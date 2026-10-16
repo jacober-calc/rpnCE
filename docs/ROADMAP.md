@@ -10,9 +10,15 @@
 - [x] Display style: native resolution, 4 stack lines, numbers drawn up to 3x size
 
 ## Milestone 2: menus
-- [ ] Menu tree generated from a menu definition file
-- [ ] DEG/RAD mode (trig is radians-only for now)
-- [ ] MATH, NUM, PROB, CONV, MODE (FIX/SCI/ENG, DEG/RAD)
+- [x] Menu tree generated from a menu definition file (menus/menus.txt)
+- [x] Menu navigation: softkeys, row up/down, HOME, EXIT
+- [x] DEG/RAD mode
+- [x] Working menu items: STK, CLR (CLX, CLST, CLD), MODE (RAD, DEG),
+      CONV (>DEG, >RAD), PROB (COMB, PERM, N!),
+      NUM (%, %CH, GCD, LCM, IP, FP, FLR, CEIL, NEAR, ABS, SIGN, MOD, MIN, MAX),
+      MATH (X^3, cube root, XROOTY, 2^X, LOG2, LOGB)
+- [ ] Remaining MATH/NUM/PROB/CONV items (ATN2, E^X-, LN1+, PRIM, rounding, RAND)
+- [ ] FIX/SCI/ENG display modes
 - [ ] Save state to an appvar on exit
 
 ## Later

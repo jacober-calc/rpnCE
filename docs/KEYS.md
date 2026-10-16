@@ -15,5 +15,9 @@
 | `x²` | X^2 | SQRT |
 | `x⁻¹` | 1/X | |
 | `LOG` / `LN` | LOG / LN | 10^X / e^X |
-| `SIN COS TAN` | trig (radians) | ASIN ACOS ATAN |
+| `SIN COS TAN` | trig (DEG or RAD mode) | ASIN ACOS ATAN |
 | `MODE` | | QUIT |
+| `Y= WINDOW ZOOM TRACE GRAPH` | the five menu softkeys | |
+| up / down arrows | previous / next menu row | |
+| `MATH` | HOME (top menu) | |
+| `ON` | EXIT (back one menu) | |

@@ -3,11 +3,12 @@
 
 #include <stdbool.h>
 #include "../core/calc.h"
+#include "menu.h"
 
 void display_open(void);
 void display_close(void);
 
 /* Redraws the whole screen from the calculator state. */
-void display_draw(const calc_t *c, bool second);
+void display_draw(const calc_t *c, const menu_t *m, bool second);
 
 #endif

@@ -25,11 +25,18 @@ Early development: the stack, number entry, and basic math work. See [docs/ROADM
 ```
 src/main.c   entry point and main loop
 src/core/    calculator logic (stack, math, modes); no screen or key code
-src/ui/      display and keypad handling for the CE
-docs/        roadmap and design notes
+src/ui/      display, keypad, and menu handling for the CE
+menus/       menus.txt: the whole menu tree as editable text
+tools/       genmenu.py: turns menus.txt into src/ui/menu_data.c/.h
+docs/        roadmap, key layout, and design notes
 ```
 
 Keeping `core/` free of hardware code means it can later be tested on a PC.
+
+## Editing menus
+
+Change `menus/menus.txt`, then run `python3 tools/genmenu.py` and rebuild.
+The generated files are committed, so building doesn't need Python.
 
 ## License
 

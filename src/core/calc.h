@@ -35,12 +35,27 @@ typedef enum {
     CMD_SIN, CMD_COS, CMD_TAN, CMD_ASIN, CMD_ACOS, CMD_ATAN,
     /* constants */
     CMD_PI, CMD_E,
+    /* stack menu */
+    CMD_ROLL_UP, CMD_DROP, CMD_CLEAR_STACK,
+    /* modes */
+    CMD_MODE_RAD, CMD_MODE_DEG,
+    /* more two-argument math: Y op X */
+    CMD_XROOT_Y, CMD_LOG_BASE, CMD_GCD, CMD_LCM, CMD_MOD,
+    CMD_MIN, CMD_MAX, CMD_COMB, CMD_PERM,
+    /* two-argument, Y is kept */
+    CMD_PERCENT, CMD_PERCENT_CHANGE,
+    /* more one-argument math */
+    CMD_CUBE, CMD_CUBE_ROOT, CMD_TWO_POW, CMD_LOG2,
+    CMD_INT_PART, CMD_FRAC_PART, CMD_FLOOR, CMD_CEIL, CMD_NEAR,
+    CMD_ABS, CMD_SIGN, CMD_FACTORIAL,
+    CMD_TO_DEG, CMD_TO_RAD,
 } calc_cmd_t;
 
 typedef struct {
     real_t x, y, z, t;
     real_t lastx;
     bool lift;                  /* stack lift enabled */
+    bool degrees;               /* angle mode: true = DEG, false = RAD */
 
     bool editing;               /* X is being typed in */
     char entry[ENTRY_MAX + 1];  /* text being typed, plain ASCII */

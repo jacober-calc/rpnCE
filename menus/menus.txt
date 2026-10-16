@@ -1,0 +1,626 @@
+# RPNCE menu tree.
+#
+# The menu tree is derived from the menu definitions of RPN83P,
+# Copyright (c) 2023 Brian T. Park, used under the MIT License.
+#
+# Format (2-space indentation):
+#   group LABEL ID        a submenu; its children are rows
+#   row                   one screen row of up to 5 entries
+#   item LABEL ID         a function
+#   alt LABEL ALTLABEL ID a mode item; ALTLABEL shows when the mode is on
+#   blank                 an empty slot
+# Labels have no spaces. Symbols are written as {name}:
+#   {sq} {cube} {cuberoot} {root} {sigma} {to} {block} {mu} {deg}
+#   {up} {down} {left} {times}
+# After editing, run: python3 tools/genmenu.py
+
+group root ROOT
+  row
+    group MATH MATH
+      row
+        item X^3 CUBE
+        item {cuberoot}{root}X CUBE_ROOT
+        item X{root}Y XROOT_Y
+        item ATN2 ATAN2
+      row
+        item 2^X TWO_POW
+        item LOG2 LOG2
+        item LOGB LOG_BASE
+        item E^X- EXP_MINUS_ONE
+        item LN1+ LN_ONE_PLUS
+    group NUM NUM
+      row
+        item % PERCENT
+        item %CH PERCENT_CHANGE
+        item GCD GCD
+        item LCM LCM
+        item PRIM PRIME
+      row
+        item IP INT_PART
+        item FP FRAC_PART
+        item FLR FLOOR
+        item CEIL CEIL
+        item NEAR NEAR
+      row
+        item ABS ABS
+        item SIGN SIGN
+        item MOD MOD
+        item MIN MIN
+        item MAX MAX
+      row
+        item RNDF ROUND_TO_FIX
+        item RNDN ROUND_TO_N
+        item RNDG ROUND_TO_GUARD
+    group PROB PROB
+      row
+        item COMB COMB
+        item PERM PERM
+        item N! FACTORIAL
+        item RAND RANDOM
+        item SEED RANDOM_SEED
+    group CPLX COMPLEX
+      row
+        item REAL COMPLEX_REAL
+        item IMAG COMPLEX_IMAG
+        item CONJ COMPLEX_CONJ
+        item CABS COMPLEX_ABS
+        item CANG COMPLEX_ANGLE
+    item HELP HELP
+  row
+    group BASE BASE
+      row
+        alt DEC DEC{block} DEC
+        alt HEX HEX{block} HEX
+        alt OCT OCT{block} OCT
+        alt BIN BIN{block} BIN
+      row
+        group LOGI BASE_LOGIC
+          row
+            item AND BITWISE_AND
+            item OR BITWISE_OR
+            item XOR BITWISE_XOR
+            item NOT BITWISE_NOT
+            item NEG BITWISE_NEG
+        group ROTS BASE_ROTATE
+          row
+            item SL SHIFT_LEFT_LOGICAL
+            item SR SHIFT_RIGHT_LOGICAL
+            item ASR SHIFT_RIGHT_ARITHMETIC
+            item SLn SHIFT_LEFT_LOGICAL_N
+            item SRn SHIFT_RIGHT_LOGICAL_N
+          row
+            item RL ROTATE_LEFT_CIRCULAR
+            item RR ROTATE_RIGHT_CIRCULAR
+            item RLC ROTATE_LEFT_CARRY
+            item RRC ROTATE_RIGHT_CARRY
+          row
+            item RLn ROTATE_LEFT_CIRCULAR_N
+            item RRn ROTATE_RIGHT_CIRCULAR_N
+            item RLCn ROTATE_LEFT_CARRY_N
+            item RRCn ROTATE_RIGHT_CARRY_N
+        group BITS BASE_BITS
+          row
+            item CB CLEAR_BIT
+            item SB SET_BIT
+            item B? GET_BIT
+            item REVB REVERSE_BIT
+            item CNTB COUNT_BIT
+        group BFCN BASE_FUNCTIONS
+          row
+            item BAS+ BASE_ADD
+            item BAS- BASE_SUBT
+            item BAS{times} BASE_MULT
+            item BAS/ BASE_DIV
+            item BDIV BASE_DIV2
+        group BCFS BASE_CONFIGS
+          row
+            item CCF CLEAR_CARRY_FLAG
+            item SCF SET_CARRY_FLAG
+            item CF? GET_CARRY_FLAG
+            item WSIZ SET_WORD_SIZE
+            item WSZ? GET_WORD_SIZE
+    group HYP HYPERBOLIC
+      row
+        blank
+        item SINH SINH
+        item COSH COSH
+        item TANH TANH
+        blank
+      row
+        blank
+        item ASNH ASINH
+        item ACSH ACOSH
+        item ATNH ATANH
+        blank
+    group STAT STAT
+      row
+        item {sigma}+ STAT_PLUS
+        item {sigma}- STAT_MINUS
+        alt ALL{sigma} ALL{block} STAT_ALL_MODE
+        alt LIN{sigma} LIN{block} STAT_LINEAR_MODE
+        item CL{sigma} STAT_CLEAR
+      row
+        item SUM STAT_SUM
+        item MEAN STAT_MEAN
+        item WMN STAT_WEIGHTED_MEAN
+        item N STAT_N
+        group {sigma} STAT_REGS
+          row
+            item {sigma}X STAT_REG_X
+            item {sigma}X2 STAT_REG_X2
+            item {sigma}Y STAT_REG_Y
+            item {sigma}Y2 STAT_REG_Y2
+            item {sigma}XY STAT_REG_XY
+          row
+            item {sigma}N STAT_REG_N
+            item {sigma}LX STAT_REG_LN_X
+            item {sigma}LX2 STAT_REG_LN_X2
+            item {sigma}LY STAT_REG_LN_Y
+            item {sigma}LY2 STAT_REG_LN_Y2
+          row
+            item {sigma}LXL STAT_REG_LN_XLN_Y
+            item {sigma}XLY STAT_REG_XLN_Y
+            item {sigma}YLX STAT_REG_YLN_X
+      row
+        item SDEV STAT_SAMPLE_SDEV
+        item SCOV STAT_SAMPLE_COV
+        item PDEV STAT_POP_SDEV
+        item PCOV STAT_POP_COV
+        group CFIT CFIT
+          row
+            item Y{to}X CFIT_FORECAST_X
+            item X{to}Y CFIT_FORECAST_Y
+            item SLOP CFIT_SLOPE
+            item YINT CFIT_INTERCEPT
+            item CORR CFIT_CORRELATION
+          row
+            alt LINF LIN{block} CFIT_LINEAR
+            alt LOGF LOG{block} CFIT_LOG
+            alt EXPF EXP{block} CFIT_EXP
+            alt PWRF PWR{block} CFIT_POWER
+            item BEST CFIT_BEST
+    group CONV CONV
+      row
+        item {to}DEG RAD_TO_DEG
+        item {to}RAD DEG_TO_RAD
+        blank
+        item {to}REC POLAR_TO_RECT
+        item {to}POL RECT_TO_POLAR
+      row
+        item {to}HR HMS_TO_HR
+        item {to}HMS HR_TO_HMS
+        item HMS+ HMS_PLUS
+        item HMS- HMS_MINUS
+    group TVM TVM
+      row
+        item N TVM_N
+        item I%YR TVM_IYR
+        item PV TVM_PV
+        item PMT TVM_PMT
+        item FV TVM_FV
+      row
+        alt P/YR P/Y{block} TVM_PYR
+        alt C/YR C/Y{block} TVM_CYR
+        alt BEG BEG{block} TVM_BEGIN
+        alt END END{block} TVM_END
+        item CLTV TVM_CLEAR
+      row
+        alt IYR1 IY1{block} TVM_IYR0
+        alt IYR2 IY2{block} TVM_IYR1
+        alt TMAX TMX{block} TVM_ITER_MAX
+        blank
+        item RSTV TVM_SOLVER_RESET
+  row
+    group CLR CLEAR
+      row
+        item CLX CLEAR_X
+        item CLST CLEAR_STACK
+        item CLRG CLEAR_REGS
+        item CL{sigma} CLEAR_STAT
+        item CLTV CLEAR_TVM
+      row
+        item CLD CLEAR_DISPLAY
+    group MODE MODE
+      row
+        alt FIX FIX{block} FIX
+        alt SCI SCI{block} SCI
+        alt ENG ENG{block} ENG
+        alt RAD RAD{block} RAD
+        alt DEG DEG{block} DEG
+      row
+        alt RRES RRE{block} NUM_RESULT_MODE_REAL
+        alt CRES CRE{block} NUM_RESULT_MODE_COMPLEX
+        alt RECT REC{block} COMPLEX_MODE_RECT
+        alt PRAD PRA{block} COMPLEX_MODE_RAD
+        alt PDEG PDE{block} COMPLEX_MODE_DEG
+      row
+        item RSIZ SET_REG_SIZE
+        item RSZ? GET_REG_SIZE
+        blank
+        item SSIZ SET_STACK_SIZE
+        item SSZ? GET_STACK_SIZE
+      row
+        alt ,EE ,EE{block} COMMA_EENORMAL
+        alt EE, EE,{block} COMMA_EESWAPPED
+        blank
+        alt (..) (..){block} FORMAT_RECORD_RAW
+        alt '..' '..'{block} FORMAT_RECORD_STRING
+    group STK STACK
+      row
+        item DUP STACK_DUP
+        item R{up} STACK_ROLL_UP
+        item R{down} STACK_ROLL_DOWN
+        item DROP STACK_DROP
+        item X{left}{to}Y STACK_EXCHANGE_XY
+    group UNIT UNIT
+      row
+        group UFCN UNIT_FUNCTIONS
+          row
+            item UVAL UNIT_VALUE
+            item UBAS UNIT_BASE
+        group LENG UNIT_LENGTH
+          row
+            item ferm UNIT_FERMI
+            item angs UNIT_ANGSTROM
+            item nm UNIT_NANO_METER
+            item {mu}m UNIT_MICRO_METER
+          row
+            item mm UNIT_MILLI_METER
+            item cm UNIT_CENTI_METER
+            item m UNIT_METER
+            item km UNIT_KILO_METER
+          row
+            item mil UNIT_MIL
+            item in UNIT_INCH
+            item ft UNIT_FOOT
+            item yd UNIT_YARD
+            item mi UNIT_MILE
+          row
+            group TYPO TYPOGRAPHY
+              row
+                item twip UNIT_TWIP
+                item pt UNIT_POINT
+                item pica UNIT_PICA
+            group SURV SURVEY
+              row
+                item svft UNIT_SURVEY_FOOT
+                item rod UNIT_ROD
+                item chai UNIT_CHAIN
+                item frlg UNIT_FURLONG
+                item svmi UNIT_SURVEY_MILE
+              row
+                item leag UNIT_LEAGUE
+            group NAUT NAUTICAL
+              row
+                item fath UNIT_FATHOM
+                item cabl UNIT_CABLE
+                item nmi UNIT_NAUTICAL_MILE
+            group ASTR ASTRONOMY
+              row
+                item lsec UNIT_LIGHT_SECOND
+                item AU UNIT_ASTRONOMICAL_UNIT
+                item ly UNIT_LIGHT_YEAR
+                item pc UNIT_PARSEC
+        group AREA UNIT_AREA
+          row
+            item mm{sq} UNIT_SQ_MILLI_METER
+            item cm{sq} UNIT_SQ_CENTI_METER
+            item m{sq} UNIT_SQ_METER
+            item km{sq} UNIT_SQ_KILO_METER
+          row
+            item in{sq} UNIT_SQ_INCH
+            item ft{sq} UNIT_SQ_FOOT
+            item yd{sq} UNIT_SQ_YARD
+            item mi{sq} UNIT_SQ_MILE
+            item nmi{sq} UNIT_SQ_NAUTICAL_MILE
+          row
+            item acre UNIT_ACRE
+            item ha UNIT_HECTARE
+            item usfb UNIT_USFOOTBALL
+            item cafb UNIT_CAFOOTBALL
+            group SURV UNIT_AREA_SURV
+              row
+                item rod{sq} UNIT_SQ_ROD
+                item chn{sq} UNIT_SQ_CHAIN
+                item fur{sq} UNIT_SQ_FURLONG
+        group VOL UNIT_VOL
+          row
+            item mm{cube} UNIT_CU_MILLI_METER
+            item cm{cube} UNIT_CU_CENTI_METER
+            item m{cube} UNIT_CU_METER
+            item km{cube} UNIT_CU_KILO_METER
+          row
+            item in{cube} UNIT_CU_INCH
+            item ft{cube} UNIT_CU_FOOT
+            item yd{cube} UNIT_CU_YARD
+            item mi{cube} UNIT_CU_MILE
+            item nmi{cube} UNIT_CU_NAUTICAL_MILE
+          row
+            item {mu}L UNIT_MICRO_LITER
+            item mL UNIT_MILLI_LITER
+            item L UNIT_LITER
+            item mtsp UNIT_METRIC_TEASPOON
+            item mtbs UNIT_METRIC_TABLESPOON
+          row
+            group US UNIT_VOL_US
+              row
+                item tsp UNIT_TEASPOON
+                item tbsp UNIT_TABLESPOON
+                item floz UNIT_FLUID_OUNCE
+                item gill UNIT_GILL
+                item cup UNIT_CUP
+              row
+                item pint UNIT_PINT
+                item qt UNIT_QUART
+                item gal UNIT_GALLON
+            group IMP UNIT_VOL_IMP
+              row
+                item tsp UNIT_IMP_TEASPOON
+                item tbsp UNIT_IMP_TABLESPOON
+                item floz UNIT_IMP_FLUID_OUNCE
+                item gill UNIT_IMP_GILL
+                item cup UNIT_IMP_CUP
+              row
+                item pint UNIT_IMP_PINT
+                item qt UNIT_IMP_QUART
+                item gal UNIT_IMP_GALLON
+            group DRY UNIT_VOL_DRY
+              row
+                item drpt UNIT_DRY_PINT
+                item drqt UNIT_DRY_QUART
+                item dgal UNIT_DRY_GALLON
+                item peck UNIT_PECK
+                item bush UNIT_BUSHEL
+              row
+                item dbbl UNIT_DRY_BARREL
+            group MISC UNIT_VOL_MISC
+              row
+                item bdft UNIT_BOARD_FOOT
+                item bbl UNIT_OIL_BARREL
+                item olmp UNIT_OLYMPIC_POOL
+                item acft UNIT_ACRE_FOOT
+        group TEMP UNIT_TEMP
+          row
+            item {deg}C UNIT_CELSIUS
+            item {deg}F UNIT_FAHRENHEIT
+            item {deg}R UNIT_RANKINE
+            item {deg}K UNIT_KELVIN
+      row
+        group MASS UNIT_MASS
+          row
+            item {mu}g UNIT_MICRO_GRAM
+            item mg UNIT_MILLI_GRAM
+            item g UNIT_GRAM
+            item kg UNIT_KILO_GRAM
+            item t UNIT_METRIC_TON
+          row
+            item amu UNIT_ATOMIC_MASS_UNIT
+            group US UNIT_MASS_US
+              row
+                item grai UNIT_GRAIN
+                item dram UNIT_DRAM
+                item oz UNIT_OUNCE
+                item lb UNIT_POUND
+                item slug UNIT_SLUG
+              row
+                item scwt UNIT_SHORT_HUNDRED_WEIGHT
+                item ston UNIT_SHORT_TON
+            group IMP UNIT_MASS_IMP
+              row
+                item lb UNIT_IMP_POUND
+                item stne UNIT_STONE
+                item qrtr UNIT_QUARTER
+                item lcwt UNIT_LONG_HUNDRED_WEIGHT
+                item lton UNIT_LONG_TON
+            group TROY UNIT_MASS_TROY
+              row
+                item grai UNIT_TROY_GRAIN
+                item dwt UNIT_TROY_PENNY_WEIGHT
+                item ozt UNIT_TROY_OUNCE
+                item lbt UNIT_TROY_POUND
+        group FORC UNIT_FORCE
+          row
+            item dyne UNIT_DYNE
+            item N UNIT_NEWTON
+            item kgf UNIT_KILOGRAM_FORCE
+            item tonf UNIT_METRIC_TON_FORCE
+          row
+            item pdl UNIT_POUNDAL
+            item lbf UNIT_POUND_FORCE
+            item stnf UNIT_SHORT_TON_FORCE
+            item ltnf UNIT_LONG_TON_FORCE
+        group PRES UNIT_PRESSURE
+          row
+            item Pa UNIT_PASCAL
+            item hPa UNIT_HECTO_PASCAL
+            item kPa UNIT_KILO_PASCAL
+            item torr UNIT_TORR
+            item atm UNIT_ATMOSPHERE
+          row
+            item mbar UNIT_MILLI_BAR
+            item dbar UNIT_DECI_BAR
+            item bar UNIT_BAR
+            item psi UNIT_POUND_SQUARE_INCH
+          row
+            item mmH UNIT_MILLI_METER_MERCURY
+            item inHg UNIT_INCH_MERCURY
+            item mmw UNIT_MILLI_METER_WATER
+            item inwg UNIT_INCH_WATER
+        group ENER UNIT_ENERGY
+          row
+            item eV UNIT_ELECTRON_VOLT
+            item erg UNIT_ERG
+            item J UNIT_JOULE
+            item kJ UNIT_KILO_JOULE
+            item ftlb UNIT_FOOT_POUND_ENERGY
+          row
+            item Wh UNIT_WATT_HOUR
+            item kWh UNIT_KILO_WATT_HOUR
+            item cal UNIT_CALORIE
+            item kcal UNIT_KILO_CALORIE
+            item Btu UNIT_BRITISH_THERMAL_UNIT
+          row
+            item tTNT UNIT_TON_TNT
+            item Latm UNIT_LITER_ATMOSPHERE
+        group PWR UNIT_POWER
+          row
+            item W UNIT_WATT
+            item kW UNIT_KILO_WATT
+            item fl/s UNIT_FOOT_POUND_ENERGY_PER_SECOND
+            item Bt/h UNIT_BTU_PER_HOUR
+            item Bt/m UNIT_BTU_PER_MINUTE
+          row
+            item ca/s UNIT_CALORIE_PER_SECOND
+            item hp UNIT_HORSEPOWER
+      row
+        group TIME UNIT_TIME
+          row
+            item ns UNIT_NANO_SECOND
+            item {mu}s UNIT_MICRO_SECOND
+            item ms UNIT_MILLI_SECOND
+            item sec UNIT_SECOND
+            item min UNIT_MINUTE
+          row
+            item hour UNIT_HOUR
+            item day UNIT_DAY
+            item week UNIT_WEEK
+            item mon UNIT_JULIAN_MONTH
+            item year UNIT_JULIAN_YEAR
+        group SPD UNIT_SPEED
+          row
+            item m/s UNIT_METER_PER_SECOND
+            item ft/s UNIT_FOOT_PER_SECOND
+            item kph UNIT_KILO_METER_PER_HOUR
+            item mph UNIT_MILE_PER_HOUR
+            item knot UNIT_KNOT
+          row
+            item c UNIT_LIGHT_SPEED
+        group FUEL UNIT_FUEL
+          row
+            item Lkm UNIT_LITERS_PER_HUNDRED_KILO_METERS
+            item mpg UNIT_MILES_PER_GALLON
+    group DATE DATE
+      row
+        group D DATE_FOLDER_DATE
+          row
+            item D() DATE_CREATE
+            item {to}ED DATE_TO_EPOCH_DAYS
+            item ED{to} EPOCH_DAYS_TO_DATE
+            item {to}ES DATE_TO_EPOCH_SECONDS
+            item ES{to} EPOCH_SECONDS_TO_DATE
+          row
+            item LEAP IS_DATE_LEAP
+            item DOW DATE_TO_DAY_OF_WEEK
+            item CVTZ DATE_CONVERT_TO_TIME_ZONE
+          row
+            item .YR DATE_EXTRACT_YEAR
+            item .MON DATE_EXTRACT_MONTH
+            item .DAY DATE_EXTRACT_DAY
+          row
+            item DSHK DATE_SHRINK_TO_NOTHING
+            item DEXD DATE_EXTEND_TO_DATE_TIME
+            item DCUT DATE_CUT_TO_NOTHING
+            item DLNK DATE_LINK_TO_DATE_TIME
+        group T DATE_FOLDER_TIME
+          row
+            item T() TIME_CREATE
+            item {to}S TIME_TO_SECONDS
+            item S{to} SECONDS_TO_TIME
+          row
+            item .HR TIME_EXTRACT_HOUR
+            item .MIN TIME_EXTRACT_MINUTE
+            item .SEC TIME_EXTRACT_SECOND
+        group DT DATE_FOLDER_DATE_TIME
+          row
+            item DT() DATE_TIME_CREATE
+            item {to}ED DATE_TIME_TO_EPOCH_DAYS
+            item ED{to} EPOCH_DAYS_TO_DATE_TIME
+            item {to}ES DATE_TIME_TO_EPOCH_SECONDS
+            item ES{to} EPOCH_SECONDS_TO_DATE_TIME
+          row
+            item LEAP IS_DATE_TIME_LEAP
+            item DOW DATE_TIME_TO_DAY_OF_WEEK
+            item CVTZ DATE_TIME_CONVERT_TO_TIME_ZONE
+            item .D() DATE_TIME_EXTRACT_DATE
+            item .T() DATE_TIME_EXTRACT_TIME
+          row
+            item DSHK DATE_TIME_SHRINK_TO_DATE
+            item DEXD DATE_TIME_EXTEND_TO_OFFSET_DATE_TIME
+            item DCUT DATE_TIME_CUT_TO_DATE
+            item DLNK DATE_TIME_LINK_TO_OFFSET_DATE_TIME
+        group TZ DATE_FOLDER_OFFSET
+          row
+            item TZ() OFFSET_CREATE
+            item {to}HR OFFSET_TO_HOURS
+            item HR{to} HOURS_TO_OFFSET
+            item .HR OFFSET_EXTRACT_HOUR
+            item .MIN OFFSET_EXTRACT_MINUTE
+        group DZ DATE_FOLDER_OFFSET_DATE_TIME
+          row
+            item DZ() OFFSET_DATE_TIME_CREATE
+            item {to}ED OFFSET_DATE_TIME_TO_EPOCH_DAYS
+            item ED{to} EPOCH_DAYS_TO_OFFSET_DATE_TIME
+            item {to}ES OFFSET_DATE_TIME_TO_EPOCH_SECONDS
+            item ES{to} EPOCH_SECONDS_TO_OFFSET_DATE_TIME_UTC
+          row
+            item ES{to}@ EPOCH_SECONDS_TO_OFFSET_DATE_TIME_APP
+            item LEAP IS_OFFSET_DATE_TIME_LEAP
+            item DOW OFFSET_DATE_TIME_TO_DAY_OF_WEEK
+            item CVTZ OFFSET_DATE_TIME_CONVERT_TO_TIME_ZONE
+          row
+            item .D() OFFSET_DATE_TIME_EXTRACT_DATE
+            item .T() OFFSET_DATE_TIME_EXTRACT_TIME
+            item .DT( OFFSET_DATE_TIME_EXTRACT_DATE_TIME
+            item .TZ( OFFSET_DATE_TIME_EXTRACT_OFFSET
+          row
+            item DSHK OFFSET_DATE_TIME_SHRINK_TO_DATE_TIME
+            item DEXD OFFSET_DATE_TIME_EXTEND_TO_NOTHING
+            item DCUT OFFSET_DATE_TIME_CUT_TO_DATE_TIME
+            item DLNK OFFSET_DATE_TIME_LINK_TO_NOTHING
+      row
+        group DR DATE_FOLDER_DURATION
+          row
+            item DR() DURATION_CREATE
+            item DAY{to} DAYS_TO_DURATION
+            item HR{to} HOURS_TO_DURATION
+            item MIN{to} MINUTES_TO_DURATION
+            item SEC{to} SECONDS_TO_DURATION
+          row
+            item {to}S DURATION_TO_SECONDS
+            item .DAY DURATION_EXTRACT_DAY
+            item .HR DURATION_EXTRACT_HOUR
+            item .MIN DURATION_EXTRACT_MINUTE
+            item .SEC DURATION_EXTRACT_SECOND
+        group DW DATE_FOLDER_DAY_OF_WEEK
+          row
+            item DW() DAY_OF_WEEK_CREATE
+            item {to}ISO DAY_OF_WEEK_TO_ISO_DOW_NUMBER
+            item ISO{to} ISO_DOW_NUMBER_TO_DAY_OF_WEEK
+            item {to}UNX DAY_OF_WEEK_TO_UNIX_DOW_NUMBER
+            item UNX{to} UNIX_DOW_NUMBER_TO_DAY_OF_WEEK
+        group EPCH EPOCH
+          row
+            alt UNIX UNI{block} EPOCH_UNIX
+            alt NTP NTP{block} EPOCH_NTP
+            alt GPS GPS{block} EPOCH_GPS
+            alt TIOS TI{block} EPOCH_TIOS
+            alt Y2K Y2K{block} EPOCH_Y2K
+          row
+            alt CEPC CEP{block} EPOCH_CUSTOM
+            blank
+            blank
+            item EPC EPOCH_SET_CUSTOM
+            item EPC? EPOCH_GET_CUSTOM
+        group CLK CLK
+          row
+            item NOW GET_NOW
+            item NOWD GET_NOW_DATE
+            item NOWT GET_NOW_TIME
+            item NWDZ GET_NOW_OFFSET_DATE_TIME
+            item NWUT GET_NOW_OFFSET_DATE_TIME_UTC
+          row
+            item ATZ SET_APP_TIME_ZONE
+            item ATZ? GET_APP_TIME_ZONE
+            item CTZ SET_CLOCK_TIME_ZONE
+            item CTZ? GET_CLOCK_TIME_ZONE
+            item SETC SET_CLOCK
