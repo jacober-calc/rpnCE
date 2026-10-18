@@ -10,6 +10,8 @@
 - MATH-013: Y=-16, X=4, XROOT_Y -> 1.4142 with no error (fail).
 - MATH-014: Repeat after clearing stack; explicitly verify Y=-16, X=4 before invocation -> 1.4142, no warning (fail reproduced). Post-error stack not inspected.
 - MATH-015: Y=-16, X=2, XROOT_Y -> 0 with no reported domain error (fail). Stack after operation not inspected. This confirms the failure extends to the square-root index and can yield different incorrect results for different even indices.
+- MATH-017: Y=-8, X=-3, XROOT_Y -> -0.5000 with expected stack drop (pass; valid negative odd index).
+- MATH-018: Y=-16, X=-4, XROOT_Y -> 0.3536 without domain error (fail; negative even index). Stack after operation not inspected. The missing guard therefore affects both signs of even integer root indices.
 - Comparison: DM32 reports `INVALID y^x` for the invalid negative-even-root case.
 
 ## Mathematical expectation
@@ -27,7 +29,7 @@ real_t inv = os_RealInv(x);
 g_result = os_RealPow(y, &inv);
 ```
 
-This delegates negative-base fractional exponent handling to TI OS power semantics. The observed 1.4142 (fourth root) and 0 (square root) outputs are wrong; the precise internal reason for this particular value has not been established.
+This delegates negative-base fractional exponent handling to TI OS power semantics. The observed 1.4142 (positive fourth-root index), 0 (square-root index), and 0.3536 (negative fourth-root index) outputs are wrong; the precise internal reason for this particular value has not been established.
 
 `do_math()` already calls `compute()` before stack mutation, and on a non-`ERR_NONE` result displays `error_text(err)` while leaving the stack unchanged. Therefore prevalidation is the appropriate place for the proposed fix.
 
@@ -63,7 +65,7 @@ For rejected operations, assert the error text and that X, Y, deeper stack level
 
 ## Acceptance criteria
 
-- MATH-013 and MATH-014 no longer return 1.4142, and MATH-015 no longer returns 0; all report `Err: Domain`.
+- MATH-013 and MATH-014 no longer return 1.4142, MATH-015 no longer returns 0, and MATH-018 no longer returns 0.3536; all report `Err: Domain`.
 - Valid odd negative roots still work.
 - Zero-index error remains intact.
 - Errors preserve stack and LASTX.
