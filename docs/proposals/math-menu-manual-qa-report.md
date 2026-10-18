@@ -1,17 +1,17 @@
 # RPNCE TI-84 Plus CE — MATH submenu manual QA report
 
-**Status:** Final verification pending MATH-106. **Documentation only.** This is an evidence and handoff document, not a code fix or automated test run.
+**Status:** Manual MATH submenu campaign CLOSED after MATH-106. **Documentation only.** This is an evidence and handoff document, not a code fix or automated test run.
 
 ## Campaign protocol
 - Device: TI-84 Plus CE running RPNCE; operator manually enters values and reports screen observations.
-- Test identifiers: MATH-001 through MATH-105 executed; MATH-106 is planned but **not yet executed**.
+- Test identifiers: MATH-001 through MATH-106 executed; MATH-107 is reserved for optional post-fix verification, not executed.
 - For each test: clear stack as specified, enter X (unary) or Y then X (binary), navigate `MATH → MATH` to the function, compare the displayed result/error with the real-number expectation, and where observed inspect X/Y and stack drop/preservation.
 - Normal binary success consumes X/Y and produces the result in X; errors should leave operands and deeper stack untouched. Earlier tests did not always inspect stack, so do not infer stack behaviour when not recorded.
 - Displays are commonly rounded to four decimal places; numerical comparisons are made at that precision unless otherwise stated. Angle mode matters for ATN2.
 - Counts are **historical outcomes, not unique confirmed defects**. Repeated failures and later passing retests both count as separate executions.
 
-## Current execution totals (through MATH-105)
-**105 executed: 88 PASS, 16 FAIL, 1 provisional.** MATH-106 pending, not included.
+## Final execution totals (through MATH-106)
+**106 executed: 89 PASS, 16 FAIL, 1 provisional.** MATH-107 not executed.
 
 ## Function-level disposition
 
@@ -53,6 +53,7 @@ The rational reciprocal exponent matters: for X=0.8, 1/X=5/4, invalid on a negat
 - MATH-098: Y=-32, X=2.5 → 4, Y=0, normal stack drop.
 - MATH-100: Y=81, X=0.8 → 243, Y=0, normal stack drop.
 - MATH-105: Y=0, X=5 → 0, Y=0, normal stack drop.
+- MATH-106: Y=16, X=-0.5 → 0.0039 (exact 1/256), Y=0, no error, normal binary stack drop; confirms valid negative fractional root index.
 - Earlier controls include MATH-010/011/012/016/017/021/024–029.
 
 ## Historical failures that did not reproduce
@@ -74,4 +75,4 @@ MATH-041 ATN2 Y=0, X=0 produced 0; mathematical atan2(0,0) is undefined. Documen
 8. Do not assume the strange returned values reveal TI OS's internal calculation. Root cause of those specific numbers is unproven.
 
 ## Source-of-truth and closure
-The historical per-case observations and proposed implementation discussion are preserved in [the XROOT_Y proposal](xroot-negative-even-domain.md). The PR description should link both documents. **After MATH-106**, append the observed result and update the totals, then mark the MATH manual campaign closed. Do not invent the MATH-106 outcome.
+The historical per-case observations and proposed implementation discussion are preserved in [the XROOT_Y proposal](xroot-negative-even-domain.md). The PR description should link both documents. MATH-106 passed with X=0.0039, Y=0 and normal stack behaviour; the campaign is **closed** at 106 tests. MATH-107 is not part of this campaign and may be assigned as a post-fix regression test.
