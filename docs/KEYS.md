@@ -14,13 +14,13 @@ leave it as it was.
 | Key | Primary | 2ND |
 | --- | --- | --- |
 | 0-9, `.` | number entry | |
-| `,` | EE (exponent) | EE |
+| `,` | EE (exponent); inside a DATE record, the field separator | EE |
 | `(-)` | +/- (of the exponent after EE) | ANS: LASTX |
 | `ENTER` | ENTER | ENTRY: SHOW all 14 digits |
 | `DEL` | backspace while typing, else CLX | INS: DUP |
 | `CLEAR` | CLX; twice in a row clears the stack | |
-| `(` | R-down | `{`: R-up |
-| `)` | X<>Y | `}`: DROP |
+| `(` | R-down | `{`: start a DATE record (R-up is in STK) |
+| `)` | X<>Y | `}`: close a DATE record; otherwise DROP |
 
 ## Math
 
@@ -175,6 +175,55 @@ press Sigma-). CL-Sigma (here or in CLR) clears all data. The data is saved betw
 
 CLX, CLST (every stack level), CLRG (A-Z, i and the extra registers; stat
 data is kept), CL-Sigma (stat data), CLTV (TVM), CLD (clear the message).
+
+## DATE
+
+MATH, then DATE (row 3 of HOME). Seven kinds of DATE objects live in the
+stack and registers alongside numbers, on the Gregorian calendar from year
+1 to 9999 with fixed UTC offsets:
+
+| Object | Typed as | Shown in ".." mode |
+| --- | --- | --- |
+| Date | `{2024,3,14` | `2024-03-14` |
+| Time | `T{15,36,1` | `15:36:01` |
+| DateTime | `{2024,3,14,15,36,1` | `2024-03-14 15:36:01` |
+| TimeZone | `{-7,0` | `UTC-07:00` |
+| ZonedDateTime | `{2024,3,14,15,36,1,-7,0` | `2024-03-14 15:36:01-07:00` |
+| DayOfWeek | `DW{4` | `Thu` |
+| Duration | `{1,2,3,4` or `1D2H3M4S` | `1d 2h 3m 4s` |
+
+Typing: `2ND {` starts a record; `,` separates fields while you're inside
+one; `(-)` makes the current field negative; the closing `2ND }` is
+optional (ENTER or any operation finishes the record). The type comes from
+the number of fields (2 TimeZone, 3 Date, 4 Duration, 6 DateTime, 8
+ZonedDateTime); Time and DayOfWeek need their tag, typed with ALPHA
+(`ALPHA T`, `ALPHA D ALPHA W`) or with the first key of their DATE menu
+(`T{}`, `DW{}`). A Duration can also be typed compactly: digits then ALPHA
+D, H, M or S, as in `1 ALPHA D 30 ALPHA M`. An impossible record (Feb 30,
+23:59:60) shows "Err: Invalid" and stays open for DEL to fix.
+
+Arithmetic: `+` and `-` work as in RPN83P: Dates count in days; Times,
+DateTimes and ZonedDateTimes in seconds; TimeZones in hours (multiples of
+0.25); DayOfWeeks in days; a Duration works anywhere a number does.
+Subtracting two of the same kind gives the difference (two Durations give a
+Duration). `×` converts a Date, DateTime or ZonedDateTime to a time zone
+(CVTZ). On DATE objects, `1/x`, `√` and `x²` are DCUT, DSHK and DEXD.
+Other math on an object shows "Err: Data Type".
+
+Submenus: D, T, DT, TZ, DZ, DR and DW hold each kind's conversions (epoch
+days >ED/ED>, epoch seconds >ES/ES>, LEAP, DOW, CVTZ), components (.YR,
+.MON, .DAY, .HR, .MIN, .SEC, .D{}, .T{}, .DT{, .TZ{), and casting (DSHK
+shrink, DEXD extend, DCUT split in two, DLNK join two). EPCH chooses the
+epoch for epoch days and seconds (UNIX 1970-01-01, NTP 1900, GPS 1980-01-06,
+TIOS 1997, Y2K 2000, or a custom date set with EPC). CLK reads the CE's
+clock (NOW as epoch seconds, NOWD, NOWT, NWDZ in the application time zone,
+NWUT in UTC), sets the application and clock time zones (ATZ, CTZ, each
+from a TimeZone or hours) and sets the clock (SETC, from a ZonedDateTime).
+
+MODE row 4 chooses how objects are shown: `{..}` as typed (the default) or
+`".."` as RFC 3339 strings. Long values scroll with the arrow keys. SHOW
+(`2ND ENTRY`) always shows the raw record. DATE settings are saved with the
+screen tint in `RPNCEcfg`.
 
 ## Menus and system
 

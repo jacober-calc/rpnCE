@@ -259,8 +259,8 @@ static calc_cmd_t second_cmd(sk_key_t key)
         case sk_Div:    return CMD_E;
         case sk_Comma:  return CMD_EE;
         case sk_Chs:    return CMD_LASTX;                 /* ANS */
-        case sk_LParen: return CMD_ROLL_UP;               /* { */
-        case sk_RParen: return CMD_DROP;                  /* } */
+        case sk_LParen: return CMD_RECORD_OPEN;           /* {: starts a DATE record */
+        case sk_RParen: return CMD_RECORD_CLOSE;          /* }: closes one, else DROP */
         case sk_Del:    return CMD_ENTER;                 /* INS: DUP */
         case sk_Enter:  return CMD_SHOW;                  /* ENTRY */
         default:        return CMD_NONE;
@@ -308,14 +308,15 @@ event_t keys_translate(keys_t *k, sk_key_t key)
         return ev;
     }
     if (k->alpha) {
-        /* ALPHA + a key with a green A-F: a HEX digit (the core ignores it
-         * in other bases). Any other key just cancels ALPHA. */
+        /* ALPHA + a key: its green letter. The core uses it as a HEX digit
+         * (A-F in HEX mode), a DATE type tag, or a duration unit. Any key
+         * without a letter just cancels ALPHA. */
         k->alpha = false;
         int idx = letter_index(key);
-        if (idx >= 0 && idx < 6) {
+        if (idx >= 0) {
             ev.kind = EV_CMD;
-            ev.cmd = CMD_DIGIT;
-            ev.arg = (uint8_t)(10 + idx);
+            ev.cmd = CMD_ALPHA_LETTER;
+            ev.arg = (uint8_t)idx;
             return ev;
         }
     }

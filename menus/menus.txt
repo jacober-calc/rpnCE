@@ -240,6 +240,9 @@ group HOME HOME
         item TINT SCREEN_TINT
         item SSIZ SET_STACK_SIZE
         item SSZ? GET_STACK_SIZE
+      row
+        alt {..} {..}{block} FORMAT_RECORD_RAW
+        alt ".." ".."{block} FORMAT_RECORD_STRING
     group STK STACK
       row
         item DUP STACK_DUP
@@ -500,7 +503,7 @@ group HOME HOME
       row
         group D DATE_FOLDER_DATE
           row
-            item D() DATE_CREATE
+            item D{} DATE_CREATE
             item {to}ED DATE_TO_EPOCH_DAYS
             item ED{to} EPOCH_DAYS_TO_DATE
             item {to}ES DATE_TO_EPOCH_SECONDS
@@ -520,7 +523,7 @@ group HOME HOME
             item DLNK DATE_LINK_TO_DATE_TIME
         group T DATE_FOLDER_TIME
           row
-            item T() TIME_CREATE
+            item T{} TIME_CREATE
             item {to}S TIME_TO_SECONDS
             item S{to} SECONDS_TO_TIME
           row
@@ -529,7 +532,7 @@ group HOME HOME
             item .SEC TIME_EXTRACT_SECOND
         group DT DATE_FOLDER_DATE_TIME
           row
-            item DT() DATE_TIME_CREATE
+            item DT{} DATE_TIME_CREATE
             item {to}ED DATE_TIME_TO_EPOCH_DAYS
             item ED{to} EPOCH_DAYS_TO_DATE_TIME
             item {to}ES DATE_TIME_TO_EPOCH_SECONDS
@@ -538,8 +541,8 @@ group HOME HOME
             item LEAP IS_DATE_TIME_LEAP
             item DOW DATE_TIME_TO_DAY_OF_WEEK
             item CVTZ DATE_TIME_CONVERT_TO_TIME_ZONE
-            item .D() DATE_TIME_EXTRACT_DATE
-            item .T() DATE_TIME_EXTRACT_TIME
+            item .D{} DATE_TIME_EXTRACT_DATE
+            item .T{} DATE_TIME_EXTRACT_TIME
           row
             item DSHK DATE_TIME_SHRINK_TO_DATE
             item DEXD DATE_TIME_EXTEND_TO_OFFSET_DATE_TIME
@@ -547,14 +550,14 @@ group HOME HOME
             item DLNK DATE_TIME_LINK_TO_OFFSET_DATE_TIME
         group TZ DATE_FOLDER_OFFSET
           row
-            item TZ() OFFSET_CREATE
+            item TZ{} OFFSET_CREATE
             item {to}HR OFFSET_TO_HOURS
             item HR{to} HOURS_TO_OFFSET
             item .HR OFFSET_EXTRACT_HOUR
             item .MIN OFFSET_EXTRACT_MINUTE
         group DZ DATE_FOLDER_OFFSET_DATE_TIME
           row
-            item DZ() OFFSET_DATE_TIME_CREATE
+            item DZ{} OFFSET_DATE_TIME_CREATE
             item {to}ED OFFSET_DATE_TIME_TO_EPOCH_DAYS
             item ED{to} EPOCH_DAYS_TO_OFFSET_DATE_TIME
             item {to}ES OFFSET_DATE_TIME_TO_EPOCH_SECONDS
@@ -565,10 +568,10 @@ group HOME HOME
             item DOW OFFSET_DATE_TIME_TO_DAY_OF_WEEK
             item CVTZ OFFSET_DATE_TIME_CONVERT_TO_TIME_ZONE
           row
-            item .D() OFFSET_DATE_TIME_EXTRACT_DATE
-            item .T() OFFSET_DATE_TIME_EXTRACT_TIME
-            item .DT( OFFSET_DATE_TIME_EXTRACT_DATE_TIME
-            item .TZ( OFFSET_DATE_TIME_EXTRACT_OFFSET
+            item .D{} OFFSET_DATE_TIME_EXTRACT_DATE
+            item .T{} OFFSET_DATE_TIME_EXTRACT_TIME
+            item .DT{ OFFSET_DATE_TIME_EXTRACT_DATE_TIME
+            item .TZ{ OFFSET_DATE_TIME_EXTRACT_OFFSET
           row
             item DSHK OFFSET_DATE_TIME_SHRINK_TO_DATE_TIME
             item DEXD OFFSET_DATE_TIME_EXTEND_TO_NOTHING
@@ -577,7 +580,7 @@ group HOME HOME
       row
         group DR DATE_FOLDER_DURATION
           row
-            item DR() DURATION_CREATE
+            item DR{} DURATION_CREATE
             item DAY{to} DAYS_TO_DURATION
             item HR{to} HOURS_TO_DURATION
             item MIN{to} MINUTES_TO_DURATION
@@ -590,7 +593,7 @@ group HOME HOME
             item .SEC DURATION_EXTRACT_SECOND
         group DW DATE_FOLDER_DAY_OF_WEEK
           row
-            item DW() DAY_OF_WEEK_CREATE
+            item DW{} DAY_OF_WEEK_CREATE
             item {to}ISO DAY_OF_WEEK_TO_ISO_DOW_NUMBER
             item ISO{to} ISO_DOW_NUMBER_TO_DAY_OF_WEEK
             item {to}UNX DAY_OF_WEEK_TO_UNIX_DOW_NUMBER

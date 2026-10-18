@@ -33,8 +33,9 @@
       100 extra (RSIZ); VARS catalog; x<> register; CLRG
 - [x] Stack depth 4-12 (SSIZ); annunciators for depth and registers
 - [x] NUM (PRIM, RNDF, RNDN, RNDG), HYP, CONV (polar, HMS), BASE
-- [ ] Remaining: CPLX (and its MODE settings),
-      DATE, HELP
+- [x] DATE: seven object types, entry, arithmetic, all D/T/DT/TZ/DZ/DR/DW,
+      EPCH and CLK functions, {..} / ".." display
+- [ ] Remaining: CPLX (and its MODE settings), HELP
 - [x] Menu tree generated from a menu definition file (menus/menus.txt)
 - [x] Menu navigation: softkeys, row up/down, HOME, EXIT
 - [x] DEG/RAD mode
@@ -52,4 +53,7 @@
 - [x] Program stored compressed (COMPRESSED = YES in the makefile); it
       unpacks itself into RAM when started, so the 64 KB file limit no
       longer caps the program's real size
-- [ ] Move the large tables (menus, units, later HELP text) into appvars
+- [x] Menus and unit tables in the RPNCEres appvar, read from archive (no
+      RAM); version-stamped, with a clear message if it's missing
+- [x] Release packaging: tools/release.sh builds RPNCE-<version>.zip
+- [ ] HELP text in an appvar

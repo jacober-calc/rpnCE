@@ -5,7 +5,9 @@
 #include "../core/format.h"
 #include "actions.h"
 #include "dotfont.h"
+#include "res.h"
 #include "../core/units.h"
+#include "../core/dateobj.h"
 
 /*
  * Screen layout (320 x 240), RPN83P style:
@@ -145,6 +147,21 @@ void display_open(void)
     gfx_SetTextConfig(gfx_text_clip);
 }
 
+void display_problem(const char *title, const char *detail)
+{
+    gfx_FillScreen(COL_PANEL);
+    gfx_SetTextScale(1, 1);
+    gfx_SetTextFGColor(COL_INK);
+    int y = 80;
+    const char *lines[4] = { "RPNCE can't start:", title, detail, "Press any key." };
+    for (int i = 0; i < 4; i++) {
+        int w = (int)gfx_GetStringWidth(lines[i]);
+        gfx_PrintStringXY(lines[i], (SCREEN_W - w) / 2, y);
+        y += (i == 0 || i == 2) ? 24 : 16;
+    }
+    gfx_SwapDraw();
+}
+
 void display_close(void)
 {
     gfx_End();
@@ -164,7 +181,7 @@ static void draw_status(const calc_t *c, const menu_t *m, bool second, bool alph
     gfx_SetTextScale(1, 1);
     gfx_SetTextFGColor(COL_INK);
 
-    if (menu_groups[m->group].rows > 1) {
+    if (menu_group(m->group)->rows > 1) {
         char arrows[3] = { MSYM_DOWN, MSYM_UP, '\0' };
         draw_label(arrows, x, y, COL_INK);
     }
@@ -290,7 +307,7 @@ static void draw_value(const char *s, int row_y, uint8_t tag, int *scroll)
     int top = row_y + (ROW_H - DOT_HEIGHT) / 2;
 
     if (tag) {
-        const char *label = unit_table[tag - 1].label;
+        const char *label = unit_label((uint8_t)(tag - 1));
         int lw = label_width(label);
         draw_label(label, VALUE_RIGHT - lw, top + DOT_HEIGHT - 8, COL_DOTS);
         right = VALUE_RIGHT - lw - 5;
@@ -338,6 +355,11 @@ static void draw_value(const char *s, int row_y, uint8_t tag, int *scroll)
 static bool format_value(char *buf, const calc_t *c, const real_t *v)
 {
     uint32_t w;
+    if (obj_is(v)) {                        /* a DATE object: {..} or ".." */
+        dt_obj_t o = obj_unpack(v);
+        dt_format(buf, &o, c->date_as_string);
+        return false;
+    }
     if (c->base.radix != 10 && base_word(&c->base, v, &w)) {
         base_format(buf, &c->base, w);
         return true;
@@ -434,9 +456,9 @@ static void draw_menu_row(const calc_t *c, const menu_t *m)
         gfx_SetColor(COL_INK);
         gfx_FillRectangle(x, MENU_Y, w, MENU_H);
 
-        const char *label = n->label;
+        const char *label = res_text(n->label);
         if (n->kind == MENU_ALT && action_is_active(c, (menu_id_t)n->id))
-            label = n->alt_label;
+            label = res_text(n->alt_label);
 
         int lw = label_width(label);
         draw_label(label, x + (w - lw) / 2, MENU_Y + (MENU_H - 8) / 2 + 1, COL_PANEL);

@@ -109,19 +109,31 @@ bool storage_load(calc_t *c)
     return true;
 }
 
-/* ---------- display settings ---------- */
+/* ---------- settings ---------- */
 
 #define SETTINGS_NAME "RPNCEcfg"
 
 typedef struct {
     uint8_t magic;
-    uint8_t version;
+    uint8_t version;        /* 1: tint only; 2: and the DATE settings */
     uint8_t tint;
+    uint8_t date_as_string;
+    uint8_t epoch;
+    dt_obj_t custom_epoch;
+    int8_t app_tz, clock_tz;
 } settings_t;
 
-void storage_save_settings(uint8_t tint)
+void storage_save_settings(uint8_t tint, const calc_t *c)
 {
-    settings_t s = { STATE_MAGIC, 1, tint };
+    settings_t s;
+    s.magic = STATE_MAGIC;
+    s.version = 2;
+    s.tint = tint;
+    s.date_as_string = c->date_as_string;
+    s.epoch = c->epoch;
+    s.custom_epoch = c->custom_epoch;
+    s.app_tz = c->app_tz;
+    s.clock_tz = c->clock_tz;
     uint8_t h = ti_Open(SETTINGS_NAME, "w");
     if (!h)
         return;
@@ -130,15 +142,26 @@ void storage_save_settings(uint8_t tint)
     ti_Close(h);
 }
 
-uint8_t storage_load_settings(void)
+uint8_t storage_load_settings(calc_t *c)
 {
     settings_t s;
     uint8_t h = ti_Open(SETTINGS_NAME, "r");
     if (!h)
         return 0;
-    size_t n = ti_Read(&s, sizeof s, 1, h);
+    size_t n = ti_Read(&s, 1, sizeof s, h);
     ti_Close(h);
-    if (n != 1 || s.magic != STATE_MAGIC || s.version != 1)
+    if (n < 3 || s.magic != STATE_MAGIC)
         return 0;
+    if (s.version >= 2 && n >= sizeof s) {
+        c->date_as_string = s.date_as_string != 0;
+        if (s.epoch <= EPOCH_CUSTOM)
+            c->epoch = s.epoch;
+        if (s.custom_epoch.type == OBJ_DATE && dt_validate(&s.custom_epoch) == DT_OK)
+            c->custom_epoch = s.custom_epoch;
+        if (s.app_tz >= -95 && s.app_tz <= 95)
+            c->app_tz = s.app_tz;
+        if (s.clock_tz >= -95 && s.clock_tz <= 95)
+            c->clock_tz = s.clock_tz;
+    }
     return s.tint;
 }

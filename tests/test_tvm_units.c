@@ -1,7 +1,7 @@
 /* Tests for the TVM solver and unit conversions. Runs on a PC with
  * stand-ins for the calculator's number routines:
  *   gcc -Itests/mock -Isrc/core -o test_tvm tests/test_tvm_units.c \
- *       src/core/tvm.c src/core/mathx.c src/core/units.c src/core/units_data.c -lm
+ *       src/core/tvm.c src/core/mathx.c src/core/units.c tests/units_data.c -lm
  *   ./test_tvm
  */
 #include <stdio.h>
@@ -77,8 +77,8 @@ static void unit(const char *name, double v, int from, int to, double want)
 static int find_unit_f(const char *label, const char *factor)
 {
     for (int i = 0; i < UNIT_COUNT; i++)
-        if (strcmp(unit_table[i].label, label) == 0 &&
-            (!factor || strncmp(unit_table[i].factor, factor, strlen(factor)) == 0))
+        if (strcmp(unit_label((uint8_t)i), label) == 0 &&
+            (!factor || strncmp(unit_factor((uint8_t)i), factor, strlen(factor)) == 0))
             return i;
     printf("no unit %s\n", label);
     return 0;
@@ -87,7 +87,7 @@ static int find_unit_f(const char *label, const char *factor)
 static int find_unit(const char *label)
 {
     for (int i = 0; i < UNIT_COUNT; i++)
-        if (strcmp(unit_table[i].label, label) == 0) return i;
+        if (strcmp(unit_label((uint8_t)i), label) == 0) return i;
     printf("no unit %s\n", label);
     return 0;
 }

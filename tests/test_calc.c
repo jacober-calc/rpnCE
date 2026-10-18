@@ -2,13 +2,14 @@
  * Runs the real calc.c on a PC with stand-ins for the OS number routines:
  *   gcc -DRPNCE_HOST_TEST -Itests/mock -Isrc/core -o test_calc tests/test_calc.c src/core/calc.c \
  *       src/core/mathx.c src/core/stats.c src/core/tvm.c src/core/units.c \
- *       src/core/units_data.c src/core/base.c -lm && ./test_calc
+ *       tests/units_data.c src/core/base.c -lm && ./test_calc
  */
 #include <stdio.h>
 #include <string.h>
 #include <ti/real.h>
 #include <ti/error.h>
 #include "calc.h"
+#include "dateobj.h"
 
 real_t mock_fin[7];
 jmp_buf mock_jmp;
@@ -31,6 +32,13 @@ real_t round_significant(const real_t *v, int n)
     int e = (int)floor(log10(fabs(v->v)));
     return round_decimals(v, n - 1 - e);
 }
+
+/* a stand-in hardware clock */
+static int clk[6] = { 2026, 10, 18, 9, 30, 0 };
+bool sys_clock_read(int *y, int *mo, int *d, int *h, int *mi, int *s)
+{ *y = clk[0]; *mo = clk[1]; *d = clk[2]; *h = clk[3]; *mi = clk[4]; *s = clk[5]; return true; }
+void sys_clock_write(int y, int mo, int d, int h, int mi, int s)
+{ clk[0] = y; clk[1] = mo; clk[2] = d; clk[3] = h; clk[4] = mi; clk[5] = s; }
 
 static calc_t C;
 static int fails = 0;
@@ -252,6 +260,106 @@ int main(void)
     expect("CNTB 11 = 2", X, 2);
     num(32); cmd(CMD_BASE_RADIX, 10); num(32); cmd(CMD_SET_WORD_SIZE, 0);
     cmd(CMD_BASE_RADIX, 10);
+
+    /* ---- DATE objects through keystrokes ---- */
+    cmd(CMD_CLEAR_STACK, 0);
+    calc_execute(&C, CMD_DISP_FIX, 99);
+    /* 2ND { 2024 , 3 , 14 ENTER */
+    #define REC(...) do { const char *k_ = __VA_ARGS__; for (const char *p_ = k_; *p_; p_++) { \
+        if (*p_ == '{') cmd(CMD_RECORD_OPEN, 0); else if (*p_ == ',') cmd(CMD_EE, 0); \
+        else if (*p_ == '-') cmd(CMD_CHS, 0); else if (*p_ == '}') cmd(CMD_RECORD_CLOSE, 0); \
+        else cmd(CMD_DIGIT, (uint8_t)(*p_ - '0')); } } while (0)
+    #define XOBJ(name, want) do { calc_finish_entry(&C); char b_[40] = "(a number)"; \
+        if (obj_is(&C.stack[0])) { dt_obj_t o_ = obj_unpack(&C.stack[0]); dt_format(b_, &o_, false); } \
+        int ok_ = strcmp(b_, want) == 0; if (!ok_) fails++; \
+        printf("%s %-46s %s (want %s)\n", ok_ ? "ok  " : "FAIL", name, b_, want); } while (0)
+    REC("{2024,3,14"); cmd(CMD_ENTER, 0);
+    XOBJ("typed Date (no closing brace)", "D{2024,3,14}");
+    expect("ENTER copies the Date into Y", obj_is(&C.stack[1]), 1);
+    num(20); cmd(CMD_ADD, 0);
+    XOBJ("Date + 20 (the + key)", "D{2024,4,3}");
+    REC("{2024,12,25"); cmd(CMD_SWAP, 0); cmd(CMD_SUB, 0);
+    expect("Dec 25 - Apr 3 = 266 days", X, 266);
+    REC("{2024,2,30"); cmd(CMD_ENTER, 0);
+    expect_msg("Feb 30 keeps the entry open", "Err: Invalid");
+    expect("... still typing", C.editing, 1);
+    cmd(CMD_BACKSPACE, 0); cmd(CMD_BACKSPACE, 0); cmd(CMD_DIGIT, 2); cmd(CMD_DIGIT, 9);
+    cmd(CMD_ENTER, 0);
+    XOBJ("fixed to Feb 29 with DEL", "D{2024,2,29}");
+    cmd(CMD_CLEAR_STACK, 0);
+    REC("{2024,3,14,15,36,1,-7,0"); calc_finish_entry(&C);
+    XOBJ("ZonedDateTime with a negative field", "DZ{2024,3,14,15,36,1,-7,0}");
+    cmd(CMD_DATE_FN, DF_TO_ES);
+    expect(">ES = 1710455761 (RPN83P's example)", X, 1710455761.0);
+    cmd(CMD_DATE_FN, DF_ES_TO_DZ_APP);
+    XOBJ("ES>@ at app zone UTC", "DZ{2024,3,14,22,36,1,0,0}");
+    num(13); cmd(CMD_MUL, 0);
+    XOBJ("x key converts to UTC+13", "DZ{2024,3,15,11,36,1,13,0}");
+    cmd(CMD_RECIP, 0);
+    XOBJ("1/x is DCUT: TimeZone in X", "TZ{13,0}");
+    expect("... DateTime in Y", obj_is(&C.stack[1]), 1);
+    cmd(CMD_DATE_FN, DF_LINK);
+    XOBJ("DLNK puts them back together", "DZ{2024,3,15,11,36,1,13,0}");
+    cmd(CMD_SQRT, 0);
+    XOBJ("sqrt is DSHK", "DT{2024,3,15,11,36,1}");
+    cmd(CMD_SQUARE, 0);
+    XOBJ("x^2 is DEXD", "DZ{2024,3,15,11,36,1,0,0}");
+    cmd(CMD_DATE_FN, DF_DOW);
+    XOBJ("DOW", "DW{5}");
+    cmd(CMD_LN, 0);
+    expect_msg("LN of a DayOfWeek", "Err: Data Type");
+    cmd(CMD_CHS, 0);
+    expect_msg("CHS of an object", "Err: Data Type");
+
+    /* menu-assisted entry and tags */
+    cmd(CMD_CLEAR_STACK, 0);
+    cmd(CMD_RECORD_TAG, OBJ_TIME); REC("15,36,1"); calc_finish_entry(&C);
+    XOBJ("T{} menu key", "T{15,36,1}");
+    cmd(CMD_ALPHA_LETTER, 'D' - 'A'); cmd(CMD_ALPHA_LETTER, 'W' - 'A'); REC("{4"); calc_finish_entry(&C);
+    XOBJ("ALPHA D ALPHA W tag", "DW{4}");
+    num(1); cmd(CMD_ALPHA_LETTER, 'D' - 'A'); cmd(CMD_DIGIT, 3); cmd(CMD_ALPHA_LETTER, 'M' - 'A');
+    calc_finish_entry(&C);
+    XOBJ("compact duration 1D3M", "DR{1,0,3,0}");
+    cmd(CMD_RECORD_CLOSE, 0);
+    XOBJ("2ND } outside a record is DROP", "DW{4}");
+
+    /* registers hold objects; STO+ adds to them */
+    cmd(CMD_CLEAR_STACK, 0);
+    REC("{2024,3,14"); cmd(CMD_STO, 1);
+    num(10); cmd(CMD_STO_ADD, 1);
+    cmd(CMD_RCL, 1);
+    XOBJ("STO A, then STO+ 10 days", "D{2024,3,24}");
+    num(28); cmd(CMD_STO, REG_I); REC("{2024,3,14"); cmd(CMD_STO, REG_INDIRECT);
+    expect_msg("an object can't go in a stat register", "Err: Data Type");
+
+    /* guards */
+    cmd(CMD_STAT_PLUS, 0);
+    expect_msg("Sigma+ with a Date", "Err: Data Type");
+    cmd(CMD_UNIT, 0);
+    expect_msg("a unit on a Date", "Err: Data Type");
+    num(32); cmd(CMD_SET_WORD_SIZE, 0);
+    REC("{2024,3,14"); cmd(CMD_SET_STACK_SIZE, 0);
+    expect_msg("SSIZ with a Date", "Err: Data Type");
+    cmd(CMD_BASE_RADIX, 16);
+    num(5); cmd(CMD_ADD, 0);
+    XOBJ("in HEX, Date + 5 still adds days", "D{2024,3,19}");
+    cmd(CMD_BASE_RADIX, 10);
+
+    /* clock: the stand-in clock reads 2026-10-18 09:30:00 at UTC */
+    cmd(CMD_CLEAR_STACK, 0);
+    num(-7); cmd(CMD_DATE_FN, DF_SET_APP_TZ);
+    cmd(CMD_DATE_FN, DF_NOW_DZ);
+    XOBJ("NWDZ at app zone UTC-07:00", "DZ{2026,10,18,2,30,0,-7,0}");
+    cmd(CMD_DATE_FN, DF_NOW_DATE);
+    XOBJ("NOWD (local date)", "D{2026,10,18}");
+    REC("{2026,12,31,23,59,59,0,0"); cmd(CMD_DATE_FN, DF_SET_CLOCK);
+    expect("SETC wrote the clock", clk[0] == 2026 && clk[1] == 12 && clk[3] == 23, 1);
+
+    /* epochs */
+    cmd(CMD_DATE_FN, DF_EPOCH_NTP);
+    REC("{2024,3,14,15,36,1,-7,0"); cmd(CMD_DATE_FN, DF_TO_ES);
+    expect("NTP epoch seconds = 3919444561", X, 3919444561.0);
+    cmd(CMD_DATE_FN, DF_EPOCH_UNIX);
 
     printf("%d failures\n", fails);
     return fails != 0;

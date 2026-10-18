@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""Generates src/ui/menu_data.h and menu_data.c from menus/menus.txt
-(and any files it includes).
+"""Reads menus/menus.txt (and any files it includes) for tools/genres.py.
 
 Run from the project root:  python3 tools/genmenu.py
 """
@@ -218,4 +217,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # The menu tables are now built into the RPNCEres appvar by genres.py,
+    # which uses this file as a library.
+    import genres
+    genres.main()

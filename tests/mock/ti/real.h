@@ -4,8 +4,11 @@
 #define MOCK_TI_REAL_H
 #include <math.h>
 #include <stdlib.h>
-typedef struct { double v; } real_t;
-static inline real_t mk(double v) { real_t r = { v }; return r; }
+#include <stdint.h>
+/* The value is a double; the sign/exp/mant fields mirror the calculator's
+ * layout so DATE objects (which use them) can be tested too. */
+typedef struct { int8_t sign, exp; uint8_t mant[7]; double v; } real_t;
+static inline real_t mk(double v) { real_t r = { 0, 0, { 0 }, v }; return r; }
 static inline real_t os_Int24ToReal(int v) { return mk(v); }
 static inline real_t os_StrToReal(const char *s, char **e) { return mk(strtod(s, e)); }
 static inline int os_RealCompare(const real_t *a, const real_t *b) { return (a->v > b->v) - (a->v < b->v); }

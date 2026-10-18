@@ -13,6 +13,8 @@
 #include "tvm.h"
 #include "stats.h"
 #include "base.h"
+#include "datetime.h"
+#include "datefn.h"
 
 #define ENTRY_MAX 34      /* room for 32 binary digits */
 /* Stack: 4 levels like the HP-32SII, up to 12 with SSIZ. */
@@ -83,6 +85,12 @@ typedef enum {
     /* BASE: arg = radix, or base_op_t for CMD_BASE_OP */
     CMD_BASE_RADIX, CMD_BASE_OP, CMD_SET_WORD_SIZE, CMD_GET_WORD_SIZE,
     CMD_CLEAR_CARRY, CMD_SET_CARRY, CMD_GET_CARRY,
+    /* DATE: typing records, and the DATE menu functions */
+    CMD_RECORD_OPEN,    /* 2ND { */
+    CMD_RECORD_CLOSE,   /* 2ND }: closes a record being typed, else DROP */
+    CMD_RECORD_TAG,     /* arg = obj_type_t: D{} etc. from the menus */
+    CMD_ALPHA_LETTER,   /* arg = 0..25: ALPHA + key (type tags, HEX digits) */
+    CMD_DATE_FN,        /* arg = date_fn_t */
     /* random numbers */
     CMD_RAND,           /* push a random number, 0 <= r < 1 */
     CMD_SEED,           /* restart the generator from X */
@@ -125,6 +133,13 @@ typedef struct {
     tvm_settings_t tvm;
     stats_t stats;
     base_state_t base;
+
+    /* DATE settings */
+    bool date_as_string;        /* ".." mode: show objects as RFC 3339 strings */
+    uint8_t epoch;              /* EPOCH_* */
+    dt_obj_t custom_epoch;      /* a Date */
+    int8_t app_tz;              /* application time zone, quarter hours */
+    int8_t clock_tz;            /* time zone of the hardware clock */
     bool lift;                  /* stack lift enabled */
     bool degrees;               /* angle mode: true = DEG, false = RAD */
     uint8_t disp_style;         /* DISP_FIX, DISP_SCI, DISP_ENG */

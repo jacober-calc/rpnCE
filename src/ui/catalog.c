@@ -2,6 +2,7 @@
 
 #include "catalog.h"
 #include "menu_data.h"      /* MSYM_SIGMA, MSYM_SQ */
+#include "../core/dateobj.h"
 
 /* Names of the stat registers 028-040. */
 static const char *const stat_names[REG_STAT_LAST - REG_STAT_FIRST + 1] = {
@@ -12,6 +13,8 @@ static const char *const stat_names[REG_STAT_LAST - REG_STAT_FIRST + 1] = {
 
 static bool is_zero_real(const real_t *v)
 {
+    if (obj_is(v))
+        return false;                       /* a DATE object is never "zero" */
     real_t zero = os_Int24ToReal(0);
     return os_RealCompare(v, &zero) == 0;
 }

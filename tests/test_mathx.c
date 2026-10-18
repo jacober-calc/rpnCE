@@ -25,7 +25,8 @@ static void rel(const char *name, double got, double want, double tol)
     if (!ok) fails++;
     printf("%s %-30s %.15g (want %.15g)\n", ok ? "ok  " : "FAIL", name, got, want);
 }
-#define F(fn, x) (fn(&(real_t){ x }).v)
+static real_t arg_;
+#define F(fn, x) (arg_ = mk(x), fn(&arg_).v)
 
 int main(void)
 {

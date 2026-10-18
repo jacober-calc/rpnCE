@@ -8,6 +8,10 @@
 
 void display_open(void);
 
+/* A full-screen notice (missing resources, say): a title and a detail line,
+ * with "Press any key." below. */
+void display_problem(const char *title, const char *detail);
+
 /* Color presets: LCD, LCD+ (stronger, for real screens), GRAY, DARK. */
 #define TINT_COUNT 4
 void display_set_tint(uint8_t tint);

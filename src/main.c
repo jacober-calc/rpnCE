@@ -14,6 +14,8 @@
 #include "sys/storage.h"
 #include "ui/actions.h"
 #include "ui/catalog.h"
+#include "ui/res.h"
+#include "core/version.h"
 #include "ui/display.h"
 #include "ui/keys.h"
 #include "ui/menu.h"
@@ -105,13 +107,25 @@ int main(void)
     bool on_was_down = false;
     clock_t last_key = clock();
 
+    /* The menu and unit tables live in the RPNCEres appvar. Without the
+     * right one there's nothing to run, so say what's needed and stop. */
+    if (!res_open()) {
+        display_open();
+        display_problem(res_problem(),
+                        "Send RPNCEres.8xv with RPNCE " RPNCE_VERSION ".");
+        while (!os_GetCSC())
+            ;
+        display_close();
+        return 1;
+    }
+
     calc_init(&calc);
     menu_home(&menu);
     calc_seed_random(rtc_Time());   /* different RAND results each run */
     storage_load(&calc);
     kb_DisableOnLatch();
     display_open();
-    tint = storage_load_settings();
+    tint = storage_load_settings(&calc);
     if (tint >= TINT_COUNT)
         tint = 0;
     display_set_tint(tint);
@@ -200,9 +214,12 @@ int main(void)
         redraw();
     }
 
-    storage_save(&calc);
-    storage_save_settings(tint);
+    /* Hand the screen back to the OS before writing to archive: archiving
+     * can trigger a garbage collection, whose prompt needs the OS screen
+     * (and which moves the RPNCEres data we no longer need by then). */
     os_ResetFlag(ON, INTERRUPT);
     display_close();
+    storage_save(&calc);
+    storage_save_settings(tint, &calc);
     return 0;
 }

@@ -1,8 +1,117 @@
 #include "actions.h"
-#include "unit_map.h"
+#include "res.h"
 #include "../core/format.h"
 
 static calc_cmd_t simple_action(menu_id_t id);
+
+/* The DATE function for a DATE menu item (date_fn_t), or -1. */
+static int date_fn_for(menu_id_t id)
+{
+    switch (id) {
+        case MID_DATE_TO_EPOCH_DAYS: return DF_TO_ED;
+        case MID_EPOCH_DAYS_TO_DATE: return DF_ED_TO_D;
+        case MID_DATE_TO_EPOCH_SECONDS: return DF_TO_ES;
+        case MID_EPOCH_SECONDS_TO_DATE: return DF_ES_TO_D;
+        case MID_IS_DATE_LEAP: return DF_LEAP;
+        case MID_DATE_TO_DAY_OF_WEEK: return DF_DOW;
+        case MID_DATE_CONVERT_TO_TIME_ZONE: return DF_CVTZ;
+        case MID_DATE_EXTRACT_YEAR: return DF_YEAR;
+        case MID_DATE_EXTRACT_MONTH: return DF_MONTH;
+        case MID_DATE_EXTRACT_DAY: return DF_DAY;
+        case MID_DATE_SHRINK_TO_NOTHING: return DF_SHRINK;
+        case MID_DATE_EXTEND_TO_DATE_TIME: return DF_EXTEND;
+        case MID_DATE_CUT_TO_NOTHING: return DF_CUT;
+        case MID_DATE_LINK_TO_DATE_TIME: return DF_LINK;
+        case MID_TIME_TO_SECONDS: return DF_TIME_TO_S;
+        case MID_SECONDS_TO_TIME: return DF_S_TO_TIME;
+        case MID_TIME_EXTRACT_HOUR: return DF_HOUR;
+        case MID_TIME_EXTRACT_MINUTE: return DF_MINUTE;
+        case MID_TIME_EXTRACT_SECOND: return DF_SECOND;
+        case MID_DATE_TIME_TO_EPOCH_DAYS: return DF_TO_ED;
+        case MID_EPOCH_DAYS_TO_DATE_TIME: return DF_ED_TO_DT;
+        case MID_DATE_TIME_TO_EPOCH_SECONDS: return DF_TO_ES;
+        case MID_EPOCH_SECONDS_TO_DATE_TIME: return DF_ES_TO_DT;
+        case MID_IS_DATE_TIME_LEAP: return DF_LEAP;
+        case MID_DATE_TIME_TO_DAY_OF_WEEK: return DF_DOW;
+        case MID_DATE_TIME_CONVERT_TO_TIME_ZONE: return DF_CVTZ;
+        case MID_DATE_TIME_EXTRACT_DATE: return DF_GET_DATE;
+        case MID_DATE_TIME_EXTRACT_TIME: return DF_GET_TIME;
+        case MID_DATE_TIME_SHRINK_TO_DATE: return DF_SHRINK;
+        case MID_DATE_TIME_EXTEND_TO_OFFSET_DATE_TIME: return DF_EXTEND;
+        case MID_DATE_TIME_CUT_TO_DATE: return DF_CUT;
+        case MID_DATE_TIME_LINK_TO_OFFSET_DATE_TIME: return DF_LINK;
+        case MID_OFFSET_TO_HOURS: return DF_TZ_TO_HR;
+        case MID_HOURS_TO_OFFSET: return DF_HR_TO_TZ;
+        case MID_OFFSET_EXTRACT_HOUR: return DF_TZ_HOUR;
+        case MID_OFFSET_EXTRACT_MINUTE: return DF_TZ_MINUTE;
+        case MID_OFFSET_DATE_TIME_TO_EPOCH_DAYS: return DF_TO_ED;
+        case MID_EPOCH_DAYS_TO_OFFSET_DATE_TIME: return DF_ED_TO_DZ;
+        case MID_OFFSET_DATE_TIME_TO_EPOCH_SECONDS: return DF_TO_ES;
+        case MID_EPOCH_SECONDS_TO_OFFSET_DATE_TIME_UTC: return DF_ES_TO_DZ;
+        case MID_EPOCH_SECONDS_TO_OFFSET_DATE_TIME_APP: return DF_ES_TO_DZ_APP;
+        case MID_IS_OFFSET_DATE_TIME_LEAP: return DF_LEAP;
+        case MID_OFFSET_DATE_TIME_TO_DAY_OF_WEEK: return DF_DOW;
+        case MID_OFFSET_DATE_TIME_CONVERT_TO_TIME_ZONE: return DF_CVTZ;
+        case MID_OFFSET_DATE_TIME_EXTRACT_DATE: return DF_GET_DATE;
+        case MID_OFFSET_DATE_TIME_EXTRACT_TIME: return DF_GET_TIME;
+        case MID_OFFSET_DATE_TIME_EXTRACT_DATE_TIME: return DF_GET_DT;
+        case MID_OFFSET_DATE_TIME_EXTRACT_OFFSET: return DF_GET_TZ;
+        case MID_OFFSET_DATE_TIME_SHRINK_TO_DATE_TIME: return DF_SHRINK;
+        case MID_OFFSET_DATE_TIME_EXTEND_TO_NOTHING: return DF_EXTEND;
+        case MID_OFFSET_DATE_TIME_CUT_TO_DATE_TIME: return DF_CUT;
+        case MID_OFFSET_DATE_TIME_LINK_TO_NOTHING: return DF_LINK;
+        case MID_DAYS_TO_DURATION: return DF_DAYS_TO_DR;
+        case MID_HOURS_TO_DURATION: return DF_HOURS_TO_DR;
+        case MID_MINUTES_TO_DURATION: return DF_MINUTES_TO_DR;
+        case MID_SECONDS_TO_DURATION: return DF_SECONDS_TO_DR;
+        case MID_DURATION_TO_SECONDS: return DF_DR_TO_S;
+        case MID_DURATION_EXTRACT_DAY: return DF_DAY;
+        case MID_DURATION_EXTRACT_HOUR: return DF_HOUR;
+        case MID_DURATION_EXTRACT_MINUTE: return DF_MINUTE;
+        case MID_DURATION_EXTRACT_SECOND: return DF_SECOND;
+        case MID_DAY_OF_WEEK_TO_ISO_DOW_NUMBER: return DF_DW_TO_ISO;
+        case MID_ISO_DOW_NUMBER_TO_DAY_OF_WEEK: return DF_ISO_TO_DW;
+        case MID_DAY_OF_WEEK_TO_UNIX_DOW_NUMBER: return DF_DW_TO_UNIX;
+        case MID_UNIX_DOW_NUMBER_TO_DAY_OF_WEEK: return DF_UNIX_TO_DW;
+        case MID_EPOCH_UNIX: return DF_EPOCH_UNIX;
+        case MID_EPOCH_NTP: return DF_EPOCH_NTP;
+        case MID_EPOCH_GPS: return DF_EPOCH_GPS;
+        case MID_EPOCH_TIOS: return DF_EPOCH_TIOS;
+        case MID_EPOCH_Y2K: return DF_EPOCH_Y2K;
+        case MID_EPOCH_CUSTOM: return DF_EPOCH_CUSTOM;
+        case MID_EPOCH_SET_CUSTOM: return DF_EPOCH_SET_CUSTOM;
+        case MID_EPOCH_GET_CUSTOM: return DF_EPOCH_GET_CUSTOM;
+        case MID_GET_NOW: return DF_NOW;
+        case MID_GET_NOW_DATE: return DF_NOW_DATE;
+        case MID_GET_NOW_TIME: return DF_NOW_TIME;
+        case MID_GET_NOW_OFFSET_DATE_TIME: return DF_NOW_DZ;
+        case MID_GET_NOW_OFFSET_DATE_TIME_UTC: return DF_NOW_DZ_UTC;
+        case MID_SET_APP_TIME_ZONE: return DF_SET_APP_TZ;
+        case MID_GET_APP_TIME_ZONE: return DF_GET_APP_TZ;
+        case MID_SET_CLOCK_TIME_ZONE: return DF_SET_CLOCK_TZ;
+        case MID_GET_CLOCK_TIME_ZONE: return DF_GET_CLOCK_TZ;
+        case MID_SET_CLOCK: return DF_SET_CLOCK;
+        case MID_FORMAT_RECORD_RAW: return DF_FORMAT_RAW;
+        case MID_FORMAT_RECORD_STRING: return DF_FORMAT_STRING;
+        default: return -1;
+    }
+}
+
+/* The record type a DATE menu's first key starts (D{}, T{}, ...), or -1. */
+static int record_tag_for(menu_id_t id)
+{
+    switch (id) {
+        case MID_DATE_CREATE: return OBJ_DATE;
+        case MID_TIME_CREATE: return OBJ_TIME;
+        case MID_DATE_TIME_CREATE: return OBJ_DATETIME;
+        case MID_OFFSET_CREATE: return OBJ_TZ;
+        case MID_OFFSET_DATE_TIME_CREATE: return OBJ_DZ;
+        case MID_DURATION_CREATE: return OBJ_DR;
+        case MID_DAY_OF_WEEK_CREATE: return OBJ_DW;
+        default: return -1;
+    }
+}
+
 
 /* The base_op_t for a BASE menu item, or -1. */
 static int base_op_for(menu_id_t id)
@@ -87,6 +196,17 @@ calc_cmd_t action_for(menu_id_t id, bool shifted, uint8_t *arg)
         case MID_OCT: *arg = 8;  return CMD_BASE_RADIX;
         case MID_BIN: *arg = 2;  return CMD_BASE_RADIX;
         default:           break;
+    }
+
+    int df = date_fn_for(id);
+    if (df >= 0) {
+        *arg = (uint8_t)df;
+        return CMD_DATE_FN;
+    }
+    int tag = record_tag_for(id);
+    if (tag >= 0) {
+        *arg = (uint8_t)tag;
+        return CMD_RECORD_TAG;
     }
 
     int op = base_op_for(id);
@@ -213,6 +333,14 @@ bool action_is_active(const calc_t *c, menu_id_t id)
     switch (id) {
         case MID_RAD: return !c->degrees;
         case MID_DEG: return c->degrees;
+        case MID_FORMAT_RECORD_RAW:    return !c->date_as_string;
+        case MID_FORMAT_RECORD_STRING: return c->date_as_string;
+        case MID_EPOCH_UNIX:   return c->epoch == EPOCH_UNIX;
+        case MID_EPOCH_NTP:    return c->epoch == EPOCH_NTP;
+        case MID_EPOCH_GPS:    return c->epoch == EPOCH_GPS;
+        case MID_EPOCH_TIOS:   return c->epoch == EPOCH_TIOS;
+        case MID_EPOCH_Y2K:    return c->epoch == EPOCH_Y2K;
+        case MID_EPOCH_CUSTOM: return c->epoch == EPOCH_CUSTOM;
         case MID_DEC: return c->base.radix == 10;
         case MID_HEX: return c->base.radix == 16;
         case MID_OCT: return c->base.radix == 8;

@@ -1,4 +1,5 @@
 #include "menu.h"
+#include "res.h"
 
 void menu_home(menu_t *m)
 {
@@ -14,11 +15,11 @@ void menu_jump(menu_t *m, uint8_t group)
     uint8_t path_group[MENU_MAX_DEPTH], path_row[MENU_MAX_DEPTH];
     uint8_t n = 0;
     uint8_t g = group;
-    while (menu_parent[g] != 0xFF && n < MENU_MAX_DEPTH) {
-        path_group[n] = menu_parent[g];
-        path_row[n] = menu_parent_row[g];
+    while (menu_parent_of(g) != 0xFF && n < MENU_MAX_DEPTH) {
+        path_group[n] = menu_parent_of(g);
+        path_row[n] = menu_parent_row_of(g);
         n++;
-        g = menu_parent[g];
+        g = menu_parent_of(g);
     }
 
     m->depth = n;
@@ -32,13 +33,13 @@ void menu_jump(menu_t *m, uint8_t group)
 
 void menu_row_up(menu_t *m)
 {
-    uint8_t rows = menu_groups[m->group].rows;
+    uint8_t rows = menu_group(m->group)->rows;
     m->row = (m->row == 0) ? rows - 1 : m->row - 1;
 }
 
 void menu_row_down(menu_t *m)
 {
-    uint8_t rows = menu_groups[m->group].rows;
+    uint8_t rows = menu_group(m->group)->rows;
     m->row = (m->row + 1 >= rows) ? 0 : m->row + 1;
 }
 
@@ -53,8 +54,8 @@ void menu_back(menu_t *m)
 
 const menu_node_t *menu_slot(const menu_t *m, uint8_t slot)
 {
-    const menu_group_t *g = &menu_groups[m->group];
-    return &menu_nodes[g->first + m->row * 5 + slot];
+    const menu_group_t *g = menu_group(m->group);
+    return menu_node((uint16_t)(g->first + m->row * 5 + slot));
 }
 
 const menu_node_t *menu_press(menu_t *m, uint8_t slot)

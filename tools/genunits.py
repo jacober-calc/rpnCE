@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generates the unit conversion tables from exact unit definitions.
+"""Exact unit definitions, used by tools/genres.py to build the unit tables.
 
     python3 tools/genunits.py
 
@@ -240,4 +240,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # The unit tables are now built into the RPNCEres appvar by genres.py,
+    # which uses this file as a library.
+    import genres
+    genres.main()

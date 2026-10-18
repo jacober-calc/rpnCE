@@ -24,10 +24,13 @@ run mathx    $M tests/test_mathx.c src/core/mathx.c
 run base     $M tests/test_base.c src/core/base.c
 run stats    $M tests/test_stats.c src/core/stats.c src/core/mathx.c
 run tvm      $M tests/test_tvm_units.c src/core/tvm.c src/core/mathx.c \
-             src/core/units.c src/core/units_data.c
+             src/core/units.c tests/units_data.c
+run datetime -Isrc/core tests/test_datetime.c src/core/datetime.c
+run res      -Itests/mock_fileioc -Itests/mock -Isrc/ui -Isrc/core tests/test_res.c \
+             src/ui/res.c
 run core     -DRPNCE_HOST_TEST $M tests/test_calc.c src/core/calc.c \
              src/core/mathx.c src/core/stats.c src/core/tvm.c src/core/units.c \
-             src/core/units_data.c src/core/base.c
+             tests/units_data.c src/core/base.c src/core/datetime.c
 
 rm -rf "$OUT"
 [ $fail -eq 0 ] && echo "all tests passed" || { echo "some tests failed"; exit 1; }
