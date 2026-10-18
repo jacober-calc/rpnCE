@@ -21,6 +21,7 @@
 - MATH-028: Y=-16, X=1.5 -> 6.3496 (pass; reciprocal exponent 2/3).
 - MATH-029: Y=-32, X=2.5 -> 4 (pass; reciprocal exponent 2/5).
 - MATH-030: Y=-16, X=0.8 -> 1.3066 rather than domain error (fail; reciprocal exponent 5/4 has even denominator). Stack not inspected. The negative-base domain defect extends to fractional indices, not just even integer indices.
+- MATH-031: Y=-16, X=-0.8 -> -0.0221 rather than domain error (fail; reciprocal exponent -5/4 has even denominator). Stack not inspected. This confirms the fractional-index domain failure for negative as well as positive indices.
 - Comparison: DM32 reports `INVALID y^x` for the invalid negative-even-root case.
 
 ## Mathematical expectation
@@ -89,4 +90,4 @@ This PR records the verified defect and actionable implementation/test specifica
 
 ## Additional fractional-index regression requirement (MATH-030)
 
-For a negative radicand, domain validation must account for the reduced rational form of the reciprocal exponent, rather than simply classifying the index as integer/noninteger. Reject reciprocal powers with even denominators (MATH-030, index 0.8 -> 5/4), while preserving valid cases with odd denominators (MATH-028 index 1.5 -> 2/3 and MATH-029 index 2.5 -> 2/5) and integer reciprocal powers (MATH-027 index 0.5 -> 2). Floating-point/rational classification requires careful tolerance and range handling; do not implement a blanket negative-radicand guard. Add corresponding hardware and host regression tests before accepting the eventual fix.
+For a negative radicand, domain validation must account for the reduced rational form of the reciprocal exponent, rather than simply classifying the index as integer/noninteger. Reject reciprocal powers with even denominators (MATH-030, index 0.8 -> 5/4; MATH-031, index -0.8 -> -5/4), while preserving valid cases with odd denominators (MATH-028 index 1.5 -> 2/3 and MATH-029 index 2.5 -> 2/5) and integer reciprocal powers (MATH-027 index 0.5 -> 2). Floating-point/rational classification requires careful tolerance and range handling; do not implement a blanket negative-radicand guard. Add corresponding hardware and host regression tests before accepting the eventual fix.
