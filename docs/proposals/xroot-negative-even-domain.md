@@ -99,3 +99,5 @@ For a negative radicand, domain validation must account for the reduced rational
 - Add both cases to the eventual host and hardware regression tests, checking the error and full stack preservation for MATH-090 and normal result/stack drop for MATH-091. The exact cause of the unexpected 2.1213 remains undetermined.
 
 - MATH-092 PASS: With Y=-243 and X=5, XROOT_Y returned X=-3 and Y=0 with no error and normal binary stack drop. Include this valid negative odd-index case in eventual host and hardware regression tests to guard against overbroad domain rejection.
+
+- MATH-093 FAIL: With Y=-64 and X=6, XROOT_Y returned 1.7321 instead of Err: Domain. Afterward X=1.7321 and Y=0, with an unexpected binary stack drop. This extends the reproduced invalid negative even-root behaviour to sixth roots (in addition to second and fourth roots). Add host/device regression asserting domain error and preservation of operands, deeper stack, and LASTX. The source of 1.7321 is not established.
