@@ -1,4 +1,19 @@
+#include <string.h>
 #include "keys.h"
+#include "menu_data.h"
+
+/* The five keys under the menu row: Y= WINDOW ZOOM TRACE GRAPH. */
+static int softkey_of(sk_key_t key)
+{
+    switch (key) {
+        case sk_Yequ:   return 0;
+        case sk_Window: return 1;
+        case sk_Zoom:   return 2;
+        case sk_Trace:  return 3;
+        case sk_Graph:  return 4;
+        default:        return -1;
+    }
+}
 
 static int digit_of(sk_key_t key)
 {
@@ -9,6 +24,188 @@ static int digit_of(sk_key_t key)
         case sk_9: return 9;
         default:   return -1;
     }
+}
+
+/* The green ALPHA letters printed above the CE keys. */
+static int letter_index(sk_key_t key);
+
+/* The register named by a key in a STO/RCL/x<> prompt: its green ALPHA
+ * letter (A = 1 ... Z = 26), or -1. */
+static int letter_of(sk_key_t key)
+{
+    int i = letter_index(key);
+    return i < 0 ? -1 : i + 1;
+}
+
+static int letter_index(sk_key_t key)
+{
+    switch (key) {
+        case sk_Math:   return 0;   /* A */
+        case sk_Apps:   return 1;   /* B */
+        case sk_Prgm:   return 2;   /* C */
+        case sk_Recip:  return 3;   /* D */
+        case sk_Sin:    return 4;   /* E */
+        case sk_Cos:    return 5;   /* F */
+        case sk_Tan:    return 6;   /* G */
+        case sk_Power:  return 7;   /* H */
+        case sk_Square: return 8;   /* I */
+        case sk_Comma:  return 9;   /* J */
+        case sk_LParen: return 10;  /* K */
+        case sk_RParen: return 11;  /* L */
+        case sk_Div:    return 12;  /* M */
+        case sk_Log:    return 13;  /* N */
+        case sk_7:      return 14;  /* O */
+        case sk_8:      return 15;  /* P */
+        case sk_9:      return 16;  /* Q */
+        case sk_Mul:    return 17;  /* R */
+        case sk_Ln:     return 18;  /* S */
+        case sk_4:      return 19;  /* T */
+        case sk_5:      return 20;  /* U */
+        case sk_6:      return 21;  /* V */
+        case sk_Sub:    return 22;  /* W */
+        case sk_Store:  return 23;  /* X */
+        case sk_1:      return 24;  /* Y */
+        case sk_2:      return 25;  /* Z */
+        default:        return -1;
+    }
+}
+
+static uint8_t op_of(sk_key_t key)
+{
+    switch (key) {
+        case sk_Add: return 1;
+        case sk_Sub: return 2;
+        case sk_Mul: return 3;
+        case sk_Div: return 4;
+        default:     return 0;
+    }
+}
+
+static void update_prompt_text(keys_t *k)
+{
+    static const char ops[] = { 0, '+', '-', MSYM_TIMES, '/' };
+    static const char names[][5] = { "", "STO", "RCL", "X<>", "FIX", "SCI", "ENG",
+                                     "RNDN", "RNDG" };
+    char *p = k->prompt_text;
+    strcpy(p, names[k->prompt]);
+    p += strlen(p);
+    if (k->prompt_op)
+        *p++ = ops[k->prompt_op];
+    *p++ = ' ';
+    if (k->prompt >= PROMPT_FIX) {
+        /* two digits, RPN83P style: "FIX __", then "FIX 4_" */
+        *p++ = k->prompt_count ? (char)('0' + k->prompt_first) : '_';
+        *p++ = '_';
+    } else {
+        *p++ = '_';
+    }
+    *p = '\0';
+}
+
+void keys_open_prompt(keys_t *k, prompt_kind_t kind)
+{
+    k->prompt = kind;
+    k->prompt_op = 0;
+    k->prompt_alpha = false;
+    k->prompt_second = false;
+    k->prompt_count = 0;
+    update_prompt_text(k);
+}
+
+bool keys_cancel_prompt(keys_t *k)
+{
+    bool was_open = k->prompt != PROMPT_NONE;
+    k->prompt = PROMPT_NONE;
+    return was_open;
+}
+
+const char *keys_prompt_text(const keys_t *k)
+{
+    return k->prompt == PROMPT_NONE ? NULL : k->prompt_text;
+}
+
+bool keys_prompt_lifts(const keys_t *k)
+{
+    return k->prompt == PROMPT_RCL && k->prompt_op == 0;
+}
+
+/* While a STO/RCL prompt is open: + - x / pick the arithmetic (first key
+ * only), letter keys pick the variable, CLEAR/DEL cancel. Once an operation
+ * is chosen, or after ALPHA, the + - x / keys are their letters (W, R, M). */
+static event_t prompt_key(keys_t *k, sk_key_t key)
+{
+    event_t ev = { EV_REDRAW, CMD_NONE, 0, false };
+
+    if (key == sk_Clear || key == sk_Del) {
+        k->prompt = PROMPT_NONE;
+        return ev;
+    }
+    /* FIX / SCI / ENG / RNDN / RNDG: two digits (00-99), or one digit then ENTER.
+     * 10 or more means as many digits as needed (shown as FIX-). */
+    if (k->prompt >= PROMPT_FIX) {
+        int d = digit_of(key);
+        uint8_t value;
+        if (d >= 0 && k->prompt_count == 0) {
+            k->prompt_first = (uint8_t)d;
+            k->prompt_count = 1;
+            update_prompt_text(k);
+            return ev;
+        } else if (d >= 0) {
+            value = (uint8_t)(k->prompt_first * 10 + d);
+        } else if (key == sk_Enter && k->prompt_count == 1) {
+            value = k->prompt_first;
+        } else {
+            ev.kind = EV_NONE;
+            return ev;
+        }
+        ev.kind = EV_CMD;
+        static const calc_cmd_t cmds[] = { CMD_DISP_FIX, CMD_DISP_SCI, CMD_DISP_ENG,
+                                           CMD_ROUND_N, CMD_ROUND_G };
+        ev.cmd = cmds[k->prompt - PROMPT_FIX];
+        ev.arg = value;
+        k->prompt = PROMPT_NONE;
+        return ev;
+    }
+
+    if (key == sk_Alpha) {
+        k->prompt_alpha = true;
+        return ev;
+    }
+    if (key == sk_2nd) {
+        k->prompt_second = !k->prompt_second;
+        return ev;
+    }
+
+    /* + - x / pick register arithmetic (STO and RCL only, first key only) */
+    uint8_t op = op_of(key);
+    if (op && !k->prompt_op && !k->prompt_alpha && k->prompt != PROMPT_XCH) {
+        k->prompt_op = op;
+        update_prompt_text(k);
+        return ev;
+    }
+
+    /* the register: a letter A-Z, . for i, or 2ND . for (i) */
+    int v;
+    if (key == sk_DecPnt)
+        v = k->prompt_second ? REG_INDIRECT : REG_I;
+    else
+        v = letter_of(key);
+    k->prompt_second = false;
+    if (v < 0) {
+        ev.kind = EV_NONE;
+        return ev;
+    }
+
+    ev.kind = EV_CMD;
+    if (k->prompt == PROMPT_XCH) {
+        ev.cmd = CMD_XCH;
+    } else {
+        calc_cmd_t base = (k->prompt == PROMPT_STO) ? CMD_STO : CMD_RCL;
+        ev.cmd = (calc_cmd_t)(base + k->prompt_op);
+    }
+    ev.arg = (uint8_t)v;
+    k->prompt = PROMPT_NONE;
+    return ev;
 }
 
 static calc_cmd_t second_cmd(sk_key_t key)
@@ -24,6 +221,9 @@ static calc_cmd_t second_cmd(sk_key_t key)
         case sk_Div:    return CMD_E;
         case sk_Comma:  return CMD_EE;
         case sk_Chs:    return CMD_LASTX;                 /* ANS */
+        case sk_LParen: return CMD_ROLL_UP;               /* { */
+        case sk_RParen: return CMD_DROP;                  /* } */
+        case sk_Del:    return CMD_ENTER;                 /* INS: DUP */
         case sk_Enter:  return CMD_SHOW;                  /* ENTRY */
         default:        return CMD_NONE;
     }
@@ -33,6 +233,7 @@ static calc_cmd_t plain_cmd(sk_key_t key)
 {
     switch (key) {
         case sk_DecPnt: return CMD_DOT;
+        case sk_Comma:  return CMD_EE;
         case sk_Chs:    return CMD_CHS;
         case sk_Del:    return CMD_BACKSPACE;
         case sk_Clear:  return CMD_CLEAR;
@@ -57,15 +258,52 @@ static calc_cmd_t plain_cmd(sk_key_t key)
 
 event_t keys_translate(keys_t *k, sk_key_t key)
 {
-    event_t ev = { EV_NONE, CMD_NONE, 0 };
+    event_t ev = { EV_NONE, CMD_NONE, 0, false };
+
+    if (k->prompt != PROMPT_NONE)
+        return prompt_key(k, key);
+
+    if (key == sk_Alpha) {
+        k->alpha = !k->alpha;
+        k->second = false;
+        ev.kind = EV_REDRAW;
+        return ev;
+    }
+    if (k->alpha) {
+        /* ALPHA + a key with a green A-F: a HEX digit (the core ignores it
+         * in other bases). Any other key just cancels ALPHA. */
+        k->alpha = false;
+        int idx = letter_index(key);
+        if (idx >= 0 && idx < 6) {
+            ev.kind = EV_CMD;
+            ev.cmd = CMD_DIGIT;
+            ev.arg = (uint8_t)(10 + idx);
+            return ev;
+        }
+    }
 
     if (key == sk_2nd) {
         k->second = !k->second;
+        ev.kind = EV_REDRAW;
         return ev;
     }
 
     bool second = k->second;
     k->second = false;
+
+    if (key == sk_Store) {
+        keys_open_prompt(k, second ? PROMPT_RCL : PROMPT_STO);
+        ev.kind = EV_REDRAW;
+        return ev;
+    }
+
+    int slot = softkey_of(key);
+    if (slot >= 0) {
+        ev.kind = EV_SOFTKEY;
+        ev.arg = (uint8_t)slot;
+        ev.shifted = second;            /* 2ND + menu key: recall (TVM) */
+        return ev;
+    }
 
     if (second) {
         if (key == sk_Mode) {
@@ -79,14 +317,13 @@ event_t keys_translate(keys_t *k, sk_key_t key)
     }
 
     switch (key) {
-        case sk_Yequ:   ev.kind = EV_SOFTKEY; ev.arg = 0; return ev;
-        case sk_Window: ev.kind = EV_SOFTKEY; ev.arg = 1; return ev;
-        case sk_Zoom:   ev.kind = EV_SOFTKEY; ev.arg = 2; return ev;
-        case sk_Trace:  ev.kind = EV_SOFTKEY; ev.arg = 3; return ev;
-        case sk_Graph:  ev.kind = EV_SOFTKEY; ev.arg = 4; return ev;
         case sk_Up:     ev.kind = EV_ROW_UP; return ev;
+        case sk_Left:   ev.kind = EV_SCROLL_LEFT; return ev;
+        case sk_Right:  ev.kind = EV_SCROLL_RIGHT; return ev;
+        case sk_Vars:   ev.kind = EV_VARS; return ev;
         case sk_Down:   ev.kind = EV_ROW_DOWN; return ev;
-        case sk_Math:   ev.kind = EV_HOME; return ev;
+        case sk_Math:   ev.kind = EV_MENU; ev.arg = MENU_GROUP_HOME; return ev;
+        case sk_Mode:   ev.kind = EV_MENU; ev.arg = MENU_GROUP_MODE; return ev;
         default:        break;
     }
 

@@ -142,16 +142,16 @@ const menu_node_t menu_nodes[MENU_NODE_COUNT] = {
     { "", 0, MID_NONE, MENU_BLANK, 0 },
     { "SSIZ", 0, MID_SET_STACK_SIZE, MENU_ITEM, 0 },
     { "SSZ?", 0, MID_GET_STACK_SIZE, MENU_ITEM, 0 },
-    { ",EE", ",EE\x07", MID_COMMA_EENORMAL, MENU_ALT, 0 },
-    { "EE,", "EE,\x07", MID_COMMA_EESWAPPED, MENU_ALT, 0 },
-    { "", 0, MID_NONE, MENU_BLANK, 0 },
-    { "(..)", "(..)\x07", MID_FORMAT_RECORD_RAW, MENU_ALT, 0 },
-    { "'..'", "'..'\x07", MID_FORMAT_RECORD_STRING, MENU_ALT, 0 },
     { "DUP", 0, MID_STACK_DUP, MENU_ITEM, 0 },
     { "R\x0a", 0, MID_STACK_ROLL_UP, MENU_ITEM, 0 },
     { "R\x0b", 0, MID_STACK_ROLL_DOWN, MENU_ITEM, 0 },
     { "DROP", 0, MID_STACK_DROP, MENU_ITEM, 0 },
     { "X\x0c\x06Y", 0, MID_STACK_EXCHANGE_XY, MENU_ITEM, 0 },
+    { "X<>", 0, MID_STACK_EXCHANGE_REG, MENU_ITEM, 0 },
+    { "", 0, MID_NONE, MENU_BLANK, 0 },
+    { "", 0, MID_NONE, MENU_BLANK, 0 },
+    { "", 0, MID_NONE, MENU_BLANK, 0 },
+    { "", 0, MID_NONE, MENU_BLANK, 0 },
     { "UFCN", 0, MID_UNIT_FUNCTIONS, MENU_GROUP, 22 },
     { "LENG", 0, MID_UNIT_LENGTH, MENU_GROUP, 23 },
     { "AREA", 0, MID_UNIT_AREA, MENU_GROUP, 24 },
@@ -580,7 +580,7 @@ const menu_node_t menu_nodes[MENU_NODE_COUNT] = {
 };
 
 const menu_group_t menu_groups[MENU_GROUP_COUNT] = {
-    { "root", 0, 3 },
+    { "HOME", 0, 3 },
     { "MATH", 15, 2 },
     { "NUM", 25, 4 },
     { "PROB", 45, 1 },
@@ -591,8 +591,8 @@ const menu_group_t menu_groups[MENU_GROUP_COUNT] = {
     { "CONV", 90, 2 },
     { "TVM", 100, 3 },
     { "CLR", 115, 2 },
-    { "MODE", 125, 4 },
-    { "STK", 145, 1 },
+    { "MODE", 125, 3 },
+    { "STK", 140, 2 },
     { "UNIT", 150, 3 },
     { "DATE", 165, 2 },
     { "LOGI", 175, 1 },
@@ -637,3 +637,6 @@ const menu_group_t menu_groups[MENU_GROUP_COUNT] = {
     { "IMP", 565, 1 },
     { "TROY", 570, 1 },
 };
+
+const uint8_t menu_parent[MENU_GROUP_COUNT] = { 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 7, 7, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 14, 14, 14, 14, 14, 14, 14, 14, 14, 23, 23, 23, 23, 24, 25, 25, 25, 25, 27, 27, 27 };
+const uint8_t menu_parent_row[MENU_GROUP_COUNT] = { 255, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 2, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 0, 0, 0, 0, 0, 1, 1, 1, 1, 3, 3, 3, 3, 2, 3, 3, 3, 3, 1, 1, 1 };

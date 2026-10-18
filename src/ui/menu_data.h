@@ -18,10 +18,12 @@
 #define MSYM_DOWN 0x0b
 #define MSYM_LEFT 0x0c
 #define MSYM_TIMES 0x0d
-#define MSYM_COUNT 13
+#define MSYM_SUPX 0x0e
+#define MSYM_COUNT 14
 
 typedef enum {
     MID_NONE,
+    MID_HOME,
     MID_MATH,
     MID_NUM,
     MID_PROB,
@@ -146,15 +148,12 @@ typedef enum {
     MID_GET_REG_SIZE,
     MID_SET_STACK_SIZE,
     MID_GET_STACK_SIZE,
-    MID_COMMA_EENORMAL,
-    MID_COMMA_EESWAPPED,
-    MID_FORMAT_RECORD_RAW,
-    MID_FORMAT_RECORD_STRING,
     MID_STACK_DUP,
     MID_STACK_ROLL_UP,
     MID_STACK_ROLL_DOWN,
     MID_STACK_DROP,
     MID_STACK_EXCHANGE_XY,
+    MID_STACK_EXCHANGE_REG,
     MID_UNIT_FUNCTIONS,
     MID_UNIT_LENGTH,
     MID_UNIT_AREA,
@@ -525,10 +524,76 @@ typedef struct {
     uint8_t rows;            /* each row is 5 nodes */
 } menu_group_t;
 
+/* Top-level menus, opened by keys. */
+#define MENU_ROOT_HOME 0
+
+/* Every menu, for jumping straight to one (e.g. MODE). */
+#define MENU_GROUP_HOME 0
+#define MENU_GROUP_MATH 1
+#define MENU_GROUP_NUM 2
+#define MENU_GROUP_PROB 3
+#define MENU_GROUP_COMPLEX 4
+#define MENU_GROUP_BASE 5
+#define MENU_GROUP_HYPERBOLIC 6
+#define MENU_GROUP_STAT 7
+#define MENU_GROUP_CONV 8
+#define MENU_GROUP_TVM 9
+#define MENU_GROUP_CLEAR 10
+#define MENU_GROUP_MODE 11
+#define MENU_GROUP_STACK 12
+#define MENU_GROUP_UNIT 13
+#define MENU_GROUP_DATE 14
+#define MENU_GROUP_BASE_LOGIC 15
+#define MENU_GROUP_BASE_ROTATE 16
+#define MENU_GROUP_BASE_BITS 17
+#define MENU_GROUP_BASE_FUNCTIONS 18
+#define MENU_GROUP_BASE_CONFIGS 19
+#define MENU_GROUP_STAT_REGS 20
+#define MENU_GROUP_CFIT 21
+#define MENU_GROUP_UNIT_FUNCTIONS 22
+#define MENU_GROUP_UNIT_LENGTH 23
+#define MENU_GROUP_UNIT_AREA 24
+#define MENU_GROUP_UNIT_VOL 25
+#define MENU_GROUP_UNIT_TEMP 26
+#define MENU_GROUP_UNIT_MASS 27
+#define MENU_GROUP_UNIT_FORCE 28
+#define MENU_GROUP_UNIT_PRESSURE 29
+#define MENU_GROUP_UNIT_ENERGY 30
+#define MENU_GROUP_UNIT_POWER 31
+#define MENU_GROUP_UNIT_TIME 32
+#define MENU_GROUP_UNIT_SPEED 33
+#define MENU_GROUP_UNIT_FUEL 34
+#define MENU_GROUP_DATE_FOLDER_DATE 35
+#define MENU_GROUP_DATE_FOLDER_TIME 36
+#define MENU_GROUP_DATE_FOLDER_DATE_TIME 37
+#define MENU_GROUP_DATE_FOLDER_OFFSET 38
+#define MENU_GROUP_DATE_FOLDER_OFFSET_DATE_TIME 39
+#define MENU_GROUP_DATE_FOLDER_DURATION 40
+#define MENU_GROUP_DATE_FOLDER_DAY_OF_WEEK 41
+#define MENU_GROUP_EPOCH 42
+#define MENU_GROUP_CLK 43
+#define MENU_GROUP_TYPOGRAPHY 44
+#define MENU_GROUP_SURVEY 45
+#define MENU_GROUP_NAUTICAL 46
+#define MENU_GROUP_ASTRONOMY 47
+#define MENU_GROUP_UNIT_AREA_SURV 48
+#define MENU_GROUP_UNIT_VOL_US 49
+#define MENU_GROUP_UNIT_VOL_IMP 50
+#define MENU_GROUP_UNIT_VOL_DRY 51
+#define MENU_GROUP_UNIT_VOL_MISC 52
+#define MENU_GROUP_UNIT_MASS_US 53
+#define MENU_GROUP_UNIT_MASS_IMP 54
+#define MENU_GROUP_UNIT_MASS_TROY 55
+
 #define MENU_GROUP_COUNT 56
 #define MENU_NODE_COUNT 575
 
 extern const menu_node_t menu_nodes[MENU_NODE_COUNT];
 extern const menu_group_t menu_groups[MENU_GROUP_COUNT];
+
+/* Where each menu sits: its parent menu and the row it appears on
+ * (0xFF for a top-level menu). */
+extern const uint8_t menu_parent[MENU_GROUP_COUNT];
+extern const uint8_t menu_parent_row[MENU_GROUP_COUNT];
 
 #endif

@@ -1,23 +1,198 @@
 # Key layout
 
-| Key | Action | 2ND + key |
+RPNCE follows RPN83P's design: the keyboard handles numbers, the stack, and
+the math functions printed on the keys; everything else lives in the menu
+tree, which is always shown along the bottom of the screen. MATH goes to the
+top of the tree (HOME) and MODE goes straight to the MODE menu.
+
+Stack behavior follows standard HP RPN rules: ENTER and CLX disable stack
+lift, most other operations enable it, and STO, CHS, SHOW, and mode changes
+leave it as it was.
+
+## Number entry and stack
+
+| Key | Primary | 2ND |
 | --- | --- | --- |
 | 0-9, `.` | number entry | |
-| `(-)` | change sign (of exponent after EE) | ANS: LASTX |
-| `,` | | EE: exponent entry |
-| `ENTER` | ENTER (duplicate X, disable lift) | ENTRY: SHOW all 14 digits |
-| `DEL` | backspace; CLX when not typing | |
-| `CLEAR` | CLX | |
-| `(` | R-down | |
-| `)` | X<>Y | |
+| `,` | EE (exponent) | EE |
+| `(-)` | +/- (of the exponent after EE) | ANS: LASTX |
+| `ENTER` | ENTER | ENTRY: SHOW all 14 digits |
+| `DEL` | backspace while typing, else CLX | INS: DUP |
+| `CLEAR` | CLX; twice in a row clears the stack | |
+| `(` | R-down | `{`: R-up |
+| `)` | X<>Y | `}`: DROP |
+
+## Math
+
+| Key | Primary | 2ND |
+| --- | --- | --- |
 | `+ - × ÷` | Y op X | `÷`: e |
 | `^` | Y^X | PI |
 | `x²` | X^2 | SQRT |
 | `x⁻¹` | 1/X | |
 | `LOG` / `LN` | LOG / LN | 10^X / e^X |
-| `SIN COS TAN` | trig (DEG or RAD mode) | ASIN ACOS ATAN |
-| `MODE` | | QUIT |
-| `Y= WINDOW ZOOM TRACE GRAPH` | the five menu softkeys | |
-| up / down arrows | previous / next menu row | |
-| `MATH` | HOME (top menu) | |
-| `ON` | EXIT (back one menu) | |
+| `SIN COS TAN` | trig (DEG or RAD) | ASIN ACOS ATAN |
+
+## Registers
+
+Registers are numbered as on the HP-32SII:
+
+| Number | Register |
+| --- | --- |
+| 001-026 | A-Z |
+| 027 | i |
+| 028-033 | n, Sx, Sy, Sx2, Sy2, Sxy (the 32SII's six stat registers) |
+| 034-040 | ln x, (ln x)^2, ln y, (ln y)^2, ln x ln y, x ln y, y ln x sums (for curve fits) |
+| 041-140 | extra registers, after MODE > RSIZ raises the total above 40 |
+
+`STO→` then a key stores X: the key's green ALPHA letter (`STO→ MATH` =
+STO A), `.` for i, or `2ND .` for (i), the register whose number is in i.
+`2ND RCL` recalls the same way, and STK > X<> swaps X with a register.
+Press `+ - × ÷` right after STO or RCL for register arithmetic (`STO→ + A`
+adds X to A). Since `- × ÷` are also the letters W, R, M, press ALPHA first
+to name those registers. CLEAR, DEL, or ON cancels the prompt.
+
+The prompt appears in the X row. RCL works like typing a number: it lifts
+the stack, except right after ENTER. STO never moves the stack.
+
+Indirect use: `41 STO→ .` puts 41 in i; then `123 STO→ 2ND .` stores 123
+in register 041, and `2ND RCL 2ND .` recalls it. i's integer part is used;
+a number that isn't an existing register gives "Err: Index". Storing into
+n, Sx, Sy, Sx2, Sy2 or Sxy directly leaves only the linear fit usable until
+the stat data is cleared.
+
+`VARS` lists every register holding a nonzero value (and LASTX) as
+`A=12.5`, `i=41`, `n=5`, `R041=123` across the four stack lines. Up and
+down move through the list; ENTER copies the selected value to X; ON,
+CLEAR or VARS closes it.
+
+## TVM (time value of money)
+
+MATH, then TVM (row 2 of HOME). Works like an HP-12C: type a value and
+press N, I%YR, PV, PMT, or FV to store it; press one of them right after
+another TVM key (without typing a number) to solve for it. 2ND + the key
+recalls the stored value. Money received is positive, money paid out is
+negative.
+
+Example, a $200,000 mortgage at 6.5% for 30 years: `360 N`, `6.5 I%YR`,
+`200000 PV`, `0 FV`, then `PMT` gives -1,264.136...
+
+Row 2: P/YR (payments per year), C/YR (compounding periods per year),
+BEG / END (payments at the start or end of each period), CLTV (clear
+everything; P/YR = C/YR = 12, END). Row 3: IYR1 and IYR2 (starting guesses
+for solving I%YR, default 0% and 100%), TMAX (most iterations, default 50),
+RSTV (reset those three).
+
+N, I%YR, PV, PMT, FV, P/YR and C/YR are the calculator's own TVM variables,
+so they are shared with TI's TVM Solver (APPS > Finance).
+
+## Units
+
+MATH, then UNIT (row 3 of HOME). Type a value and press a unit to attach
+it (`12 ft`); press another unit of the same kind to convert (`m` gives
+3.6576 m). The unit shows after the value on the stack and moves with it.
+Math on a value removes its unit. UFCN has UVAL (remove the unit, keep the
+value) and UBAS (convert to the base unit: m, m², m³, kg, K, N, Pa, J, W,
+s, m/s, or L/100km).
+
+Kinds: length, area, volume, temperature, mass, force, pressure, energy,
+power, time, speed, and fuel economy (mpg and L/100km convert both ways).
+Conventions where definitions differ: US survey units are the US survey
+foot; the calorie is the thermochemical calorie (4.184 J); the Btu is the
+International Table Btu; football fields include the end zones; the cable
+is 120 fathoms.
+
+## Stack depth
+
+The stack has 4 levels (T, Z, Y, X) like the HP-32SII; MODE > SSIZ makes
+it up to 12. Only the bottom four are shown; deeper levels sit above T. A
+two-number operation drops the whole stack and copies the top level down;
+R-down and R-up roll through every level. The status line always shows the
+depth (`4STK`) and the total number of registers (`R040`).
+
+A value too long for its line (a 32-bit BIN number, say) stays on one line:
+the rightmost digits show, with a small arrow where more are hidden. Left
+and right arrows scroll X through the rest.
+
+## NUM, HYP and CONV
+
+- NUM: PRIM gives the smallest prime factor of a whole number from 2 to
+  4,294,967,295, or 1 if it's prime. RNDF rounds X to what the display
+  shows; RNDN __ and RNDG __ round to that many decimals or significant
+  digits (two digits, or one digit then ENTER). Rounding is exact decimal
+  rounding: 2.675 RNDN 2 gives 2.68.
+- HYP: SINH, COSH, TANH, ASNH, ACSH, ATNH, accurate near zero.
+- CONV: ->POL takes x in X and y in Y and gives r in X and the angle in Y
+  (current angle mode); ->REC does the reverse. ->HR and ->HMS convert
+  between hours and H.MMSS (1.3045 is 1 h 30 min 45 s); HMS+ and HMS- add
+  and subtract H.MMSS values.
+
+## BASE
+
+MATH, then BASE. DEC, HEX, OCT, BIN choose how whole numbers are shown and
+typed; the status line shows HEX, OCT or BIN, plus C when the carry flag is
+set. In HEX, type A-F with ALPHA plus the key with that green letter (ALPHA
+MATH = A, ALPHA APPS = B, ... ALPHA COS = F). Digits the base can't use, and
+digits that would overflow the word size, are ignored. Long values scroll
+with the left and right arrows.
+
+In HEX, OCT and BIN the `+ - × ÷` keys do word arithmetic (BAS+ BAS- BAS×
+BAS/) and `(-)` is NEG. Values are unsigned words of 8, 16, 24 or 32 bits
+(BCFS > WSIZ, from X; default 32). Larger words aren't offered because the
+calculator's 14-digit numbers can't hold them exactly.
+
+- LOGI: AND, OR, XOR, NOT, NEG (two's complement).
+- ROTS: SL, SR, ASR (keeps the sign bit), SLn and SRn (shift Y by X bits);
+  RL, RR, RLC, RRC (through carry), and the n versions rotating Y X times.
+  Shifts and rotates set the carry to the last bit moved out.
+- BITS: CB, SB, B? (clear, set, test bit X of Y), REVB, CNTB.
+- BFCN: BAS+, BAS- (carry on overflow or borrow), BAS×, BAS/, BDIV
+  (quotient in Y, remainder in X).
+- BCFS: CCF, SCF, CF? (clear, set, test carry), WSIZ, WSZ?.
+
+## Statistics
+
+MATH, then STAT (row 2 of HOME). Works like the HP-42S. Enter a data point
+as `y ENTER x` and press Sigma+ (for one-variable data, just `x` then
+Sigma+). X then shows the number of points, and the next number you type
+replaces it. Sigma- removes a point (to fix a mistake, re-enter it and
+press Sigma-). CL-Sigma (here or in CLR) clears all data. The data is saved between runs.
+
+- Row 1: Sigma+, Sigma-, ALL-Sigma / LIN-Sigma (keep all 13 sums, needed for
+  the LOG, EXP and PWR fits, or just the 6 linear ones), CL-Sigma.
+- Row 2: SUM, MEAN, WMN (x weighted by y; y weighted by x), N, and the
+  Sigma menu, which recalls any of the 13 sums.
+- Row 3: SDEV and PDEV (sample and population standard deviation of x in X
+  and of y in Y), SCOV and PCOV (covariance), and CFIT for curve fitting.
+- CFIT: Y->X and X->Y forecast one from the other with the current model;
+  SLOP, YINT, CORR give the fit's slope, intercept, and correlation. Row 2
+  picks the model: LINF (y = a + bx), LOGF (y = a + b ln x), EXPF
+  (y = a e^bx), PWRF (y = a x^b), or BEST for the best fit. LOG needs all
+  x > 0, EXP all y > 0, PWR both.
+
+## CLR
+
+CLX, CLST (every stack level), CLRG (A-Z, i and the extra registers; stat
+data is kept), CL-Sigma (stat data), CLTV (TVM), CLD (clear the message).
+
+## Menus and system
+
+| Key | Action |
+| --- | --- |
+| `Y= WINDOW ZOOM TRACE GRAPH` | the five menu keys; the menu stays put after a pick |
+| up / down arrows | previous / next row of the current menu (shown by the arrows in the status line) |
+| `MATH` | HOME, the top of the menu tree |
+| `MODE` | MODE menu: FIX, SCI, ENG (each asks for two digits, or one digit then ENTER; 10 or more means as many digits as needed, shown as FIX-), RAD, DEG. Row 3: RSIZ (X = total registers, 40-140) and RSZ?, SSIZ (X = stack depth, 4-12) and SSZ? |
+| `VARS` | the register catalog (see Registers) |
+| `ON` | EXIT: back one menu level |
+| left / right arrows | scroll a value too long for the X line |
+| `2ND MODE` (QUIT) | save and exit |
+| `2ND ON` (OFF) | save and exit |
+
+Numbers show up to 12 digits with thousands commas, or up to 10 next to an
+exponent; SHOW (2ND ENTRY) shows all 14.
+
+The stack, LASTX, variables, angle mode, and display format are saved on exit
+(in the archived appvar `RPNCEdat`) and restored on the next run. After 5
+minutes without a key press, RPNCE saves and exits so the calculator can
+power down.

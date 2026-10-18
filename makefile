@@ -4,7 +4,7 @@
 
 NAME = RPNCE
 DESCRIPTION = "RPN calculator inspired by RPN83P"
-COMPRESSED = NO
+COMPRESSED = YES
 ARCHIVED = NO
 
 CFLAGS = -Wall -Wextra -Oz
