@@ -1,0 +1,24 @@
+# Build output (make)
+bin/
+obj/
+
+# macOS
+.DS_Store
+._*
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# Python (tools/genmenu.py, tools/genunits.py)
+__pycache__/
+*.pyc
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# Local test builds
+tests/*.out
