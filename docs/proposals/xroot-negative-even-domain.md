@@ -17,6 +17,10 @@
 - MATH-021: Y=0, X=3, XROOT_Y -> 0 with expected stack drop (pass).
 - MATH-022: Y=0, X=-3, XROOT_Y -> displayed -3 (fail against expected divide-by-zero error). Stack not inspected; -3 equals the original X operand, so whether the operation was rejected, skipped, or calculated incorrectly remains unresolved. Explicitly test and handle zero radicand with negative index as an independent boundary condition.
 - MATH-023: Y=0, X=-1, XROOT_Y -> displayed -1 (fail against expected divide-by-zero error). Stack not inspected. As in MATH-022, the displayed value matches the original X operand; investigate whether the operation was rejected without visible error or produced an incorrect result. This reproduces the zero-radicand/negative-index issue for the reciprocal index -1.
+- MATH-027: Y=-3, X=0.5 -> 9 (pass; reciprocal exponent 2).
+- MATH-028: Y=-16, X=1.5 -> 6.3496 (pass; reciprocal exponent 2/3).
+- MATH-029: Y=-32, X=2.5 -> 4 (pass; reciprocal exponent 2/5).
+- MATH-030: Y=-16, X=0.8 -> 1.3066 rather than domain error (fail; reciprocal exponent 5/4 has even denominator). Stack not inspected. The negative-base domain defect extends to fractional indices, not just even integer indices.
 - Comparison: DM32 reports `INVALID y^x` for the invalid negative-even-root case.
 
 ## Mathematical expectation
@@ -81,3 +85,8 @@ For rejected operations, assert the error text and that X, Y, deeper stack level
 ## Scope
 
 This PR records the verified defect and actionable implementation/test specification **without changing any application code**. The actual fix requires a subsequent implementation PR.
+
+
+## Additional fractional-index regression requirement (MATH-030)
+
+For a negative radicand, domain validation must account for the reduced rational form of the reciprocal exponent, rather than simply classifying the index as integer/noninteger. Reject reciprocal powers with even denominators (MATH-030, index 0.8 -> 5/4), while preserving valid cases with odd denominators (MATH-028 index 1.5 -> 2/3 and MATH-029 index 2.5 -> 2/5) and integer reciprocal powers (MATH-027 index 0.5 -> 2). Floating-point/rational classification requires careful tolerance and range handling; do not implement a blanket negative-radicand guard. Add corresponding hardware and host regression tests before accepting the eventual fix.
