@@ -91,3 +91,9 @@ This PR records the verified defect and actionable implementation/test specifica
 ## Additional fractional-index regression requirement (MATH-030)
 
 For a negative radicand, domain validation must account for the reduced rational form of the reciprocal exponent, rather than simply classifying the index as integer/noninteger. Reject reciprocal powers with even denominators (MATH-030, index 0.8 -> 5/4; MATH-031, index -0.8 -> -5/4), while preserving valid cases with odd denominators (MATH-028 index 1.5 -> 2/3 and MATH-029 index 2.5 -> 2/5) and integer reciprocal powers (MATH-027 index 0.5 -> 2). Floating-point/rational classification requires careful tolerance and range handling; do not implement a blanket negative-radicand guard. Add corresponding hardware and host regression tests before accepting the eventual fix.
+
+## MATH-090 and MATH-091 paired hardware regression
+
+- MATH-090 FAIL: With Y=-81 and X=4, XROOT_Y returned 2.1213 rather than Err: Domain; afterward X=2.1213 and Y=0, with an unexpected binary stack drop. Invalid real fourth roots must instead reject the operation and preserve operands and stack.
+- MATH-091 PASS: With Y=81 and X=4, XROOT_Y returned X=3 and Y=0, with normal binary stack drop. This positive-radicand control confirms that the same index calculates correctly on a valid input.
+- Add both cases to the eventual host and hardware regression tests, checking the error and full stack preservation for MATH-090 and normal result/stack drop for MATH-091. The exact cause of the unexpected 2.1213 remains undetermined.
