@@ -109,3 +109,5 @@ For a negative radicand, domain validation must account for the reduced rational
 - MATH-096 PASS (positive reciprocal fourth-root control): With Y=81 and X=-4, XROOT_Y returned X=0.3333 and Y=0, no error, with normal binary stack drop. Paired with MATH-095 (Y=-81, X=-4), this verifies the negative index itself is supported on valid positive radicands. Add to host/device regression coverage to prevent an overbroad negative-index guard.
 
 - MATH-097 PASS (negative reciprocal fifth-root control): With Y=-243 and X=-5, XROOT_Y returned X=-0.3333 and Y=0, no error, with normal binary stack drop. This is a valid negative radicand with negative odd root index; include in host/device regression coverage to ensure the eventual domain guard preserves this behaviour (paired with MATH-092, X=5).
+
+- MATH-098 PASS (fractional-index regression control): With Y=-32 and X=2.5, XROOT_Y returned X=4 and Y=0 with no error and normal binary stack drop, reproducing MATH-029. Reciprocal exponent 1/2.5 = 2/5 gives a valid real result for the negative radicand. Retain this case in eventual host/device regression tests; do not reject all noninteger root indices indiscriminately.
