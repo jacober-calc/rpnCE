@@ -16,6 +16,7 @@
 - MATH-020: After clearing the stack, Y=25 and X=0 were explicitly confirmed before execution; XROOT_Y displayed 0, with no reported error (fail). Stack after operation not inspected. This reproduces MATH-019 with a different positive radicand, making an operand-entry mistake less likely. The source/runtime discrepancy remains unresolved.
 - MATH-021: Y=0, X=3, XROOT_Y -> 0 with expected stack drop (pass).
 - MATH-022: Y=0, X=-3, XROOT_Y -> displayed -3 (fail against expected divide-by-zero error). Stack not inspected; -3 equals the original X operand, so whether the operation was rejected, skipped, or calculated incorrectly remains unresolved. Explicitly test and handle zero radicand with negative index as an independent boundary condition.
+- MATH-023: Y=0, X=-1, XROOT_Y -> displayed -1 (fail against expected divide-by-zero error). Stack not inspected. As in MATH-022, the displayed value matches the original X operand; investigate whether the operation was rejected without visible error or produced an incorrect result. This reproduces the zero-radicand/negative-index issue for the reciprocal index -1.
 - Comparison: DM32 reports `INVALID y^x` for the invalid negative-even-root case.
 
 ## Mathematical expectation
@@ -72,7 +73,7 @@ For rejected operations, assert the error text and that X, Y, deeper stack level
 - MATH-013 and MATH-014 no longer return 1.4142, MATH-015 no longer returns 0, and MATH-018 no longer returns 0.3536; all report `Err: Domain`.
 - Valid odd negative roots still work.
 - Zero-index handling produces the correct error on hardware; investigate the reproducible MATH-019/MATH-020 observed 0 and reconcile it with the source precheck.
-- Zero radicand with negative index (MATH-022) reports division-by-zero and preserves operands, rather than displaying -3. Also investigate MATH-022 (Y=0, X=-3 -> displayed -3) and ensure zero radicand with negative index reports divide-by-zero while preserving the stack.
+- Zero radicand with negative index (MATH-022 and MATH-023) reports division-by-zero and preserves operands, rather than merely displaying the original X operand. Also investigate MATH-022 (Y=0, X=-3 -> displayed -3) and MATH-023 (Y=0, X=-1 -> displayed -1), and ensure zero radicand with negative index reports divide-by-zero while preserving the stack.
 - Errors preserve stack and LASTX.
 - All suites pass via `sh tests/run_tests.sh`, and targeted tests pass on TI-84 Plus CE.
 - No change to the current release is made until a separate code-change PR is reviewed and merged.
