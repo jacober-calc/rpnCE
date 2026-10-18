@@ -97,3 +97,5 @@ For a negative radicand, domain validation must account for the reduced rational
 - MATH-090 FAIL: With Y=-81 and X=4, XROOT_Y returned 2.1213 rather than Err: Domain; afterward X=2.1213 and Y=0, with an unexpected binary stack drop. Invalid real fourth roots must instead reject the operation and preserve operands and stack.
 - MATH-091 PASS: With Y=81 and X=4, XROOT_Y returned X=3 and Y=0, with normal binary stack drop. This positive-radicand control confirms that the same index calculates correctly on a valid input.
 - Add both cases to the eventual host and hardware regression tests, checking the error and full stack preservation for MATH-090 and normal result/stack drop for MATH-091. The exact cause of the unexpected 2.1213 remains undetermined.
+
+- MATH-092 PASS: With Y=-243 and X=5, XROOT_Y returned X=-3 and Y=0 with no error and normal binary stack drop. Include this valid negative odd-index case in eventual host and hardware regression tests to guard against overbroad domain rejection.
