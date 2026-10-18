@@ -86,7 +86,7 @@ typedef enum {
     /* random numbers */
     CMD_RAND,           /* push a random number, 0 <= r < 1 */
     CMD_SEED,           /* restart the generator from X */
-    /* display format: arg = digits 0..9, or 10+ for as many as needed */
+    /* display format: arg = digits 0..11, or 12+ for as many as needed */
     CMD_DISP_FIX, CMD_DISP_SCI, CMD_DISP_ENG,
     CMD_DISP_ALL,
     /* units: arg = unit index (see units.h) */
@@ -128,7 +128,7 @@ typedef struct {
     bool lift;                  /* stack lift enabled */
     bool degrees;               /* angle mode: true = DEG, false = RAD */
     uint8_t disp_style;         /* DISP_FIX, DISP_SCI, DISP_ENG */
-    int8_t disp_digits;         /* 0-9, or DISP_FLOAT */
+    int8_t disp_digits;         /* 0-11, or DISP_FLOAT */
 
     bool editing;               /* X is being typed in */
     char entry[ENTRY_MAX + 1];  /* text being typed, plain ASCII */

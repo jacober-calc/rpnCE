@@ -11,4 +11,8 @@ void storage_save(calc_t *c);
  * or it is from an incompatible version. */
 bool storage_load(calc_t *c);
 
+/* Display settings (the screen tint), kept in their own small appvar. */
+void storage_save_settings(uint8_t tint);
+uint8_t storage_load_settings(void);     /* 0 if none saved */
+
 #endif

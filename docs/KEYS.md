@@ -108,7 +108,8 @@ The stack has 4 levels (T, Z, Y, X) like the HP-32SII; MODE > SSIZ makes
 it up to 12. Only the bottom four are shown; deeper levels sit above T. A
 two-number operation drops the whole stack and copies the top level down;
 R-down and R-up roll through every level. The status line always shows the
-depth (`4STK`) and the total number of registers (`R040`).
+stack depth and the total number of registers together: `4S-40R` is the
+default 4 levels and 40 registers.
 
 A value too long for its line (a 32-bit BIN number, say) stays on one line:
 the rightmost digits show, with a small arrow where more are hidden. Left
@@ -118,8 +119,8 @@ and right arrows scroll X through the rest.
 
 - NUM: PRIM gives the smallest prime factor of a whole number from 2 to
   4,294,967,295, or 1 if it's prime. RNDF rounds X to what the display
-  shows; RNDN __ and RNDG __ round to that many decimals or significant
-  digits (two digits, or one digit then ENTER). Rounding is exact decimal
+  shows; RNDN _ and RNDG _ round to that many decimals or significant
+  digits (a digit, or . then a digit for 10-19). Rounding is exact decimal
   rounding: 2.675 RNDN 2 gives 2.68.
 - HYP: SINH, COSH, TANH, ASNH, ACSH, ATNH, accurate near zero.
 - CONV: ->POL takes x in X and y in Y and gives r in X and the angle in Y
@@ -182,7 +183,7 @@ data is kept), CL-Sigma (stat data), CLTV (TVM), CLD (clear the message).
 | `Y= WINDOW ZOOM TRACE GRAPH` | the five menu keys; the menu stays put after a pick |
 | up / down arrows | previous / next row of the current menu (shown by the arrows in the status line) |
 | `MATH` | HOME, the top of the menu tree |
-| `MODE` | MODE menu: FIX, SCI, ENG (each asks for two digits, or one digit then ENTER; 10 or more means as many digits as needed, shown as FIX-), RAD, DEG. Row 3: RSIZ (X = total registers, 40-140) and RSZ?, SSIZ (X = stack depth, 4-12) and SSZ? |
+| `MODE` | MODE menu: FIX, SCI, ENG (a digit 0-9, or . then a digit for 10-19, as on the HP-32SII: FIX . 1 is FIX 11; 12 or more means as many digits as needed, shown as FIX-), RAD, DEG. Row 3: RSIZ (X = total registers, 40-140; less than 40 means 40) and RSZ?, TINT (cycle the screen colors: LCD, LCD+ for real screens, GRAY, DARK; saved in the appvar `RPNCEcfg`), SSIZ (X = stack depth, 4-12; less than 4 means 4) and SSZ? |
 | `VARS` | the register catalog (see Registers) |
 | `ON` | EXIT: back one menu level |
 | left / right arrows | scroll a value too long for the X line |

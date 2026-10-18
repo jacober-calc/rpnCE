@@ -40,10 +40,12 @@ typedef struct {
     uint8_t prompt_op;      /* 0 none, 1 +, 2 -, 3 x, 4 / */
     bool prompt_alpha;      /* ALPHA pressed: next key is a letter */
     bool prompt_second;     /* 2ND pressed: . means (i) */
-    uint8_t prompt_count;   /* FIX/SCI/ENG: digits typed so far (0 or 1) */
-    uint8_t prompt_first;   /* ... and the first one */
+    uint8_t prompt_count;   /* FIX/SCI/ENG/RND: 1 after the . key (10-19) */
     char prompt_text[12];
     bool alpha;             /* ALPHA pending: next key is its green letter */
+    char flash_text[12];    /* a finished prompt, shown briefly ("STO A") */
+    bool flash;
+    bool flash_lifts;       /* ... over a lifted stack (plain RCL) */
 } keys_t;
 
 /* Turns a scan code into an event. */
@@ -60,5 +62,9 @@ const char *keys_prompt_text(const keys_t *k);
 
 /* True while the prompt is a plain RCL, which lifts the stack. */
 bool keys_prompt_lifts(const keys_t *k);
+
+/* A prompt just completed: its final text ("STO A", "FIX 04") to show for a
+ * moment before the command runs, or NULL. Clears it. */
+const char *keys_take_flash(keys_t *k, bool *lifts);
 
 #endif

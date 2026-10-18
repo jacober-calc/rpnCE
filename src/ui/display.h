@@ -8,6 +8,11 @@
 
 void display_open(void);
 
+/* Color presets: LCD, LCD+ (stronger, for real screens), GRAY, DARK. */
+#define TINT_COUNT 4
+void display_set_tint(uint8_t tint);
+const char *display_tint_name(uint8_t tint);
+
 /* Scrolling a value too long for the X row (long BIN numbers): delta > 0
  * shows digits further to the left. Reset when X changes. */
 void display_scroll_x(int delta);

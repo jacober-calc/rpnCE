@@ -14,6 +14,8 @@ static const glyph_t glyphs[] = {
     { '\x01', 3, { 0x18, 0x04, 0x08, 0x1c, 0x00, 0x00, 0x00 } },
     { '\x05', 5, { 0x1f, 0x10, 0x08, 0x04, 0x08, 0x10, 0x1f } },
     { ' ', 3, { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } },
+    { '(', 3, { 0x04, 0x08, 0x10, 0x10, 0x10, 0x08, 0x04 } },
+    { ')', 3, { 0x10, 0x08, 0x04, 0x04, 0x04, 0x08, 0x10 } },
     { '*', 5, { 0x00, 0x11, 0x0a, 0x04, 0x0a, 0x11, 0x00 } },
     { '+', 5, { 0x00, 0x04, 0x04, 0x1f, 0x04, 0x04, 0x00 } },
     { '-', 5, { 0x00, 0x00, 0x00, 0x1f, 0x00, 0x00, 0x00 } },
@@ -121,16 +123,25 @@ int dot_width(const char *s)
     return (cols - 1) * DOT_PITCH_X;
 }
 
+static void draw_rows_pitch(const uint8_t *rows, int nrows, int x, int y,
+                            int clip_left, int px_w, int px_h);
+
 static void draw_rows(const uint8_t *rows, int nrows, int x, int y, int clip_left)
+{
+    draw_rows_pitch(rows, nrows, x, y, clip_left, DOT_PITCH_X, DOT_PITCH_Y);
+}
+
+static void draw_rows_pitch(const uint8_t *rows, int nrows, int x, int y,
+                            int clip_left, int px_w, int px_h)
 {
     for (int r = 0; r < nrows; r++) {
         uint8_t bits = rows[r];
         for (int c = 0; bits; c++, bits = (uint8_t)(bits << 1) & 0x1f) {
             if (!(bits & 0x10))
                 continue;
-            int px = x + c * DOT_PITCH_X;
+            int px = x + c * px_w;
             if (px >= clip_left)
-                gfx_FillRectangle(px, y + r * DOT_PITCH_Y, DOT_PITCH_X, DOT_PITCH_Y);
+                gfx_FillRectangle(px, y + r * px_h, px_w, px_h);
         }
     }
 }
@@ -151,5 +162,17 @@ void dot_draw(const char *s, int x, int y, uint8_t color, int clip_left)
                 draw_rows(g->rows, DOT_ROWS, x, y, clip_left);
         }
         x += (columns_of(s, start) + 1) * DOT_PITCH_X;
+    }
+}
+
+void dot_draw_small(const char *s, int x, int y, uint8_t color)
+{
+    const char *start = s;
+    gfx_SetColor(color);
+    for (; *s; s++) {
+        const glyph_t *g = find_glyph(*s);
+        if (g)
+            draw_rows_pitch(g->rows, DOT_ROWS, x, y, 0, DOT_SMALL_PITCH, DOT_SMALL_PITCH);
+        x += (columns_of(s, start) + 1) * DOT_SMALL_PITCH;
     }
 }

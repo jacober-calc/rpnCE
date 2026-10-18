@@ -103,9 +103,9 @@ int main(void)
     cmd(CMD_GET_STACK_SIZE, 0);
     expect("SSZ?", X, 8);
     num(3); cmd(CMD_SET_STACK_SIZE, 0);
-    expect_msg("SSIZ 3 is refused", "Err: Domain");
-    num(4); cmd(CMD_SET_STACK_SIZE, 0);
-    expect("back to SSIZ 4", C.depth, 4);
+    expect("SSIZ 3 means the default 4", C.depth, 4);
+    num(13); cmd(CMD_SET_STACK_SIZE, 0);
+    expect_msg("SSIZ 13 is refused", "Err: Domain");
 
     /* ---- registers ---- */
     cmd(CMD_CLEAR_STACK, 0);
@@ -151,7 +151,9 @@ int main(void)
     num(123); cmd(CMD_STO, REG_INDIRECT);
     expect_msg("register 041 doesn't exist yet", "Err: Index");
     num(20); cmd(CMD_SET_REG_SIZE, 0);
-    expect_msg("RSIZ 20 is below the standard 40", "Err: Domain");
+    expect("RSIZ 20 means the default 40", C.extra_count, 0);
+    num(141); cmd(CMD_SET_REG_SIZE, 0);
+    expect_msg("RSIZ 141 is refused", "Err: Domain");
     num(60); cmd(CMD_SET_REG_SIZE, 0);
     expect("RSIZ 60 adds registers 041-060", C.extra_count, 20);
     num(41); cmd(CMD_STO, REG_I);
@@ -203,7 +205,10 @@ int main(void)
     cmd(CMD_DISP_FIX, 1);
     num(2.46); cmd(CMD_ROUND_FIX, 0);
     expect("RNDF in FIX 1", X, 2.5);
-    cmd(CMD_DISP_FIX, 99);
+    cmd(CMD_DISP_FIX, 11);
+    expect("FIX 11 is a real setting (HP-32SII range)", C.disp_digits, 11);
+    cmd(CMD_DISP_FIX, 12);
+    expect("FIX 12 (. 2) means as many digits as needed", C.disp_digits, -1);
 
     /* ---- CONV ---- */
     cmd(CMD_MODE_DEG, 0);

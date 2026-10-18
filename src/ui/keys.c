@@ -92,13 +92,9 @@ static void update_prompt_text(keys_t *k)
     if (k->prompt_op)
         *p++ = ops[k->prompt_op];
     *p++ = ' ';
-    if (k->prompt >= PROMPT_FIX) {
-        /* two digits, RPN83P style: "FIX __", then "FIX 4_" */
-        *p++ = k->prompt_count ? (char)('0' + k->prompt_first) : '_';
-        *p++ = '_';
-    } else {
-        *p++ = '_';
-    }
+    if (k->prompt >= PROMPT_FIX && k->prompt_count)
+        *p++ = '.';                         /* "FIX ._" after the . key */
+    *p++ = '_';
     *p = '\0';
 }
 
@@ -124,6 +120,27 @@ const char *keys_prompt_text(const keys_t *k)
     return k->prompt == PROMPT_NONE ? NULL : k->prompt_text;
 }
 
+const char *keys_take_flash(keys_t *k, bool *lifts)
+{
+    if (!k->flash)
+        return NULL;
+    k->flash = false;
+    *lifts = k->flash_lifts;
+    return k->flash_text;
+}
+
+/* Records the finished prompt: the prompt text with its "_" replaced. */
+static void set_flash(keys_t *k, const char *answer)
+{
+    k->flash_lifts = keys_prompt_lifts(k);
+    strcpy(k->flash_text, k->prompt_text);
+    char *u = strchr(k->flash_text, '_');
+    if (u)
+        *u = '\0';
+    strcat(k->flash_text, answer);
+    k->flash = true;
+}
+
 bool keys_prompt_lifts(const keys_t *k)
 {
     return k->prompt == PROMPT_RCL && k->prompt_op == 0;
@@ -140,24 +157,33 @@ static event_t prompt_key(keys_t *k, sk_key_t key)
         k->prompt = PROMPT_NONE;
         return ev;
     }
-    /* FIX / SCI / ENG / RNDN / RNDG: two digits (00-99), or one digit then ENTER.
-     * 10 or more means as many digits as needed (shown as FIX-). */
+    /* FIX / SCI / ENG / RNDN / RNDG, HP-32SII style: a digit 0-9 completes
+     * the prompt; . then a digit means 10-19 (FIX . 1 is FIX 11). */
     if (k->prompt >= PROMPT_FIX) {
         int d = digit_of(key);
-        uint8_t value;
-        if (d >= 0 && k->prompt_count == 0) {
-            k->prompt_first = (uint8_t)d;
-            k->prompt_count = 1;
+        if (key == sk_DecPnt && k->prompt_count == 0) {
+            k->prompt_count = 1;                /* "FIX ._" */
             update_prompt_text(k);
             return ev;
-        } else if (d >= 0) {
-            value = (uint8_t)(k->prompt_first * 10 + d);
-        } else if (key == sk_Enter && k->prompt_count == 1) {
-            value = k->prompt_first;
-        } else {
+        }
+        if (d < 0) {
             ev.kind = EV_NONE;
             return ev;
         }
+        uint8_t value = (uint8_t)(k->prompt_count ? 10 + d : d);
+        char ans[3];
+        if (value >= 10) {
+            ans[0] = '1';
+            ans[1] = (char)('0' + value - 10);
+            ans[2] = '\0';
+        } else {
+            ans[0] = (char)('0' + value);
+            ans[1] = '\0';
+        }
+        k->prompt_count = 0;                    /* flash shows the number: */
+        update_prompt_text(k);                  /* "FIX 3", "FIX 11" */
+        set_flash(k, ans);
+
         ev.kind = EV_CMD;
         static const calc_cmd_t cmds[] = { CMD_DISP_FIX, CMD_DISP_SCI, CMD_DISP_ENG,
                                            CMD_ROUND_N, CMD_ROUND_G };
@@ -195,6 +221,18 @@ static event_t prompt_key(keys_t *k, sk_key_t key)
         ev.kind = EV_NONE;
         return ev;
     }
+
+    /* show the register briefly: "STO A", "RCL+ i", "X<> (i)" */
+    char ans[4];
+    if (v == REG_INDIRECT)
+        strcpy(ans, "(i)");
+    else if (v == REG_I)
+        strcpy(ans, "i");
+    else {
+        ans[0] = (char)('A' + v - 1);
+        ans[1] = '\0';
+    }
+    set_flash(k, ans);
 
     ev.kind = EV_CMD;
     if (k->prompt == PROMPT_XCH) {

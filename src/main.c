@@ -4,6 +4,7 @@
 
 #include <stdbool.h>
 #include <time.h>
+#include <sys/timers.h>
 #include <keypadc.h>
 #include <sys/rtc.h>
 #include <ti/flags.h>
@@ -21,10 +22,14 @@
  * exit after this long without a key press; the OS then powers off as usual. */
 #define IDLE_TIMEOUT (5UL * 60UL * CLOCKS_PER_SEC)
 
+/* How long a finished STO/RCL/FIX prompt stays on screen. */
+#define PROMPT_FLASH_MS 300
+
 static calc_t calc;
 static keys_t keys;
 static menu_t menu;
 static catalog_t catalog;
+static uint8_t tint;            /* screen color preset */
 
 /* Runs the item under a softkey, or opens its submenu. As in RPN83P, the
  * menu stays where it is, so a function can be pressed again. */
@@ -40,6 +45,11 @@ static void press_softkey(uint8_t slot, bool shifted)
         case MID_SCI: keys_open_prompt(&keys, PROMPT_SCI); return;
         case MID_ENG: keys_open_prompt(&keys, PROMPT_ENG); return;
         case MID_STACK_EXCHANGE_REG: keys_open_prompt(&keys, PROMPT_XCH); return;
+        case MID_SCREEN_TINT:                   /* next color preset */
+            tint = (uint8_t)((tint + 1) % TINT_COUNT);
+            display_set_tint(tint);
+            calc.message = display_tint_name(tint);
+            return;
         case MID_ROUND_TO_N: keys_open_prompt(&keys, PROMPT_RNDN); return;
         case MID_ROUND_TO_GUARD: keys_open_prompt(&keys, PROMPT_RNDG); return;
         default: break;
@@ -101,6 +111,10 @@ int main(void)
     storage_load(&calc);
     kb_DisableOnLatch();
     display_open();
+    tint = storage_load_settings();
+    if (tint >= TINT_COUNT)
+        tint = 0;
+    display_set_tint(tint);
     redraw();
 
     for (;;) {
@@ -140,6 +154,16 @@ int main(void)
                 continue;
             }
             ev = keys_translate(&keys, key);
+
+            /* A finished prompt shows its answer for a moment ("STO A")
+             * before the command runs. */
+            bool flash_lifts;
+            const char *flash = keys_take_flash(&keys, &flash_lifts);
+            if (flash) {
+                display_draw(&calc, &menu, false, false, flash,
+                             flash_lifts && calc.lift, &catalog);
+                delay(PROMPT_FLASH_MS);
+            }
         }
         last_key = clock();
 
@@ -177,6 +201,7 @@ int main(void)
     }
 
     storage_save(&calc);
+    storage_save_settings(tint);
     os_ResetFlag(ON, INTERRUPT);
     display_close();
     return 0;

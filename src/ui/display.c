@@ -14,21 +14,39 @@
  *   menu row      always showing: five dark boxes with inverted labels
  */
 
-/* ---------- colors (sampled from a TI-84 Plus LCD) ---------- */
+/* ---------- colors ---------- */
 
 enum {
-    COL_INK = 1,        /* dark slate "LCD ink" */
-    COL_PANEL,          /* gray-green LCD background */
-    COL_FAINT,          /* faded ink: register labels */
-    COL_DOTS,           /* near-black: the stack's digits and units */
+    COL_INK = 1,        /* status text, menu boxes */
+    COL_PANEL,          /* background; text on menu boxes */
+    COL_FAINT,          /* register labels */
+    COL_DOTS,           /* the stack's digits and units */
 };
 
-static void set_palette(void)
+/* Color presets, as RGB for ink, panel, faint, dots. The real CE screen
+ * washes out light, subtle colors, so LCD+ pushes the green further. */
+typedef struct { const char *name; uint8_t rgb[4][3]; } tint_t;
+
+static const tint_t tints[TINT_COUNT] = {
+    { "LCD",  { { 34, 46, 49 },   { 156, 170, 155 }, { 56, 68, 68 },  { 26, 32, 32 } } },
+    { "LCD+", { { 16, 30, 20 },   { 146, 178, 122 }, { 44, 66, 44 },  { 10, 20, 12 } } },
+    { "GRAY", { { 22, 21, 21 },   { 219, 211, 203 }, { 92, 88, 84 },  { 20, 18, 18 } } },
+    { "DARK", { { 150, 186, 140 },{ 14, 18, 16 },    { 84, 104, 88 }, { 198, 232, 188 } } },
+};
+
+void display_set_tint(uint8_t tint)
 {
-    gfx_palette[COL_INK]   = gfx_RGBTo1555(34, 46, 49);
-    gfx_palette[COL_PANEL] = gfx_RGBTo1555(156, 170, 155);
-    gfx_palette[COL_FAINT] = gfx_RGBTo1555(56, 68, 68);
-    gfx_palette[COL_DOTS]  = gfx_RGBTo1555(26, 32, 32);
+    if (tint >= TINT_COUNT)
+        tint = 0;
+    for (int i = 0; i < 4; i++) {
+        const uint8_t *c = tints[tint].rgb[i];
+        gfx_palette[COL_INK + i] = gfx_RGBTo1555(c[0], c[1], c[2]);
+    }
+}
+
+const char *display_tint_name(uint8_t tint)
+{
+    return tints[tint < TINT_COUNT ? tint : 0].name;
 }
 
 /* ---------- layout ---------- */
@@ -40,7 +58,7 @@ static void set_palette(void)
 #define STACK_TOP    (STATUS_H + 2)
 #define ROW_H        ((MENU_Y - 3 - STACK_TOP) / 4)
 #define LABEL_X      6
-#define VALUE_LEFT   36      /* values never draw left of this */
+#define VALUE_LEFT   26      /* values never draw left of this */
 #define VALUE_RIGHT  (SCREEN_W - 6)
 
 /* ---------- menu label symbols ---------- */
@@ -117,7 +135,7 @@ static void draw_label(const char *s, int x, int y, uint8_t color)
 void display_open(void)
 {
     gfx_Begin();
-    set_palette();
+    display_set_tint(0);
     gfx_SetDrawBuffer();            /* draw off-screen, then swap */
     gfx_SetTextTransparentColor(255);
     gfx_SetTextBGColor(255);        /* 255 = transparent text background */
@@ -154,8 +172,17 @@ static void draw_status(const calc_t *c, const menu_t *m, bool second, bool alph
 
     static const char names[][4] = { "", "FIX", "SCI", "ENG" };
     memcpy(buf, names[c->disp_style], 3);
-    buf[3] = (c->disp_digits == DISP_FLOAT) ? '-' : (char)('0' + c->disp_digits);
-    buf[4] = '\0';
+    if (c->disp_digits == DISP_FLOAT) {
+        buf[3] = '-';
+        buf[4] = '\0';
+    } else if (c->disp_digits >= 10) {     /* FIX10, FIX11 */
+        buf[3] = '1';
+        buf[4] = (char)('0' + c->disp_digits - 10);
+        buf[5] = '\0';
+    } else {
+        buf[3] = (char)('0' + c->disp_digits);
+        buf[4] = '\0';
+    }
     gfx_PrintStringXY(buf, x, y);
     x += (int)gfx_GetStringWidth(buf) + 8;
 
@@ -174,23 +201,21 @@ static void draw_status(const calc_t *c, const menu_t *m, bool second, bool alph
         x += 4;
     }
 
-    /* stack depth (4STK) and total registers (R040), always shown */
+    /* stack depth and total registers, always shown: 4S-40R */
     {
-        buf[0] = (c->depth >= 10) ? '1' : (char)('0' + c->depth);
-        int k = 1;
+        int regs = REG_STAT_LAST + c->extra_count;
+        int k = 0;
         if (c->depth >= 10)
-            buf[k++] = (char)('0' + c->depth - 10);
-        strcpy(buf + k, "STK");
-        gfx_PrintStringXY(buf, x, y);
-        x += (int)gfx_GetStringWidth(buf) + 8;
-    }
-    {
-        int last = REG_EXTRA_FIRST - 1 + c->extra_count;   /* highest register */
-        buf[0] = 'R';
-        buf[1] = (char)('0' + last / 100);
-        buf[2] = (char)('0' + last / 10 % 10);
-        buf[3] = (char)('0' + last % 10);
-        buf[4] = '\0';
+            buf[k++] = '1';
+        buf[k++] = (char)('0' + c->depth % 10);
+        buf[k++] = 'S';
+        buf[k++] = '-';
+        if (regs >= 100)
+            buf[k++] = (char)('0' + regs / 100);
+        buf[k++] = (char)('0' + regs / 10 % 10);
+        buf[k++] = (char)('0' + regs % 10);
+        buf[k++] = 'R';
+        buf[k] = '\0';
         gfx_PrintStringXY(buf, x, y);
         x += (int)gfx_GetStringWidth(buf) + 8;
     }
@@ -338,7 +363,8 @@ static void draw_stack(const calc_t *c, const char *prompt, bool lifted)
         int y = STACK_TOP + i * ROW_H;
         bool is_x = (i == 3);
 
-        dot_draw(labels[i], LABEL_X, y + (ROW_H - DOT_HEIGHT) / 2, COL_FAINT, 0);
+        /* small label, centered on the row, so the numbers stand out */
+        dot_draw_small(labels[i], LABEL_X, y + (ROW_H - DOT_SMALL_HEIGHT) / 2, COL_FAINT);
 
         if (is_x && prompt) {
             draw_value(prompt, y, 0, NULL);

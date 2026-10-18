@@ -94,7 +94,7 @@ bool storage_load(calc_t *c)
     c->lift = s.lift != 0;
     c->degrees = s.degrees != 0;
     if (s.disp_style >= DISP_FIX && s.disp_style <= DISP_ENG &&
-        s.disp_digits >= DISP_FLOAT && s.disp_digits <= 9) {
+        s.disp_digits >= DISP_FLOAT && s.disp_digits <= DISP_MAX_DIGITS) {
         c->disp_style = s.disp_style;
         c->disp_digits = s.disp_digits;
     }
@@ -107,4 +107,38 @@ bool storage_load(calc_t *c)
     c->base = s.base;
     base_validate(&c->base);
     return true;
+}
+
+/* ---------- display settings ---------- */
+
+#define SETTINGS_NAME "RPNCEcfg"
+
+typedef struct {
+    uint8_t magic;
+    uint8_t version;
+    uint8_t tint;
+} settings_t;
+
+void storage_save_settings(uint8_t tint)
+{
+    settings_t s = { STATE_MAGIC, 1, tint };
+    uint8_t h = ti_Open(SETTINGS_NAME, "w");
+    if (!h)
+        return;
+    ti_Write(&s, sizeof s, 1, h);
+    ti_SetArchiveStatus(true, h);
+    ti_Close(h);
+}
+
+uint8_t storage_load_settings(void)
+{
+    settings_t s;
+    uint8_t h = ti_Open(SETTINGS_NAME, "r");
+    if (!h)
+        return 0;
+    size_t n = ti_Read(&s, sizeof s, 1, h);
+    ti_Close(h);
+    if (n != 1 || s.magic != STATE_MAGIC || s.version != 1)
+        return 0;
+    return s.tint;
 }

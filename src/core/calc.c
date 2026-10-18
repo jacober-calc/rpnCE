@@ -896,6 +896,21 @@ static void do_exchange(calc_t *c, uint8_t arg)
     c->lift = true;
 }
 
+/* A whole number from X for a size setting: below lo becomes lo (the
+ * default); above hi, or not a whole number, is an error (-1). */
+static int size_from_x(calc_t *c, int lo, int hi)
+{
+    real_t f = os_RealFrac(&c->stack[0]);
+    real_t a = os_Int24ToReal(lo), b = os_Int24ToReal(hi);
+    if (!mx_is_zero(&f) || os_RealCompare(&c->stack[0], &b) > 0) {
+        c->message = "Err: Domain";
+        return -1;
+    }
+    if (os_RealCompare(&c->stack[0], &a) < 0)
+        return lo;
+    return os_RealToInt24(&c->stack[0]);
+}
+
 /* A whole number from X in [lo, hi], or -1 (with an error message). */
 static int whole_from_x(calc_t *c, int lo, int hi)
 {
@@ -910,11 +925,12 @@ static int whole_from_x(calc_t *c, int lo, int hi)
 }
 
 /* RSIZ: X is the total number of registers, from the standard 40 (A-Z, i
- * and the stat registers) up to 140. Registers removed lose their values. */
+ * and the stat registers) up to 140; less than 40 means 40. Registers
+ * removed lose their values. */
 static void set_reg_size(calc_t *c)
 {
     finish_entry(c);
-    int total = whole_from_x(c, REG_STAT_LAST, REG_STAT_LAST + REG_EXTRA_MAX);
+    int total = size_from_x(c, REG_STAT_LAST, REG_STAT_LAST + REG_EXTRA_MAX);
     if (total < 0)
         return;
     int n = total - REG_STAT_LAST;
@@ -924,12 +940,12 @@ static void set_reg_size(calc_t *c)
     c->message = "Register Size Set";
 }
 
-/* SSIZ: X is the stack depth, 4 to 12. New levels start at zero; levels
- * beyond a smaller depth are lost. */
+/* SSIZ: X is the stack depth, 4 to 12; less than 4 means 4. New levels
+ * start at zero; levels beyond a smaller depth are lost. */
 static void set_stack_size(calc_t *c)
 {
     finish_entry(c);
-    int n = whole_from_x(c, STACK_MIN, STACK_MAX);
+    int n = size_from_x(c, STACK_MIN, STACK_MAX);
     if (n < 0)
         return;
     for (int k = n; k < STACK_MAX; k++) {
@@ -1589,8 +1605,9 @@ void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg)
             finish_entry(c);
             c->disp_style = (cmd == CMD_DISP_FIX) ? DISP_FIX :
                             (cmd == CMD_DISP_SCI) ? DISP_SCI : DISP_ENG;
-            /* 0-9 digits; 10 or more means as many as needed (FIX-) */
-            c->disp_digits = (arg > 9) ? DISP_FLOAT : (int8_t)arg;
+            /* 0-11 digits, as on the HP-32SII; 12 or more means as many
+             * as needed (FIX-) */
+            c->disp_digits = (arg > DISP_MAX_DIGITS) ? DISP_FLOAT : (int8_t)arg;
             break;
 
         case CMD_DISP_ALL:

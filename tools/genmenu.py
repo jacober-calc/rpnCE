@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Generates src/ui/menu_data.h and menu_data.c from menus/menus.txt.
+"""Generates src/ui/menu_data.h and menu_data.c from menus/menus.txt
+(and any files it includes).
 
 Run from the project root:  python3 tools/genmenu.py
 """
@@ -14,7 +15,7 @@ OUT_C = os.path.join(ROOT, 'src', 'ui', 'menu_data.c')
 
 # Symbol names -> character codes drawn by the UI (see menu_glyphs in display.c).
 SYMBOLS = ['sq', 'cube', 'cuberoot', 'root', 'sigma', 'to', 'block', 'mu',
-           'deg', 'up', 'down', 'left', 'times']
+           'deg', 'up', 'down', 'left', 'times', 'supx']
 SYM_CODE = {name: i + 1 for i, name in enumerate(SYMBOLS)}
 
 
@@ -23,14 +24,31 @@ class Group:
         self.label, self.ident, self.rows = label, ident, []
 
 
-def fail(lineno, msg):
-    sys.exit(f'menus.txt:{lineno}: {msg}')
+def fail(where, msg):
+    sys.exit(f'{where}: {msg}')
+
+
+def read_lines(path, seen=()):
+    """Yields (where, line) for a menu file, expanding top-level includes."""
+    name = os.path.basename(path)
+    if path in seen:
+        sys.exit(f'{name}: include loop')
+    for lineno, raw in enumerate(open(path, encoding='utf-8'), 1):
+        stripped = raw.split('#', 1)[0].rstrip()
+        parts = stripped.split()
+        if parts and parts[0] == 'include':
+            if len(parts) != 2 or raw.startswith(' '):
+                fail(f'{name}:{lineno}', 'include FILE must be at the top level')
+            inc = os.path.join(os.path.dirname(path), parts[1])
+            yield from read_lines(inc, seen + (path,))
+        else:
+            yield f'{name}:{lineno}', raw
 
 
 def parse():
-    root = None
+    roots = []
     stack = []   # (indent, object)
-    for lineno, raw in enumerate(open(SRC, encoding='utf-8'), 1):
+    for lineno, raw in read_lines(SRC):
         line = raw.split('#', 1)[0].rstrip()
         if not line.strip():
             continue
@@ -61,9 +79,9 @@ def parse():
             fail(lineno, f'cannot parse: {line.strip()}')
 
         if parent is None:
-            if root is not None or not isinstance(node, Group):
-                fail(lineno, 'file must contain one top-level group')
-            root = node
+            if indent != 0 or not isinstance(node, Group):
+                fail(lineno, 'only groups can be at the top level')
+            roots.append(node)
         elif isinstance(parent, list):
             if len(parent) >= 5:
                 fail(lineno, 'a row holds at most 5 entries')
@@ -73,9 +91,9 @@ def parse():
 
         if isinstance(node, Group):
             stack.append((indent, node))
-    if root is None:
-        sys.exit('menus.txt: no menu tree found')
-    return root
+    if not roots:
+        sys.exit('menus.txt: no menus found')
+    return roots
 
 
 def c_label(text, lineinfo=''):
@@ -92,10 +110,10 @@ def c_label(text, lineinfo=''):
 
 
 def main():
-    root = parse()
+    roots = parse()
 
-    groups = []          # list of Group, in breadth-first order
-    order = [root]
+    groups = []          # top-level menus first, then submenus breadth-first
+    order = list(roots)
     while order:
         g = order.pop(0)
         groups.append(g)
@@ -105,17 +123,15 @@ def main():
                     order.append(n)
     gindex = {id(g): i for i, g in enumerate(groups)}
 
+    # An ID names a function, so it may appear in several menus.
     ids = ['NONE']
-    seen = set()
+    seen = {'NONE'}
     for g in groups:
-        for row in g.rows:
-            for n in row:
-                ident = n.ident if isinstance(n, Group) else n[3]
-                if ident:
-                    if ident in seen:
-                        sys.exit(f'menus.txt: duplicate id {ident}')
-                    seen.add(ident)
-                    ids.append(ident)
+        for ident in [g.ident] + [n.ident if isinstance(n, Group) else n[3]
+                                  for row in g.rows for n in row]:
+            if ident and ident not in seen:
+                seen.add(ident)
+                ids.append(ident)
 
     nodes = []
     group_rows = []
@@ -156,10 +172,21 @@ def main():
                 '    uint16_t first;          /* index of first node in menu_nodes */\n'
                 '    uint8_t rows;            /* each row is 5 nodes */\n'
                 '} menu_group_t;\n\n')
+        f.write('/* Top-level menus, opened by keys. */\n')
+        for i, r in enumerate(roots):
+            f.write(f'#define MENU_ROOT_{r.ident} {i}\n')
+        f.write('\n/* Every menu, for jumping straight to one (e.g. MODE). */\n')
+        for i, g in enumerate(groups):
+            f.write(f'#define MENU_GROUP_{g.ident} {i}\n')
+        f.write('\n')
         f.write(f'#define MENU_GROUP_COUNT {len(groups)}\n')
         f.write(f'#define MENU_NODE_COUNT {len(nodes)}\n\n')
         f.write('extern const menu_node_t menu_nodes[MENU_NODE_COUNT];\n')
         f.write('extern const menu_group_t menu_groups[MENU_GROUP_COUNT];\n\n')
+        f.write('/* Where each menu sits: its parent menu and the row it appears on\n'
+                ' * (0xFF for a top-level menu). */\n')
+        f.write('extern const uint8_t menu_parent[MENU_GROUP_COUNT];\n')
+        f.write('extern const uint8_t menu_parent_row[MENU_GROUP_COUNT];\n\n')
         f.write('#endif\n')
 
     with open(OUT_C, 'w') as f:
@@ -173,7 +200,19 @@ def main():
         f.write('const menu_group_t menu_groups[MENU_GROUP_COUNT] = {\n')
         for label, first, rows in group_rows:
             f.write(f'    {{ {c_label(label)}, {first}, {rows} }},\n')
-        f.write('};\n')
+        f.write('};\n\n')
+        parent = [0xFF] * len(groups)
+        prow = [0xFF] * len(groups)
+        for gi, g in enumerate(groups):
+            for ri, row in enumerate(g.rows):
+                for n in row:
+                    if isinstance(n, Group):
+                        parent[gindex[id(n)]] = gi
+                        prow[gindex[id(n)]] = ri
+        f.write('const uint8_t menu_parent[MENU_GROUP_COUNT] = { '
+                + ', '.join(str(v) for v in parent) + ' };\n')
+        f.write('const uint8_t menu_parent_row[MENU_GROUP_COUNT] = { '
+                + ', '.join(str(v) for v in prow) + ' };\n')
 
     print(f'{len(groups)} menus, {len(nodes)} slots, {len(ids) - 1} ids')
 

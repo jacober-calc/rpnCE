@@ -1,20 +1,21 @@
-# RPNCE menu tree.
+# RPNCE menu tree, opened with MATH (HOME). MODE jumps to the MODE menu.
 #
 # The menu tree is derived from the menu definitions of RPN83P,
 # Copyright (c) 2023 Brian T. Park, used under the MIT License.
 #
 # Format (2-space indentation):
-#   group LABEL ID        a submenu; its children are rows
+#   group LABEL ID        a menu; its children are rows
 #   row                   one screen row of up to 5 entries
-#   item LABEL ID         a function
+#   item LABEL ID         a function (the same ID can appear in several menus)
 #   alt LABEL ALTLABEL ID a mode item; ALTLABEL shows when the mode is on
 #   blank                 an empty slot
+#   include FILE          read another menu file here (top level only)
 # Labels have no spaces. Symbols are written as {name}:
 #   {sq} {cube} {cuberoot} {root} {sigma} {to} {block} {mu} {deg}
-#   {up} {down} {left} {times}
+#   {up} {down} {left} {times} {supx}
 # After editing, run: python3 tools/genmenu.py
 
-group root ROOT
+group HOME HOME
   row
     group MATH MATH
       row
@@ -236,15 +237,9 @@ group root ROOT
       row
         item RSIZ SET_REG_SIZE
         item RSZ? GET_REG_SIZE
-        blank
+        item TINT SCREEN_TINT
         item SSIZ SET_STACK_SIZE
         item SSZ? GET_STACK_SIZE
-      row
-        alt ,EE ,EE{block} COMMA_EENORMAL
-        alt EE, EE,{block} COMMA_EESWAPPED
-        blank
-        alt (..) (..){block} FORMAT_RECORD_RAW
-        alt '..' '..'{block} FORMAT_RECORD_STRING
     group STK STACK
       row
         item DUP STACK_DUP
@@ -252,6 +247,8 @@ group root ROOT
         item R{down} STACK_ROLL_DOWN
         item DROP STACK_DROP
         item X{left}{to}Y STACK_EXCHANGE_XY
+      row
+        item X<> STACK_EXCHANGE_REG
     group UNIT UNIT
       row
         group UFCN UNIT_FUNCTIONS

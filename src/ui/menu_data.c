@@ -139,7 +139,7 @@ const menu_node_t menu_nodes[MENU_NODE_COUNT] = {
     { "PDEG", "PDE\x07", MID_COMPLEX_MODE_DEG, MENU_ALT, 0 },
     { "RSIZ", 0, MID_SET_REG_SIZE, MENU_ITEM, 0 },
     { "RSZ?", 0, MID_GET_REG_SIZE, MENU_ITEM, 0 },
-    { "", 0, MID_NONE, MENU_BLANK, 0 },
+    { "TINT", 0, MID_SCREEN_TINT, MENU_ITEM, 0 },
     { "SSIZ", 0, MID_SET_STACK_SIZE, MENU_ITEM, 0 },
     { "SSZ?", 0, MID_GET_STACK_SIZE, MENU_ITEM, 0 },
     { "DUP", 0, MID_STACK_DUP, MENU_ITEM, 0 },
