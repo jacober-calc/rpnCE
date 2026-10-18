@@ -12,6 +12,7 @@
 - MATH-015: Y=-16, X=2, XROOT_Y -> 0 with no reported domain error (fail). Stack after operation not inspected. This confirms the failure extends to the square-root index and can yield different incorrect results for different even indices.
 - MATH-017: Y=-8, X=-3, XROOT_Y -> -0.5000 with expected stack drop (pass; valid negative odd index).
 - MATH-018: Y=-16, X=-4, XROOT_Y -> 0.3536 without domain error (fail; negative even index). Stack after operation not inspected. The missing guard therefore affects both signs of even integer root indices.
+- MATH-019: Y=16, X=0, XROOT_Y -> 0 as reported (fail against expected divide-by-zero error); stack after operation not inspected. **Unresolved:** current source includes a zero-index precheck, so verify operand entry, any transient error message, and installed build version before attributing this to the guard itself.
 - Comparison: DM32 reports `INVALID y^x` for the invalid negative-even-root case.
 
 ## Mathematical expectation
@@ -35,7 +36,7 @@ This delegates negative-base fractional exponent handling to TI OS power semanti
 
 ## Proposed implementation (NOT implemented in this PR)
 
-1. Give `CMD_XROOT_Y` a dedicated case in `precheck()`, preserving the existing X=0 -> `ERR_DIV0` behaviour.
+1. Give `CMD_XROOT_Y` a dedicated case in `precheck()`, preserving the intended X=0 -> `ERR_DIV0` behaviour. MATH-019 reports an observed 0 rather than an error, despite the current source guard; investigate this source/build/runtime discrepancy before implementation.
 2. When Y is negative, validate X as an **integer odd root index** before calling `os_RealPow`. Reject even integer X and noninteger X with `ERR_DOMAIN` (unless a deliberately documented broader real-root convention is implemented).
 3. Use existing `is_integer()`, `is_neg()`, and TI real arithmetic helpers; do not convert a large root index to a narrow native integer or use floating-point `fmod` in calculator code. An odd/even test should be designed to work within TI's 14-digit real representation, e.g. using TI real division by two and its fractional part. Verify negative root indices also work (odd negative allowed, even negative rejected).
 4. Preserve current valid odd-negative-root behaviour, including sign, and ensure no changes to X, Y, LASTX or stack lift on a rejected operation.
@@ -67,7 +68,7 @@ For rejected operations, assert the error text and that X, Y, deeper stack level
 
 - MATH-013 and MATH-014 no longer return 1.4142, MATH-015 no longer returns 0, and MATH-018 no longer returns 0.3536; all report `Err: Domain`.
 - Valid odd negative roots still work.
-- Zero-index error remains intact.
+- Zero-index handling produces the correct error on hardware; investigate MATH-019's reported 0 and reconcile it with the source precheck.
 - Errors preserve stack and LASTX.
 - All suites pass via `sh tests/run_tests.sh`, and targeted tests pass on TI-84 Plus CE.
 - No change to the current release is made until a separate code-change PR is reviewed and merged.
