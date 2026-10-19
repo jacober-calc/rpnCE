@@ -25,7 +25,7 @@
 ## Milestone 4: RPN83P-style menus
 - [x] Full RPN83P menu tree, always shown, MATH = HOME, MODE = MODE menu
 - [x] Dark menu boxes with inverted labels; T: Z: Y: X: labels; dot-matrix font
-- [x] MATH: all ten functions
+- [x] MATH: all nine functions
 - [x] TVM: N, I%YR, PV, PMT, FV, P/YR, C/YR, BEG/END, solver settings
 - [x] UNIT: all 169 units in 12 kinds, UVAL, UBAS
 - [x] STAT: Sigma+/-, all sums, means, deviations, covariance, curve fits
@@ -35,7 +35,7 @@
 - [x] NUM (PRIM, RNDF, RNDN, RNDG), HYP, CONV (polar, HMS), BASE
 - [x] DATE: seven object types, entry, arithmetic, all D/T/DT/TZ/DZ/DR/DW,
       EPCH and CLK functions, {..} / ".." display
-- [x] HELP: three reference pages, with 2ND CATALOG access, from
+- [x] HELP: 19 reference pages, with 2ND CATALOG access, from
       help/help.txt in the RPNCEres appvar
 - [x] Dedicated menu shortcuts (2ND LINK and 2ND ANGLE kept free for
       complex numbers) and quantities in ordinary registers, with register
@@ -43,8 +43,9 @@
 - [ ] Remaining: CPLX (and its MODE settings)
 - [ ] Check each UNIT function against RPN83P's rules, including which NUM
       functions accept TEMP and FUEL values
-- [x] User guide for 0.7.0 (docs/USER_GUIDE.md), with generated menu map
-      and unit list (tools/guide_appendix.py)
+- [x] Chapter-based [user manual for 0.7.0](USER_GUIDE.md), with worked
+      examples, troubleshooting, and generated menu map, unit list and
+      alphabetical function index (tools/guide_appendix.py)
 - [x] Menu tree generated from a menu definition file (menus/menus.txt)
 - [x] Menu navigation: softkeys, row up/down, HOME, EXIT
 - [x] DEG/RAD mode

@@ -4,7 +4,7 @@ RPNCE @VERSION@ - an RPN calculator for the TI-84 Plus CE
 Files
 -----
   RPNCE.8xp      the program
-  RPNCEres.8xv   its menus and unit tables (required)
+  RPNCEres.8xv   its menus, unit tables and HELP pages (required)
 
 RPNCE also needs the CE C libraries (clibs.8xg), which many CE programs
 use. If you don't have them, download clibs.8xg from
@@ -14,9 +14,11 @@ Installing
 ----------
 1. Send RPNCE.8xp, RPNCEres.8xv and clibs.8xg to the calculator with
    TI Connect CE. All three can stay in archive memory.
-2. On the home screen run Asm(prgmRPNCE), or just prgmRPNCE on newer
-   OS versions. Calculators on OS 5.5 or newer need the arTIfiCE jailbreak
-   to run C programs.
+2. Launch using the native-program method supported by your OS or
+   launcher. On OS versions that support it, use Asm(prgmRPNCE).
+   Newer OS versions need native-program support enabled first; follow
+   the current arTIfiCE instructions for your exact model and OS:
+   https://yvantt.github.io/arTIfiCE/
 
 RPNCE.8xp and RPNCEres.8xv must come from the same release. If RPNCEres
 is missing or from a different version, RPNCE says so when it starts.
@@ -25,7 +27,9 @@ Your data
 ---------
 RPNCE saves the stack, registers, statistics and settings when you quit
 (2ND QUIT) in appvars it creates: RPNCEdat, RPNCEcfg, and RPNCEunt when a
-register holds a unit. Deleting them resets RPNCE. They are kept when you upgrade.
+register holds a unit. They are kept when you upgrade. Back them up as a
+set before deleting or replacing saved state. Deleting them resets RPNCE's
+private state; it does not clear shared TI-OS TVM values or reset the clock.
 
 Getting started
 ---------------
@@ -34,5 +38,6 @@ Getting started
   MODE                  display format, angle mode, and more
   2ND QUIT              save and exit
 
-The full key and menu reference is docs/KEYS.md in the project:
+The full user manual starts at docs/USER_GUIDE.md in the project.
+The compact key and menu reference is docs/KEYS.md:
 https://github.com/jacober-calc/rpnce

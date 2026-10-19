@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Fills in the generated appendices of docs/USER_GUIDE.md:
+"""Fills in the generated appendices of docs/guide/19-reference.md:
 
   Appendix B (the menu map), from menus/menus.txt
   Appendix C (the units), from menus/menus.txt and tools/genunits.py
+  Appendix D (the function index), from menus/menus.txt
 
     python3 tools/guide_appendix.py
 
@@ -19,7 +20,7 @@ import genmenu   # noqa: E402
 import genunits  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-GUIDE = os.path.join(ROOT, 'docs', 'USER_GUIDE.md')
+GUIDE = os.path.join(ROOT, 'docs', 'guide', '19-reference.md')
 
 # menu label symbols, as shown on the calculator
 SYMBOLS = {'sq': '²', 'cube': '³', 'cuberoot': '³√', 'root': '√', 'sigma': 'Σ',
@@ -94,9 +95,11 @@ def unit_list(roots):
                     stack.append(n)
     walk(unit_root, ['UNIT'])
 
-    lines = ['Each unit with its value in the base unit of its kind (the unit UBAS',
-             'converts to). Values are exact to the digits shown, from each',
-             "unit's definition.", '']
+    lines = ['Each unit is listed in menu order with its value in the base unit',
+             'selected by UBAS. Numeric factors are rounded to at most 12 significant',
+             'digits for this table; the calculator uses 14-digit conversion factors.',
+             'Temperature entries are formulas; reciprocal fuel entries divide by',
+             'the quantity shown. See [Units](14-units.md) for usage and conventions.', '']
     by_dim = {}
     for ident, lab, where in found:
         dim = genunits.U[ident][0]
@@ -145,10 +148,66 @@ def temp_factor(f):
     return f' × {number(f)}'
 
 
+def function_index(roots):
+    """Link each non-unit menu action to its operating instructions."""
+    chapters = {
+        'MATH': '10-mathematics.md#math-menu',
+        'NUM': '10-mathematics.md#num-menu',
+        'PROB': '10-mathematics.md#prob-menu',
+        'COMPLEX': '18-compatibility.md#complex-number-placeholders',
+        'TVM': '13-tvm.md',
+        'BASE': '11-base.md',
+        'HYPERBOLIC': '10-mathematics.md#hyp-menu',
+        'STAT': '12-statistics.md',
+        'CONV': '10-mathematics.md#conv-menu',
+        'CLEAR': '10-mathematics.md#stk-and-clr-menus',
+        'MODE': '09-settings.md',
+        'STACK': '06-stack.md#moving-things-around',
+        'UNIT': '14-units.md#ufcn',
+        'DATE': '15-date.md#the-date-submenus',
+        'EPOCH': '15-date.md#epochs',
+        'CLK': '15-date.md#the-clock-and-time-zones',
+        'CFIT': '12-statistics.md#curve-fitting',
+        'HELP': '07-menus.md#help',
+    }
+    unavailable = {'NUM_RESULT_MODE_REAL', 'NUM_RESULT_MODE_COMPLEX',
+                   'COMPLEX_MODE_RECT', 'COMPLEX_MODE_RAD', 'COMPLEX_MODE_DEG'}
+    entries = {}
+
+    def walk(g, path, destination=None):
+        destination = chapters.get(g.ident, destination)
+        for row in g.rows:
+            for n in row:
+                if isinstance(n, genmenu.Group):
+                    walk(n, path + [label(n.label)], destination)
+                elif n[0] != 'blank' and n[3] not in genunits.U:
+                    ident = n[3]
+                    target = chapters.get(ident, destination)
+                    if ident in unavailable:
+                        target = chapters['COMPLEX']
+                    if not target:
+                        sys.exit(f'guide index: no chapter for {ident}')
+                    entry = entries.setdefault(ident, [label(n[1]), [], target])
+                    entry[1].append(' → '.join(path))
+
+    for r in roots:
+        walk(r, [label(r.label)])
+    lines = ['Find a menu action by its displayed label. Menu paths distinguish',
+             'repeated labels such as N, CLTV, or LEAP. Unit selections are listed',
+             'separately in [Appendix C](#appendix-c-units); keyboard operations',
+             'are in [Appendix A](#appendix-a-key-reference).', '',
+             '| Function | Menu location | Instructions |',
+             '| --- | --- | --- |']
+    for text, paths, target in sorted(entries.values(), key=lambda e: (e[0].casefold(), e[1])):
+        lines.append(f'| {text} | {"; ".join(paths)} | [Read]({target}) |')
+    lines.append('')
+    return lines
+
+
 def replace_block(text, name, new_lines):
     pat = re.compile(r'(<!-- BEGIN ' + name + r'[^>]*-->\n).*?(<!-- END ' + name + r' -->)', re.S)
     if not pat.search(text):
-        sys.exit(f'USER_GUIDE.md: no {name} markers')
+        sys.exit(f'{GUIDE}: no {name} markers')
     return pat.sub(lambda m: m.group(1) + '\n'.join(new_lines) + '\n' + m.group(2), text)
 
 
@@ -157,8 +216,9 @@ def main():
     text = open(GUIDE, encoding='utf-8').read()
     text = replace_block(text, 'MENU MAP', menu_map(roots))
     text = replace_block(text, 'UNITS', unit_list(roots))
+    text = replace_block(text, 'FUNCTION INDEX', function_index(roots))
     open(GUIDE, 'w', encoding='utf-8').write(text)
-    print('USER_GUIDE.md appendices updated')
+    print('19-reference.md menu map, units, and function index updated')
 
 
 if __name__ == '__main__':

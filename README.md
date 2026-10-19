@@ -29,8 +29,9 @@ bottom of the screen, on a dot-matrix LCD-style display.
 - **Screen tints:** LCD, LCD+ (for real screens), GRAY, INVERTED, AYU DARK,
   MONOKAI, PASTEL, and COMMODORE.
 
-The **[User Guide](docs/USER_GUIDE.md)** explains everything RPNCE does,
-with examples: the stack, menus, registers, every function, and the screen.
+The **[User Guide](docs/USER_GUIDE.md)** is a chapter-based manual for 0.7.0,
+with operating procedures, worked keystroke examples, and a
+[function index](docs/guide/19-reference.md#appendix-d-alphabetical-function-index).
 [docs/KEYS.md](docs/KEYS.md) is a compact key and menu reference, and
 [docs/ROADMAP.md](docs/ROADMAP.md) shows what's done and what's next.
 
@@ -44,9 +45,12 @@ with examples: the stack, menus, registers, every function, and the screen.
    (`clibs.8xg`) if you don't already have them.
 2. Send all three to the calculator with TI Connect CE. They can all stay
    in archive memory.
-3. Run it from the home screen with `Asm(prgmRPNCE)`, or `prgmRPNCE` on
-   newer OS versions. Calculators on OS 5.5 or newer need the arTIfiCE
-   jailbreak to run C programs.
+3. Use the native-program launch method supported by your OS or installed
+   launcher. On OS versions that support it, use `Asm(prgmRPNCE)`.
+   For newer OS versions, follow the current
+   [arTIfiCE instructions](https://yvantt.github.io/arTIfiCE/) for your
+   exact model and OS. See the manual's
+   [installation chapter](docs/guide/02-installation.md).
 
 The program and `RPNCEres` must come from the same release; if the appvar
 is missing or doesn't match, RPNCE says so at startup. RPNCE saves its own
@@ -81,7 +85,7 @@ To try it without a calculator, load both files and `clibs.8xg` into the
 
 ### Memory
 
-The menu tree, unit tables and HELP pages (about 12 KB) live in `RPNCEres`
+The menu tree, unit tables and HELP pages (about 17 KB) live in `RPNCEres`
 and are read straight from archive, so they use no RAM. The 0.7.0 build has
 an 82,968-byte program image and 3,855 bytes of static variables, excluding
 runtime stack and library allocations. See the
@@ -129,12 +133,13 @@ src/sys/     saving and loading state, the hardware clock
 menus/       menus.txt: the whole menu tree as editable text
 help/        help.txt: the HELP pages as editable text
 data/        RPNCEres.bin: the RPNCEres appvar's contents (generated)
-tools/       guide_appendix.py: regenerates the user guide's menu map and
-             unit list; genres.py: builds RPNCEres and the matching headers from
+tools/       guide_appendix.py: regenerates the manual's menu map, unit list
+             and function index; genres.py: builds RPNCEres and the matching headers from
              menus.txt (via genmenu.py) and the unit definitions
              (genunits.py); release.sh: packages a release
 tests/       PC test suites and run_tests.sh
-docs/        the user guide, key reference, roadmap, and install notes
+docs/        USER_GUIDE.md: manual contents; guide/: chapters and reference
+             tables; key reference, roadmap, and install notes
 prod/        the current build: RPNCE.8xp, RPNCEres.8xv, INSTALL.txt
 ```
 
@@ -146,8 +151,10 @@ Change `menus/menus.txt`, `help/help.txt` (or the unit definitions in
 stamp, so a program and appvar built from different sources can't be mixed
 up. The generated files are committed, so building doesn't need Python.
 After changing the menus or units, also run `python3 tools/guide_appendix.py`
-to refresh the user guide's menu map and unit list.
-genres.py needs the `mpmath` package.
+to refresh the menu map, unit list, and function index in
+`docs/guide/19-reference.md`. Update the operating instructions and examples
+in the corresponding chapter when behavior changes; generated tables do
+not replace those explanations. Both generators need the `mpmath` package.
 
 ## License
 
