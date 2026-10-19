@@ -12,27 +12,22 @@
 
 /* ---------- constants ---------- */
 
-static real_t r_zero, r_one, r_two, r_three, r_ten, r_hundred, r_360;
+static real_t r_three, r_360;
 static real_t r_ln10, r_ln2, r_pi, r_e, r_half_pi, r_quarter_pi, r_tenth;
 
 static void init_constants(void)
 {
     mathx_init();
-    r_zero = os_Int24ToReal(0);
-    r_one = os_Int24ToReal(1);
-    r_two = os_Int24ToReal(2);
     r_three = os_Int24ToReal(3);
-    r_ten = os_Int24ToReal(10);
-    r_hundred = os_Int24ToReal(100);
     r_360 = os_Int24ToReal(360);
-    r_ln10 = os_RealLog(&r_ten);
-    r_ln2 = os_RealLog(&r_two);
+    r_ln10 = os_RealLog(&mx_ten);
+    r_ln2 = os_RealLog(&mx_two);
     r_pi = os_StrToReal("3.1415926535898", NULL);
-    r_e = os_RealExp(&r_one);
-    r_half_pi = os_RealDiv(&r_pi, &r_two);
+    r_e = os_RealExp(&mx_one);
+    r_half_pi = os_RealDiv(&r_pi, &mx_two);
     real_t four = os_Int24ToReal(4);
     r_quarter_pi = os_RealDiv(&r_pi, &four);
-    r_tenth = os_RealDiv(&r_one, &r_ten);
+    r_tenth = os_RealDiv(&mx_one, &mx_ten);
 }
 
 /* ---------- stack primitives ---------- */
@@ -54,6 +49,30 @@ static void drop_levels(calc_t *c, int from)
         c->stack[k] = c->stack[k + 1];
         c->unit[k] = c->unit[k + 1];
     }
+}
+
+/* Commit a successful calculation. Save X and its unit before a binary
+ * operation drops Y; errors return before reaching this point. */
+static void save_lastx(calc_t *c)
+{
+    c->lastx = c->stack[0];
+    c->unit_lastx = c->unit[REG_X];
+}
+
+static void set_result(calc_t *c, const real_t *v, bool drop)
+{
+    save_lastx(c);
+    if (drop)
+        drop_levels(c, 1);
+    c->stack[0] = *v;
+    c->unit[REG_X] = 0;
+    c->lift = true;
+}
+
+/* Replace X with a result (LASTX keeps the old X). */
+static void set_x(calc_t *c, const real_t *v)
+{
+    set_result(c, v, false);
 }
 
 /* Lifts the stack and puts v (with unit tag u) in X. */
@@ -95,7 +114,7 @@ static void clear_units(calc_t *c)
 static void clear_stack(calc_t *c)
 {
     for (int i = 0; i < STACK_MAX; i++)
-        c->stack[i] = r_zero;
+        c->stack[i] = mx_zero;
     clear_units(c);
 }
 
@@ -168,7 +187,7 @@ static void finish_entry(calc_t *c)
         if (dt_parse(c->entry, &o) == DT_OK)
             c->stack[0] = obj_pack(&o);
         else
-            c->stack[0] = r_zero;           /* only when leaving mid-record */
+            c->stack[0] = mx_zero;           /* only when leaving mid-record */
     } else if (base_mode(c)) {
         c->stack[0] = base_real(entry_word(c));
     } else {
@@ -183,7 +202,7 @@ static void cancel_entry_to_zero(calc_t *c)
     c->editing = false;
     c->entry_len = 0;
     c->entry[0] = '\0';
-    c->stack[0] = r_zero;
+    c->stack[0] = mx_zero;
     c->unit[REG_X] = 0;
     c->lift = false;
 }
@@ -419,15 +438,12 @@ static calc_err_t map_os_error(int err)
 static real_t g_result;
 static real_t g_result2;        /* second answer (Y) for two-value stats */
 
-static bool is_zero(const real_t *v) { return os_RealCompare(v, &r_zero) == 0; }
-static bool is_neg(const real_t *v)  { return os_RealCompare(v, &r_zero) < 0; }
-
-static bool is_positive(const real_t *v) { return os_RealCompare(v, &r_zero) > 0; }
+static bool is_positive(const real_t *v) { return os_RealCompare(v, &mx_zero) > 0; }
 
 static bool is_integer(const real_t *v)
 {
     real_t f = os_RealFrac(v);
-    return is_zero(&f);
+    return mx_is_zero(&f);
 }
 
 /* A whole number not divisible by 2 (any size: x / 2 is checked for a
@@ -436,7 +452,7 @@ static bool is_odd_integer(const real_t *v)
 {
     if (!is_integer(v))
         return false;
-    real_t half = os_RealDiv(v, &r_two);
+    real_t half = os_RealDiv(v, &mx_two);
     return !is_integer(&half);
 }
 
@@ -448,7 +464,7 @@ static calc_err_t precheck(calc_cmd_t cmd, const real_t *y, const real_t *x)
         case CMD_DIV:
         case CMD_RECIP:
         case CMD_MOD:
-            return is_zero(x) ? ERR_DIV0 : ERR_NONE;
+            return mx_is_zero(x) ? ERR_DIV0 : ERR_NONE;
         /* Negative bases follow the HP rule (as on the HP-32SII / DM32): a
          * root of a negative number needs an odd whole-number index, and a
          * power of one a whole-number exponent. Anything else is an error,
@@ -456,17 +472,17 @@ static calc_err_t precheck(calc_cmd_t cmd, const real_t *y, const real_t *x)
          * power routine never sees a negative base with any other exponent
          * (it would return the real part of a complex result). */
         case CMD_XROOT_Y:
-            if (is_zero(x))
+            if (mx_is_zero(x))
                 return ERR_DIV0;
-            if (is_zero(y) && is_neg(x))
+            if (mx_is_zero(y) && mx_is_neg(x))
                 return ERR_DOMAIN;          /* 0 to a negative power (MATH-103/104) */
-            return (is_neg(y) && !is_odd_integer(x)) ? ERR_DOMAIN : ERR_NONE;
+            return (mx_is_neg(y) && !is_odd_integer(x)) ? ERR_DOMAIN : ERR_NONE;
         case CMD_POW:
-            return (is_neg(y) && !is_integer(x)) ? ERR_DOMAIN : ERR_NONE;
+            return (mx_is_neg(y) && !is_integer(x)) ? ERR_DOMAIN : ERR_NONE;
         case CMD_PERCENT_CHANGE:
-            return is_zero(y) ? ERR_DIV0 : ERR_NONE;
+            return mx_is_zero(y) ? ERR_DIV0 : ERR_NONE;
         case CMD_SQRT:
-            return is_neg(x) ? ERR_DOMAIN : ERR_NONE;
+            return mx_is_neg(x) ? ERR_DOMAIN : ERR_NONE;
         case CMD_LOG:
         case CMD_LN:
         case CMD_LOG2:
@@ -474,30 +490,30 @@ static calc_err_t precheck(calc_cmd_t cmd, const real_t *y, const real_t *x)
         case CMD_LOG_BASE:
             if (!is_positive(x) || !is_positive(y))
                 return ERR_DOMAIN;
-            return os_RealCompare(x, &r_one) == 0 ? ERR_DIV0 : ERR_NONE;
+            return os_RealCompare(x, &mx_one) == 0 ? ERR_DIV0 : ERR_NONE;
         case CMD_ASIN:
         case CMD_ACOS:
-            neg_one = os_RealNeg(&r_one);
-            if (os_RealCompare(x, &r_one) > 0 || os_RealCompare(x, &neg_one) < 0)
+            neg_one = os_RealNeg(&mx_one);
+            if (os_RealCompare(x, &mx_one) > 0 || os_RealCompare(x, &neg_one) < 0)
                 return ERR_DOMAIN;
             return ERR_NONE;
         case CMD_LN_ONE_PLUS:
-            neg_one = os_RealNeg(&r_one);
+            neg_one = os_RealNeg(&mx_one);
             return os_RealCompare(x, &neg_one) > 0 ? ERR_NONE : ERR_DOMAIN;
         case CMD_FACTORIAL:
             max_fact = os_Int24ToReal(69);
-            if (is_neg(x) || !is_integer(x) || os_RealCompare(x, &max_fact) > 0)
+            if (mx_is_neg(x) || !is_integer(x) || os_RealCompare(x, &max_fact) > 0)
                 return ERR_DOMAIN;
             return ERR_NONE;
         case CMD_GCD:
         case CMD_LCM:
-            if (!is_integer(x) || !is_integer(y) || is_neg(x) || is_neg(y))
+            if (!is_integer(x) || !is_integer(y) || mx_is_neg(x) || mx_is_neg(y))
                 return ERR_DOMAIN;
             return ERR_NONE;
         case CMD_COMB:
         case CMD_PERM:
             /* Y items taken X at a time: whole numbers with X <= Y */
-            if (!is_integer(x) || !is_integer(y) || is_neg(x) || is_neg(y) ||
+            if (!is_integer(x) || !is_integer(y) || mx_is_neg(x) || mx_is_neg(y) ||
                 os_RealCompare(x, y) > 0)
                 return ERR_DOMAIN;
             return ERR_NONE;
@@ -548,7 +564,7 @@ static real_t trig(calc_cmd_t cmd, const real_t *x)
             static const int8_t cos_q[4] = { 1, 0, -1, 0 };
             if (cmd == CMD_SIN) return os_Int24ToReal(sin_q[q]);
             if (cmd == CMD_COS) return os_Int24ToReal(cos_q[q]);
-            if (q == 0 || q == 2) return r_zero;          /* tan */
+            if (q == 0 || q == 2) return mx_zero;          /* tan */
             os_ThrowError(OS_E_DOMAIN);                    /* tan(90), tan(270) */
         }
         a = os_RealDegToRad(&d);
@@ -573,7 +589,7 @@ static real_t inverse_trig(calc_cmd_t cmd, const real_t *x)
 static real_t factorial(const real_t *x)
 {
     int n = os_RealToInt24(x);
-    real_t r = r_one;
+    real_t r = mx_one;
     for (int i = 2; i <= n; i++) {
         real_t k = os_Int24ToReal(i);
         r = os_RealMul(&r, &k);
@@ -585,13 +601,13 @@ static real_t factorial(const real_t *x)
  * error handler in compute(), which also bounds the loop. */
 static real_t permutations(const real_t *n, const real_t *r)
 {
-    real_t result = r_one;
+    real_t result = mx_one;
     real_t k = *n;
     real_t count = *r;
-    while (os_RealCompare(&count, &r_zero) > 0) {
+    while (os_RealCompare(&count, &mx_zero) > 0) {
         result = os_RealMul(&result, &k);
-        k = os_RealSub(&k, &r_one);
-        count = os_RealSub(&count, &r_one);
+        k = os_RealSub(&k, &mx_one);
+        count = os_RealSub(&count, &mx_one);
     }
     return result;
 }
@@ -605,20 +621,15 @@ static real_t combinations(const real_t *n, const real_t *r)
         k = *r;
 
     real_t base = os_RealSub(n, &k);            /* n - k */
-    real_t result = r_one;
-    real_t i = r_one;
+    real_t result = mx_one;
+    real_t i = mx_one;
     while (os_RealCompare(&i, &k) <= 0) {
         real_t factor = os_RealAdd(&base, &i);
         result = os_RealMul(&result, &factor);
         result = os_RealDiv(&result, &i);
-        i = os_RealAdd(&i, &r_one);
+        i = os_RealAdd(&i, &mx_one);
     }
     return result;
-}
-
-static real_t abs_real(const real_t *x)
-{
-    return is_neg(x) ? os_RealNeg(x) : *x;
 }
 
 /* ATN2: the angle of the point (X, Y), from -180 to 180 degrees (or -pi to
@@ -627,13 +638,13 @@ static real_t abs_real(const real_t *x)
  * degrees. ATN2 of (0, 0) is 0. */
 static real_t atan2_real(const real_t *y, const real_t *x)
 {
-    real_t ax = abs_real(x), ay = abs_real(y);
+    real_t ax = mx_abs(x), ay = mx_abs(y);
     int cmp = os_RealCompare(&ay, &ax);
     real_t a;               /* angle of (|x|, |y|): 0 to 90 degrees */
 
-    if (is_zero(&ay)) {
-        a = r_zero;
-    } else if (is_zero(&ax)) {
+    if (mx_is_zero(&ay)) {
+        a = mx_zero;
+    } else if (mx_is_zero(&ax)) {
         a = g_degrees ? os_Int24ToReal(90) : r_half_pi;
     } else if (cmp == 0) {
         a = g_degrees ? os_Int24ToReal(45) : r_quarter_pi;
@@ -650,11 +661,11 @@ static real_t atan2_real(const real_t *y, const real_t *x)
             a = os_RealRadToDeg(&a);
     }
 
-    if (is_neg(x)) {                        /* left half: 180 - a */
+    if (mx_is_neg(x)) {                        /* left half: 180 - a */
         real_t half_turn = g_degrees ? os_Int24ToReal(180) : r_pi;
         a = os_RealSub(&half_turn, &a);
     }
-    if (is_neg(y))                          /* below the x axis */
+    if (mx_is_neg(y))                          /* below the x axis */
         a = os_RealNeg(&a);
     return a;
 }
@@ -669,16 +680,16 @@ static real_t smallest_prime_factor(const real_t *x)
     if (!base_u32(x, &n) || n < 2)
         os_ThrowError(OS_E_DOMAIN);
     if (n % 2 == 0)
-        return n == 2 ? r_one : r_two;
+        return n == 2 ? mx_one : mx_two;
     if (n % 3 == 0)
-        return n == 3 ? r_one : r_three;
+        return n == 3 ? mx_one : r_three;
     for (uint32_t k = 5; k <= n / k; k += 6) {
         if (n % k == 0)
             return base_real(k);
         if (n % (k + 2) == 0)
             return base_real(k + 2);
     }
-    return r_one;
+    return mx_one;
 }
 
 /* RNDF: round to what the display shows. */
@@ -693,8 +704,8 @@ static real_t round_to_display(const real_t *x)
 
 static real_t cube_root(const real_t *x)
 {
-    real_t third = os_RealDiv(&r_one, &r_three);
-    if (is_neg(x)) {
+    real_t third = os_RealDiv(&mx_one, &r_three);
+    if (mx_is_neg(x)) {
         real_t a = os_RealNeg(x);
         real_t r = os_RealPow(&a, &third);
         return os_RealNeg(&r);
@@ -736,7 +747,7 @@ static bool reads_y(calc_cmd_t cmd)
  * isn't a whole number unless x is 1 or -1 (both odd, so negative too). */
 static real_t signed_power(const real_t *y, const real_t *e)
 {
-    if (!is_neg(y))
+    if (!mx_is_neg(y))
         return os_RealPow(y, e);
     real_t mag = os_RealNeg(y);
     real_t r = os_RealPow(&mag, e);
@@ -774,7 +785,7 @@ static calc_err_t compute(calc_cmd_t cmd, const real_t *y, const real_t *x)
             break;
         }
         case CMD_EXP:    g_result = os_RealExp(x); break;
-        case CMD_ALOG:   g_result = os_RealPow(&r_ten, x); break;
+        case CMD_ALOG:   g_result = os_RealPow(&mx_ten, x); break;
         case CMD_SIN:
         case CMD_COS:
         case CMD_TAN:    g_result = trig(cmd, x); break;
@@ -809,12 +820,12 @@ static calc_err_t compute(calc_cmd_t cmd, const real_t *y, const real_t *x)
         case CMD_PERM:   g_result = permutations(y, x); break;
         case CMD_PERCENT: {
             real_t m = os_RealMul(y, x);
-            g_result = os_RealDiv(&m, &r_hundred);
+            g_result = os_RealDiv(&m, &mx_hundred);
             break;
         }
         case CMD_PERCENT_CHANGE: {
             real_t d = os_RealSub(x, y);
-            real_t m = os_RealMul(&d, &r_hundred);
+            real_t m = os_RealMul(&d, &mx_hundred);
             g_result = os_RealDiv(&m, y);
             break;
         }
@@ -827,7 +838,7 @@ static calc_err_t compute(calc_cmd_t cmd, const real_t *y, const real_t *x)
         case CMD_ATAN2:     g_result = atan2_real(y, x); break;
         case CMD_EXP_MINUS_ONE: g_result = mx_expm1(x); break;
         case CMD_LN_ONE_PLUS:   g_result = mx_ln1p(x); break;
-        case CMD_TWO_POW:   g_result = os_RealPow(&r_two, x); break;
+        case CMD_TWO_POW:   g_result = os_RealPow(&mx_two, x); break;
         case CMD_LOG2: {
             real_t ln = os_RealLog(x);
             g_result = os_RealDiv(&ln, &r_ln2);
@@ -843,9 +854,9 @@ static calc_err_t compute(calc_cmd_t cmd, const real_t *y, const real_t *x)
             break;
         }
         case CMD_NEAR:      g_result = os_RealRoundInt(x); break;
-        case CMD_ABS:       g_result = is_neg(x) ? os_RealNeg(x) : *x; break;
+        case CMD_ABS:       g_result = mx_is_neg(x) ? os_RealNeg(x) : *x; break;
         case CMD_SIGN:
-            g_result = os_Int24ToReal(is_zero(x) ? 0 : (is_neg(x) ? -1 : 1));
+            g_result = os_Int24ToReal(mx_is_zero(x) ? 0 : (mx_is_neg(x) ? -1 : 1));
             break;
         case CMD_FACTORIAL: g_result = factorial(x); break;
         case CMD_UNIT:      g_result = unit_convert(x, g_unit_from, g_unit_to); break;
@@ -951,13 +962,7 @@ static void do_math(calc_t *c, calc_cmd_t cmd)
         return;
     }
 
-    c->lastx = c->stack[0];
-    c->unit_lastx = c->unit[REG_X];
-    if (is_binary(cmd))
-        drop_levels(c, 1);              /* the top level is duplicated */
-    c->stack[0] = g_result;
-    c->unit[REG_X] = 0;                 /* results carry no unit */
-    c->lift = true;
+    set_result(c, &g_result, is_binary(cmd));
 }
 
 /* defined with the DATE functions below */
@@ -1092,11 +1097,7 @@ static void do_recall(calc_t *c, calc_cmd_t cmd, uint8_t arg)
         }
         result = g_result;
     }
-    c->lastx = c->stack[0];
-    c->unit_lastx = c->unit[REG_X];
-    c->stack[0] = result;
-    c->unit[REG_X] = 0;
-    c->lift = true;
+    set_x(c, &result);
 }
 
 /* x<> reg: swaps X with a register. */
@@ -1166,7 +1167,7 @@ static void set_reg_size(calc_t *c)
         return;
     int n = total - REG_STAT_LAST;
     for (int i = n; i < REG_EXTRA_MAX; i++)
-        c->extra[i] = r_zero;
+        c->extra[i] = mx_zero;
     c->extra_count = (uint8_t)n;
     c->message = "Register Size Set";
 }
@@ -1180,7 +1181,7 @@ static void set_stack_size(calc_t *c)
     if (n < 0)
         return;
     for (int k = n; k < STACK_MAX; k++) {
-        c->stack[k] = r_zero;
+        c->stack[k] = mx_zero;
         c->unit[k] = 0;
     }
     c->depth = (uint8_t)n;
@@ -1251,11 +1252,8 @@ static void do_unit(calc_t *c, uint8_t to)
         c->message = error_text(err);
         return;
     }
-    c->lastx = c->stack[0];
-    c->unit_lastx = tag;
-    c->stack[0] = g_result;
+    set_x(c, &g_result);
     c->unit[REG_X] = (uint8_t)(to + 1);
-    c->lift = true;
 }
 
 /* UBAS: converts X to its kind's base unit (m, kg, s, K, ...). */
@@ -1299,9 +1297,9 @@ static real_t whole_to_real(dt_int n)
     return os_RealAdd(&t, &r);
 }
 
-/* A stack value as a DATE operand: an object, or a number (whole, and in
- * quarter hours for TimeZone arithmetic). */
-static dt_val_t date_val(const real_t *v)
+/* A stack value as a DATE operand. Only timezone operations need the
+ * second conversion to quarter hours. */
+static dt_val_t date_val(const real_t *v, bool quarters)
 {
     dt_val_t d;
     memset(&d, 0, sizeof d);
@@ -1311,9 +1309,11 @@ static dt_val_t date_val(const real_t *v)
         return d;
     }
     d.is_whole = real_to_whole(v, &d.whole);
-    real_t four = os_Int24ToReal(4);
-    real_t q = os_RealMul(v, &four);
-    d.is_quarter = real_to_whole(&q, &d.quarters);
+    if (quarters) {
+        real_t four = os_Int24ToReal(4);
+        real_t q = os_RealMul(v, &four);
+        d.is_quarter = real_to_whole(&q, &d.quarters);
+    }
     return d;
 }
 
@@ -1364,7 +1364,7 @@ static dt_err_t date_cvtz(const dt_val_t *a, const dt_val_t *b, dt_result_t *out
 /* y op x where either may be an object: + and -, and x for CVTZ. */
 static dt_err_t date_op(calc_cmd_t op, const real_t *y, const real_t *x, real_t *out)
 {
-    dt_val_t a = date_val(y), b = date_val(x);
+    dt_val_t a = date_val(y, true), b = date_val(x, true);
     dt_result_t r;
     dt_err_t e;
     if (op == CMD_ADD)
@@ -1389,12 +1389,7 @@ static void do_date_binary(calc_t *c, calc_cmd_t op)
         date_error(c, e);
         return;
     }
-    c->lastx = c->stack[0];
-    c->unit_lastx = c->unit[REG_X];
-    drop_levels(c, 1);
-    c->stack[0] = r;
-    c->unit[REG_X] = 0;
-    c->lift = true;
+    set_result(c, &r, true);
 }
 
 static dt_int epoch_days(const calc_t *c)
@@ -1408,16 +1403,6 @@ static dt_int epoch_days(const calc_t *c)
                                    c->custom_epoch.month, c->custom_epoch.day);
         default:           return 0;
     }
-}
-
-/* Replace X with a result (LASTX keeps the old X). */
-static void set_x(calc_t *c, const real_t *v)
-{
-    c->lastx = c->stack[0];
-    c->unit_lastx = c->unit[REG_X];
-    c->stack[0] = *v;
-    c->unit[REG_X] = 0;
-    c->lift = true;
 }
 
 static void set_x_obj(calc_t *c, const dt_obj_t *o)
@@ -1454,25 +1439,25 @@ static bool clock_now(const calc_t *c, dt_obj_t *out)
 }
 
 /* A time zone from X: a TimeZone object or hours (multiples of 0.25). */
-static bool tz_from_x(calc_t *c, int *q)
+static bool tz_from_value(calc_t *c, const dt_val_t *v, int *q)
 {
-    dt_val_t v = date_val(&c->stack[0]);
-    if (v.is_obj && v.obj.type == OBJ_TZ) {
-        *q = dt_tz_quarters(&v.obj);
+    if (v->is_obj && v->obj.type == OBJ_TZ) {
+        *q = dt_tz_quarters(&v->obj);
         return true;
     }
-    if (!v.is_obj && v.is_quarter && v.quarters >= -95 && v.quarters <= 95) {
-        *q = (int)v.quarters;
+    if (!v->is_obj && v->is_quarter && v->quarters >= -95 && v->quarters <= 95) {
+        *q = (int)v->quarters;
         return true;
     }
-    date_error(c, v.is_obj ? DT_ERR_TYPE : DT_ERR_DOMAIN);
+    date_error(c, v->is_obj ? DT_ERR_TYPE : DT_ERR_DOMAIN);
     return false;
 }
 
 static void do_date_fn(calc_t *c, date_fn_t fn)
 {
     finish_entry(c);
-    dt_val_t x = date_val(&c->stack[0]);
+    dt_val_t x = date_val(&c->stack[0], fn == DF_HR_TO_TZ ||
+                         fn == DF_SET_APP_TZ || fn == DF_SET_CLOCK_TZ);
     uint8_t t = x.is_obj ? x.obj.type : OBJ_NONE;
     bool dated = (t == OBJ_DATE || t == OBJ_DATETIME || t == OBJ_DZ);
     dt_obj_t o;
@@ -1599,7 +1584,7 @@ static void do_date_fn(calc_t *c, date_fn_t fn)
             return;
         }
         case DF_LINK: {                         /* D + T -> DT; DT + TZ -> DZ */
-            dt_val_t y = date_val(&c->stack[1]);
+            dt_val_t y = date_val(&c->stack[1], false);
             if (!x.is_obj || !y.is_obj) { e = DT_ERR_TYPE; break; }
             const dt_obj_t *a = &y.obj, *b = &x.obj;
             if (a->type > b->type) { const dt_obj_t *s = a; a = b; b = s; }
@@ -1615,12 +1600,8 @@ static void do_date_fn(calc_t *c, date_fn_t fn)
                 e = DT_ERR_TYPE;
                 break;
             }
-            c->lastx = c->stack[0];
-            c->unit_lastx = c->unit[REG_X];
-            drop_levels(c, 1);
-            c->stack[0] = obj_pack(&o);
-            c->unit[REG_X] = 0;
-            c->lift = true;
+            real_t result = obj_pack(&o);
+            set_result(c, &result, true);
             return;
         }
 
@@ -1717,7 +1698,7 @@ static void do_date_fn(calc_t *c, date_fn_t fn)
         }
         case DF_SET_APP_TZ:
         case DF_SET_CLOCK_TZ:
-            if (!tz_from_x(c, &q))
+            if (!tz_from_value(c, &x, &q))
                 return;
             if (fn == DF_SET_APP_TZ)
                 c->app_tz = (int8_t)q;
@@ -1767,12 +1748,9 @@ static void do_polar_rect(calc_t *c, calc_cmd_t cmd)
         c->message = error_text(err);
         return;
     }
-    c->lastx = c->stack[0];
-    c->unit_lastx = c->unit[REG_X];
-    c->stack[0] = g_result;
+    set_x(c, &g_result);
     c->stack[1] = g_result2;
-    c->unit[REG_X] = c->unit[REG_Y] = 0;
-    c->lift = true;
+    c->unit[REG_Y] = 0;
 }
 
 /* ---------- BASE ---------- */
@@ -1804,8 +1782,7 @@ static void do_base_op(calc_t *c, base_op_t op)
     }
     c->base = trial;
 
-    c->lastx = c->stack[0];
-    c->unit_lastx = c->unit[REG_X];
+    save_lastx(c);
     if (op == BOP_DIV2) {                   /* BDIV: quotient in Y, remainder in X */
         c->stack[1] = base_real(r);
         c->stack[0] = base_real(r2);
@@ -1864,10 +1841,7 @@ static void do_stat(calc_t *c, calc_cmd_t cmd)
     switch (cmd) {
         case CMD_STAT_PLUS:
         case CMD_STAT_MINUS:
-            c->lastx = c->stack[0];
-            c->unit_lastx = c->unit[REG_X];
-            c->stack[0] = g_result;
-            c->unit[REG_X] = 0;
+            set_x(c, &g_result);
             c->lift = false;
             break;
         case CMD_STAT_SUM: case CMD_STAT_MEAN: case CMD_STAT_WMEAN:
@@ -1879,11 +1853,7 @@ static void do_stat(calc_t *c, calc_cmd_t cmd)
         }
         case CMD_FIT_X:
         case CMD_FIT_Y:
-            c->lastx = c->stack[0];
-            c->unit_lastx = c->unit[REG_X];
-            c->stack[0] = g_result;
-            c->unit[REG_X] = 0;
-            c->lift = true;
+            set_x(c, &g_result);
             break;
         case CMD_FIT_BEST:
             c->message = model_names[c->stats.model];
@@ -1895,11 +1865,6 @@ static void do_stat(calc_t *c, calc_cmd_t cmd)
 }
 
 /* ---------- TVM ---------- */
-
-static bool is_positive_real(const real_t *v)
-{
-    return !mx_is_neg(v) && !mx_is_zero(v);
-}
 
 /* N, I%YR, PV, PMT, FV: like an HP-12C, the key stores X, unless the last
  * key was a TVM key too, in which case it solves for that value. P/YR and
@@ -1923,7 +1888,7 @@ static void do_tvm_var(calc_t *c, uint8_t arg, calc_cmd_t prev)
         return;
     }
     if (!solve) {
-        if (which >= TVM_PYR && !is_positive_real(&c->stack[0])) {
+        if (which >= TVM_PYR && !is_positive(&c->stack[0])) {
             c->message = "Err: Domain";
             return;
         }
@@ -1964,7 +1929,7 @@ static void do_tvm_setting(calc_t *c, calc_cmd_t cmd, uint8_t arg)
     if (cmd == CMD_TVM_ITER_MAX) {
         real_t max = os_Int24ToReal(255);
         real_t f = os_RealFrac(&c->stack[0]);
-        if (!is_positive_real(&c->stack[0]) || !mx_is_zero(&f) ||
+        if (!is_positive(&c->stack[0]) || !mx_is_zero(&f) ||
             os_RealCompare(&c->stack[0], &max) > 0) {
             c->message = "Err: Domain";
             return;
@@ -1999,11 +1964,11 @@ void calc_init(calc_t *c)
     memset(c, 0, sizeof *c);
     c->depth = STACK_MIN;
     clear_stack(c);
-    c->lastx = r_zero;
+    c->lastx = mx_zero;
     for (int i = 0; i < REG_BASE_COUNT; i++)
-        c->regs[i] = r_zero;
+        c->regs[i] = mx_zero;
     for (int i = 0; i < REG_EXTRA_MAX; i++)
-        c->extra[i] = r_zero;
+        c->extra[i] = mx_zero;
     c->extra_count = 0;
     c->lift = true;
     c->disp_style = DISP_FIX;
@@ -2103,9 +2068,9 @@ void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg)
 
         case CMD_CLEAR_REGS:                    /* CLRG */
             for (int i = 0; i < REG_BASE_COUNT; i++)
-                c->regs[i] = r_zero;
+                c->regs[i] = mx_zero;
             for (int i = 0; i < REG_EXTRA_MAX; i++)
-                c->extra[i] = r_zero;
+                c->extra[i] = mx_zero;
             c->message = "Registers Cleared";
             break;
 
@@ -2332,7 +2297,7 @@ void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg)
 
         case CMD_GET_CARRY:
             finish_entry(c);
-            tmp = c->base.carry ? r_one : r_zero;
+            tmp = c->base.carry ? mx_one : mx_zero;
             enter_value(c, &tmp);
             break;
 

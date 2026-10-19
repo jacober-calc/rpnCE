@@ -147,14 +147,6 @@ int dot_width(const char *s)
 }
 
 static void draw_rows_pitch(const uint8_t *rows, int nrows, int x, int y,
-                            int clip_left, int px_w, int px_h);
-
-static void draw_rows(const uint8_t *rows, int nrows, int x, int y, int clip_left)
-{
-    draw_rows_pitch(rows, nrows, x, y, clip_left, DOT_PITCH_X, DOT_PITCH_Y);
-}
-
-static void draw_rows_pitch(const uint8_t *rows, int nrows, int x, int y,
                             int clip_left, int px_w, int px_h)
 {
     for (int r = 0; r < nrows; r++) {
@@ -169,40 +161,38 @@ static void draw_rows_pitch(const uint8_t *rows, int nrows, int x, int y,
     }
 }
 
-void dot_draw(const char *s, int x, int y, uint8_t color, int clip_left)
+/* Both sizes use the same glyphs and spacing rules. Look up each ordinary
+ * glyph once, using its width for the advance as well as its rows. */
+static void draw_text(const char *s, int x, int y, uint8_t color, int clip_left,
+                      int px_w, int px_h)
 {
     const char *start = s;
     gfx_SetColor(color);
 
     for (; *s; s++) {
+        int columns;
         if (is_exponent_e(s, start)) {
-            draw_rows(small_e_rows, 5, x, y + DOT_PITCH_Y, clip_left);
+            draw_rows_pitch(small_e_rows, 5, x, y + px_h, clip_left, px_w, px_h);
+            columns = SMALL_E_WIDTH;
         } else if (*s == ',') {
-            draw_rows(comma_rows, DOT_ROWS + 1, x, y, clip_left);
+            draw_rows_pitch(comma_rows, DOT_ROWS + 1, x, y, clip_left, px_w, px_h);
+            columns = 1;
         } else {
             const glyph_t *g = find_glyph(*s);
             if (g)
-                draw_rows(g->rows, DOT_ROWS, x, y, clip_left);
+                draw_rows_pitch(g->rows, DOT_ROWS, x, y, clip_left, px_w, px_h);
+            columns = g ? g->width : 5;
         }
-        x += (columns_of(s, start) + 1) * DOT_PITCH_X;
+        x += (columns + 1) * px_w;
     }
+}
+
+void dot_draw(const char *s, int x, int y, uint8_t color, int clip_left)
+{
+    draw_text(s, x, y, color, clip_left, DOT_PITCH_X, DOT_PITCH_Y);
 }
 
 void dot_draw_small(const char *s, int x, int y, uint8_t color)
 {
-    const char *start = s;
-    const int p = DOT_SMALL_PITCH;
-    gfx_SetColor(color);
-    for (; *s; s++) {
-        if (is_exponent_e(s, start)) {
-            draw_rows_pitch(small_e_rows, 5, x, y + p, 0, p, p);
-        } else if (*s == ',') {
-            draw_rows_pitch(comma_rows, DOT_ROWS + 1, x, y, 0, p, p);
-        } else {
-            const glyph_t *g = find_glyph(*s);
-            if (g)
-                draw_rows_pitch(g->rows, DOT_ROWS, x, y, 0, p, p);
-        }
-        x += (columns_of(s, start) + 1) * p;
-    }
+    draw_text(s, x, y, color, 0, DOT_SMALL_PITCH, DOT_SMALL_PITCH);
 }

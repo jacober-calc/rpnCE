@@ -5,6 +5,7 @@
 set -e
 CC=${CC:-cc}
 OUT=$(mktemp -d)
+trap 'rm -rf "$OUT"' EXIT
 M="-Itests/mock -Isrc/core"
 fail=0
 
@@ -13,7 +14,11 @@ run() {
     if ! $CC -w "$@" -o "$OUT/$name" -lm; then
         echo "$name: did not build"; fail=1; return
     fi
-    result=$("$OUT/$name" | tail -1)
+    if ! "$OUT/$name" > "$OUT/$name.log"; then
+        echo "$name: failed"
+        cat "$OUT/$name.log"; fail=1; return
+    fi
+    result=$(tail -1 "$OUT/$name.log")
     printf '%-10s %s\n' "$name" "$result"
     case "$result" in "0 failures") ;; *) fail=1 ;; esac
 }
@@ -28,9 +33,15 @@ run tvm      $M tests/test_tvm_units.c src/core/tvm.c src/core/mathx.c \
 run datetime -Isrc/core tests/test_datetime.c src/core/datetime.c
 run res      -Itests/mock_fileioc -Itests/mock -Isrc/ui -Isrc/core tests/test_res.c \
              src/ui/res.c
-run core     -DRPNCE_HOST_TEST $M tests/test_calc.c src/core/calc.c \
+run actions  -Itests/mock_fileioc $M -Isrc/ui tests/test_actions.c \
+             src/ui/actions.c src/ui/res.c
+run dotfont  -Itests/mock_graphx -Isrc/ui tests/test_dotfont.c \
+             src/ui/dotfont.c
+run storage  -Itests/mock_storage $M tests/test_storage.c \
+             src/sys/storage.c src/core/base.c src/core/tvm.c src/core/mathx.c \
+             src/core/datetime.c
+run core     -DRPNCE_HOST_TEST $M tests/test_calc.c tests/mock_calc_runtime.c src/core/calc.c \
              src/core/mathx.c src/core/stats.c src/core/tvm.c src/core/units.c \
              tests/units_data.c src/core/base.c src/core/datetime.c
 
-rm -rf "$OUT"
 [ $fail -eq 0 ] && echo "all tests passed" || { echo "some tests failed"; exit 1; }

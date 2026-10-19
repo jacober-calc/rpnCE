@@ -33,10 +33,12 @@ typedef struct {
 
 #define SAVED_FIXED_SIZE (sizeof(saved_state_t) - sizeof(real_t) * REG_EXTRA_MAX)
 
+/* Loading and saving run sequentially. Share one scratch buffer, kept off
+ * the stack because it includes space for every extra register. */
+static saved_state_t s;
+
 void storage_save(calc_t *c)
 {
-    static saved_state_t s;     /* static: it's large for the stack */
-
     calc_finish_entry(c);
 
     s.magic = STATE_MAGIC;
@@ -67,8 +69,6 @@ void storage_save(calc_t *c)
 
 bool storage_load(calc_t *c)
 {
-    static saved_state_t s;
-
     uint8_t h = ti_Open(APPVAR_NAME, "r");
     if (!h)
         return false;
