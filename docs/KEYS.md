@@ -237,12 +237,27 @@ MODE row 4 chooses how objects are shown: `{..}` as typed (the default) or
 (`2ND ENTRY`) always shows the raw record. DATE settings are saved with the
 screen tint in `RPNCEcfg`.
 
+## The screen
+
+- **Status bar:** a dark strip with the calculator's state: the date and
+  time from the CE's clock (`2026-10-18 14:05`, in the clock's own time
+  zone), the display format (FIX4, SCI3, FIX- for as many digits as
+  needed), DEG or RAD, the base (DEC, HEX, OCT or BIN, with C when the carry
+  flag is set), the stack depth and register count (4S-40R), and a 2ND or A
+  (ALPHA) badge when one is pending.
+- **Message line:** under the status bar: errors, SHOW, notices, and BASE
+  warnings about X, in the system font. Up/down arrows at its right end
+  mean the current menu has more rows.
+- **Stack:** T, Z, Y, X, with units, `dec` tags in BASE modes, and scroll
+  arrows on long values.
+- **Menu row:** the five menu keys.
+
 ## Menus and system
 
 | Key | Action |
 | --- | --- |
 | `Y= WINDOW ZOOM TRACE GRAPH` | the five menu keys; the menu stays put after a pick |
-| up / down arrows | previous / next row of the current menu (shown by the arrows in the status line) |
+| up / down arrows | previous / next row of the current menu (when the message line shows arrows at its right end) |
 | `MATH` | HOME, the top of the menu tree |
 | `MODE` | MODE menu: FIX, SCI, ENG (a digit 0-9, or . then a digit for 10-19, as on the HP-32SII: FIX . 1 is FIX 11; 12 or more means as many digits as needed, shown as FIX-), RAD, DEG. Row 3: RSIZ (X = total registers, 40-140; less than 40 means 40) and RSZ?, TINT (cycle the screen colors: LCD, LCD+ for real screens, GRAY, DARK; saved in the appvar `RPNCEcfg`), SSIZ (X = stack depth, 4-12; less than 4 means 4) and SSZ? |
 | `VARS` | the register catalog (see Registers) |

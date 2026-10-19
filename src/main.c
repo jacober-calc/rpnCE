@@ -106,6 +106,7 @@ int main(void)
 {
     bool on_was_down = false;
     clock_t last_key = clock();
+    uint8_t shown_minute = rtc_Minutes;
 
     /* The menu and unit tables live in the RPNCEres appvar. Without the
      * right one there's nothing to run, so say what's needed and stop. */
@@ -157,6 +158,11 @@ int main(void)
         if (ev.kind == EV_NONE) {
             sk_key_t key = os_GetCSC();
             if (!key) {
+                /* keep the status bar's clock current */
+                if (rtc_Minutes != shown_minute) {
+                    shown_minute = rtc_Minutes;
+                    redraw();
+                }
                 if (clock() - last_key > IDLE_TIMEOUT)
                     break;
                 continue;

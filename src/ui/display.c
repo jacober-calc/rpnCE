@@ -8,10 +8,12 @@
 #include "res.h"
 #include "../core/units.h"
 #include "../core/dateobj.h"
+#include "../core/datefn.h"      /* sys_clock_read */
 
 /*
  * Screen layout (320 x 240), RPN83P style:
- *   status line   annunciators on the left, messages on the right
+ *   status bar    dark, with the clock and the annunciators: the state
+ *   message line  warnings, errors, SHOW, notices; menu row arrows
  *   stack         T: Z: Y: X: in a dot-matrix LCD font
  *   menu row      always showing: five dark boxes with inverted labels
  */
@@ -55,9 +57,11 @@ const char *display_tint_name(uint8_t tint)
 
 #define SCREEN_W     320
 #define STATUS_H     18
+#define MSG_Y        STATUS_H            /* the message line, under the status bar */
+#define MSG_H        22                  /* 8-pixel text with padding */
 #define MENU_H       24
 #define MENU_Y       (240 - MENU_H - 3)
-#define STACK_TOP    (STATUS_H + 2)
+#define STACK_TOP    (MSG_Y + MSG_H)
 #define ROW_H        ((MENU_Y - 3 - STACK_TOP) / 4)
 #define LABEL_X      6
 #define VALUE_LEFT   26      /* values never draw left of this */
@@ -174,21 +178,51 @@ void display_close(void)
  * then RAD or DEG, then 2ND when pending). Right: messages. */
 static const char *base_warning(const calc_t *c, char *buf);
 
+/* "2026-10-18 14:05" (ISO 8601, as DATE's ".." mode writes dates) from the
+ * hardware clock, or "" if it isn't set. */
+static void clock_text(char *out)
+{
+    int y, mo, d, h, mi, sec;
+    out[0] = '\0';
+    if (!sys_clock_read(&y, &mo, &d, &h, &mi, &sec) || mo < 1 || mo > 12)
+        return;
+    const int f[5] = { y, mo, d, h, mi };
+    const int digits[5] = { 4, 2, 2, 2, 2 };
+    const char after[5] = { '-', '-', ' ', ':', '\0' };
+    char *p = out;
+    for (int i = 0; i < 5; i++) {
+        int v = f[i], div = 1;
+        for (int k = 1; k < digits[i]; k++)
+            div *= 10;
+        for (; div; div /= 10)
+            *p++ = (char)('0' + v / div % 10);
+        *p++ = after[i];
+    }
+}
+
+/* The status bar, dark with the text cut out: the calculator's state. The
+ * clock, then the display format, angle mode, base, stack and register
+ * sizes, and 2ND or ALPHA when pending. Messages go on the line below. */
+#define STATUS_GAP 6
 static void draw_status(const calc_t *c, const menu_t *m, bool second, bool alpha)
 {
     const int y = (STATUS_H - 8) / 2;
     int x = LABEL_X;
-    char buf[8];
+    char buf[16];
 
+    gfx_SetColor(COL_INK);
+    gfx_FillRectangle(0, 0, SCREEN_W, STATUS_H);
     gfx_SetTextScale(1, 1);
-    gfx_SetTextFGColor(COL_INK);
+    gfx_SetTextFGColor(COL_PANEL);
+    x = 4;
 
-    if (menu_group(m->group)->rows > 1) {
-        char arrows[3] = { MSYM_DOWN, MSYM_UP, '\0' };
-        draw_label(arrows, x, y, COL_INK);
+    clock_text(buf);
+    if (buf[0]) {
+        gfx_PrintStringXY(buf, x, y);
+        x += (int)gfx_GetStringWidth(buf) + STATUS_GAP;
     }
-    x += 16;
 
+    (void)m;
     static const char names[][4] = { "", "FIX", "SCI", "ENG" };
     memcpy(buf, names[c->disp_style], 3);
     if (c->disp_digits == DISP_FLOAT) {
@@ -203,21 +237,22 @@ static void draw_status(const calc_t *c, const menu_t *m, bool second, bool alph
         buf[4] = '\0';
     }
     gfx_PrintStringXY(buf, x, y);
-    x += (int)gfx_GetStringWidth(buf) + 8;
+    x += (int)gfx_GetStringWidth(buf) + STATUS_GAP;
 
     gfx_PrintStringXY(c->degrees ? "DEG" : "RAD", x, y);
-    x += (int)gfx_GetStringWidth("DEG") + 8;
+    x += (int)gfx_GetStringWidth("DEG") + STATUS_GAP;
 
-    /* HEX / OCT / BIN, with C when the carry flag is set */
-    if (c->base.radix != 10) {
-        const char *rn = (c->base.radix == 16) ? "HEX" : (c->base.radix == 8) ? "OCT" : "BIN";
+    /* DEC / HEX / OCT / BIN, with C when the carry flag is set */
+    {
+        const char *rn = (c->base.radix == 16) ? "HEX" : (c->base.radix == 8) ? "OCT" :
+                         (c->base.radix == 2) ? "BIN" : "DEC";
         gfx_PrintStringXY(rn, x, y);
         x += (int)gfx_GetStringWidth(rn) + 4;
-        if (c->base.carry) {
+        if (c->base.radix != 10 && c->base.carry) {
             gfx_PrintStringXY("C", x, y);
             x += (int)gfx_GetStringWidth("C");
         }
-        x += 4;
+        x += STATUS_GAP - 4;
     }
 
     /* stack depth and total registers, always shown: 4S-40R */
@@ -236,26 +271,33 @@ static void draw_status(const calc_t *c, const menu_t *m, bool second, bool alph
         buf[k++] = 'R';
         buf[k] = '\0';
         gfx_PrintStringXY(buf, x, y);
-        x += (int)gfx_GetStringWidth(buf) + 8;
+        x += (int)gfx_GetStringWidth(buf) + STATUS_GAP;
     }
 
-    const char *shift = second ? "2ND" : alpha ? "ALPHA" : NULL;
+    const char *shift = second ? "2ND" : alpha ? "A" : NULL;     /* A: ALPHA pending */
     if (shift) {
-        gfx_SetColor(COL_INK);
+        /* a light badge on the dark bar */
+        gfx_SetColor(COL_PANEL);
         gfx_FillRectangle(x - 2, y - 2, (int)gfx_GetStringWidth(shift) + 4, 12);
-        gfx_SetTextFGColor(COL_PANEL);
-        gfx_PrintStringXY(shift, x, y);
         gfx_SetTextFGColor(COL_INK);
-        x += (int)gfx_GetStringWidth(shift) + 10;
+        gfx_PrintStringXY(shift, x, y);
+        gfx_SetTextFGColor(COL_PANEL);
     }
+}
 
+/* The message line: a message from the last command, or else a warning
+ * about X in HEX, OCT or BIN, left-justified in the system font. At the
+ * right end, up/down arrows when the current menu has more rows. */
+static void draw_message_line(const calc_t *c, const menu_t *m)
+{
+    const int y = MSG_Y + (MSG_H - 8) / 2;
     char warn[24];
     const char *msg = c->message ? c->message : base_warning(c, warn);
-    if (msg) {
-        int mx = VALUE_RIGHT - label_width(msg);
-        if (mx < x)
-            mx = x;
-        draw_label(msg, mx, y, COL_INK);
+    if (msg)
+        draw_label(msg, LABEL_X, y, COL_INK);
+    if (menu_group(m->group)->rows > 1) {
+        char arrows[3] = { MSYM_DOWN, MSYM_UP, '\0' };
+        draw_label(arrows, VALUE_RIGHT - label_width(arrows), y, COL_INK);
     }
 }
 
@@ -507,6 +549,7 @@ void display_draw(const calc_t *c, const menu_t *m, bool second, bool alpha,
 {
     gfx_FillScreen(COL_PANEL);
     draw_status(c, m, second, alpha);
+    draw_message_line(c, m);
     if (cat && cat->open)
         draw_catalog(c, cat);
     else
