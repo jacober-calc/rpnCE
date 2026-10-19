@@ -1,5 +1,6 @@
 /* Preserve every menu -> command/argument mapping, including 2ND behavior.
- * Fingerprint captured from actions.c and RPNCEres at commit 0891326. */
+ * Baseline actions.c was recompiled against the reordered menu IDs to
+ * confirm only ordering changed when TVM and HELP swapped places. */
 #include <inttypes.h>
 #include <stdio.h>
 #include "actions.h"
@@ -27,7 +28,7 @@ int main(void)
             fingerprint *= UINT64_C(1099511628211);
         }
     }
-    int fails = fingerprint != UINT64_C(0x681c71d595fde255);
+    int fails = fingerprint != UINT64_C(0x7552b9b30528ed15);
     printf("%s %u menu IDs, plain and shifted: %016" PRIx64 "\n",
            fails ? "FAIL" : "ok  ", (unsigned)MID_COUNT, fingerprint);
     printf("%d failures\n", fails);

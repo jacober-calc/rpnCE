@@ -14,7 +14,9 @@ bottom of the screen, on a dot-matrix LCD-style display.
   functions; everything else is in the menu row, opened with MATH.
 - **Registers:** A-Z, i, indirect (i), the statistics registers, and up to
   100 extra numbered registers, with STO/RCL arithmetic, x<>, and a VARS
-  catalog of everything stored.
+  catalog of stored registers and all seven TVM values. Unit values retain
+  their units in ordinary
+  registers and convert compatible units during arithmetic.
 - **Accurate numbers:** the calculator's 14-digit decimal math, shown with
   up to 12 digits, thousands separators, and FIX/SCI/ENG/ALL formats.
 - **Functions:** MATH, NUM, PROB, HYP, CONV (polar, H.MMSS), STAT with
@@ -24,11 +26,12 @@ bottom of the screen, on a dot-matrix LCD-style display.
   (dates, times, time zones, durations, epochs, and the CE's clock).
 - **Remembers everything:** the stack, registers, statistics, and settings
   are saved when you quit and restored next time.
-- **Screen tints:** LCD, LCD+ (for real screens), GRAY, and DARK.
+- **Screen tints:** LCD, LCD+ (for real screens), GRAY, INVERTED, AYU DARK,
+  MONOKAI, PASTEL, and COMMODORE.
 
 See [docs/KEYS.md](docs/KEYS.md) for the full key and menu reference, and
 [docs/ROADMAP.md](docs/ROADMAP.md) for what's done and what's next
-(complex numbers and help are still to come).
+(complex numbers are still to come).
 
 ## Installing
 
@@ -92,10 +95,10 @@ tested on a PC. With a C compiler installed:
 sh tests/run_tests.sh
 ```
 
-This builds and runs thirteen suites (number formatting, decimal rounding,
+This builds and runs fifteen suites (number formatting, decimal rounding,
 math, BASE, statistics, TVM and units, DATE, the RPNCEres appvar reader,
-menu actions, dot-font rendering, saved state, the calculator core, and display
-redraws), using
+menu actions, keyboard shortcuts, dot-font rendering, saved state, the
+calculator core, reported bug regressions, and display redraws), using
 stand-ins for the calculator's number routines.
 
 To compare the refactored core against the original in a Git checkout:
@@ -104,10 +107,12 @@ To compare the refactored core against the original in a Git checkout:
 sh tests/check_core_equivalence.sh
 ```
 
-This checks 23,016 command/state combinations, including DATE and BASE
+This checks 22,848 command/state combinations, including DATE and BASE
 arguments, both stack depths, unit tags, errors, TVM variables and the clock,
-plus 8,568 entry-sequence steps. A baseline from before the core was split
-can also be passed as an argument (for example, `2e29e01`).
+plus 8,568 entry-sequence steps. Intentional quantity behavior, PRIM's stack
+push and percentage DATE type checks are covered separately by regression
+tests. A baseline from before the core was split can also be passed as an
+argument (for example, `2e29e01`).
 
 ## Layout
 

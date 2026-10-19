@@ -123,6 +123,10 @@ dt_err_t calc_date_op(calc_cmd_t op, const real_t *y, const real_t *x, real_t *o
 /* y op x on the stack, for objects. */
 void calc_date_binary(calc_t *c, calc_cmd_t op)
 {
+    if (c->unit[REG_X] || c->unit[REG_Y]) {
+        calc_date_error(c, DT_ERR_TYPE);
+        return;
+    }
     real_t r;
     dt_err_t e = calc_date_op(op, &c->stack[1], &c->stack[0], &r);
     if (e) {
@@ -185,11 +189,11 @@ static bool tz_from_value(calc_t *c, const dt_val_t *v, int *q)
         *q = dt_tz_quarters(&v->obj);
         return true;
     }
-    if (!v->is_obj && v->is_quarter && v->quarters >= -95 && v->quarters <= 95) {
+    if (!v->is_obj && !c->unit[REG_X] && v->is_quarter && v->quarters >= -95 && v->quarters <= 95) {
         *q = (int)v->quarters;
         return true;
     }
-    calc_date_error(c, v->is_obj ? DT_ERR_TYPE : DT_ERR_DOMAIN);
+    calc_date_error(c, v->is_obj || c->unit[REG_X] ? DT_ERR_TYPE : DT_ERR_DOMAIN);
     return false;
 }
 
@@ -219,7 +223,7 @@ void calc_date_execute(calc_t *c, date_fn_t fn)
             return;
         case DF_ED_TO_D: case DF_ED_TO_DT: case DF_ED_TO_DZ:
         case DF_ES_TO_D: case DF_ES_TO_DT: case DF_ES_TO_DZ: case DF_ES_TO_DZ_APP: {
-            if (x.is_obj) { e = DT_ERR_TYPE; break; }
+            if (x.is_obj || c->unit[REG_X]) { e = DT_ERR_TYPE; break; }
             if (!x.is_whole) { e = DT_ERR_DOMAIN; break; }
             bool days = (fn == DF_ED_TO_D || fn == DF_ED_TO_DT || fn == DF_ED_TO_DZ);
             obj_type_t ty = (fn == DF_ED_TO_D || fn == DF_ES_TO_D) ? OBJ_DATE :
@@ -233,9 +237,9 @@ void calc_date_execute(calc_t *c, date_fn_t fn)
         case DF_LEAP:
             if (dated)
                 n = dt_is_leap(x.obj.year);
-            else if (!x.is_obj && x.is_whole && x.whole >= 1 && x.whole <= 9999)
+            else if (!x.is_obj && !c->unit[REG_X] && x.is_whole && x.whole >= 1 && x.whole <= 9999)
                 n = dt_is_leap((int)x.whole);
-            else { e = x.is_obj ? DT_ERR_TYPE : DT_ERR_DOMAIN; break; }
+            else { e = x.is_obj || c->unit[REG_X] ? DT_ERR_TYPE : DT_ERR_DOMAIN; break; }
             set_x_whole(c, n);
             return;
         case DF_DOW:
@@ -351,7 +355,7 @@ void calc_date_execute(calc_t *c, date_fn_t fn)
             set_x_whole(c, dt_time_seconds(&x.obj));
             return;
         case DF_S_TO_TIME:
-            if (x.is_obj) { e = DT_ERR_TYPE; break; }
+            if (x.is_obj || c->unit[REG_X]) { e = DT_ERR_TYPE; break; }
             if (!x.is_whole) { e = DT_ERR_DOMAIN; break; }
             e = dt_time_from_seconds(x.whole, &o);
             if (!e) { set_x_obj(c, &o); return; }
@@ -364,14 +368,14 @@ void calc_date_execute(calc_t *c, date_fn_t fn)
             return;
         }
         case DF_HR_TO_TZ:
-            if (x.is_obj) { e = DT_ERR_TYPE; break; }
+            if (x.is_obj || c->unit[REG_X]) { e = DT_ERR_TYPE; break; }
             if (!x.is_quarter) { e = DT_ERR_DOMAIN; break; }
             e = dt_tz_from_quarters(x.quarters, &o);
             if (!e) { set_x_obj(c, &o); return; }
             break;
         case DF_DAYS_TO_DR: case DF_HOURS_TO_DR: case DF_MINUTES_TO_DR: case DF_SECONDS_TO_DR: {
             static const dt_int unit[4] = { 86400, 3600, 60, 1 };
-            if (x.is_obj) { e = DT_ERR_TYPE; break; }
+            if (x.is_obj || c->unit[REG_X]) { e = DT_ERR_TYPE; break; }
             if (!x.is_whole) { e = DT_ERR_DOMAIN; break; }
             e = dt_duration_from_seconds(x.whole * unit[fn - DF_DAYS_TO_DR], &o);
             if (!e) { set_x_obj(c, &o); return; }
@@ -386,7 +390,7 @@ void calc_date_execute(calc_t *c, date_fn_t fn)
             set_x_whole(c, fn == DF_DW_TO_ISO ? x.obj.day : x.obj.day % 7);
             return;
         case DF_ISO_TO_DW: case DF_UNIX_TO_DW: {
-            if (x.is_obj) { e = DT_ERR_TYPE; break; }
+            if (x.is_obj || c->unit[REG_X]) { e = DT_ERR_TYPE; break; }
             dt_int lo = (fn == DF_ISO_TO_DW) ? 1 : 0;
             if (!x.is_whole || x.whole < lo || x.whole > lo + 6) { e = DT_ERR_DOMAIN; break; }
             o.type = OBJ_DW;

@@ -67,14 +67,19 @@ a number that isn't an existing register gives "Err: Index". Storing into
 n, Sx, Sy, Sx2, Sy2 or Sxy directly leaves only the linear fit usable until
 the stat data is cleared.
 
-`VARS` lists every register holding a nonzero value (and LASTX) as
+`VARS` lists every numbered register holding a nonzero value or a unit as
 `A=12.5`, `i=41`, `n=5`, `R041=123` across the four stack lines. Up and
 down move through the list; ENTER copies the selected value to X; ON,
-CLEAR or VARS closes it.
+CLEAR or VARS closes it. After the numbered registers, it lists all seven
+TVM values: N, I%YR, PV, PMT, FV, P/YR and C/YR, then LASTX as the final
+entry. LASTX is always shown, including when it is zero. TVM entries include zero
+values (for example, FV=0) and read the calculator's shared TVM variables.
+ENTER recalls a TVM entry to X with the normal stack-lift rules. Store or
+solve TVM values using the TVM menu below.
 
 ## TVM (time value of money)
 
-MATH, then TVM (row 2 of HOME). Works like an HP-12C: type a value and
+MATH, then TVM (row 1 of HOME). Works like an HP-12C: type a value and
 press N, I%YR, PV, PMT, or FV to store it; press one of them right after
 another TVM key (without typing a number) to solve for it. 2ND + the key
 recalls the stored value. Money received is positive, money paid out is
@@ -97,9 +102,28 @@ so they are shared with TI's TVM Solver (APPS > Finance).
 MATH, then UNIT (row 3 of HOME). Type a value and press a unit to attach
 it (`12 ft`); press another unit of the same kind to convert (`m` gives
 3.6576 m). The unit shows after the value on the stack and moves with it.
-Math on a value removes its unit. UFCN has UVAL (remove the unit, keep the
-value) and UBAS (convert to the base unit: m, m², m³, kg, K, N, Pa, J, W,
-s, m/s, or L/100km).
+Ordinary registers (A-Z, i and the extra registers) preserve both the value
+and its unit through STO, RCL, X<> and quitting. VARS shows the stored unit,
+including quantities whose value is zero. Statistics and TVM accept plain
+numbers; a quantity cannot act as an indirect register index.
+
+`+` and `-` convert X to Y's unit and keep that unit on the result. MIN,
+MAX and MOD do the same. Multiplication by a scalar and division of a
+quantity by a scalar preserve its unit; division of two compatible
+quantities gives a plain ratio. Products of two quantities and scalar /
+quantity are unsupported. ABS and rounding retain units; SIGN gives a
+plain number. Temperature and fuel economy support conversion and rounding,
+but their arithmetic is refused because offsets or reciprocals make
+ordinary quantity arithmetic ambiguous. Unsupported operations give
+"Err: Data Type"; incompatible dimensions give "Err: Unit Mismatch".
+
+`%` takes a plain percentage in X and a quantity in Y, keeps Y and puts the
+quantity result in X. `%CH` converts X to Y's unit, keeps Y and returns the
+plain percentage `(X - Y) / Y * 100`. For example, `2 kWh`, `2000 kcal`,
+`%CH` gives approximately `16.222222222222%`, using the units under ENER.
+
+UFCN has UVAL (remove the unit, keep the value) and UBAS (convert to the
+base unit: m, m², m³, kg, K, N, Pa, J, W, s, m/s, or L/100km).
 
 Kinds: length, area, volume, temperature, mass, force, pressure, energy,
 power, time, speed, and fuel economy (mpg and L/100km convert both ways).
@@ -123,7 +147,9 @@ and right arrows scroll X through the rest.
 ## NUM, HYP and CONV
 
 - NUM: PRIM gives the smallest prime factor of a whole number from 2 to
-  4,294,967,295, or 1 if it's prime. RNDF rounds X to what the display
+  4,294,967,295, or 1 if it's prime. It pushes that result, leaving the
+  original number in Y; PRIM then ÷ removes a factor. For example, 1981
+  PRIM gives X = 7 and Y = 1981. RNDF rounds X to what the display
   shows; RNDN _ and RNDG _ round to that many decimals or significant
   digits (a digit, or . then a digit for 10-19). Rounding is exact decimal
   rounding: 2.675 RNDN 2 gives 2.68.
@@ -258,12 +284,34 @@ screen tint in `RPNCEcfg`.
 | `Y= WINDOW ZOOM TRACE GRAPH` | the five menu keys; the menu stays put after a pick |
 | up / down arrows | previous / next row of the current menu (when the message line shows arrows at its right end) |
 | `MATH` | HOME, the top of the menu tree |
-| `MODE` | MODE menu: FIX, SCI, ENG (a digit 0-9, or . then a digit for 10-19, as on the HP-32SII: FIX . 1 is FIX 11; 12 or more means as many digits as needed, shown as FIX-), RAD, DEG. Row 3: RSIZ (X = total registers, 40-140; less than 40 means 40) and RSZ?, TINT (cycle the screen colors: LCD, LCD+ for real screens, GRAY, DARK; saved in the appvar `RPNCEcfg`), SSIZ (X = stack depth, 4-12; less than 4 means 4) and SSZ? |
+| `MODE` | MODE menu: FIX, SCI, ENG (a digit 0-9, or . then a digit for 10-19, as on the HP-32SII: FIX . 1 is FIX 11; 12 or more means as many digits as needed, shown as FIX-), RAD, DEG. Row 3: RSIZ (X = total registers, 40-140; less than 40 means 40) and RSZ?, TINT (cycle the screen colors: LCD, LCD+ for real screens, GRAY, INVERTED, AYU DARK, MONOKAI, PASTEL, COMMODORE; saved in the appvar `RPNCEcfg`), SSIZ (X = stack depth, 4-12; less than 4 means 4) and SSZ? |
+| `STAT` | STAT menu |
+| `X,T,theta,n` | UNIT menu |
+| `APPS` | BASE menu |
+| `PRGM` | HYP menu |
+| `2ND MEM` (`2ND +`) | CLR menu |
+| `2ND CATALOG` (`2ND 0`) | HELP reference pages |
+| `2ND LINK` (`2ND X,T,theta,n`) | DATE menu |
+| `2ND LIST` (`2ND STAT`) | STK menu |
+| `2ND ANGLE` (`2ND APPS`) | CONV menu |
 | `VARS` | the register catalog (see Registers) |
 | `ON` | EXIT: back one menu level |
 | left / right arrows | scroll a value too long for the X line |
 | `2ND MODE` (QUIT) | save and exit |
 | `2ND ON` (OFF) | save and exit |
+
+TINT cycles through eight presets. INVERTED is the former DARK, with the
+same colors and saved selection. AYU DARK uses a deep blue-gray background
+with amber and blue accents. MONOKAI uses charcoal with purple, cyan, green
+and pink stack values. PASTEL uses a light background, distinct row colors and
+pastel menu keys. COMMODORE uses phosphor greens on near-black, with brighter
+X digits and dark green menu panels. The selection is saved on exit. See
+[TINTS.md](TINTS.md) for palette details.
+
+HOME has TVM in the fifth position on its first row and HELP in the fifth
+position on its second row. HELP opens three reference pages: UP / DOWN
+change pages; ENTER, CLEAR, DEL or ON returns to the calculator. ALPHA
+letters and STO/RCL variable selection take priority over menu shortcuts.
 
 Numbers show up to 12 digits with thousands commas, or up to 10 next to an
 exponent; SHOW (2ND ENTRY) shows all 14.

@@ -35,7 +35,9 @@
 - [x] NUM (PRIM, RNDF, RNDN, RNDG), HYP, CONV (polar, HMS), BASE
 - [x] DATE: seven object types, entry, arithmetic, all D/T/DT/TZ/DZ/DR/DW,
       EPCH and CLK functions, {..} / ".." display
-- [ ] Remaining: CPLX (and its MODE settings), HELP
+- [x] HELP: three reference pages, with 2ND CATALOG access
+- [x] Dedicated menu shortcuts and quantities in ordinary registers
+- [ ] Remaining: CPLX (and its MODE settings)
 - [x] Menu tree generated from a menu definition file (menus/menus.txt)
 - [x] Menu navigation: softkeys, row up/down, HOME, EXIT
 - [x] DEG/RAD mode

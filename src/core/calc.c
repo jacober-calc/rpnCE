@@ -7,6 +7,7 @@
 #include "calc_internal.h"
 #include "calc_entry.h"
 #include "calc_date.h"
+#include "calc_quantity.h"
 #include "format.h"
 #include "mathx.h"
 #include "units.h"
@@ -130,7 +131,8 @@ typedef enum {
     ERR_OVERFLOW,
     ERR_TVM_NOT_FOUND,
     ERR_STAT,
-    ERR_TYPE,           /* a DATE object where a number is needed */
+    ERR_TYPE,           /* an unsupported object or quantity operand */
+    ERR_UNIT,
     ERR_OTHER,
 } calc_err_t;
 
@@ -143,6 +145,7 @@ static const char *error_text(calc_err_t e)
         case ERR_TVM_NOT_FOUND: return "TVM Not Found";
         case ERR_STAT:     return "Err: Stat";
         case ERR_TYPE:     return "Err: Data Type";
+        case ERR_UNIT:     return "Err: Unit Mismatch";
         default:           return "Err: Math";
     }
 }
@@ -461,7 +464,8 @@ static bool reads_x(calc_cmd_t cmd)
 static bool reads_y(calc_cmd_t cmd)
 {
     return is_binary(cmd) || cmd == CMD_TO_POL || cmd == CMD_TO_REC ||
-           cmd == CMD_STAT_PLUS || cmd == CMD_STAT_MINUS;
+           cmd == CMD_STAT_PLUS || cmd == CMD_STAT_MINUS ||
+           cmd == CMD_PERCENT || cmd == CMD_PERCENT_CHANGE;
 }
 
 /* y^e, with a negative y taken from its magnitude: |y|^e, negated when the
@@ -482,19 +486,35 @@ static real_t signed_power(const real_t *y, const real_t *e)
     return negative ? os_RealNeg(&r) : r;
 }
 
-static calc_err_t compute(calc_cmd_t cmd, const real_t *y, const real_t *x)
+static calc_err_t compute(calc_cmd_t cmd, const real_t *y, const real_t *x,
+                          uint8_t uy, uint8_t ux, uint8_t *result_unit)
 {
+    if (result_unit) *result_unit = 0;
     if ((reads_x(cmd) && obj_is(x)) || (reads_y(cmd) && obj_is(y)))
         return ERR_TYPE;
-
-    calc_err_t pre = precheck(cmd, y, x);
-    if (pre != ERR_NONE)
-        return pre;
 
     os_ResetFlag(ON, INTERRUPT);    /* an ON press must not become ERR:BREAK */
     int err = os_PushErrorHandler();
     if (err)
         return map_os_error(err);
+
+    real_t converted_x;
+    uint8_t tag = 0;
+    if (!reads_x(cmd)) ux = 0;
+    if (!reads_y(cmd)) uy = 0;
+    if (uy || ux) {
+        quantity_err_t qe = calc_quantity_prepare(cmd, uy, x, ux, &converted_x, &tag);
+        if (qe != QUANTITY_OK) {
+            os_PopErrorHandler();
+            return qe == QUANTITY_MISMATCH ? ERR_UNIT : ERR_TYPE;
+        }
+        x = &converted_x;
+    }
+    calc_err_t pre = precheck(cmd, y, x);
+    if (pre != ERR_NONE) {
+        os_PopErrorHandler();
+        return pre;
+    }
 
     switch (cmd) {
         case CMD_ADD:    g_result = os_RealAdd(y, x); break;
@@ -532,7 +552,18 @@ static calc_err_t compute(calc_cmd_t cmd, const real_t *y, const real_t *x)
             break;
         }
         case CMD_GCD:    g_result = os_RealGcd(y, x); break;
-        case CMD_LCM:    g_result = os_RealLcm(y, x); break;
+        case CMD_LCM: {
+            /* Avoid the OS LCM entry point; divide first to keep the
+             * intermediate product small, and define lcm(0,n) as zero. */
+            if (mx_is_zero(y) || mx_is_zero(x)) {
+                g_result = mx_zero;
+            } else {
+                real_t gcd = os_RealGcd(y, x);
+                real_t q = os_RealDiv(y, &gcd);
+                g_result = os_RealMul(&q, x);
+            }
+            break;
+        }
         case CMD_MOD: {
             /* y - x * floor(y / x): result takes the sign of x */
             real_t q = os_RealDiv(y, x);
@@ -645,6 +676,7 @@ static calc_err_t compute(calc_cmd_t cmd, const real_t *y, const real_t *x)
     }
 
     os_PopErrorHandler();
+    if (result_unit) *result_unit = tag;
     return ERR_NONE;
 }
 
@@ -668,6 +700,10 @@ static void do_math(calc_t *c, calc_cmd_t cmd)
     /* DATE objects: + - x act on them, and 1/x, sqrt, x^2 are DCUT, DSHK
      * and DEXD (as in RPN83P); other math doesn't apply. */
     if (obj_is(&c->stack[0]) || (is_binary(cmd) && obj_is(&c->stack[1]))) {
+        if (c->unit[REG_X] || (is_binary(cmd) && c->unit[REG_Y])) {
+            c->message = "Err: Data Type";
+            return;
+        }
         switch (cmd) {
             case CMD_ADD: case CMD_SUB: case CMD_MUL: calc_date_binary(c, cmd); return;
             case CMD_RECIP:  calc_date_execute(c, DF_CUT); return;
@@ -680,13 +716,22 @@ static void do_math(calc_t *c, calc_cmd_t cmd)
     }
 
     g_degrees = c->degrees;
-    calc_err_t err = compute(cmd, &c->stack[1], &c->stack[0]);
+    uint8_t result_unit;
+    calc_err_t err = compute(cmd, &c->stack[1], &c->stack[0],
+                             c->unit[REG_Y], c->unit[REG_X], &result_unit);
     if (err != ERR_NONE) {
         c->message = error_text(err);   /* stack is left unchanged */
         return;
     }
 
-    calc_stack_set_result(c, &g_result, is_binary(cmd));
+    if (cmd == CMD_PRIME) {
+        save_lastx(c);
+        calc_stack_push(c, &g_result); /* keep original X in Y for division */
+        c->lift = true;
+    } else {
+        calc_stack_set_result(c, &g_result, is_binary(cmd));
+        c->unit[REG_X] = result_unit;
+    }
 }
 
 /* ---------- registers ---------- */
@@ -708,6 +753,15 @@ real_t *calc_register(calc_t *c, uint8_t num)
     return NULL;
 }
 
+uint8_t *calc_register_unit(calc_t *c, uint8_t num)
+{
+    if (num >= REG_A && num <= REG_I)
+        return &c->reg_unit[num - REG_A];
+    if (num >= REG_EXTRA_FIRST && num < REG_EXTRA_FIRST + c->extra_count)
+        return &c->extra_unit[num - REG_EXTRA_FIRST];
+    return NULL;
+}
+
 /* The register a STO/RCL/x<> argument names: a register number, or (i),
  * the register whose number is the integer part of i. NULL (with an error
  * message) if there is no such register. */
@@ -715,6 +769,10 @@ static real_t *target_register(calc_t *c, uint8_t arg, uint8_t *num_out)
 {
     uint8_t num = arg;
     if (arg == REG_INDIRECT) {
+        if (c->reg_unit[REG_I - REG_A] || obj_is(&c->regs[REG_I - REG_A])) {
+            c->message = "Err: Data Type";
+            return NULL;
+        }
         real_t ip = os_RealInt(&c->regs[REG_I - REG_A]);
         real_t lo = os_Int24ToReal(1), hi = os_Int24ToReal(255);
         if (os_RealCompare(&ip, &lo) < 0 || os_RealCompare(&ip, &hi) > 0) {
@@ -760,12 +818,16 @@ static void do_store(calc_t *c, calc_cmd_t cmd, uint8_t arg)
         return;
 
     bool stat_reg = num >= REG_STAT_FIRST && num <= REG_STAT_LAST;
+    uint8_t *stored_unit = calc_register_unit(c, num);
+    uint8_t ru = stored_unit ? *stored_unit : 0;
+    uint8_t xu = c->unit[REG_X], result_unit = 0;
     calc_cmd_t op = arith_of(cmd);
-    if (stat_reg && obj_is(&c->stack[0])) {
+    if (stat_reg && (obj_is(&c->stack[0]) || xu)) {
         c->message = "Err: Data Type";      /* stat registers hold numbers */
         return;
     }
     if (op != CMD_NONE && (obj_is(r) || obj_is(&c->stack[0]))) {
+        if (ru || xu) { c->message = "Err: Data Type"; return; }
         real_t out;
         dt_err_t e = calc_date_op(op, r, &c->stack[0], &out);
         if (e) {
@@ -775,14 +837,16 @@ static void do_store(calc_t *c, calc_cmd_t cmd, uint8_t arg)
         *r = out;
     } else if (op == CMD_NONE) {
         *r = c->stack[0];
+        result_unit = xu;
     } else {
-        calc_err_t err = compute(op, r, &c->stack[0]);
+        calc_err_t err = compute(op, r, &c->stack[0], ru, xu, &result_unit);
         if (err != ERR_NONE) {
             c->message = error_text(err);
             return;
         }
         *r = g_result;
     }
+    if (stored_unit) *stored_unit = result_unit;
     register_written(c, num);
     /* STO is neutral: it leaves stack lift as it was, as on HP calculators. */
 }
@@ -791,26 +855,30 @@ static void do_store(calc_t *c, calc_cmd_t cmd, uint8_t arg)
 static void do_recall(calc_t *c, calc_cmd_t cmd, uint8_t arg)
 {
     calc_finish_entry(c);
-    real_t *r = target_register(c, arg, NULL);
+    uint8_t num;
+    real_t *r = target_register(c, arg, &num);
     if (!r)
         return;
 
+    uint8_t *stored_unit = calc_register_unit(c, num);
+    uint8_t ru = stored_unit ? *stored_unit : 0, result_unit = 0;
     calc_cmd_t op = arith_of(cmd);
     if (op == CMD_NONE) {
         real_t value = *r;
-        calc_stack_enter(c, &value);     /* lifts unless lift is disabled (ENTER) */
+        enter_value_unit(c, &value, ru); /* lifts unless lift is disabled (ENTER) */
         return;
     }
 
     real_t result;
     if (obj_is(r) || obj_is(&c->stack[0])) {
+        if (ru || c->unit[REG_X]) { c->message = "Err: Data Type"; return; }
         dt_err_t e = calc_date_op(op, &c->stack[0], r, &result);
         if (e) {
             calc_date_error(c, e);
             return;
         }
     } else {
-        calc_err_t err = compute(op, &c->stack[0], r);
+        calc_err_t err = compute(op, &c->stack[0], r, c->unit[REG_X], ru, &result_unit);
         if (err != ERR_NONE) {
             c->message = error_text(err);
             return;
@@ -818,6 +886,7 @@ static void do_recall(calc_t *c, calc_cmd_t cmd, uint8_t arg)
         result = g_result;
     }
     calc_stack_set_x(c, &result);
+    c->unit[REG_X] = result_unit;
 }
 
 /* x<> reg: swaps X with a register. */
@@ -828,14 +897,18 @@ static void do_exchange(calc_t *c, uint8_t arg)
     real_t *r = target_register(c, arg, &num);
     if (!r)
         return;
-    if (num >= REG_STAT_FIRST && num <= REG_STAT_LAST && obj_is(&c->stack[0])) {
+    if (num >= REG_STAT_FIRST && num <= REG_STAT_LAST &&
+        (obj_is(&c->stack[0]) || c->unit[REG_X])) {
         c->message = "Err: Data Type";
         return;
     }
     real_t t = *r;
+    uint8_t *stored_unit = calc_register_unit(c, num);
+    uint8_t tag = stored_unit ? *stored_unit : 0;
+    if (stored_unit) *stored_unit = c->unit[REG_X];
     *r = c->stack[0];
     c->stack[0] = t;
-    c->unit[REG_X] = 0;             /* registers hold plain numbers */
+    c->unit[REG_X] = tag;
     register_written(c, num);
     c->lift = true;
 }
@@ -844,7 +917,7 @@ static void do_exchange(calc_t *c, uint8_t arg)
  * default); above hi, or not a whole number, is an error (-1). */
 static int size_from_x(calc_t *c, int lo, int hi)
 {
-    if (obj_is(&c->stack[0])) {
+    if (obj_is(&c->stack[0]) || c->unit[REG_X]) {
         c->message = "Err: Data Type";
         return -1;
     }
@@ -862,7 +935,7 @@ static int size_from_x(calc_t *c, int lo, int hi)
 /* A whole number from X in [lo, hi], or -1 (with an error message). */
 static int whole_from_x(calc_t *c, int lo, int hi)
 {
-    if (obj_is(&c->stack[0])) {
+    if (obj_is(&c->stack[0]) || c->unit[REG_X]) {
         c->message = "Err: Data Type";
         return -1;
     }
@@ -888,6 +961,7 @@ static void set_reg_size(calc_t *c)
     int n = total - REG_STAT_LAST;
     for (int i = n; i < REG_EXTRA_MAX; i++)
         c->extra[i] = mx_zero;
+    memset(c->extra_unit + n, 0, REG_EXTRA_MAX - n);
     c->extra_count = (uint8_t)n;
     c->message = "Register Size Set";
 }
@@ -967,7 +1041,7 @@ static void do_unit(calc_t *c, uint8_t to)
 
     g_unit_from = from;
     g_unit_to = to;
-    calc_err_t err = compute(CMD_UNIT, &c->stack[1], &c->stack[0]);
+    calc_err_t err = compute(CMD_UNIT, &c->stack[1], &c->stack[0], 0, 0, NULL);
     if (err != ERR_NONE) {
         c->message = error_text(err);
         return;
@@ -994,7 +1068,8 @@ static void do_polar_rect(calc_t *c, calc_cmd_t cmd)
 {
     calc_finish_entry(c);
     g_degrees = c->degrees;
-    calc_err_t err = compute(cmd, &c->stack[1], &c->stack[0]);
+    calc_err_t err = compute(cmd, &c->stack[1], &c->stack[0],
+                             c->unit[REG_Y], c->unit[REG_X], NULL);
     if (err != ERR_NONE) {
         c->message = error_text(err);
         return;
@@ -1013,7 +1088,8 @@ static void do_base_op(calc_t *c, base_op_t op)
     calc_finish_entry(c);
     bool binary = base_is_binary(op);
     base_word_t x, y = 0, r, r2 = 0;
-    if (obj_is(&c->stack[0]) || (binary && obj_is(&c->stack[1]))) {
+    if (obj_is(&c->stack[0]) || c->unit[REG_X] ||
+        (binary && (obj_is(&c->stack[1]) || c->unit[REG_Y]))) {
         c->message = "Err: Data Type";
         return;
     }
@@ -1051,6 +1127,7 @@ static void do_base_op(calc_t *c, base_op_t op)
 static calc_cmd_t base_key(const calc_t *c, calc_cmd_t cmd, uint8_t *arg)
 {
     if (!calc_base_mode(c) || obj_is(&c->stack[0]) || obj_is(&c->stack[1]) ||
+        c->unit[REG_X] || c->unit[REG_Y] ||
         calc_entry_is_object(c))
         return cmd;
     switch (cmd) {
@@ -1083,7 +1160,8 @@ static void do_stat(calc_t *c, calc_cmd_t cmd)
 {
     calc_finish_entry(c);
     g_stats = &c->stats;
-    calc_err_t err = compute(cmd, &c->stack[1], &c->stack[0]);
+    calc_err_t err = compute(cmd, &c->stack[1], &c->stack[0],
+                             c->unit[REG_Y], c->unit[REG_X], NULL);
     if (err != ERR_NONE) {
         c->message = error_text(err);
         return;
@@ -1134,7 +1212,7 @@ static void do_tvm_var(calc_t *c, uint8_t arg, calc_cmd_t prev)
     }
 
     bool solve = which <= TVM_FV && prev == CMD_TVM_VAR && !was_editing;
-    if (!solve && obj_is(&c->stack[0])) {
+    if (!solve && (obj_is(&c->stack[0]) || c->unit[REG_X])) {
         c->message = "Err: Data Type";
         return;
     }
@@ -1150,7 +1228,7 @@ static void do_tvm_var(calc_t *c, uint8_t arg, calc_cmd_t prev)
 
     g_tvm_which = which;
     g_tvm_settings = &c->tvm;
-    calc_err_t err = compute(CMD_TVM_VAR, &c->stack[1], &c->stack[0]);
+    calc_err_t err = compute(CMD_TVM_VAR, &c->stack[1], &c->stack[0], 0, 0, NULL);
     if (err != ERR_NONE) {
         c->message = error_text(err);
         return;
@@ -1173,7 +1251,7 @@ static void do_tvm_setting(calc_t *c, calc_cmd_t cmd, uint8_t arg)
         return;
     }
 
-    if (obj_is(&c->stack[0])) {
+    if (obj_is(&c->stack[0]) || c->unit[REG_X]) {
         c->message = "Err: Data Type";
         return;
     }
@@ -1313,6 +1391,8 @@ void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg)
             break;
 
         case CMD_CLEAR_REGS:                    /* CLRG */
+            memset(c->reg_unit, 0, sizeof c->reg_unit);
+            memset(c->extra_unit, 0, sizeof c->extra_unit);
             for (int i = 0; i < REG_BASE_COUNT; i++)
                 c->regs[i] = mx_zero;
             for (int i = 0; i < REG_EXTRA_MAX; i++)

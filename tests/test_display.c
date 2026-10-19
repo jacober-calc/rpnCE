@@ -1,4 +1,5 @@
 /* Whole-display drawing commands captured from display.c at 2e29e01.
+ * Revalidated against HEAD display.c with the TVM/HELP resource reorder.
  * GraphX text metrics are deterministic stand-ins; dot-font drawing uses
  * the actual renderer. Only intentional appearance changes may update the
  * fingerprint. Tests also verify formatting work saved across redraws. */
@@ -10,6 +11,7 @@
 #include "res.h"
 #include "../src/core/format.h"
 #include "../src/core/dateobj.h"
+#include "../src/core/units.h"
 #include "mock_calc_runtime.h"
 
 uint8_t mock_res[65536];
@@ -18,6 +20,15 @@ uint16_t gfx_palette[256];
 static uint64_t fingerprint;
 static uint8_t scale_x = 1;
 static int fails;
+static char printed[4096];
+static size_t printed_count;
+static void printed_char(char c)
+{
+    if (printed_count + 1 < sizeof printed) {
+        printed[printed_count++] = c;
+        printed[printed_count] = '\0';
+    }
+}
 
 static void record(uint32_t value)
 {
@@ -52,11 +63,11 @@ unsigned int gfx_GetCharWidth(char c)
 { return (unsigned)(c == ' ' || c == '.' || c == ',' || c == ':' ? 3 : 6) * scale_x; }
 unsigned int gfx_GetStringWidth(const char *s)
 { unsigned w = 0; for (; *s; s++) w += gfx_GetCharWidth(*s); return w; }
-void gfx_PrintChar(char c) { record(16); record((uint8_t)c); }
+void gfx_PrintChar(char c) { record(16); record((uint8_t)c); printed_char(c); }
 void gfx_PrintStringXY(const char *s, int x, int y)
 {
     record(17); record((uint32_t)x); record((uint32_t)y);
-    for (; *s; s++) record((uint8_t)*s);
+    for (; *s; s++) { record((uint8_t)*s); printed_char(*s); }
     record(0);
 }
 
@@ -140,11 +151,14 @@ static void appearance(void)
     c.regs[0] = mk(123.5);
     c.regs[1] = c.stack[0];
     catalog_open(&cat, &c);
+    /* This legacy appearance fixture contains only the seeded A and B. */
+    cat.count = 2;
     draw(&c, &m, &cat, NULL, false);
     catalog_move(&cat, 1);
     draw(&c, &m, &cat, NULL, false);
     cat.open = false;
-    for (uint8_t tint = 0; tint < TINT_COUNT; tint++) {
+    /* Golden fixture covers the original four persistent preset slots. */
+    for (uint8_t tint = 0; tint < 4; tint++) {
         display_set_tint(tint);
         draw(&c, &m, &cat, NULL, false);
     }
@@ -153,7 +167,7 @@ static void appearance(void)
     draw(&c, &m, &cat, NULL, false);
     display_close();
     printf("display fingerprint: %016" PRIx64 "\n", fingerprint);
-    check("whole-display drawing commands match baseline", fingerprint == UINT64_C(0x2c060cd2d4b4f9fa));
+    check("whole-display drawing commands match baseline", fingerprint == UINT64_C(0x9cca3371ee56ce8a));
 }
 
 static void formatting_work(void)
@@ -239,6 +253,41 @@ static void formatting_work(void)
     display_close();
 }
 
+static void quantity_catalog_and_help(void)
+{
+    calc_t c;
+    menu_t m;
+    catalog_t cat = {0};
+    calc_init(&c);
+    menu_home(&m);
+    for (uint8_t i = 0; i < UNIT_COUNT; i++) {
+        if (!strcmp(unit_label(i), "ft")) c.reg_unit[0] = i + 1;
+        if (!strcmp(unit_label(i), "in")) c.unit_lastx = i + 1;
+    }
+    display_open();
+    check("zero quantities appear in catalog", catalog_open(&cat, &c) && cat.count == 2 + TVM_VAR_COUNT);
+    printed_count = 0; printed[0] = '\0';
+    draw(&c, &m, &cat, NULL, false);
+    catalog_move(&cat, -1);  /* LASTX now follows every TVM entry. */
+    draw(&c, &m, &cat, NULL, false);
+    check("catalog draws register and LASTX unit labels", strstr(printed, "ft") && strstr(printed, "in"));
+    cat.open = false;
+    draw(&c, &m, &cat, NULL, false);
+    calc_t before = c;
+    static const char *const titles[] = { "HELP 1/3", "HELP 2/3", "HELP 3/3" };
+    for (uint8_t page = 0; page < HELP_PAGE_COUNT; page++) {
+        printed_count = 0; printed[0] = '\0';
+        display_help(page);
+        check("HELP pages include navigation and expected title", strstr(printed, titles[page]) &&
+              strstr(printed, "UP / DOWN") && strstr(printed, "CLEAR / ON"));
+    }
+    mock_format_calls = 0;
+    draw(&c, &m, &cat, NULL, false);
+    check("HELP preserves calculator state and formatted stack cache",
+          !memcmp(&before, &c, sizeof c) && !mock_format_calls);
+    display_close();
+}
+
 int main(void)
 {
     FILE *f = fopen("data/RPNCEres.bin", "rb");
@@ -248,6 +297,7 @@ int main(void)
     if (!res_open()) return 1;
     appearance();
     formatting_work();
+    quantity_catalog_and_help();
     printf("%d failures\n", fails);
     return fails != 0;
 }

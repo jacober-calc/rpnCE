@@ -1,4 +1,5 @@
 /* Golden drawing-command fingerprints captured from dotfont.c at 0891326.
+ * All-byte fingerprints include the percent glyph added for I%YR labels.
  * Update them only for an intentional change to the font's appearance.
  * Cover both sizes, every non-NUL byte, exponent context, and clipping. */
 #include <inttypes.h>
@@ -60,7 +61,7 @@ int main(void)
             draw(word, 26, 23, 32, small);
         }
         check(small ? "small font, all bytes and contexts" : "stack font, all bytes and contexts",
-              small ? UINT64_C(0xd57fa409680573c4) : UINT64_C(0x511b8507b34fa768));
+              small ? UINT64_C(0x5d9e927d925e67a8) : UINT64_C(0x1cd164ff9b788214));
     }
 
     static const char *const examples[] = {

@@ -13,7 +13,7 @@
 
 typedef struct {
     unsigned char data[16384];
-    size_t size;
+    size_t size, pos;
     bool exists, archived;
 } appvar_t;
 static appvar_t vars[2];
@@ -30,21 +30,24 @@ uint8_t ti_Open(const char *name, const char *mode)
         vars[i].exists = true;
         vars[i].archived = false;
     }
+    vars[i].pos = 0;
     return (uint8_t)(i + 1);
 }
 size_t ti_Read(void *data, size_t size, size_t count, uint8_t handle)
 {
     appvar_t *v = &vars[handle - 1];
-    if (count > v->size / size) count = v->size / size;
-    memcpy(data, v->data, size * count);
+    if (count > (v->size - v->pos) / size) count = (v->size - v->pos) / size;
+    memcpy(data, v->data + v->pos, size * count);
+    v->pos += size * count;
     return count;
 }
 size_t ti_Write(const void *data, size_t size, size_t count, uint8_t handle)
 {
     appvar_t *v = &vars[handle - 1];
-    assert(size * count <= sizeof v->data);
-    memcpy(v->data, data, size * count);
-    v->size = size * count;
+    assert(v->pos + size * count <= sizeof v->data);
+    memcpy(v->data + v->pos, data, size * count);
+    v->pos += size * count;
+    if (v->pos > v->size) v->size = v->pos;
     return count;
 }
 int ti_Close(uint8_t handle) { (void)handle; return 1; }
@@ -88,8 +91,14 @@ static void populate(calc_t *c, int count)
     c->stack[2] = obj_pack(&date);
     c->lastx = mk(-42.5);
     c->unit_lastx = UNIT_COUNT;
-    for (int i = 0; i < REG_BASE_COUNT; i++) c->regs[i] = mk(-i - 0.5);
-    for (int i = 0; i < count; i++) c->extra[i] = mk(i + 1000);
+    for (int i = 0; i < REG_BASE_COUNT; i++) {
+        c->regs[i] = mk(-i - 0.5);
+        c->reg_unit[i] = (uint8_t)(i + 1);
+    }
+    for (int i = 0; i < count; i++) {
+        c->extra[i] = mk(i + 1000);
+        c->extra_unit[i] = (uint8_t)(i + 1);
+    }
     c->lift = true;
     c->degrees = true;
     c->disp_style = DISP_ENG;
@@ -129,9 +138,9 @@ static bool same_saved(const calc_t *a, const calc_t *b)
     for (int i = 0; i < STACK_MAX; i++)
         if (!same_real(&a->stack[i], &b->stack[i]) || a->unit[i] != b->unit[i]) return false;
     for (int i = 0; i < REG_BASE_COUNT; i++)
-        if (!same_real(&a->regs[i], &b->regs[i])) return false;
+        if (!same_real(&a->regs[i], &b->regs[i]) || a->reg_unit[i] != b->reg_unit[i]) return false;
     for (int i = 0; i < a->extra_count; i++)
-        if (!same_real(&a->extra[i], &b->extra[i])) return false;
+        if (!same_real(&a->extra[i], &b->extra[i]) || a->extra_unit[i] != b->extra_unit[i]) return false;
     for (int i = 0; i < SUM_COUNT; i++)
         if (!same_real(&a->stats.sum[i], &b->stats.sum[i])) return false;
     return true;
@@ -161,7 +170,7 @@ int main(void)
         check("save finalizes entry and archives the appvar", finishes == previous_finishes + 1 && vars[0].archived);
         if (n == 0) fixed_size = vars[0].size;
         check("save writes only the configured extra registers",
-              vars[0].size == fixed_size + sizeof(real_t) * counts[n]);
+              vars[0].size == fixed_size + (sizeof(real_t) + 1) * counts[n]);
         memset(&loaded, 0, sizeof loaded);
         check("all persistent state survives repeated save/load",
               storage_load(&loaded) && same_saved(&original, &loaded));
@@ -183,6 +192,30 @@ int main(void)
     vars[0].size = saved_size;
     check("valid load after failed loads recovers the saved state",
           storage_load(&loaded) && same_saved(&original, &loaded));
+
+    size_t legacy_size = saved_size - 2 - REG_BASE_COUNT - original.extra_count;
+    vars[0].size = legacy_size + 1;
+    rejected_unchanged("truncated extension header is rejected", &loaded);
+    vars[0].size = saved_size;
+    vars[0].data[legacy_size] = '?';
+    rejected_unchanged("unknown unit extension is rejected", &loaded);
+    memcpy(vars[0].data, saved, saved_size);
+    vars[0].data[saved_size - 1] = 255;
+    check("invalid saved unit tags become scalar values",
+          storage_load(&loaded) && loaded.extra_unit[original.extra_count - 1] == 0 &&
+          same_real(&loaded.extra[original.extra_count - 1], &original.extra[original.extra_count - 1]));
+    memcpy(vars[0].data, saved, saved_size);
+
+    /* Legacy v5 ends before the optional unit extension. Preserve its values
+     * and stack units while initializing the new register metadata. */
+    vars[0].size = saved_size - 2 - REG_BASE_COUNT - original.extra_count;
+    memset(original.reg_unit, 0, sizeof original.reg_unit);
+    memset(original.extra_unit, 0, sizeof original.extra_unit);
+    check("legacy saves load without losing numeric or DATE values",
+          storage_load(&loaded) && same_saved(&original, &loaded));
+    storage_save(&loaded);
+    check("legacy state gains unit extension and reloads",
+          vars[0].data[1] == 5 && vars[0].size == saved_size && storage_load(&loaded) && same_saved(&original, &loaded));
 
     /* Loading and then saving a smaller state must not retain old registers. */
     populate(&original, 0);

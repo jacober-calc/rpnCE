@@ -1,0 +1,74 @@
+/* Translate actual CE scan codes, preserving modifiers and register prompts. */
+#include <stdio.h>
+#include <string.h>
+#include "keys.h"
+#include "menu.h"
+#include "res.h"
+
+uint8_t mock_res[65536];
+size_t mock_res_size;
+static int fails;
+static void check(const char *name, bool pass)
+{
+    if (!pass) fails++;
+    printf("%s %s\n", pass ? "ok  " : "FAIL", name);
+}
+int main(void)
+{
+    FILE *f = fopen("data/RPNCEres.bin", "rb");
+    if (!f) return 1;
+    mock_res_size = fread(mock_res, 1, sizeof mock_res, f);
+    fclose(f);
+    if (!res_open()) return 1;
+    static const struct { sk_key_t key; uint8_t group; bool second; } cases[] = {
+        { sk_Math, MENU_GROUP_HOME, false }, { sk_Mode, MENU_GROUP_MODE, false },
+        { sk_Stat, MENU_GROUP_STAT, false }, { sk_GraphVar, MENU_GROUP_UNIT, false },
+        { sk_Apps, MENU_GROUP_BASE, false }, { sk_Prgm, MENU_GROUP_HYPERBOLIC, false },
+        { sk_Add, MENU_GROUP_CLEAR, true }, { sk_GraphVar, MENU_GROUP_DATE, true },
+        { sk_Stat, MENU_GROUP_STACK, true }, { sk_Apps, MENU_GROUP_CONV, true },
+    };
+    for (unsigned i = 0; i < sizeof cases / sizeof cases[0]; i++) {
+        keys_t k = {0};
+        menu_t m;
+        menu_home(&m);
+        if (cases[i].second) keys_translate(&k, sk_2nd);
+        event_t e = keys_translate(&k, cases[i].key);
+        check("key selects requested menu and consumes 2ND", e.kind == EV_MENU &&
+              e.arg == cases[i].group && !k.second);
+        menu_jump(&m, e.arg);
+        check("shortcut opens first row of menu", m.group == cases[i].group && m.row == 0);
+        if (m.group != MENU_GROUP_HOME) {
+            menu_back(&m);
+            check("ON returns from shortcut to correct HOME row", m.group == MENU_GROUP_HOME &&
+                  m.row == menu_parent_row_of(e.arg));
+        }
+    }
+    keys_t k = {0};
+    keys_translate(&k, sk_2nd);
+    check("2ND CATALOG opens HELP", keys_translate(&k, sk_0).kind == EV_HELP && !k.second);
+    keys_translate(&k, sk_2nd);
+    check("2ND QUIT still quits", keys_translate(&k, sk_Mode).kind == EV_QUIT);
+    keys_translate(&k, sk_2nd);
+    event_t e = keys_translate(&k, sk_Graph);
+    check("shifted softkeys still request TVM recall", e.kind == EV_SOFTKEY && e.arg == 4 && e.shifted);
+    keys_translate(&k, sk_Alpha); e = keys_translate(&k, sk_Apps);
+    check("ALPHA APPS is still B", e.kind == EV_CMD && e.cmd == CMD_ALPHA_LETTER && e.arg == 1);
+    keys_translate(&k, sk_Alpha); e = keys_translate(&k, sk_Prgm);
+    check("ALPHA PRGM is still C", e.kind == EV_CMD && e.cmd == CMD_ALPHA_LETTER && e.arg == 2);
+    keys_open_prompt(&k, PROMPT_STO); e = keys_translate(&k, sk_Apps);
+    check("STO APPS still stores B", e.kind == EV_CMD && e.cmd == CMD_STO && e.arg == 2);
+    keys_open_prompt(&k, PROMPT_RCL); e = keys_translate(&k, sk_Prgm);
+    check("RCL PRGM still recalls C", e.kind == EV_CMD && e.cmd == CMD_RCL && e.arg == 3);
+    keys_open_prompt(&k, PROMPT_STO); keys_translate(&k, sk_Add); e = keys_translate(&k, sk_Math);
+    check("STO arithmetic still works", e.kind == EV_CMD && e.cmd == CMD_STO_ADD && e.arg == 1);
+    menu_t m;
+    menu_home(&m);
+    const menu_node_t *n = menu_slot(&m, 4);
+    check("TVM occupies HOME first row fifth slot", n->kind == MENU_GROUP && n->group == MENU_GROUP_TVM);
+    menu_press(&m, 4);
+    check("TVM submenu still opens", m.group == MENU_GROUP_TVM && menu_slot(&m, 0)->id == MID_TVM_N);
+    menu_back(&m); menu_row_down(&m); n = menu_slot(&m, 4);
+    check("HELP occupies HOME second row fifth slot", n->kind == MENU_ITEM && n->id == MID_HELP);
+    printf("%d failures\n", fails);
+    return fails != 0;
+}

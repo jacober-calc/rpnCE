@@ -451,17 +451,17 @@ int main(void)
                 C.lift = false;
                 for (int k = 0; k < depth; k++) {
                     C.stack[k] = mk(k == 0 ? 2 : k == 1 ? 10 : 100 + k);
-                    C.unit[k] = (uint8_t)(k + 1);
+                    C.unit[k] = k < 2 ? 0 : (uint8_t)(k + 1);
                 }
                 C.regs[0] = mk(3);
                 cmd(cases[i].command, cases[i].arg);
                 expect("result matches operation", C.stack[0].v, cases[i].result);
-                expect("LASTX keeps the original X and unit", C.lastx.v == 2 && C.unit_lastx == 1, 1);
+                expect("LASTX keeps the original X and unit", C.lastx.v == 2 && C.unit_lastx == 0, 1);
                 expect("result has no unit", C.unit[0], 0);
                 expect("operation keeps its lift rule", C.lift, cases[i].lift);
                 expect("Y and its unit follow the drop rule",
                        C.stack[1].v == (cases[i].drops ? 102 : 10) &&
-                       C.unit[1] == (cases[i].drops ? 3 : 2), 1);
+                       C.unit[1] == (cases[i].drops ? 3 : 0), 1);
                 expect("top stack level stays duplicated", C.stack[depth - 1].v, 100 + depth - 1);
                 expect("no unexpected result error", C.message == NULL, 1);
             }
@@ -470,15 +470,15 @@ int main(void)
         C.stack[0] = mk(0);
         C.stack[1] = mk(10);
         C.lastx = mk(42);
-        C.unit[0] = 1;
-        C.unit[1] = 2;
+        C.unit[0] = 3;
+        C.unit[1] = 4;
         C.unit_lastx = 3;
         C.lift = false;
         cmd(CMD_DIV, 0);
         expect_msg("failed result reports division by zero", "Err: Division By 0");
         expect("failed result preserves values, tags, LASTX and lift",
                C.stack[0].v == 0 && C.stack[1].v == 10 && C.lastx.v == 42 &&
-               C.unit[0] == 1 && C.unit[1] == 2 && C.unit_lastx == 3 && !C.lift, 1);
+               C.unit[0] == 3 && C.unit[1] == 4 && C.unit_lastx == 3 && !C.lift, 1);
     }
 
     /* DATE conversion boundaries: ordinary epoch/duration functions need

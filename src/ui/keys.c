@@ -347,6 +347,15 @@ event_t keys_translate(keys_t *k, sk_key_t key)
     if (second) {
         if (key == sk_Mode) {
             ev.kind = EV_QUIT;
+        } else if (key == sk_0) {
+            ev.kind = EV_HELP;
+        } else if (key == sk_Apps) {      /* ANGLE */
+            ev.kind = EV_MENU;
+            ev.arg = MENU_GROUP_CONV;
+        } else if (key == sk_Add || key == sk_GraphVar || key == sk_Stat) {
+            ev.kind = EV_MENU;
+            ev.arg = key == sk_Add ? MENU_GROUP_CLEAR :
+                     key == sk_GraphVar ? MENU_GROUP_DATE : MENU_GROUP_STACK;
         } else {
             ev.cmd = second_cmd(key);
             if (ev.cmd != CMD_NONE)
@@ -363,6 +372,10 @@ event_t keys_translate(keys_t *k, sk_key_t key)
         case sk_Down:   ev.kind = EV_ROW_DOWN; return ev;
         case sk_Math:   ev.kind = EV_MENU; ev.arg = MENU_GROUP_HOME; return ev;
         case sk_Mode:   ev.kind = EV_MENU; ev.arg = MENU_GROUP_MODE; return ev;
+        case sk_Stat:   ev.kind = EV_MENU; ev.arg = MENU_GROUP_STAT; return ev;
+        case sk_GraphVar: ev.kind = EV_MENU; ev.arg = MENU_GROUP_UNIT; return ev;
+        case sk_Apps:   ev.kind = EV_MENU; ev.arg = MENU_GROUP_BASE; return ev;
+        case sk_Prgm:   ev.kind = EV_MENU; ev.arg = MENU_GROUP_HYPERBOLIC; return ev;
         default:        break;
     }
 

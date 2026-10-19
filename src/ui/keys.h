@@ -15,6 +15,7 @@ typedef enum {
     EV_MENU,        /* go to menu arg (MENU_GROUP_*): MATH = HOME, MODE */
     EV_BACK,        /* ON */
     EV_QUIT,        /* 2ND QUIT or 2ND OFF */
+    EV_HELP,        /* quick reference: HELP or 2ND CATALOG */
     EV_VARS,        /* VARS: the register catalog */
     EV_SCROLL_LEFT, /* left / right arrows: scroll a long X value */
     EV_SCROLL_RIGHT,

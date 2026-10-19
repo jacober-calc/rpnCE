@@ -27,25 +27,88 @@ enum {
     COL_DOTS,           /* the stack's digits and units */
 };
 
-/* Color presets, as RGB for ink, panel, faint, dots. The real CE screen
- * washes out light, subtle colors, so LCD+ pushes the green further. */
-typedef struct { const char *name; uint8_t rgb[4][3]; } tint_t;
-
-static const tint_t tints[TINT_COUNT] = {
-    { "LCD",  { { 34, 46, 49 },   { 156, 170, 155 }, { 56, 68, 68 },  { 26, 32, 32 } } },
-    { "LCD+", { { 16, 30, 20 },   { 146, 178, 122 }, { 44, 66, 44 },  { 10, 20, 12 } } },
-    { "GRAY", { { 22, 21, 21 },   { 219, 211, 203 }, { 92, 88, 84 },  { 20, 18, 18 } } },
-    { "DARK", { { 150, 186, 140 },{ 14, 18, 16 },    { 84, 104, 88 }, { 198, 232, 188 } } },
+/* The original four palette slots stay fixed. Optional accents separate
+ * status/menu colors from stack values, keeping dark themes readable. */
+enum {
+    COL_BAR = COL_DOTS + 1,
+    COL_BAR_TEXT,
+    COL_MENU_FIRST,
+    COL_ROW_FIRST = COL_MENU_FIRST + 5,
+    COL_MENU_TEXT = COL_ROW_FIRST + 4,
+    ACCENT_COUNT = COL_MENU_TEXT - COL_BAR + 1,
 };
+typedef struct { uint8_t rgb[ACCENT_COUNT][3]; } accents_t;
+typedef struct {
+    const char *name;
+    uint8_t rgb[4][3];       /* ink, panel, faint, dots */
+    const accents_t *accents;
+} tint_t;
+
+/* Palette references: ayu-theme/vscode-ayu (Ayu Dark), and classic Monokai.
+ * Small labels are brighter than editor comments for the CE's LCD. */
+static const accents_t ayu_accents = { {
+    { 13, 16, 23 }, { 191, 189, 182 },                  /* status */
+    { 27, 31, 41 }, { 27, 31, 41 }, { 27, 31, 41 },     /* menu fills */
+    { 27, 31, 41 }, { 27, 31, 41 },
+    { 191, 189, 182 }, { 191, 189, 182 },               /* T, Z, Y, X */
+    { 115, 184, 255 }, { 230, 180, 80 },
+    { 230, 180, 80 },                                 /* menu text */
+} };
+static const accents_t monokai_accents = { {
+    { 30, 31, 28 }, { 248, 248, 242 },
+    { 62, 61, 50 }, { 62, 61, 50 }, { 62, 61, 50 },
+    { 62, 61, 50 }, { 62, 61, 50 },
+    { 174, 129, 255 }, { 102, 217, 239 },
+    { 166, 226, 46 }, { 255, 82, 141 }, /* brighter pink for small unit labels */
+    { 248, 248, 242 },
+} };
+static const accents_t pastel_accents = { {
+    { 38, 58, 89 }, { 244, 247, 252 },
+    { 215, 199, 249 }, { 183, 217, 255 }, { 167, 230, 210 },
+    { 255, 215, 163 }, { 249, 191, 213 },
+    { 112, 69, 174 }, { 35, 98, 180 },
+    { 14, 115, 108 }, { 183, 62, 96 },
+    { 38, 58, 89 },
+} };
+
+/* Phosphor greens on near-black, with restrained green menu panels. */
+static const accents_t commodore_accents = { {
+    { 10, 34, 17 }, { 128, 233, 148 },
+    { 16, 43, 25 }, { 16, 43, 25 }, { 16, 43, 25 },
+    { 16, 43, 25 }, { 16, 43, 25 },
+    { 84, 200, 116 }, { 90, 218, 123 },
+    { 108, 236, 141 }, { 145, 255, 165 },
+    { 121, 231, 149 },
+} };
+
+/* Existing indices 0..3 are persistent settings; append new presets. */
+static const tint_t tints[TINT_COUNT] = {
+    { "LCD",  { { 34, 46, 49 },   { 156, 170, 155 }, { 56, 68, 68 },  { 26, 32, 32 } }, NULL },
+    { "LCD+", { { 16, 30, 20 },   { 146, 178, 122 }, { 44, 66, 44 },  { 10, 20, 12 } }, NULL },
+    { "GRAY", { { 22, 21, 21 },   { 219, 211, 203 }, { 92, 88, 84 },  { 20, 18, 18 } }, NULL },
+    { "INVERTED", { { 150, 186, 140 }, { 14, 18, 16 }, { 84, 104, 88 }, { 198, 232, 188 } }, NULL },
+    { "AYU DARK", { { 230, 180, 80 }, { 16, 20, 28 }, { 139, 150, 169 }, { 191, 189, 182 } }, &ayu_accents },
+    { "MONOKAI", { { 166, 226, 46 }, { 39, 40, 34 }, { 163, 161, 144 }, { 248, 248, 242 } }, &monokai_accents },
+    { "PASTEL", { { 38, 58, 89 }, { 244, 247, 252 }, { 83, 103, 132 }, { 38, 58, 89 } }, &pastel_accents },
+    { "COMMODORE", { { 84, 222, 116 }, { 4, 10, 7 }, { 85, 168, 107 }, { 116, 232, 144 } }, &commodore_accents },
+};
+static const accents_t *g_accents;
+
+static void set_rgb(uint8_t slot, const uint8_t *rgb)
+{
+    gfx_palette[slot] = gfx_RGBTo1555(rgb[0], rgb[1], rgb[2]);
+}
 
 void display_set_tint(uint8_t tint)
 {
     if (tint >= TINT_COUNT)
         tint = 0;
-    for (int i = 0; i < 4; i++) {
-        const uint8_t *c = tints[tint].rgb[i];
-        gfx_palette[COL_INK + i] = gfx_RGBTo1555(c[0], c[1], c[2]);
-    }
+    for (int i = 0; i < 4; i++)
+        set_rgb((uint8_t)(COL_INK + i), tints[tint].rgb[i]);
+    g_accents = tints[tint].accents;
+    if (g_accents)
+        for (int i = 0; i < ACCENT_COUNT; i++)
+            set_rgb((uint8_t)(COL_BAR + i), g_accents->rgb[i]);
 }
 
 const char *display_tint_name(uint8_t tint)
@@ -194,6 +257,32 @@ void display_problem(const char *title, const char *detail)
     gfx_SwapDraw();
 }
 
+/* Compact reference pages, also available through 2ND CATALOG. */
+void display_help(uint8_t page)
+{
+    static const char *const lines[HELP_PAGE_COUNT][8] = {
+        { "HELP 1/3 - KEYS", "MATH: home    MODE: settings",
+          "STAT: STAT    X,T,theta,n: UNIT", "APPS: BASE    PRGM: HYP",
+          "2ND MEM: CLR    2ND LIST: STK", "2ND LINK: DATE    2ND ANGLE: CONV",
+          "2ND CATALOG: HELP    VARS: recall", "2ND MODE or 2ND ON: quit" },
+        { "HELP 2/3 - STACK / REGISTERS", "ENTER: duplicate X; type to replace X",
+          "( : roll down    ) : swap X and Y", "2ND ANS: LASTX    DEL: edit / clear X",
+          "STO + letter: store X", "2ND STO + letter: recall",
+          "STO + . : i    STO + 2ND . : (i)", "PRIM: factor in X, original in Y" },
+        { "HELP 3/3 - UNITS", "Choose a unit to attach it to X.",
+          "Choose a compatible unit to convert.", "STO / RCL / X<> keep value and unit.",
+          "+ and - convert X to Y's unit.", "%CH: (X - Y) / Y * 100, after conversion",
+          "TEMP / FUEL: convert or round only.", "UVAL: remove unit    UBAS: base unit" },
+    };
+    if (page >= HELP_PAGE_COUNT) page = 0;
+    gfx_FillScreen(COL_PANEL);
+    gfx_SetTextScale(1, 1);
+    for (int i = 0; i < 8; i++)
+        draw_label(lines[page][i], LABEL_X, 12 + i * 24, COL_INK);
+    draw_label("UP / DOWN: page    ENTER / CLEAR / ON: back", LABEL_X, 222, COL_INK);
+    gfx_SwapDraw();
+}
+
 void display_close(void)
 {
     gfx_End();
@@ -239,10 +328,10 @@ static void draw_status(const calc_t *c, bool second, bool alpha)
     const int y = (STATUS_H - 8) / 2;
     char clock[20], fmt[8], base[6];
 
-    gfx_SetColor(COL_INK);
+    gfx_SetColor(g_accents ? COL_BAR : COL_INK);
     gfx_FillRectangle(0, 0, SCREEN_W, STATUS_H);
     gfx_SetTextScale(1, 1);
-    gfx_SetTextFGColor(COL_PANEL);
+    gfx_SetTextFGColor(g_accents ? COL_BAR_TEXT : COL_PANEL);
 
     clock_text(clock);
     if (clock[0])
@@ -282,11 +371,11 @@ static void draw_status(const calc_t *c, bool second, bool alpha)
     gfx_PrintStringXY(base, x, y);
     x += (int)gfx_GetStringWidth(base) + STATUS_GAP;
     if (shift) {                            /* a light badge on the dark bar */
-        gfx_SetColor(COL_PANEL);
+        gfx_SetColor(g_accents ? COL_BAR_TEXT : COL_PANEL);
         gfx_FillRectangle(x, y - 2, (int)gfx_GetStringWidth(shift) + 4, 12);
-        gfx_SetTextFGColor(COL_INK);
+        gfx_SetTextFGColor(g_accents ? COL_BAR : COL_INK);
         gfx_PrintStringXY(shift, x + 2, y);
-        gfx_SetTextFGColor(COL_PANEL);
+        gfx_SetTextFGColor(g_accents ? COL_BAR_TEXT : COL_PANEL);
     }
 }
 
@@ -327,10 +416,10 @@ void display_reset_scroll(void)
 #define ARROW_W 8       /* room for a scroll arrow at each end */
 
 /* Small filled triangle pointing left or right, vertically centered. */
-static void draw_arrow(int x, int top, bool left)
+static void draw_arrow(int x, int top, bool left, uint8_t ink)
 {
     int cy = top + DOT_HEIGHT / 2;
-    gfx_SetColor(COL_DOTS);
+    gfx_SetColor(ink);
     for (int i = 0; i < 4; i++) {
         int col = left ? x + i : x + 3 - i;
         gfx_FillRectangle(col, cy - i, 1, 2 * i + 1);
@@ -353,20 +442,20 @@ static int substring_width(const char *s, int from, int to)
  * the row stays on one line: the part that fits is shown, with arrows at
  * the ends where more digits are hidden. scroll (X row only, else NULL)
  * says how many characters are hidden at the right. */
-static void draw_value(const char *s, int row_y, const char *label, int *scroll)
+static void draw_value(const char *s, int row_y, const char *label, int *scroll, uint8_t ink)
 {
     int right = VALUE_RIGHT;
     int top = row_y + (ROW_H - DOT_HEIGHT) / 2;
 
     if (label) {
         int lw = label_width(label);
-        draw_label(label, VALUE_RIGHT - lw, top + DOT_HEIGHT - 8, COL_DOTS);
+        draw_label(label, VALUE_RIGHT - lw, top + DOT_HEIGHT - 8, ink);
         right = VALUE_RIGHT - lw - 5;
     }
 
     int w = dot_width(s);
     if (w <= right - VALUE_LEFT) {
-        dot_draw(s, right - w, top, COL_DOTS, 0);
+        dot_draw(s, right - w, top, ink, 0);
         return;
     }
 
@@ -393,11 +482,11 @@ static void draw_value(const char *s, int row_y, const char *label, int *scroll)
     int n = end - start;
     memcpy(tmp, s + start, (size_t)n);
     tmp[n] = '\0';
-    dot_draw(tmp, area_right - dot_width(tmp), top, COL_DOTS, 0);
+    dot_draw(tmp, area_right - dot_width(tmp), top, ink, 0);
     if (start > 0)
-        draw_arrow(VALUE_LEFT, top, true);
+        draw_arrow(VALUE_LEFT, top, true, ink);
     if (sc > 0)
-        draw_arrow(right - 4, top, false);
+        draw_arrow(right - 4, top, false, ink);
 }
 
 /* Formats a stack value for the display: in HEX, OCT or BIN when that mode
@@ -517,16 +606,17 @@ static void draw_stack(const calc_t *c, const char *prompt, bool lifted)
     for (int i = 0; i < 4; i++) {
         int y = STACK_TOP + i * ROW_H;
         bool is_x = (i == 3);
+        uint8_t ink = g_accents ? (uint8_t)(COL_ROW_FIRST + i) : COL_DOTS;
 
         /* small label, centered on the row, so the numbers stand out */
         dot_draw_small(labels[i], LABEL_X, y + (ROW_H - DOT_SMALL_HEIGHT) / 2, COL_FAINT);
 
         if (is_x && prompt) {
-            draw_value(prompt, y, NULL, NULL);
+            draw_value(prompt, y, NULL, NULL, ink);
         } else if (is_x && c->editing) {
             strcpy(buf, c->entry);
             strcat(buf, "_");
-            draw_value(buf, y, NULL, NULL);     /* typing: the end is shown */
+            draw_value(buf, y, NULL, NULL, ink);     /* typing: the end is shown */
         } else {
             bool shift = prompt && lifted;
             const real_t *v = shift ? shown_lifted[i] : values[i];
@@ -539,7 +629,7 @@ static void draw_stack(const calc_t *c, const char *prompt, bool lifted)
             const char *text = stack_value_text(c, v, i, &kind);
             if (kind == FV_DECIMAL_IN_BASE)
                 label = "dec";
-            draw_value(text, y, label, is_x ? &g_x_scroll : NULL);
+            draw_value(text, y, label, is_x ? &g_x_scroll : NULL, ink);
         }
     }
 }
@@ -573,8 +663,18 @@ static void draw_catalog(const calc_t *c, const catalog_t *cat)
         dot_draw(name, LABEL_X, top, ink, 0);
         int name_end = LABEL_X + dot_width(name) + 6;
 
-        (void)format_value(buf, c, catalog_value((calc_t *)c, item));
-        dot_draw(buf, VALUE_RIGHT - dot_width(buf), top, ink, name_end);
+        uint8_t kind = format_value(buf, c, catalog_value((calc_t *)c, item));
+        uint8_t tag = catalog_unit((calc_t *)c, item);
+        const char *label = tag ? unit_label((uint8_t)(tag - 1)) : NULL;
+        if (kind == FV_DECIMAL_IN_BASE)
+            label = "dec";
+        int right = VALUE_RIGHT;
+        if (label) {
+            int width = label_width(label);
+            draw_label(label, right - width, top + DOT_HEIGHT - 8, ink);
+            right -= width + 5;
+        }
+        dot_draw(buf, right - dot_width(buf), top, ink, name_end);
     }
 }
 
@@ -593,7 +693,7 @@ static void draw_menu_row(const calc_t *c, const menu_t *m)
             continue;
 
         int x = gap + i * (w + gap);
-        gfx_SetColor(COL_INK);
+        gfx_SetColor(g_accents ? (uint8_t)(COL_MENU_FIRST + i) : COL_INK);
         gfx_FillRectangle(x, MENU_Y, w, MENU_H);
 
         const char *label = res_text(n->label);
@@ -601,10 +701,10 @@ static void draw_menu_row(const calc_t *c, const menu_t *m)
             label = res_text(n->alt_label);
 
         int lw = label_width(label);
-        draw_label(label, x + (w - lw) / 2, MENU_Y + (MENU_H - 8) / 2 + 1, COL_PANEL);
+        draw_label(label, x + (w - lw) / 2, MENU_Y + (MENU_H - 8) / 2 + 1, g_accents ? COL_MENU_TEXT : COL_PANEL);
 
         if (n->kind == MENU_GROUP) {
-            gfx_SetColor(COL_PANEL);
+            gfx_SetColor(g_accents ? COL_MENU_TEXT : COL_PANEL);
             gfx_HorizLine(x + w / 2 - 8, MENU_Y + 2, 16);
         }
     }
