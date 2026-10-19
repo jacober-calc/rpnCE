@@ -20,6 +20,40 @@ These measurements exclude runtime stack and library allocations.
 `RPNCEres.8xv` is unchanged at 11,545 bytes. No release files in `prod/`
 were replaced.
 
+## CE DATE arithmetic correction (0.7.0, dev)
+
+Native CE testing reproduced `1987-01-17 + 15000` reporting Err: Domain
+and corrupted date differences. CE v15 miscompiled the private
+`date_days()` wrapper's 64-bit return; a positive day count could acquire
+an extra bit at position 40. The desktop compiler did not reproduce it.
+
+The private helper now returns a 32-bit day count, which covers the entire
+supported calendar. Seconds calculations explicitly widen to 64 bits
+before multiplication, preserving years 1–9999 and post-2038 values.
+The public API, DATE object encoding, and save format are unchanged.
+
+The [native regression suite](../tests/ce_date/README.md) uses the real
+core, TI-OS real routines, and release -Oz/LTO settings. The old build
+fails eight of the original 18 arithmetic checks; the corrected build
+passes all 18. All 15
+host suites also pass with address and undefined-behavior sanitizers.
+The correction adds 150 bytes to the program image and 121 bytes to the
+compressed program, with static storage unchanged at 3,855 bytes.
+
+## Application clock display (0.7.0, dev)
+
+The status bar now uses the same CTZ-to-ATZ conversion as the NOWT, NOWD
+and NWDZ commands. CTZ describes the local hardware clock; ATZ selects the
+application time zone. The common clock reader is read-only, skips the
+conversion when the offsets match, and rejects invalid clock readings.
+NWUT remains UTC, and NOW remains epoch seconds independent of ATZ.
+Neither time-zone setting writes the TI-OS clock; SETC does so explicitly.
+
+The native suite now includes 33 checks, covering matching and independent
+offsets, fractional offsets, year rollovers, and hardware-clock preservation.
+Host display tests verify ATZ status text and preserve the existing default
+display fingerprint. Saved settings and appvar formats are unchanged.
+
 ## Merge preparation (0.7.0)
 
 Before merging into `dev`, the branch was adjusted as follows. The

@@ -338,6 +338,16 @@ int main(void)
         if (obj_is(&C.stack[0])) { dt_obj_t o_ = obj_unpack(&C.stack[0]); dt_format(b_, &o_, false); } \
         int ok_ = strcmp(b_, want) == 0; if (!ok_) fails++; \
         printf("%s %-46s %s (want %s)\n", ok_ ? "ok  " : "FAIL", name, b_, want); } while (0)
+    REC("{1987,01,17"); cmd(CMD_ENTER, 0); num(15000); cmd(CMD_ADD, 0);
+    XOBJ("reported birth date + 15000 days", "D{2028,2,11}");
+    cmd(CMD_CLEAR_STACK, 0);
+    REC("{1987,01,17"); cmd(CMD_ENTER, 0); REC("{2026,10,19"); cmd(CMD_SUB, 0);
+    expect("1987-01-17 minus 2026-10-19 is days", X, -14520);
+    expect("date subtraction remembers the original date in LASTX", obj_is(&C.lastx), 1);
+    cmd(CMD_CLEAR_STACK, 0);
+    REC("{2026,10,19"); cmd(CMD_ENTER, 0); REC("{1987,01,17"); cmd(CMD_SUB, 0);
+    expect("date difference reverses sign in the other order", X, 14520);
+    cmd(CMD_CLEAR_STACK, 0);
     REC("{2024,3,14"); cmd(CMD_ENTER, 0);
     XOBJ("typed Date (no closing brace)", "D{2024,3,14}");
     expect("ENTER copies the Date into Y", obj_is(&C.stack[1]), 1);
@@ -419,6 +429,46 @@ int main(void)
     XOBJ("NOWD (local date)", "D{2026,10,18}");
     REC("{2026,12,31,23,59,59,0,0"); cmd(CMD_DATE_FN, DF_SET_CLOCK);
     expect("SETC wrote the clock", mock_clock[0] == 2026 && mock_clock[1] == 12 && mock_clock[3] == 23, 1);
+
+    /* The TI clock stays local; CTZ interprets it and ATZ selects app time. */
+    {
+        int saved[6];
+        memcpy(saved, mock_clock, sizeof saved);
+        const int local[6] = { 2026, 12, 31, 23, 30, 0 };
+        memcpy(mock_clock, local, sizeof local);
+        num(-7); cmd(CMD_DATE_FN, DF_SET_CLOCK_TZ);
+        num(-7); cmd(CMD_DATE_FN, DF_SET_APP_TZ);
+        cmd(CMD_DATE_FN, DF_NOW_TIME);
+        XOBJ("CTZ=ATZ preserves local clock time", "T{23,30,0}");
+        cmd(CMD_DATE_FN, DF_NOW_DZ);
+        XOBJ("NWDZ carries the application offset", "DZ{2026,12,31,23,30,0,-7,0}");
+        cmd(CMD_DATE_FN, DF_NOW_DZ_UTC);
+        XOBJ("NWUT crosses into next UTC year", "DZ{2027,1,1,6,30,0,0,0}");
+        cmd(CMD_DATE_FN, DF_NOW);
+        double instant = X;
+        num(9); cmd(CMD_DATE_FN, DF_SET_APP_TZ);
+        cmd(CMD_DATE_FN, DF_NOW_TIME);
+        XOBJ("ATZ changes application time", "T{15,30,0}");
+        cmd(CMD_DATE_FN, DF_NOW_DATE);
+        XOBJ("ATZ changes application date at midnight", "D{2027,1,1}");
+        cmd(CMD_DATE_FN, DF_NOW_DZ);
+        XOBJ("NWDZ uses new ATZ", "DZ{2027,1,1,15,30,0,9,0}");
+        cmd(CMD_DATE_FN, DF_NOW);
+        expect("NOW epoch seconds independent of ATZ", X, instant);
+        expect("clock reads and zone setters preserve hardware time",
+               !memcmp(mock_clock, local, sizeof local) && C.clock_tz == -28, 1);
+        const int fractional[6] = { 2027, 1, 1, 0, 15, 0 };
+        memcpy(mock_clock, fractional, sizeof fractional);
+        num(5.5); cmd(CMD_DATE_FN, DF_SET_CLOCK_TZ);
+        num(-3.5); cmd(CMD_DATE_FN, DF_SET_APP_TZ);
+        cmd(CMD_DATE_FN, DF_NOW_DZ);
+        XOBJ("fractional zones cross previous year", "DZ{2026,12,31,15,15,0,-3,-30}");
+        cmd(CMD_DATE_FN, DF_NOW_DZ_UTC);
+        XOBJ("UTC removes fractional clock offset", "DZ{2026,12,31,18,45,0,0,0}");
+        memcpy(mock_clock, saved, sizeof saved);
+        C.clock_tz = 0;
+        C.app_tz = -28;
+    }
 
     /* epochs */
     cmd(CMD_DATE_FN, DF_EPOCH_NTP);

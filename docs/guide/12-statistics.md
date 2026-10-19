@@ -124,6 +124,13 @@ not a guarantee that the selected relationship explains the process.
 Use the [error reference](16-troubleshooting.md#errors) if a result reports
 `Err: Stat`.
 
+Entering a nonpositive value disables the logarithmic sums that need it.
+Removing that observation with Σ− does not re-enable those sums; clear
+the statistics and re-enter the corrected data. Switching from LINΣ to
+ALLΣ after entering observations likewise cannot reconstruct sums that
+were not accumulated. Select ALLΣ before entering a new nonlinear-fit data
+set.
+
 ---
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 11. BASE: hexadecimal, octal and binary](11-base.md) · [Next: 13. TVM: time value of money](13-tvm.md)

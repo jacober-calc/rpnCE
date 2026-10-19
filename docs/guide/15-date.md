@@ -164,11 +164,35 @@ The CE has a real-time clock (the same one TI-OS sets in MODE). RPNCE uses
 two time zones:
 
 - the **clock time zone** (**CTZ**): the zone the CE's clock is set to;
-- the **application time zone** (**ATZ**): the zone you want results in.
+- the **application time zone** (**ATZ**): the zone for application clock
+  results and the status bar.
 
-Both start at UTC. Set each from a TimeZone or from hours in X: if the
-clock shows local time in Vancouver in summer, `7 (−)` **CTZ** and
-`7 (−)` **ATZ**. **CTZ?** and **ATZ?** show them.
+### Set up a local calculator clock
+
+1. Set the calculator's normal local date and time in TI-OS. It does not
+   need to be set to UTC.
+2. Open **DATE** → **CLK** and set **CTZ** to the UTC offset represented
+   by that clock. Enter signed hours in X, then select **CTZ**. For a
+   UTC−07:00 clock, use `7 (−)` **CTZ**.
+3. Set **ATZ** to the offset you want inside RPNCE. Use `7 (−)` **ATZ**
+   for the same local time, or choose another offset to work elsewhere.
+
+Both settings initially default to UTC. They accept hours in multiples of
+0.25 (for example, `5.5` means UTC+05:30), or a TimeZone object. **CTZ?**
+and **ATZ?** recall the saved settings; both persist when you quit RPNCE.
+Changing either setting leaves the hardware clock unchanged.
+
+For example, suppose the TI clock reads **2026-12-31 23:30** and represents
+UTC−07:00:
+
+| CTZ | ATZ | Status bar / NOWT | NOWD | NWDZ | NWUT |
+| --- | --- | --- | --- | --- | --- |
+| −7 | −7 | 23:30 | 2026-12-31 | 2026-12-31 23:30 −07:00 | 2027-01-01 06:30 UTC |
+| −7 | +9 | 15:30 | 2027-01-01 | 2027-01-01 15:30 +09:00 | 2027-01-01 06:30 UTC |
+
+The status bar also shows the application date. The TI-OS clock continues
+reading 23:30 in both cases. **NOW** gives the same epoch seconds for the
+same instant, regardless of ATZ.
 
 | Item | Gives |
 | --- | --- |
@@ -179,8 +203,8 @@ clock shows local time in Vancouver in summer, `7 (−)` **CTZ** and
 | **NWUT** | the current ZonedDateTime in UTC |
 | **SETC** | sets the CE's clock from a ZonedDateTime (or a DateTime, taken as clock time) |
 
-The date and time in the status bar come from the same clock, shown in the
-clock's own time zone.
+The status bar and application clock functions share the same CTZ-to-ATZ
+conversion, including changes of calendar date across midnight.
 
 
 ## Procedure: enter a date and count days
@@ -236,11 +260,11 @@ month with a variable number of days.
 
 ## Clock operations that change settings
 
-ATZ changes how application clock results are presented. CTZ tells RPNCE
+ATZ changes how application clock results and the status bar are presented. CTZ tells RPNCE
 what offset the hardware clock's existing reading represents. Neither
 setting adjusts the hardware clock by itself. SETC writes a new hardware
 clock reading; use it deliberately, because that clock is also used by
-TI-OS. The status bar displays the hardware clock's local reading.
+TI-OS. Use CTZ and ATZ for time-zone changes; SETC is not needed for them.
 
 ---
 

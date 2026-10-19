@@ -1,12 +1,11 @@
 # Hardware testing: 0.7.0
 
-This is the 0.7.0 development build: the `refactor` branch prepared for
-merging into `dev`. Send both files from `bin/` using TI Connect CE,
+This is the 0.7.0 development build from `dev`. Send both files from `bin/` using TI Connect CE,
 replacing the matching files on the calculator:
 
-- `bin/RPNCE.8xp`: 46,287 bytes
-- `bin/RPNCEres.8xv`: 12,308 bytes; resource stamp `4A1F17C6` (format 2,
-  now with the HELP pages)
+- `bin/RPNCE.8xp`: 46,168 bytes
+- `bin/RPNCEres.8xv`: 17,019 bytes; resource stamp `5E2832E1` (format 2,
+  with 19 HELP pages)
 
 Use the existing CE libraries. An existing `RPNCEdat` from 0.6.6, or from
 an earlier `refactor` test build, loads without a reset. Earlier refactor
@@ -51,6 +50,43 @@ Temperature and fuel-economy units support conversion and rounding;
 arithmetic on them is refused. Compound units are not supported. Use UVAL
 to remove a unit explicitly. Statistics and TVM continue to use plain values.
 
+## DATE arithmetic regression
+
+Select DEC before entry. `2ND {` means the second function of `(`; the
+commas below separate fields while the record is open. Use the Date object
+from three fields, rather than a DateTime or ZonedDateTime, for day counts.
+
+| Keys | Expected |
+| --- | --- |
+| `2ND { 1987 , 01 , 17 ENTER 15000 +` | `D{2028,2,11}` (or `2028-02-11` in string display) |
+| `2ND { 1987 , 01 , 17 ENTER 2ND { 2026 , 10 , 19 −` | −14,520 days |
+| `2ND { 2026 , 10 , 19 ENTER 2ND { 1987 , 01 , 17 −` | 14,520 days |
+| `2ND { 1987 , 01 , 17 ENTER`, then DATE → CLK → NOWD, then `−` | Birth date minus the clock's current application date, in days |
+
+The earlier build could report Err: Domain on the first case and corrupt
+the date difference. The native [CE regression suite](../tests/ce_date/README.md)
+reproduces the failure in the old build and verifies the fix, including
+wide epoch-second conversions through years 1 and 9999.
+
+## Local clock and application time zone
+
+Keep the TI-OS clock set to local time. In DATE → CLK, set CTZ to the UTC
+offset that reading represents, then set ATZ to the desired application
+offset. For a reproducible check, use a TI clock of 2026-12-31 23:30 with
+CTZ = −7 (or adapt the expected times to your current clock).
+
+| Check | Expected |
+| --- | --- |
+| Set CTZ = −7, ATZ = −7 | Status bar 2026-12-31 23:30; NOWT 23:30; NOWD 2026-12-31; NWDZ carries −07:00 |
+| Select NWUT | 2027-01-01 06:30 UTC |
+| Set ATZ = +9, leave CTZ = −7 | Status bar 2027-01-01 15:30; NOWD/NOWT/NWDZ agree; NWUT and NOW epoch seconds unchanged |
+| Quit and inspect the TI-OS clock | Still the original local time, allowing for elapsed time |
+| Reopen and use CTZ? / ATZ? | −07:00 / +09:00; status bar still uses ATZ |
+| Restore your actual CTZ and desired ATZ | Normal clock behavior resumes; no SETC needed |
+
+Offsets are fixed; update them when your intended daylight-saving offset
+changes. Only SETC explicitly writes the calculator's hardware clock.
+
 ## Register units: RPNCEunt
 
 | Check | Expected |
@@ -77,7 +113,7 @@ to remove a unit explicitly. Statistics and TVM continue to use plain values.
 `2ND LINK` (`2ND X,T,theta,n`) and `2ND ANGLE` (`2ND APPS`) should do
 nothing: they are kept free for complex-number entry.
 
-TVM occupies HOME row 1, slot 5; HELP occupies row 2, slot 5. HELP has three
+TVM occupies HOME row 1, slot 5; HELP occupies row 2, slot 5. HELP has 19
 pages, now read from the RPNCEres appvar: UP / DOWN changes page, wrapping
 from the last page to the first; ENTER, CLEAR, DEL or ON returns. Page 1
 should not mention 2ND LINK or 2ND ANGLE. Check that

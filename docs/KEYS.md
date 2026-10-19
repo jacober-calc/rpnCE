@@ -256,6 +256,9 @@ TIOS 1997, Y2K 2000, or a custom date set with EPC). CLK reads the CE's
 clock (NOW as epoch seconds, NOWD, NOWT, NWDZ in the application time zone,
 NWUT in UTC), sets the application and clock time zones (ATZ, CTZ, each
 from a TimeZone or hours) and sets the clock (SETC, from a ZonedDateTime).
+Keep the TI clock at local time and set CTZ to its UTC offset. ATZ controls
+application clock results and the status bar; changing either zone leaves
+the TI clock unchanged.
 
 MODE row 4 chooses how objects are shown: `{..}` as typed (the default) or
 `".."` as RFC 3339 strings. Long values scroll with the arrow keys. SHOW
@@ -265,8 +268,8 @@ screen tint in `RPNCEcfg`.
 ## The screen
 
 - **Status bar:** a dark strip with the calculator's state: the date and
-  time from the CE's clock on the left (`2026-10-18 14:05`, in the clock's
-  own time zone), and on the right the display format (FIX4, SCI3, FIX- for
+  time from the CE's clock on the left (`2026-10-18 14:05`, converted to
+  the application time zone, ATZ), and on the right the display format (FIX4, SCI3, FIX- for
   as many digits as needed), DEG or RAD, the base (DEC, HEX, OCT or BIN,
   with C when the carry flag is set), and a 2ND or A (ALPHA) badge when one
   is pending.

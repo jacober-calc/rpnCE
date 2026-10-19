@@ -25,7 +25,7 @@ The dark strip at the top shows the calculator's state.
 
 | Item | Meaning |
 | --- | --- |
-| `2026-10-18 14:05` | the date and time from the CE's clock, in the clock's own time zone; it updates each minute |
+| `2026-10-18 14:05` | the date and time in the application time zone (ATZ), using CTZ to interpret the CE's clock; it updates each minute |
 | `FIX4`, `SCI3`, `ENG2` | the display format and its number of digits (see [chapter 9](09-settings.md#9-display-formats-and-mode-settings)) |
 | `FIX-` | "as many digits as needed" (all digits, like ALL on an HP) |
 | `DEG` / `RAD` | the angle mode for trigonometry and polar conversions |

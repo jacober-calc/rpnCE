@@ -287,6 +287,43 @@ static void quantity_catalog_and_help(void)
     display_close();
 }
 
+static void application_clock(void)
+{
+    calc_t c;
+    menu_t m;
+    catalog_t cat = {0};
+    int saved[6];
+    memcpy(saved, mock_clock, sizeof saved);
+    const int local[6] = {2026, 12, 31, 23, 30, 0};
+    memcpy(mock_clock, local, sizeof local);
+    calc_init(&c);
+    menu_home(&m);
+    c.clock_tz = -28;
+    display_open();
+    static const struct { int8_t zone; const char *text; } cases[] = {
+        {-28, "2026-12-31 23:30"},
+        {36, "2027-01-01 15:30"},
+        {-14, "2027-01-01 03:00"},
+    };
+    for (unsigned i = 0; i < sizeof cases / sizeof cases[0]; i++) {
+        c.app_tz = cases[i].zone;
+        calc_t before = c;
+        printed_count = 0; printed[0] = '\0';
+        draw(&c, &m, &cat, NULL, false);
+        check("status clock follows ATZ including fractional offsets and year rollover",
+              strstr(printed, cases[i].text) != NULL);
+        check("status clock preserves calculator state and hardware time",
+              !memcmp(&before, &c, sizeof c) && !memcmp(mock_clock, local, sizeof local));
+    }
+    mock_clock[1] = 0;
+    printed_count = 0; printed[0] = '\0';
+    draw(&c, &m, &cat, NULL, false);
+    check("invalid hardware clock is omitted", strstr(printed, "2026-") == NULL &&
+          strstr(printed, "2027-") == NULL);
+    display_close();
+    memcpy(mock_clock, saved, sizeof saved);
+}
+
 int main(void)
 {
     FILE *f = fopen("data/RPNCEres.bin", "rb");
@@ -297,6 +334,7 @@ int main(void)
     appearance();
     formatting_work();
     quantity_catalog_and_help();
+    application_clock();
     printf("%d failures\n", fails);
     return fails != 0;
 }

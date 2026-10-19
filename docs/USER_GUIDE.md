@@ -1,6 +1,6 @@
 # RPNCE User Guide
 
-**RPN scientific and financial calculator for the TI-84 Plus CE**  
+**RPN scientific and financial calculator for the TI-84 Plus CE**\
 **Software version 0.7.0 · First edition · 19 October 2026**
 
 ![RPNCE calculator display](../assets/rpnce-promo1.png)

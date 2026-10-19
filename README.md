@@ -87,7 +87,7 @@ To try it without a calculator, load both files and `clibs.8xg` into the
 
 The menu tree, unit tables and HELP pages (about 17 KB) live in `RPNCEres`
 and are read straight from archive, so they use no RAM. The 0.7.0 build has
-an 82,968-byte program image and 3,855 bytes of static variables, excluding
+an 81,907-byte program image and 3,855 bytes of static variables, excluding
 runtime stack and library allocations. See the
 [refactor measurements](docs/REFACTOR.md) for the comparison with the original.
 
@@ -105,6 +105,11 @@ math, BASE, statistics, TVM and units, DATE, the RPNCEres appvar reader,
 menu actions, keyboard shortcuts, dot-font rendering, saved state, the
 calculator core, reported bug regressions, and display redraws), using
 stand-ins for the calculator's number routines.
+
+The [native DATE regressions](tests/ce_date/README.md) additionally compile
+the real core with the CE toolchain and run 33 checks in CEmu using TI-OS
+number routines. They cover a CE-specific compiler failure that the desktop
+stand-ins cannot reproduce, and verify CTZ/ATZ clock conversions.
 
 To compare the refactored core against the original in a Git checkout:
 

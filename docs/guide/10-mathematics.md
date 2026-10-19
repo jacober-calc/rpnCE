@@ -17,6 +17,7 @@ RPNCE 0.7.0 · User Guide
 - [Percentages and rounding](#percentages-and-rounding)
 - [Trigonometry and coordinate conversion](#trigonometry-and-coordinate-conversion)
 - [Hyperbolic domains](#hyperbolic-domains)
+- [Other domain restrictions](#other-domain-restrictions)
 
 ## On the keyboard
 
@@ -71,7 +72,7 @@ ln(1 + X) loses every digit, but **LN1+** gives the right answer.
 | **ABS**, **SIGN** | absolute value; −1, 0 or 1 |
 | **MOD** | Y mod X, taking the sign of X |
 | **MIN**, **MAX** | the smaller or larger of Y and X |
-| **RNDF** | round X to what the display shows (in FIX 2, 3.14159 becomes 3.14) |
+| **RNDF** | round X using the selected format's digits (in FIX 2, 3.14159 becomes 3.14) |
 | **RNDN** | round X to a number of decimal places: **RNDN** `2` |
 | **RNDG** | round X to a number of significant digits: **RNDG** `3` |
 
@@ -206,6 +207,11 @@ part: `7 ENTER 3` **MOD** gives 1.
 | Round to three significant digits | **RNDG** `3` |
 | Request 10–19 digits in a digit prompt | Press `.`, then a digit 0–9. |
 
+RNDF uses decimal places in FIX and significant digits in SCI/ENG. In the
+all-digits setting (FIX-), RNDF leaves the value unchanged. If FIX falls
+back to scientific notation for a very small value, RNDF still uses the
+requested FIX decimal-place count; it is not a copy of the rendered text.
+
 For example, `12.3456` **RNDN** `2` gives 12.35; re-enter `12.3456` and
 use **RNDG** `3` for 12.3. Rounding changes the value used by subsequent
 operations; avoid rounding intermediate results unless the problem calls
@@ -243,6 +249,25 @@ are separate from the typed Time and Duration objects in DATE.
 The inverse menu labels are shortened to fit the screen. They mean inverse
 hyperbolic sine, cosine, and tangent. Ordinary trigonometric DEG/RAD
 settings do not scale the inputs to hyperbolic functions.
+
+## Other domain restrictions
+
+| Function | Required operands |
+| --- | --- |
+| LOG, LN, LOG2 | X > 0 |
+| LOGB | Y > 0; base X > 0 and X ≠ 1 |
+| LN1+ | X > −1 |
+| ASIN, ACOS | −1 ≤ X ≤ 1 |
+| X√Y | X ≠ 0; negative Y requires an odd whole-number X |
+| Y^X | Negative Y requires a whole-number X |
+| COMB, PERM | Whole numbers with 0 ≤ X ≤ Y |
+| GCD, LCM | Nonnegative whole-number X and Y |
+| PRIM | Whole X from 2 to 4,294,967,295 |
+| N! | Whole X from 0 to 69 |
+
+Any function can also fail if its result exceeds the supported numeric
+range. Retain the original operands or use LASTX before applying a
+different function; an error is not a prompt to continue a partial formula.
 
 ---
 

@@ -461,9 +461,12 @@ void dt_format(char *out, const dt_obj_t *o, bool as_string)
 
 /* ---------- conversions ---------- */
 
-static dt_int date_days(const dt_obj_t *o)
+/* Calendar day counts fit in 32 bits. The CE v15 compiler miscompiles
+ * this private wrapper with a 64-bit return, corrupting high bits in callers.
+ * Keep seconds calculations explicitly wide where this value is used. */
+static int32_t date_days(const dt_obj_t *o)
 {
-    return dt_days_from_civil(o->year, o->month, o->day);
+    return (int32_t)dt_days_from_civil(o->year, o->month, o->day);
 }
 
 static dt_int clock_seconds(const dt_obj_t *o)
@@ -492,13 +495,13 @@ static dt_err_t utc_seconds(const dt_obj_t *o, dt_int *out)
 {
     switch (o->type) {
         case OBJ_DATE:
-            *out = date_days(o) * SECS_PER_DAY;
+            *out = (dt_int)date_days(o) * SECS_PER_DAY;
             return DT_OK;
         case OBJ_DATETIME:
-            *out = date_days(o) * SECS_PER_DAY + clock_seconds(o);
+            *out = (dt_int)date_days(o) * SECS_PER_DAY + clock_seconds(o);
             return DT_OK;
         case OBJ_DZ:
-            *out = date_days(o) * SECS_PER_DAY + clock_seconds(o) -
+            *out = (dt_int)date_days(o) * SECS_PER_DAY + clock_seconds(o) -
                    (dt_int)(o->tz_hour * 60 + o->tz_minute) * 60;
             return DT_OK;
         default:
@@ -670,7 +673,7 @@ static dt_err_t shift(const dt_obj_t *o, dt_int amount, dt_result_t *out)
             break;
         case OBJ_DATETIME:
         case OBJ_DZ: {
-            dt_int local = date_days(o) * SECS_PER_DAY + clock_seconds(o) + amount;
+            dt_int local = (dt_int)date_days(o) * SECS_PER_DAY + clock_seconds(o) + amount;
             e = fill_local(&r, local);          /* the offset stays the same */
             break;
         }

@@ -173,4 +173,8 @@ uint8_t *calc_register_unit(calc_t *c, uint8_t num);
 /* Ends number entry, if any, so the state can be saved. */
 void calc_finish_entry(calc_t *c);
 
+/* Read the hardware clock using CTZ, converted to ATZ or UTC. Does not
+ * change calculator state or write the hardware clock. */
+bool calc_clock_now(const calc_t *c, bool utc, dt_obj_t *out);
+
 #endif

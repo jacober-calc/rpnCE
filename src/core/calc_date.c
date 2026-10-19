@@ -167,8 +167,7 @@ static void push_obj(calc_t *c, const dt_obj_t *o)
     calc_stack_enter(c, &v);
 }
 
-/* The hardware clock as a ZonedDateTime in the clock's zone. */
-static bool clock_now(const calc_t *c, dt_obj_t *out)
+bool calc_clock_now(const calc_t *c, bool utc, dt_obj_t *out)
 {
     int y, mo, d, h, mi, s;
     if (!sys_clock_read(&y, &mo, &d, &h, &mi, &s))
@@ -179,7 +178,13 @@ static bool clock_now(const calc_t *c, dt_obj_t *out)
     out->hour = (int8_t)h; out->minute = (int8_t)mi; out->second = (int8_t)s;
     out->tz_hour = (int8_t)(c->clock_tz / 4);
     out->tz_minute = (int8_t)((c->clock_tz % 4) * 15);
-    return dt_validate(out) == DT_OK;
+    if (dt_validate(out) != DT_OK)
+        return false;
+    int zone = utc ? 0 : c->app_tz;
+    if (zone == c->clock_tz)
+        return true;
+    dt_obj_t clock = *out;
+    return dt_convert_tz(&clock, zone, out) == DT_OK;
 }
 
 /* A time zone from X: a TimeZone object or hours (multiples of 0.25). */
@@ -416,18 +421,16 @@ void calc_date_execute(calc_t *c, date_fn_t fn)
 
         /* ---- clock ---- */
         case DF_NOW: case DF_NOW_DATE: case DF_NOW_TIME: case DF_NOW_DZ: case DF_NOW_DZ_UTC: {
-            dt_obj_t now;
-            if (!clock_now(c, &now)) {
+            if (!calc_clock_now(c, fn == DF_NOW || fn == DF_NOW_DZ_UTC, &o)) {
                 c->message = "Err: Clock";
                 return;
             }
             if (fn == DF_NOW) {
-                dt_to_epoch_seconds(&now, epoch_days(c), &n);
+                dt_to_epoch_seconds(&o, epoch_days(c), &n);
                 real_t v = whole_to_real(n);
                 calc_stack_enter(c, &v);
                 return;
             }
-            dt_convert_tz(&now, fn == DF_NOW_DZ_UTC ? 0 : c->app_tz, &o);
             if (fn == DF_NOW_DATE) {
                 o.type = OBJ_DATE;
                 o.hour = o.minute = o.second = 0;

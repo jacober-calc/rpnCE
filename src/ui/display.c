@@ -8,7 +8,6 @@
 #include "res.h"
 #include "../core/units.h"
 #include "../core/dateobj.h"
-#include "../core/datefn.h"      /* sys_clock_read */
 
 /*
  * Screen layout (320 x 240), RPN83P style:
@@ -283,14 +282,14 @@ void display_close(void)
 static const char *base_warning(const calc_t *c, char *buf);
 
 /* "2026-10-18 14:05" (ISO 8601, as DATE's ".." mode writes dates) from the
- * hardware clock, or "" if it isn't set. */
-static void clock_text(char *out)
+ * hardware clock converted to ATZ, or "" if the reading is invalid. */
+static void clock_text(const calc_t *c, char *out)
 {
-    int y, mo, d, h, mi, sec;
+    dt_obj_t now;
     out[0] = '\0';
-    if (!sys_clock_read(&y, &mo, &d, &h, &mi, &sec) || mo < 1 || mo > 12)
+    if (!calc_clock_now(c, false, &now))
         return;
-    const int f[5] = { y, mo, d, h, mi };
+    const int f[5] = { now.year, now.month, now.day, now.hour, now.minute };
     const int digits[5] = { 4, 2, 2, 2, 2 };
     const char after[5] = { '-', '-', ' ', ':', '\0' };
     char *p = out;
@@ -320,7 +319,7 @@ static void draw_status(const calc_t *c, bool second, bool alpha)
     gfx_SetTextScale(1, 1);
     gfx_SetTextFGColor(g_accents ? COL_BAR_TEXT : COL_PANEL);
 
-    clock_text(clock);
+    clock_text(c, clock);
     if (clock[0])
         gfx_PrintStringXY(clock, 4, y);
 
