@@ -79,7 +79,7 @@ To try it without a calculator, load both files and `clibs.8xg` into the
 
 The menu tree and unit tables (about 11 KB) live in `RPNCEres` and are
 read straight from archive, so they use no RAM. The v15.0 source build has a
-77,101-byte program image and 3,327 bytes of static variables, excluding
+77,767-byte program image and 3,577 bytes of static variables, excluding
 runtime stack and library allocations. See the
 [refactor measurements](docs/REFACTOR.md) for the comparison with the original.
 
@@ -92,9 +92,10 @@ tested on a PC. With a C compiler installed:
 sh tests/run_tests.sh
 ```
 
-This builds and runs twelve suites (number formatting, decimal rounding,
+This builds and runs thirteen suites (number formatting, decimal rounding,
 math, BASE, statistics, TVM and units, DATE, the RPNCEres appvar reader,
-menu actions, dot-font rendering, saved state, and the calculator core), using
+menu actions, dot-font rendering, saved state, the calculator core, and display
+redraws), using
 stand-ins for the calculator's number routines.
 
 To compare the refactored core against the original in a Git checkout:
@@ -104,8 +105,9 @@ sh tests/check_core_equivalence.sh
 ```
 
 This checks 23,016 command/state combinations, including DATE and BASE
-arguments, both stack depths, unit tags, errors, TVM variables and the clock.
-The baseline commit can also be passed as an argument.
+arguments, both stack depths, unit tags, errors, TVM variables and the clock,
+plus 8,568 entry-sequence steps. A baseline from before the core was split
+can also be passed as an argument (for example, `2e29e01`).
 
 ## Layout
 
@@ -113,6 +115,8 @@ The baseline commit can also be passed as an argument.
 src/main.c   entry point and main loop
 src/core/    calculator logic: stack, registers, math, formatting, rounding,
              TVM, statistics, units, BASE (no screen or key code)
+             calc_entry.c handles editing; calc_date.c integrates DATE
+             with the stack; calc.c dispatches commands and runs math
 src/ui/      display, dot-matrix font, keypad, menus, VARS catalog,
              res.c (reads the RPNCEres appvar)
 src/sys/     saving and loading state, the hardware clock

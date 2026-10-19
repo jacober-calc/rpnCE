@@ -41,7 +41,14 @@ run storage  -Itests/mock_storage $M tests/test_storage.c \
              src/sys/storage.c src/core/base.c src/core/tvm.c src/core/mathx.c \
              src/core/datetime.c
 run core     -DRPNCE_HOST_TEST $M tests/test_calc.c tests/mock_calc_runtime.c src/core/calc.c \
+             src/core/calc_entry.c src/core/calc_date.c \
              src/core/mathx.c src/core/stats.c src/core/tvm.c src/core/units.c \
              tests/units_data.c src/core/base.c src/core/datetime.c
+run display  -DRPNCE_HOST_TEST -Itests/mock_graphx -Itests/mock_fileioc $M -Isrc/ui \
+             tests/test_display.c tests/mock_calc_runtime.c \
+             src/ui/display.c src/ui/dotfont.c src/ui/menu.c src/ui/catalog.c \
+             src/ui/actions.c src/ui/res.c src/core/calc.c src/core/calc_entry.c \
+             src/core/calc_date.c src/core/base.c src/core/datetime.c src/core/mathx.c \
+             src/core/stats.c src/core/tvm.c src/core/units.c
 
 [ $fail -eq 0 ] && echo "all tests passed" || { echo "some tests failed"; exit 1; }

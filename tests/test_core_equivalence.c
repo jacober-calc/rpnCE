@@ -1,6 +1,7 @@
 /* Compare the original and refactored cores using the same host OS mocks.
  * Run with sh tests/check_core_equivalence.sh [baseline-commit]. */
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "calc.h"
 #include "dateobj.h"
@@ -75,6 +76,84 @@ static uint8_t argument(calc_cmd_t cmd, int variant)
     }
 }
 
+static void sequence_step(calc_t *old, calc_t *current, calc_cmd_t cmd,
+                          uint8_t arg, unsigned *checked)
+{
+    original_calc_execute(old, cmd, arg);
+    calc_execute(current, cmd, arg);
+    if (!same_state(old, current)) {
+        fprintf(stderr, "Entry sequence mismatch: step=%u command=%d argument=%u\n",
+                *checked, cmd, arg);
+        exit(1);
+    }
+    (*checked)++;
+}
+
+static void entry_sequences(void)
+{
+    /* '=' ENTER, '~' DEL and '!' CLEAR. Each intermediate editing state is
+     * compared, including invalid records that must stay open for repair. */
+    static const char *const traces[] = {
+        "12.34567890123456789E-123~~5=!!-0.25E-9=",
+        "{2024,2,30=~~29}=!!DT{2024,3,14,15,36,1}=",
+        "DZ{2024,3,14,15,36,1,-7,0}=}",
+        "1D3H10M=!!-2D5M=",
+        "D{2024,3,14}=10+!!T{23,59,59}=",
+        "{2024,12,31}~=!{{!!123~~~-5===!!!",
+    };
+    unsigned checked = 0;
+    for (int depth = STACK_MIN; depth <= STACK_MAX; depth += STACK_MAX - STACK_MIN) {
+        for (unsigned t = 0; t < sizeof traces / sizeof traces[0]; t++) {
+            calc_t old, current;
+            original_calc_init(&old);
+            calc_init(&current);
+            old.depth = current.depth = (uint8_t)depth;
+            for (const char *p = traces[t]; *p; p++) {
+                calc_cmd_t cmd;
+                uint8_t arg = 0;
+                switch (*p) {
+                    case '=': cmd = CMD_ENTER; break;
+                    case '~': cmd = CMD_BACKSPACE; break;
+                    case '!': cmd = CMD_CLEAR; break;
+                    case '-': cmd = CMD_CHS; break;
+                    case '.': cmd = CMD_DOT; break;
+                    case ',': case 'E': cmd = CMD_EE; break;
+                    case '{': cmd = CMD_RECORD_OPEN; break;
+                    case '}': cmd = CMD_RECORD_CLOSE; break;
+                    case '+': cmd = CMD_ADD; break;
+                    default:
+                        if (*p >= '0' && *p <= '9') {
+                            cmd = CMD_DIGIT; arg = (uint8_t)(*p - '0');
+                        } else {
+                            cmd = CMD_ALPHA_LETTER; arg = (uint8_t)(*p - 'A');
+                        }
+                        break;
+                }
+                sequence_step(&old, &current, cmd, arg, &checked);
+            }
+        }
+        /* A bounded, repeatable mixture of editing keys exercises transitions
+         * between decimal, HEX and record entry, including cancellations. */
+        calc_t old, current;
+        original_calc_init(&old);
+        calc_init(&current);
+        old.depth = current.depth = (uint8_t)depth;
+        uint32_t state = 0x52504e43;
+        static const calc_cmd_t commands[] = {
+            CMD_DIGIT, CMD_DIGIT, CMD_DIGIT, CMD_DOT, CMD_EE, CMD_CHS,
+            CMD_BACKSPACE, CMD_CLEAR, CMD_ENTER, CMD_RECORD_OPEN,
+            CMD_RECORD_CLOSE, CMD_ALPHA_LETTER, CMD_RECORD_TAG, CMD_BASE_RADIX
+        };
+        for (unsigned i = 0; i < 4096; i++) {
+            state ^= state << 13; state ^= state >> 17; state ^= state << 5;
+            calc_cmd_t cmd = commands[state % (sizeof commands / sizeof commands[0])];
+            uint8_t arg = argument(cmd, (int)((state >> 8) & 0xFFFF));
+            sequence_step(&old, &current, cmd, arg, &checked);
+        }
+    }
+    printf("%u original/refactored entry-sequence steps matched\n", checked);
+}
+
 int main(void)
 {
     unsigned checked = 0;
@@ -141,5 +220,6 @@ int main(void)
             }
     }
     printf("%u original/refactored command-state comparisons matched\n", checked);
+    entry_sequences();
     return 0;
 }

@@ -8,6 +8,7 @@
 
 real_t mock_fin[7];
 jmp_buf mock_jmp;
+unsigned mock_format_calls;
 real_t os_RealDiv(const real_t *a, const real_t *b)
 { if (b->v == 0) os_ThrowError(OS_E_DIVBY0); return mk(a->v / b->v); }
 real_t os_RealLog(const real_t *a)
@@ -17,7 +18,7 @@ real_t os_RealGcd(const real_t *a, const real_t *b) { return mk((double)g((long 
 real_t os_RealLcm(const real_t *a, const real_t *b)
 { long long x = (long long)a->v, y = (long long)b->v; return mk((double)(x / g(x, y) * y)); }
 void format_real(char *out, const real_t *v, uint8_t style, int8_t digits, int maxd, int maxe, bool group)
-{ (void)style; (void)digits; (void)maxd; (void)maxe; (void)group; snprintf(out, FORMAT_MAX, "%.14g", v->v); }
+{ (void)style; (void)digits; (void)maxd; (void)maxe; (void)group; mock_format_calls++; snprintf(out, FORMAT_MAX, "%.14g", v->v); }
 
 /* decimal rounding stand-ins (the real ones work on the calculator's digits) */
 real_t round_decimals(const real_t *v, int n) { double p = pow(10, n); return mk(round(v->v * p) / p); }

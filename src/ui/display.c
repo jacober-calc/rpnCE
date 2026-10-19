@@ -163,8 +163,11 @@ static void draw_label_tall(const char *s, int x, int y, uint8_t color)
     gfx_SetTextScale(1, 1);
 }
 
+static void reset_value_cache(void);
+
 void display_open(void)
 {
+    reset_value_cache();
     gfx_Begin();
     display_set_tint(0);
     gfx_SetDrawBuffer();            /* draw off-screen, then swap */
@@ -418,6 +421,62 @@ static fv_kind_t format_value(char *buf, const calc_t *c, const real_t *v)
     return c->base.radix != 10 ? FV_DECIMAL_IN_BASE : FV_NORMAL;
 }
 
+/* Cache only formatted stack text. Every frame is still drawn in full, and
+ * unit labels, prompts, warnings and the catalog are drawn from live state.
+ * The key contains every setting used by format_value(), plus the value's
+ * bytes (including DATE objects, which must not enter real-number math). */
+#define VALUE_BUFFER_SIZE 48
+_Static_assert(VALUE_BUFFER_SIZE >= FORMAT_MAX && VALUE_BUFFER_SIZE >= DT_FORMAT_MAX &&
+               VALUE_BUFFER_SIZE >= BASE_MAX_BITS + 1 && VALUE_BUFFER_SIZE >= ENTRY_MAX + 2,
+               "stack text buffer is too small");
+
+static struct {
+    real_t value;
+    char text[VALUE_BUFFER_SIZE];
+    fv_kind_t kind;
+    bool valid;
+} value_cache[4];
+
+static struct {
+    uint8_t style, radix, bits;
+    int8_t digits;
+    bool date_as_string, valid;
+} value_cache_format;
+
+static void reset_value_cache(void)
+{
+    value_cache_format.valid = false;
+    for (int i = 0; i < 4; i++)
+        value_cache[i].valid = false;
+}
+
+static void prepare_value_cache(const calc_t *c)
+{
+    if (value_cache_format.valid && value_cache_format.style == c->disp_style &&
+        value_cache_format.digits == c->disp_digits && value_cache_format.radix == c->base.radix &&
+        value_cache_format.bits == c->base.bits && value_cache_format.date_as_string == c->date_as_string)
+        return;
+
+    reset_value_cache();
+    value_cache_format.style = c->disp_style;
+    value_cache_format.digits = c->disp_digits;
+    value_cache_format.radix = c->base.radix;
+    value_cache_format.bits = c->base.bits;
+    value_cache_format.date_as_string = c->date_as_string;
+    value_cache_format.valid = true;
+}
+
+static const char *stack_value_text(const calc_t *c, const real_t *v, int row, fv_kind_t *kind)
+{
+    if (!value_cache[row].valid || memcmp(&value_cache[row].value, v, sizeof *v) != 0) {
+        value_cache[row].kind = format_value(value_cache[row].text, c, v);
+        memcpy(&value_cache[row].value, v, sizeof *v);
+        value_cache[row].valid = true;
+    }
+    *kind = value_cache[row].kind;
+    return value_cache[row].text;
+}
+
 /* In HEX, OCT or BIN: why X can't be shown in the base, or NULL. */
 static const char *base_warning(const calc_t *c, char *buf)
 {
@@ -451,7 +510,9 @@ static void draw_stack(const calc_t *c, const char *prompt, bool lifted)
     static const uint8_t regs[4] = { REG_T, REG_Z, REG_Y, REG_X };
     const real_t *values[4] = { &c->stack[3], &c->stack[2], &c->stack[1], &c->stack[0] };
     const real_t *shown_lifted[4] = { &c->stack[2], &c->stack[1], &c->stack[0], &c->stack[0] };
-    char buf[FORMAT_MAX > ENTRY_MAX + 2 ? FORMAT_MAX : ENTRY_MAX + 2];
+    char buf[VALUE_BUFFER_SIZE];
+
+    prepare_value_cache(c);
 
     for (int i = 0; i < 4; i++) {
         int y = STACK_TOP + i * ROW_H;
@@ -474,9 +535,11 @@ static void draw_stack(const calc_t *c, const char *prompt, bool lifted)
              * size stays decimal, tagged "dec" so it's never mistaken for a
              * base number. */
             const char *label = tag ? unit_label((uint8_t)(tag - 1)) : NULL;
-            if (format_value(buf, c, v) == FV_DECIMAL_IN_BASE)
+            fv_kind_t kind;
+            const char *text = stack_value_text(c, v, i, &kind);
+            if (kind == FV_DECIMAL_IN_BASE)
                 label = "dec";
-            draw_value(buf, y, label, is_x ? &g_x_scroll : NULL);
+            draw_value(text, y, label, is_x ? &g_x_scroll : NULL);
         }
     }
 }
