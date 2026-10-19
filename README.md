@@ -29,9 +29,10 @@ bottom of the screen, on a dot-matrix LCD-style display.
 - **Screen tints:** LCD, LCD+ (for real screens), GRAY, INVERTED, AYU DARK,
   MONOKAI, PASTEL, and COMMODORE.
 
-See [docs/KEYS.md](docs/KEYS.md) for the full key and menu reference, and
-[docs/ROADMAP.md](docs/ROADMAP.md) for what's done and what's next
-(complex numbers are still to come).
+The **[User Guide](docs/USER_GUIDE.md)** explains everything RPNCE does,
+with examples: the stack, menus, registers, every function, and the screen.
+[docs/KEYS.md](docs/KEYS.md) is a compact key and menu reference, and
+[docs/ROADMAP.md](docs/ROADMAP.md) shows what's done and what's next.
 
 ## Installing
 
@@ -128,11 +129,12 @@ src/sys/     saving and loading state, the hardware clock
 menus/       menus.txt: the whole menu tree as editable text
 help/        help.txt: the HELP pages as editable text
 data/        RPNCEres.bin: the RPNCEres appvar's contents (generated)
-tools/       genres.py: builds RPNCEres and the matching headers from
+tools/       guide_appendix.py: regenerates the user guide's menu map and
+             unit list; genres.py: builds RPNCEres and the matching headers from
              menus.txt (via genmenu.py) and the unit definitions
              (genunits.py); release.sh: packages a release
 tests/       PC test suites and run_tests.sh
-docs/        key reference, roadmap, and install notes
+docs/        the user guide, key reference, roadmap, and install notes
 prod/        the current build: RPNCE.8xp, RPNCEres.8xv, INSTALL.txt
 ```
 
@@ -143,6 +145,8 @@ Change `menus/menus.txt`, `help/help.txt` (or the unit definitions in
 `data/RPNCEres.bin` and the headers that go with it, with a new version
 stamp, so a program and appvar built from different sources can't be mixed
 up. The generated files are committed, so building doesn't need Python.
+After changing the menus or units, also run `python3 tools/guide_appendix.py`
+to refresh the user guide's menu map and unit list.
 genres.py needs the `mpmath` package.
 
 ## License

@@ -43,7 +43,8 @@
 - [ ] Remaining: CPLX (and its MODE settings)
 - [ ] Check each UNIT function against RPN83P's rules, including which NUM
       functions accept TEMP and FUEL values
-- [ ] Finish the user guide (docs/USER_GUIDE.md) for 0.7.0
+- [x] User guide for 0.7.0 (docs/USER_GUIDE.md), with generated menu map
+      and unit list (tools/guide_appendix.py)
 - [x] Menu tree generated from a menu definition file (menus/menus.txt)
 - [x] Menu navigation: softkeys, row up/down, HOME, EXIT
 - [x] DEG/RAD mode
