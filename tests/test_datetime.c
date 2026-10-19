@@ -147,6 +147,9 @@ int main(void)
 
     dt_val_t t = OBJ("T{17,0,0}"), t2 = OBJ("T{15,36,1}");
     res_num("17:00:00 - 15:36:01 = 5039 s", dt_sub(&t, &t2, &res), &res, 5039, 1);
+    dt_val_t early = OBJ("T{12,47,0}"), late = OBJ("T{20,17,0}");
+    res_num("12:47 - 20:17 = -27000 seconds", dt_sub(&early, &late, &res), &res, -27000, 1);
+    res_num("20:17 - 12:47 = 27000 seconds", dt_sub(&late, &early, &res), &res, 27000, 1);
     num = NUM(-100000); res_obj("Time wraps around midnight", dt_add(&t2, &num, &res), &res, "T{11,49,21}");
 
     dt_val_t dta = OBJ("{2024,12,25,0,0,0"), dtb = OBJ("{2024,3,14,15,36,1");

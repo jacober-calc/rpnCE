@@ -6,12 +6,14 @@ they use the host compiler and its calling conventions. The native build
 reproduced `1987-01-17 + 15000` failing and corrupted date differences.
 
 This suite compiles the real calculator core with release `-Oz` and LTO,
-uses TI-OS real-number routines, and checks 33 results in CEmu. It covers
+uses TI-OS real-number routines, and checks 37 results in CEmu. It covers
 the reported addition, subtraction in both directions, NOWD, scalar-first
 addition, leap days, STO arithmetic, epoch and zoned conversions, years 1
 and 9999, and the 2038 boundary. Clock checks cover CTZ/ATZ alignment,
 independent application time, UTC, fractional offsets and year rollovers,
-without writing the hardware clock. A simulated clock is used in this test. It does not load or write RPNCE's saved-data appvars.
+without writing the hardware clock. Time subtraction is checked in both
+operand orders, including conversion of signed seconds to Durations.
+A simulated clock is used in this test. It does not load or write RPNCE's saved-data appvars.
 
 With the CE toolchain and `cemu-autotester` on PATH, point these environment
 variables to your own ROM and CE libraries:

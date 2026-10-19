@@ -139,6 +139,16 @@ int main(void)
     check(!calc_clock_now(&c, false, &now));
     cmd(CMD_DATE_FN, DF_NOW_DZ);
     check(c.message && !strcmp(c.message, "Err: Clock"));
+    cmd(CMD_RECORD_TAG, OBJ_TIME); record("12,47,0"); cmd(CMD_ENTER, 0);
+    cmd(CMD_RECORD_TAG, OBJ_TIME); record("20,17,0"); cmd(CMD_SUB, 0);
+    check(x_number("-27000"));
+    cmd(CMD_DATE_FN, DF_SECONDS_TO_DR);
+    check(x_object("DR{0,-7,-30,0}"));
+    cmd(CMD_RECORD_TAG, OBJ_TIME); record("20,17,0"); cmd(CMD_ENTER, 0);
+    cmd(CMD_RECORD_TAG, OBJ_TIME); record("12,47,0"); cmd(CMD_SUB, 0);
+    check(x_number("27000"));
+    cmd(CMD_DATE_FN, DF_SECONDS_TO_DR);
+    check(x_object("DR{0,7,30,0}"));
     RESULTS[0] = checks;
     RESULTS[127] = 0xAA;
     while (!os_GetCSC()) { }

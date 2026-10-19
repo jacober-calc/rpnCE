@@ -49,8 +49,9 @@ conversion when the offsets match, and rejects invalid clock readings.
 NWUT remains UTC, and NOW remains epoch seconds independent of ATZ.
 Neither time-zone setting writes the TI-OS clock; SETC does so explicitly.
 
-The native suite now includes 33 checks, covering matching and independent
-offsets, fractional offsets, year rollovers, and hardware-clock preservation.
+The native suite now includes 37 checks, covering matching and independent
+offsets, fractional offsets, year rollovers, hardware-clock preservation,
+and signed Time differences with conversion to Durations.
 Host display tests verify ATZ status text and preserve the existing default
 display fingerprint. Saved settings and appvar formats are unchanged.
 

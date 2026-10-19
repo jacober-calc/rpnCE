@@ -398,6 +398,18 @@ int main(void)
     cmd(CMD_RECORD_CLOSE, 0);
     XOBJ("2ND } outside a record is DROP", "DW{4}");
 
+    /* Time differences are signed seconds; SEC-> makes a Duration. */
+    cmd(CMD_RECORD_TAG, OBJ_TIME); REC("12,47,0"); cmd(CMD_ENTER, 0);
+    cmd(CMD_RECORD_TAG, OBJ_TIME); REC("20,17,0"); cmd(CMD_SUB, 0);
+    expect("12:47 minus 20:17 in entered order", X, -27000);
+    cmd(CMD_DATE_FN, DF_SECONDS_TO_DR);
+    XOBJ("negative time difference as Duration", "DR{0,-7,-30,0}");
+    cmd(CMD_RECORD_TAG, OBJ_TIME); REC("20,17,0"); cmd(CMD_ENTER, 0);
+    cmd(CMD_RECORD_TAG, OBJ_TIME); REC("12,47,0"); cmd(CMD_SUB, 0);
+    expect("20:17 minus 12:47 in entered order", X, 27000);
+    cmd(CMD_DATE_FN, DF_SECONDS_TO_DR);
+    XOBJ("positive time difference as Duration", "DR{0,7,30,0}");
+
     /* registers hold objects; STO+ adds to them */
     cmd(CMD_CLEAR_STACK, 0);
     REC("{2024,3,14"); cmd(CMD_STO, 1);

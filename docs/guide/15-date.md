@@ -11,6 +11,7 @@ RPNCE 0.7.0 · User Guide
 - [How DATE objects are shown](#how-date-objects-are-shown)
 - [Arithmetic with dates](#arithmetic-with-dates)
 - [Examples](#examples)
+- [Reading a time difference](#reading-a-time-difference)
 - [The DATE submenus](#the-date-submenus)
 - [Epochs](#epochs)
 - [The clock and time zones](#the-clock-and-time-zones)
@@ -123,6 +124,22 @@ Other math on a DATE object gives "Err: Data Type".
 | then **DT** > **DLNK** | joined back into the ZonedDateTime |
 | `2ND { 2024,12,25,0,0,0 ENTER 2ND { 2024,3,14,15,36,1 −` | 24,654,239 (seconds) |
 | then **DR** > **SEC→** | `DR{285,8,23,59}`: 285 days 8 h 23 min 59 s |
+
+### Reading a time difference
+
+Subtracting two Time objects gives a signed number of **seconds**. For
+example, `T{12,47,0} ENTER T{20,17,0} −` gives **−27,000**, which is
+−7 hours 30 minutes. Reversing the entries gives **+27,000**.
+RPN subtraction always calculates **Y − X**.
+
+To show the result as a Duration, select **DATE** → **DR** → **SEC→**.
+The positive result becomes `DR{0,7,30,0}`; in string display mode it
+reads `7h 30m`. The negative result becomes `DR{0,-7,-30,0}`, shown as
+`-7h 30m` in string mode.
+
+A Time has no date, so subtraction does not assume an overnight interval:
+`T{1,0,0} − T{23,0,0}` is −22 hours. Use DateTime objects with the actual
+dates when an interval crosses midnight.
 
 ## The DATE submenus
 

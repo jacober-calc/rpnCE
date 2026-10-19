@@ -107,7 +107,7 @@ calculator core, reported bug regressions, and display redraws), using
 stand-ins for the calculator's number routines.
 
 The [native DATE regressions](tests/ce_date/README.md) additionally compile
-the real core with the CE toolchain and run 33 checks in CEmu using TI-OS
+the real core with the CE toolchain and run 37 checks in CEmu using TI-OS
 number routines. They cover a CE-specific compiler failure that the desktop
 stand-ins cannot reproduce, and verify CTZ/ATZ clock conversions.
 

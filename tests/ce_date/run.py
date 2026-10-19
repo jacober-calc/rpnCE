@@ -12,7 +12,7 @@ import subprocess
 import sys
 
 HERE = Path(__file__).resolve().parent
-CHECK_COUNT = 33
+CHECK_COUNT = 37
 
 
 def crc32c(data):
