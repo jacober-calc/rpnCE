@@ -1,33 +1,183 @@
-# RPNCE quick reference (HELP, or 2ND CATALOG).
+# RPNCE on-device reference (HELP, or 2ND CATALOG).
 #
 # Built into the RPNCEres appvar by tools/genres.py: after editing, run
 #   python3 tools/genres.py
-# and rebuild. Pages are separated by a line of three dashes. A page's
-# first line is its title; each page has at most 8 lines, title included,
-# of at most 44 characters. Lines starting with # are comments.
+# and rebuild both the program and resource appvar. Pages are separated
+# by a line of three dashes. A page's first line is its title; each page
+# has at most 8 lines, title included, of at most 44 ASCII characters.
+# Lines starting with # are comments. Keep titles numbered in page order
+# and the ABOUT version in sync with src/core/version.h.
+#
+# One page per main menu, in HOME order, follows the usage pages. HELP
+# itself is this first page. ABOUT is last (UP from here reaches it).
 
-HELP 1/3 - KEYS
-MATH: home    MODE: settings
+HELP 01/19 - USING HELP / MENUS
+UP / DOWN: previous / next HELP page.
+Pages wrap; UP here opens ABOUT.
+ENTER, CLEAR, DEL or ON: close HELP.
+Y= WINDOW ZOOM TRACE GRAPH: menu keys.
+In menus, UP / DOWN changes the row.
+ON: back one menu. MATH: HOME.
+Full guide: GitHub repo > docs/USER_GUIDE.md
+---
+HELP 02/19 - THE RPN STACK
+X is the bottom; Y, Z, T are above it.
+Type a number; ENTER copies X into Y.
+Next number replaces X after ENTER/CLX.
+Otherwise, typing lifts old X into Y.
+Unary math uses X; binary math uses Y,X.
+Y-X and Y/X: the order matters.
+Example: 2 ENTER 3 + 4 * gives 20.
+---
+HELP 03/19 - VARIABLES
+STO + letter: store X (stack kept).
+2ND RCL + letter: recall to X.
+Use the key's green letter, e.g. A.
+STO/RCL then + - * /: reg arithmetic.
+. = i; 2ND . = register numbered by i.
+VARS: UP/DOWN select, ENTER recalls.
+Units/dates kept; TVM then LASTX last.
+---
+HELP 04/19 - KEY SHORTCUTS
+MATH: HOME    MODE: settings
 STAT: STAT    X,T,theta,n: UNIT
 APPS: BASE    PRGM: HYP
 2ND MEM: CLR    2ND LIST: STK
-2ND CATALOG: HELP    VARS: recall
-2ND MODE or 2ND ON: quit
+2ND CATALOG: HELP    VARS: variables
+2ND ENTRY: SHOW    2ND ANS: LASTX
+2ND MODE / 2ND ON: save and quit
 ---
-HELP 2/3 - STACK / REGISTERS
-ENTER: duplicate X; type to replace X
-( : roll down    ) : swap X and Y
-2ND ANS: LASTX    DEL: edit / clear X
-STO + letter: store X
-2ND STO + letter: recall
-STO + . : i    STO + 2ND . : (i)
-PRIM: factor in X, original in Y
+HELP 05/19 - MATH
+X^3: cube X; cube-root key: cube root.
+X-root-Y: X-th root of Y.
+ATN2: angle of (x=X,y=Y), DEG or RAD.
+2^X: power of 2; LOG2: log base 2.
+LOGB: log of Y in base X.
+E^X-: exp(X)-1; LN1+: ln(1+X).
+Negative Y in X-root-Y needs odd int X.
 ---
-HELP 3/3 - UNITS
-Choose a unit to attach it to X.
-Choose a compatible unit to convert.
-STO / RCL / X<> keep value and unit.
-+ and - convert X to Y's unit.
-%CH: (X - Y) / Y * 100, after conversion
-TEMP / FUEL: convert or round only.
-UVAL: remove unit    UBAS: base unit
+HELP 06/19 - NUM
+%: Y*X/100; %CH: (X-Y)/Y*100; keeps Y.
+GCD/LCM: common divisor / multiple.
+PRIM: factor to X, old X to Y; 1=prime.
+IP/FP: int/fraction; ABS: |X|; SIGN: sign.
+FLR/CEIL/NEAR: down/up/nearest integer.
+MOD: Y mod X; MIN/MAX: smaller/larger.
+RNDF: display; RNDN: places; RNDG: digits.
+---
+HELP 07/19 - PROB
+COMB: combinations, Y choose X.
+PERM: permutations, Y taken X at a time.
+N!: factorial of whole X, 0 through 69.
+RAND: random number, 0 <= X < 1.
+SEED: use X to restart random sequence.
+Example: 5 ENTER 2 COMB gives 10.
+Example: 5 ENTER 2 PERM gives 20.
+---
+HELP 08/19 - CPLX
+Complex numbers are not available yet.
+These menu items are placeholders:
+REAL / IMAG: real / imaginary parts.
+CONJ: complex conjugate.
+CABS / CANG: magnitude / angle.
+They currently say Not available yet.
+Use real numbers in this version.
+---
+HELP 09/19 - TVM
+N: payments; I%YR: annual rate (%).
+PV: present; PMT: payment; FV: future.
+Type then key stores; next key solves.
+2ND + key recalls. Cash out: negative.
+P/YR,C/YR: periods; BEG/END: timing.
+CLTV: clear; IYR1/2: rate guesses.
+TMAX: iteration limit; RSTV: defaults.
+---
+HELP 10/19 - BASE
+DEC/HEX/OCT/BIN: number base.
+ALPHA A-F in HEX; WSIZ: 1-44 bits.
+LOGI: AND/OR/XOR/NOT/NEG.
+ROTS: shifts/rotates; n uses X count.
+BITS: clear/set/test/reverse/count bits.
+BFCN: word + - * /; BDIV: quotient/rem.
+BCFS: clear/set/test carry; WSZ?: size.
+---
+HELP 11/19 - HYP
+SINH / COSH / TANH: hyperbolic functions.
+ASNH / ACSH / ATNH: inverse functions.
+ASNH accepts any real X.
+ACSH needs X >= 1.
+ATNH needs -1 < X < 1.
+Example: 0 SINH gives 0.
+Example: 0 COSH gives 1.
+---
+HELP 12/19 - STAT
+Enter y ENTER x, then Sigma+ adds point.
+Sigma- removes point; CL-Sigma clears.
+ALL/LIN-Sigma: all 13 / six linear sums.
+SUM/MEAN/WMN: sums/means/weighted means.
+N: count; Sigma menu: recall each sum.
+SDEV/PDEV: std dev; SCOV/PCOV: covariance.
+CFIT: forecasts, slope, intercept, corr.
+---
+HELP 13/19 - CONV
+->DEG: radians to degrees; ->RAD: back.
+->POL: x=X,y=Y to radius=X,angle=Y.
+->REC: radius=X,angle=Y to x=X,y=Y.
+Polar angles use current DEG/RAD mode.
+->HR: H.MMSS to hours; ->HMS: back.
+HMS+ / HMS-: add / subtract H.MMSS.
+Example: 1.30 ->HR gives 1.5 hours.
+---
+HELP 14/19 - CLR
+CLX: clear X; next entry replaces X.
+CLST: clear every stack level.
+CLRG: clear A-Z, i and extra registers.
+CL-Sigma: clear the statistics data.
+CLTV: clear TVM; P/YR=C/YR=12, END.
+CLD: clear the message line.
+CLEAR twice also clears the stack.
+---
+HELP 15/19 - MODE
+FIX/SCI/ENG: fixed/scientific/engineering.
+Then digit; .digit=10-19; >=12=all.
+RAD/DEG: angle unit. TINT: colors.
+RSIZ/RSZ?: set/get registers (40-140).
+SSIZ/SSZ?: set/get stack depth (4-12).
+{..}/"..": raw/readable DATE values.
+Row 2 complex modes: not available.
+---
+HELP 16/19 - STK
+DUP: copy X into Y, like ENTER.
+R-up: top to X; roll other levels up.
+R-down: X to top; roll others down.
+DROP: remove X; stack drops.
+X<->Y: swap X and Y; X<>: swap register.
+( : R-down    ) : X<->Y    2ND } : DROP
+2ND INS: DUP    2ND ANS: recall LASTX
+---
+HELP 17/19 - UNIT
+Select a unit to attach it to X.
+Choose same category to convert X.
++/- convert X to Y's unit; keep it.
+Unit * number or unit / number: kept.
+Unit / compatible unit: plain ratio.
+UVAL: remove unit; UBAS: base unit.
+TEMP/FUEL: conversion and rounding only.
+---
+HELP 18/19 - DATE
+D/T/DT: date/time/date+time.
+TZ/DZ: time zone / zoned date+time.
+DR: duration; DW: day of week.
+Choose {} key to enter; , splits fields.
+Submenus: convert/extract/join/split.
+EPCH: epoch; CLK: clock/time zones.
++/-: D,DW use days; T,DT,DZ use seconds.
+---
+HELP 19/19 - ABOUT
+RPNCE 0.7.0
+An RPN calculator for the TI-84 Plus CE.
+HP-style stack, menus and variables.
+Units, statistics, TVM, BASE and DATE.
+Inspired by RPN83P. MIT License.
+Source, releases and full user guide:
+https://github.com/jacober-calc/rpnce

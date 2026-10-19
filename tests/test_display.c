@@ -274,11 +274,10 @@ static void quantity_catalog_and_help(void)
     cat.open = false;
     draw(&c, &m, &cat, NULL, false);
     calc_t before = c;
-    static const char *const titles[] = { "HELP 1/3", "HELP 2/3", "HELP 3/3" };
     for (uint8_t page = 0; page < res_help_pages(); page++) {
         printed_count = 0; printed[0] = '\0';
         display_help(page);
-        check("HELP pages include navigation and expected title", strstr(printed, titles[page]) &&
+        check("HELP pages include navigation and expected title", strstr(printed, res_help_line(page, 0)) &&
               strstr(printed, "UP / DOWN") && strstr(printed, "CLEAR / ON"));
     }
     mock_format_calls = 0;

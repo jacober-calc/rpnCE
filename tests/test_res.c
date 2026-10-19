@@ -10,6 +10,7 @@
 #include "res.h"
 #include "res_info.h"
 #include "units.h"
+#include "version.h"
 
 uint8_t mock_res[65536];
 size_t mock_res_size;
@@ -77,20 +78,51 @@ int main(void)
     ok("CUBE is not a unit", unit_for_menu(MID_CUBE) < 0, NULL);
 
     /* HELP pages, from help/help.txt */
-    ok("three HELP pages", res_help_pages() == 3, NULL);
-    ok("page 1's title", strcmp(res_help_line(0, 0), "HELP 1/3 - KEYS") == 0, res_help_line(0, 0));
-    ok("page 1 has no LINK or ANGLE shortcuts", ({
-        bool clean = true;
-        for (uint8_t i = 0; i < res_help_lines(0); i++)
-            if (strstr(res_help_line(0, i), "LINK") || strstr(res_help_line(0, i), "ANGLE")) clean = false;
-        clean; }), NULL);
-    ok("page 3 ends with UVAL / UBAS", strcmp(res_help_line(2, res_help_lines(2) - 1),
-       "UVAL: remove unit    UBAS: base unit") == 0, res_help_line(2, res_help_lines(2) - 1));
-    ok("every page fits (1-8 lines)", ({
-        bool fits = true;
-        for (uint8_t p = 0; p < res_help_pages(); p++)
-            if (res_help_lines(p) < 1 || res_help_lines(p) > 8) fits = false;
-        fits; }), NULL);
+    ok("19 HELP pages", res_help_pages() == 19, NULL);
+    ok("page 1 explains HELP", strcmp(res_help_line(0, 0),
+       "HELP 01/19 - USING HELP / MENUS") == 0, res_help_line(0, 0));
+    const char *topics[] = { "THE RPN STACK", "VARIABLES", "KEY SHORTCUTS",
+        "MATH", "NUM", "PROB", "CPLX", "TVM", "BASE", "HYP", "STAT",
+        "CONV", "CLR", "MODE", "STK", "UNIT", "DATE", "ABOUT" };
+    bool complete = true, numbered = true, fits = true, shortcuts = false;
+    for (uint8_t p = 0; p < res_help_pages(); p++) {
+        char prefix[24];
+        snprintf(prefix, sizeof prefix, "HELP %02u/%u - ", p + 1, res_help_pages());
+        if (strncmp(res_help_line(p, 0), prefix, strlen(prefix))) numbered = false;
+        if (res_help_lines(p) < 1 || res_help_lines(p) > 8) fits = false;
+        for (uint8_t l = 0; l < res_help_lines(p); l++) {
+            const char *s = res_help_line(p, l);
+            if (strlen(s) > 44) fits = false;
+            for (; *s; s++)
+                if ((unsigned char)*s < 32 || (unsigned char)*s > 126) fits = false;
+        }
+        if (strstr(res_help_line(p, 0), "KEY SHORTCUTS")) {
+            shortcuts = true;
+            for (uint8_t l = 0; l < res_help_lines(p); l++)
+                if (strstr(res_help_line(p, l), "LINK") || strstr(res_help_line(p, l), "ANGLE"))
+                    shortcuts = false;
+        }
+    }
+    for (size_t t = 0; t < sizeof topics / sizeof topics[0]; t++) {
+        bool found = false;
+        for (uint8_t p = 0; p < res_help_pages(); p++) {
+            const char *topic = strstr(res_help_line(p, 0), " - ");
+            if (topic && strcmp(topic + 3, topics[t]) == 0) found = true;
+        }
+        if (!found) complete = false;
+    }
+    ok("every main menu and usage topic has a HELP page", complete, NULL);
+    ok("HELP titles show their page number and total", numbered, NULL);
+    ok("shortcuts omit reserved LINK and ANGLE keys", shortcuts, NULL);
+    ok("every page fits (8 lines, 44 ASCII chars)", fits, NULL);
+    ok("ABOUT has the current version and repository", ({
+        bool version = false, repo = false;
+        uint8_t p = res_help_pages() - 1;
+        for (uint8_t l = 0; l < res_help_lines(p); l++) {
+            if (strcmp(res_help_line(p, l), RPNCE_NAME " " RPNCE_VERSION) == 0) version = true;
+            if (strcmp(res_help_line(p, l), "https://github.com/jacober-calc/rpnce") == 0) repo = true;
+        }
+        version && repo; }), NULL);
     ok("past the last line or page is empty, not garbage",
        res_help_line(0, 99)[0] == '\0' && res_help_lines(99) == 0, NULL);
 

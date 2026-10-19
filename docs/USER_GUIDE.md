@@ -377,9 +377,11 @@ for complex numbers.
 
 ### HELP
 
-**HELP** (HOME row 2, or `2ND CATALOG`) shows three quick-reference pages:
-keys, the stack and registers, and units. The up and down arrows change
-pages; `ENTER`, `CLEAR`, `DEL` or `ON` returns to the calculator.
+**HELP** (HOME row 2, or `2ND CATALOG`) shows 19 quick-reference pages:
+using HELP and the menus, the RPN stack, variables, key shortcuts, one page
+per main menu, and About (the version and GitHub repository). The up and
+down arrows change pages and wrap around; `UP` from the first page opens
+About. `ENTER`, `CLEAR`, `DEL` or `ON` returns to the calculator.
 
 ## 8. Registers
 
