@@ -172,6 +172,8 @@ void display_close(void)
 /* Left: annunciators, RPN83P style ("up/down" when the menu has more rows,
  * the display format such as FIX4 or FIX- for as many digits as needed,
  * then RAD or DEG, then 2ND when pending). Right: messages. */
+static const char *base_warning(const calc_t *c, char *buf);
+
 static void draw_status(const calc_t *c, const menu_t *m, bool second, bool alpha)
 {
     const int y = (STATUS_H - 8) / 2;
@@ -247,11 +249,13 @@ static void draw_status(const calc_t *c, const menu_t *m, bool second, bool alph
         x += (int)gfx_GetStringWidth(shift) + 10;
     }
 
-    if (c->message) {
-        int mx = VALUE_RIGHT - label_width(c->message);
+    char warn[24];
+    const char *msg = c->message ? c->message : base_warning(c, warn);
+    if (msg) {
+        int mx = VALUE_RIGHT - label_width(msg);
         if (mx < x)
             mx = x;
-        draw_label(c->message, mx, y, COL_INK);
+        draw_label(msg, mx, y, COL_INK);
     }
 }
 
@@ -297,17 +301,16 @@ static int substring_width(const char *s, int from, int to)
 }
 
 /* Draws a value right-aligned and vertically centered in a stack row, with
- * its unit (tag: 0 for none) in small text after it. A value too long for
+ * a small label after it (a unit, or "dec"; NULL for none). A value too long for
  * the row stays on one line: the part that fits is shown, with arrows at
  * the ends where more digits are hidden. scroll (X row only, else NULL)
  * says how many characters are hidden at the right. */
-static void draw_value(const char *s, int row_y, uint8_t tag, int *scroll)
+static void draw_value(const char *s, int row_y, const char *label, int *scroll)
 {
     int right = VALUE_RIGHT;
     int top = row_y + (ROW_H - DOT_HEIGHT) / 2;
 
-    if (tag) {
-        const char *label = unit_label((uint8_t)(tag - 1));
+    if (label) {
         int lw = label_width(label);
         draw_label(label, VALUE_RIGHT - lw, top + DOT_HEIGHT - 8, COL_DOTS);
         right = VALUE_RIGHT - lw - 5;
@@ -350,23 +353,47 @@ static void draw_value(const char *s, int row_y, uint8_t tag, int *scroll)
 }
 
 /* Formats a stack value for the display: in HEX, OCT or BIN when that mode
- * is on and the value is a word that fits the word size. Returns true when
- * it's a base number. */
-static bool format_value(char *buf, const calc_t *c, const real_t *v)
+ * is on and the value is a word of the current size. Says which it did. */
+typedef enum { FV_NORMAL, FV_BASE, FV_DECIMAL_IN_BASE } fv_kind_t;
+
+static fv_kind_t format_value(char *buf, const calc_t *c, const real_t *v)
 {
-    uint32_t w;
-    if (obj_is(v)) {                        /* a DATE object: {..} or ".." */
+    base_word_t w;
+    if (obj_is(v)) {                        /* a DATE object */
         dt_obj_t o = obj_unpack(v);
         dt_format(buf, &o, c->date_as_string);
-        return false;
+        return FV_NORMAL;
     }
     if (c->base.radix != 10 && base_word(&c->base, v, &w)) {
         base_format(buf, &c->base, w);
-        return true;
+        return FV_BASE;
     }
     format_real(buf, v, c->disp_style, c->disp_digits,
                 DISPLAY_DIGITS, DISPLAY_EXP_DIGITS, true);
-    return false;
+    return c->base.radix != 10 ? FV_DECIMAL_IN_BASE : FV_NORMAL;
+}
+
+/* In HEX, OCT or BIN: why X can't be shown in the base, or NULL. */
+static const char *base_warning(const calc_t *c, char *buf)
+{
+    base_word_t w;
+    if (c->base.radix == 10 || c->editing || obj_is(&c->stack[0]))
+        return NULL;
+    switch (base_fit(&c->base, &c->stack[0], &w)) {
+        case BW_TOO_BIG: {                  /* e.g. Exceeds 32-bit word */
+            char *p = buf;
+            strcpy(p, "Exceeds ");
+            p += 8;
+            if (c->base.bits >= 10)
+                *p++ = (char)('0' + c->base.bits / 10);
+            *p++ = (char)('0' + c->base.bits % 10);
+            strcpy(p, "-bit word");
+            return buf;
+        }
+        case BW_NEGATIVE: return "Negative: not a word";
+        case BW_FRACTION: return "Not a whole number";
+        default:          return NULL;
+    }
 }
 
 
@@ -389,17 +416,22 @@ static void draw_stack(const calc_t *c, const char *prompt, bool lifted)
         dot_draw_small(labels[i], LABEL_X, y + (ROW_H - DOT_SMALL_HEIGHT) / 2, COL_FAINT);
 
         if (is_x && prompt) {
-            draw_value(prompt, y, 0, NULL);
+            draw_value(prompt, y, NULL, NULL);
         } else if (is_x && c->editing) {
             strcpy(buf, c->entry);
             strcat(buf, "_");
-            draw_value(buf, y, 0, NULL);        /* typing: the end is shown */
+            draw_value(buf, y, NULL, NULL);     /* typing: the end is shown */
         } else {
             bool shift = prompt && lifted;
             const real_t *v = shift ? shown_lifted[i] : values[i];
             uint8_t tag = c->unit[shift && i < 3 ? regs[i + 1] : regs[i]];
-            format_value(buf, c, v);
-            draw_value(buf, y, tag, is_x ? &g_x_scroll : NULL);
+            /* In HEX, OCT and BIN a value that isn't a word of the current
+             * size stays decimal, tagged "dec" so it's never mistaken for a
+             * base number. */
+            const char *label = tag ? unit_label((uint8_t)(tag - 1)) : NULL;
+            if (format_value(buf, c, v) == FV_DECIMAL_IN_BASE)
+                label = "dec";
+            draw_value(buf, y, label, is_x ? &g_x_scroll : NULL);
         }
     }
 }
@@ -410,7 +442,7 @@ static void draw_stack(const calc_t *c, const char *prompt, bool lifted)
  * inverted. */
 static void draw_catalog(const calc_t *c, const catalog_t *cat)
 {
-    char name[12], buf[40];             /* room for 32 binary digits */
+    char name[12], buf[48];             /* room for 44 binary digits */
 
     for (int row = 0; row < 4; row++) {
         int idx = cat->top + row;
@@ -433,7 +465,7 @@ static void draw_catalog(const calc_t *c, const catalog_t *cat)
         dot_draw(name, LABEL_X, top, ink, 0);
         int name_end = LABEL_X + dot_width(name) + 6;
 
-        format_value(buf, c, catalog_value((calc_t *)c, item));
+        (void)format_value(buf, c, catalog_value((calc_t *)c, item));
         dot_draw(buf, VALUE_RIGHT - dot_width(buf), top, ink, name_end);
     }
 }

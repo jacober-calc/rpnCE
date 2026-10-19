@@ -150,11 +150,11 @@ static bool base_mode(const calc_t *c)
 }
 
 /* The typed digits as a word, in the current radix. */
-static uint32_t entry_word(const calc_t *c)
+static base_word_t entry_word(const calc_t *c)
 {
-    uint32_t w = 0;
+    base_word_t w = 0;
     for (int i = 0; i < c->entry_len; i++)
-        w = w * c->base.radix + (uint32_t)base_digit_value(&c->base, c->entry[i]);
+        w = w * c->base.radix + (base_word_t)base_digit_value(&c->base, c->entry[i]);
     return w;
 }
 
@@ -204,7 +204,7 @@ static void entry_base_digit(calc_t *c, uint8_t d)
     if (d >= c->base.radix)
         return;
     begin_entry(c);
-    uint64_t w = (uint64_t)entry_word(c) * c->base.radix + d;
+    base_word_t w = entry_word(c) * c->base.radix + d;   /* at most 48 bits */
     if (w > base_mask(&c->base) || c->entry_len >= ENTRY_MAX)
         return;
     if (c->entry_len == 1 && c->entry[0] == '0')
@@ -430,6 +430,16 @@ static bool is_integer(const real_t *v)
     return is_zero(&f);
 }
 
+/* A whole number not divisible by 2 (any size: x / 2 is checked for a
+ * fractional part, so no conversion to a native integer is needed). */
+static bool is_odd_integer(const real_t *v)
+{
+    if (!is_integer(v))
+        return false;
+    real_t half = os_RealDiv(v, &r_two);
+    return !is_integer(&half);
+}
+
 /* Checks inputs the OS would choke on (some crash instead of erroring). */
 static calc_err_t precheck(calc_cmd_t cmd, const real_t *y, const real_t *x)
 {
@@ -437,9 +447,22 @@ static calc_err_t precheck(calc_cmd_t cmd, const real_t *y, const real_t *x)
     switch (cmd) {
         case CMD_DIV:
         case CMD_RECIP:
-        case CMD_XROOT_Y:
         case CMD_MOD:
             return is_zero(x) ? ERR_DIV0 : ERR_NONE;
+        /* Negative bases follow the HP rule (as on the HP-32SII / DM32): a
+         * root of a negative number needs an odd whole-number index, and a
+         * power of one a whole-number exponent. Anything else is an error,
+         * even where a real value exists (such as (-8)^0.4), and the OS's
+         * power routine never sees a negative base with any other exponent
+         * (it would return the real part of a complex result). */
+        case CMD_XROOT_Y:
+            if (is_zero(x))
+                return ERR_DIV0;
+            if (is_zero(y) && is_neg(x))
+                return ERR_DOMAIN;          /* 0 to a negative power (MATH-103/104) */
+            return (is_neg(y) && !is_odd_integer(x)) ? ERR_DOMAIN : ERR_NONE;
+        case CMD_POW:
+            return (is_neg(y) && !is_integer(x)) ? ERR_DOMAIN : ERR_NONE;
         case CMD_PERCENT_CHANGE:
             return is_zero(y) ? ERR_DIV0 : ERR_NONE;
         case CMD_SQRT:
@@ -703,6 +726,24 @@ static bool reads_y(calc_cmd_t cmd)
            cmd == CMD_STAT_PLUS || cmd == CMD_STAT_MINUS;
 }
 
+/* y^e, with a negative y taken from its magnitude: |y|^e, negated when the
+ * result should be negative. precheck() has already made sure a negative y
+ * only arrives with a whole-number power (Y^X) or the reciprocal of an odd
+ * whole-number index (ˣ√Y), so the sign is:
+ *   Y^X:   negative when the exponent x is odd
+ *   ˣ√Y:   always negative (an odd root of a negative number)
+ * The caller says which by passing the exponent: for ˣ√Y it is 1/x, which
+ * isn't a whole number unless x is 1 or -1 (both odd, so negative too). */
+static real_t signed_power(const real_t *y, const real_t *e)
+{
+    if (!is_neg(y))
+        return os_RealPow(y, e);
+    real_t mag = os_RealNeg(y);
+    real_t r = os_RealPow(&mag, e);
+    bool negative = is_integer(e) ? is_odd_integer(e) : true;
+    return negative ? os_RealNeg(&r) : r;
+}
+
 static calc_err_t compute(calc_cmd_t cmd, const real_t *y, const real_t *x)
 {
     if ((reads_x(cmd) && obj_is(x)) || (reads_y(cmd) && obj_is(y)))
@@ -722,7 +763,7 @@ static calc_err_t compute(calc_cmd_t cmd, const real_t *y, const real_t *x)
         case CMD_SUB:    g_result = os_RealSub(y, x); break;
         case CMD_MUL:    g_result = os_RealMul(y, x); break;
         case CMD_DIV:    g_result = os_RealDiv(y, x); break;
-        case CMD_POW:    g_result = os_RealPow(y, x); break;
+        case CMD_POW:    g_result = signed_power(y, x); break;
         case CMD_SQUARE: g_result = os_RealMul(x, x); break;
         case CMD_SQRT:   g_result = os_RealSqrt(x); break;
         case CMD_RECIP:  g_result = os_RealInv(x); break;
@@ -743,7 +784,7 @@ static calc_err_t compute(calc_cmd_t cmd, const real_t *y, const real_t *x)
 
         case CMD_XROOT_Y: {
             real_t inv = os_RealInv(x);
-            g_result = os_RealPow(y, &inv);
+            g_result = signed_power(y, &inv);
             break;
         }
         case CMD_LOG_BASE: {
@@ -1742,14 +1783,17 @@ static void do_base_op(calc_t *c, base_op_t op)
 {
     finish_entry(c);
     bool binary = base_is_binary(op);
-    uint32_t x, y = 0, r, r2 = 0;
+    base_word_t x, y = 0, r, r2 = 0;
     if (obj_is(&c->stack[0]) || (binary && obj_is(&c->stack[1]))) {
         c->message = "Err: Data Type";
         return;
     }
-    if (!base_word(&c->base, &c->stack[0], &x) ||
-        (binary && !base_word(&c->base, &c->stack[1], &y))) {
-        c->message = "Err: Domain";
+    /* both operands must be words of the current size */
+    base_fit_t fx = base_fit(&c->base, &c->stack[0], &x);
+    base_fit_t fy = binary ? base_fit(&c->base, &c->stack[1], &y) : BW_OK;
+    if (fx != BW_OK || fy != BW_OK) {
+        c->message = (fx == BW_TOO_BIG || fy == BW_TOO_BIG) ? "Err: Word Size"
+                                                            : "Err: Domain";
         return;
     }
     base_state_t trial = c->base;           /* carry changes only on success */
@@ -2264,13 +2308,9 @@ void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg)
 
         case CMD_SET_WORD_SIZE: {
             finish_entry(c);
-            int n = whole_from_x(c, 8, 32);
+            int n = whole_from_x(c, 1, BASE_MAX_BITS);     /* WSIZ: 1 to 44 bits */
             if (n < 0)
                 break;
-            if (n % 8) {
-                c->message = "Err: Domain";
-                break;
-            }
             c->base.bits = (uint8_t)n;
             c->message = "Word Size Set";
             break;

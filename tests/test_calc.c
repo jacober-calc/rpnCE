@@ -258,8 +258,102 @@ int main(void)
     expect("BIN ignores the digit 2", X, 3);
     cmd(CMD_BASE_OP, BOP_CNTB);
     expect("CNTB 11 = 2", X, 2);
-    num(32); cmd(CMD_BASE_RADIX, 10); num(32); cmd(CMD_SET_WORD_SIZE, 0);
+    /* 44-bit words */
+    cmd(CMD_BASE_RADIX, 10); cmd(CMD_CLEAR_STACK, 0);
+    num(5133136320.0); cmd(CMD_ENTER, 0); num(1);
+    cmd(CMD_BASE_RADIX, 16);
+    cmd(CMD_ADD, 0);
+    expect_msg("33-bit value in a 32-bit word: BAS+", "Err: Word Size");
+    cmd(CMD_BASE_RADIX, 10); num(44); cmd(CMD_SET_WORD_SIZE, 0);
+    expect_msg("WSIZ 44", "Word Size Set");
+    cmd(CMD_DROP, 0);                   /* drop the 44 */
+    cmd(CMD_BASE_RADIX, 16);
+    cmd(CMD_ADD, 0);
+    expect("in 44 bits, 131F571C0 + 1 = 131F571C1", X, 5133136321.0);
+    cmd(CMD_CLEAR_STACK, 0);
+    for (int i = 0; i < 12; i++) cmd(CMD_ALPHA_LETTER, 5);   /* F x 12 */
+    calc_finish_entry(&C);
+    expect("typing F x 12 in HEX keeps 11 (44 bits)", X, 17592186044415.0);
     cmd(CMD_BASE_RADIX, 10);
+    num(45); cmd(CMD_SET_WORD_SIZE, 0);
+    expect_msg("WSIZ 45 is refused", "Err: Domain");
+    num(12); cmd(CMD_SET_WORD_SIZE, 0);
+    expect("WSIZ 12 (not a multiple of 8) is allowed", C.base.bits, 12);
+    num(32); cmd(CMD_SET_WORD_SIZE, 0);
+
+    /* ---- negative bases: the HP rule (MATH QA campaign, PR #1) ----
+     * A root of a negative Y needs an odd whole-number index X; a power of
+     * one a whole-number exponent. Rejected operations leave X, Y, the
+     * rest of the stack and LASTX untouched. */
+    {
+        struct { const char *id; double y, x; int cmd; int ok; double want; } t[] = {
+            /* valid: must keep working */
+            { "MATH-010", 27, 3, CMD_XROOT_Y, 1, 3 },
+            { "MATH-011", 81, 4, CMD_XROOT_Y, 1, 3 },
+            { "MATH-012", -8, 3, CMD_XROOT_Y, 1, -2 },
+            { "MATH-017", -8, -3, CMD_XROOT_Y, 1, -0.5 },
+            { "MATH-092", -243, 5, CMD_XROOT_Y, 1, -3 },
+            { "MATH-097", -243, -5, CMD_XROOT_Y, 1, -1.0 / 3 },
+            { "MATH-094", 64, 6, CMD_XROOT_Y, 1, 2 },
+            { "MATH-096", 81, -4, CMD_XROOT_Y, 1, 1.0 / 3 },
+            { "MATH-100", 81, 0.8, CMD_XROOT_Y, 1, 243 },
+            { "MATH-105", 0, 5, CMD_XROOT_Y, 1, 0 },
+            { "MATH-106", 16, -0.5, CMD_XROOT_Y, 1, 0.00390625 },
+            { "index -1", -5, -1, CMD_XROOT_Y, 1, -0.2 },
+            /* invalid: Err: Domain */
+            { "MATH-013", -16, 4, CMD_XROOT_Y, 0, 0 },
+            { "MATH-015", -16, 2, CMD_XROOT_Y, 0, 0 },
+            { "MATH-018", -16, -4, CMD_XROOT_Y, 0, 0 },
+            { "MATH-090", -81, 4, CMD_XROOT_Y, 0, 0 },
+            { "MATH-093", -64, 6, CMD_XROOT_Y, 0, 0 },
+            { "MATH-095", -81, -4, CMD_XROOT_Y, 0, 0 },
+            { "MATH-099", -81, 0.8, CMD_XROOT_Y, 0, 0 },
+            { "MATH-031", -16, -0.8, CMD_XROOT_Y, 0, 0 },
+            /* fractional indices: an error on the HP-32SII / DM32 */
+            { "MATH-027 (HP rule)", -3, 0.5, CMD_XROOT_Y, 0, 0 },
+            { "MATH-028 (HP rule)", -16, 1.5, CMD_XROOT_Y, 0, 0 },
+            { "MATH-098 (HP rule)", -32, 2.5, CMD_XROOT_Y, 0, 0 },
+            /* the ^ key */
+            { "(-2)^3", -2, 3, CMD_POW, 1, -8 },
+            { "(-2)^4", -2, 4, CMD_POW, 1, 16 },
+            { "(-2)^-3", -2, -3, CMD_POW, 1, -0.125 },
+            { "(-8)^0.4 (HP rule)", -8, 0.4, CMD_POW, 0, 0 },
+            { "(-16)^0.25", -16, 0.25, CMD_POW, 0, 0 },
+            { "2^0.5", 2, 0.5, CMD_POW, 1, 1.4142135623731 },
+        };
+        cmd(CMD_CLEAR_STACK, 0);
+        for (unsigned i = 0; i < sizeof t / sizeof *t; i++) {
+            char name[64];
+            cmd(CMD_CLEAR_STACK, 0);
+            num(7); cmd(CMD_ENTER, 0);          /* a deeper level to watch */
+            num(t[i].y); cmd(CMD_ENTER, 0); num(t[i].x);
+            calc_finish_entry(&C);
+            C.lastx = mk(42);
+            cmd((calc_cmd_t)t[i].cmd, 0);
+            if (t[i].ok) {
+                snprintf(name, sizeof name, "%s: Y=%g X=%g", t[i].id, t[i].y, t[i].x);
+                expect(name, X, t[i].want);
+                snprintf(name, sizeof name, "%s: stack dropped, LASTX = X", t[i].id);
+                expect(name, Y == 7 && C.lastx.v == t[i].x, 1);
+            } else {
+                snprintf(name, sizeof name, "%s: Y=%g X=%g -> Err: Domain", t[i].id, t[i].y, t[i].x);
+                expect_msg(name, "Err: Domain");
+                snprintf(name, sizeof name, "%s: X, Y, Z and LASTX untouched", t[i].id);
+                expect(name, X == t[i].x && Y == t[i].y && Z == 7 && C.lastx.v == 42, 1);
+            }
+        }
+        cmd(CMD_CLEAR_STACK, 0);
+        num(16); cmd(CMD_ENTER, 0); num(0); cmd(CMD_XROOT_Y, 0);
+        expect_msg("MATH-101: index 0 -> Err: Division By 0", "Err: Division By 0");
+        expect("MATH-101: X and Y untouched", X == 0 && Y == 16, 1);
+        cmd(CMD_CLEAR_STACK, 0);
+        num(0); cmd(CMD_ENTER, 0); num(-3); cmd(CMD_XROOT_Y, 0);
+        expect_msg("MATH-103: 0, index -3 -> Err: Domain", "Err: Domain");
+        expect("MATH-103: X and Y untouched", X == -3 && Y == 0, 1);
+        cmd(CMD_CLEAR_STACK, 0);
+        num(0); cmd(CMD_ENTER, 0); num(-1); cmd(CMD_XROOT_Y, 0);
+        expect_msg("MATH-104: 0, index -1 -> Err: Domain", "Err: Domain");
+    }
 
     /* ---- DATE objects through keystrokes ---- */
     cmd(CMD_CLEAR_STACK, 0);

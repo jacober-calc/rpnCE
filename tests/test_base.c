@@ -12,18 +12,19 @@ real_t os_RealLog(const real_t *a) { return mk(log(a->v)); }
 
 static int fails = 0;
 static base_state_t B;
-static void t(const char *name, base_op_t op, uint32_t y, uint32_t x, uint32_t want, int want_carry)
+static void t(const char *name, base_op_t op, base_word_t y, base_word_t x, base_word_t want, int want_carry)
 {
-    uint32_t r = 0, r2 = 0;
+    base_word_t r = 0, r2 = 0;
     bool ok = base_apply(&B, op, y, x, &r, &r2);
     int good = ok && r == want && (want_carry < 0 || B.carry == want_carry);
     if (!good) fails++;
-    printf("%s %-30s %08X carry %d (want %08X%s)\n", good ? "ok  " : "FAIL", name,
-           (unsigned)r, B.carry, (unsigned)want, want_carry < 0 ? "" : want_carry ? " carry 1" : " carry 0");
+    printf("%s %-30s %011llX carry %d (want %011llX%s)\n", good ? "ok  " : "FAIL", name,
+           (unsigned long long)r, B.carry, (unsigned long long)want,
+           want_carry < 0 ? "" : want_carry ? " carry 1" : " carry 0");
 }
-static void bad(const char *name, base_op_t op, uint32_t y, uint32_t x)
+static void bad(const char *name, base_op_t op, base_word_t y, base_word_t x)
 {
-    uint32_t r;
+    base_word_t r;
     bool ok = base_apply(&B, op, y, x, &r, NULL);
     if (ok) fails++;
     printf("%s %s is refused\n", ok ? "FAIL" : "ok  ", name);
@@ -67,7 +68,7 @@ int main(void)
     t("BAS+ 32-bit carry", BOP_ADD, 0xFFFFFFFF, 1, 0, 1);
     t("RL 32-bit", BOP_RL, 0, 0x80000000, 1, 1);
     t("REVB 32-bit", BOP_REVB, 0, 1, 0x80000000, -1);
-    uint32_t q, rm;
+    base_word_t q, rm;
     base_apply(&B, BOP_DIV2, 100, 7, &q, &rm);
     printf("%s BDIV 100/7 = %u rem %u\n", q == 14 && rm == 2 ? "ok  " : "FAIL", (unsigned)q, (unsigned)rm);
     if (!(q == 14 && rm == 2)) fails++;
@@ -80,12 +81,42 @@ int main(void)
     B.radix = 8; base_format(buf, &B, 511);
     printf("%s OCT %s\n", strcmp(buf, "777") == 0 ? "ok  " : "FAIL", buf); if (strcmp(buf, "777")) fails++;
 
-    uint32_t w;
+    uint32_t w32;
     real_t big = mk(4294967295.0);
-    bool ok = base_u32(&big, &w) && w == 0xFFFFFFFF;
+    bool ok = base_u32(&big, &w32) && w32 == 0xFFFFFFFF;
     printf("%s real 4294967295 -> word\n", ok ? "ok  " : "FAIL"); if (!ok) fails++;
     real_t back = base_real(0xFFFFFFFF);
     printf("%s word -> real %.0f\n", back.v == 4294967295.0 ? "ok  " : "FAIL", back.v); if (back.v != 4294967295.0) fails++;
+
+    /* 44-bit words */
+    B.bits = 44; B.radix = 16; B.carry = 0;
+    base_word_t w;
+    real_t v = mk(5133136320.0);
+    ok = base_fit(&B, &v, &w) == BW_OK && w == 0x131F571C0ULL;
+    base_format(buf, &B, w);
+    printf("%s 5133136320 in HEX (44 bits) = %s\n", ok && strcmp(buf, "131F571C0") == 0 ? "ok  " : "FAIL", buf);
+    if (!(ok && strcmp(buf, "131F571C0") == 0)) fails++;
+    B.bits = 32;
+    ok = base_fit(&B, &v, &w) == BW_TOO_BIG;
+    printf("%s 5133136320 exceeds a 32-bit word\n", ok ? "ok  " : "FAIL"); if (!ok) fails++;
+    real_t neg = mk(-5), frac = mk(2.5), top = mk(17592186044415.0), over = mk(17592186044416.0);
+    B.bits = 44;
+    ok = base_fit(&B, &neg, &w) == BW_NEGATIVE && base_fit(&B, &frac, &w) == BW_FRACTION;
+    printf("%s negative and fractional values are classified\n", ok ? "ok  " : "FAIL"); if (!ok) fails++;
+    ok = base_fit(&B, &top, &w) == BW_OK && w == 0xFFFFFFFFFFFULL && base_fit(&B, &over, &w) == BW_TOO_BIG;
+    printf("%s 2^44-1 fits, 2^44 doesn't\n", ok ? "ok  " : "FAIL"); if (!ok) fails++;
+    back = base_real(0xFFFFFFFFFFFULL);
+    printf("%s 44-bit word -> real %.0f\n", back.v == 17592186044415.0 ? "ok  " : "FAIL", back.v); if (back.v != 17592186044415.0) fails++;
+    t("NOT 44-bit", BOP_NOT, 0, 0, 0xFFFFFFFFFFFULL, -1);
+    t("BAS+ 44-bit carry", BOP_ADD, 0xFFFFFFFFFFFULL, 1, 0, 1);
+    t("BAS* 44-bit, no overflow", BOP_MUL, 0x100000, 0x100000, 0x10000000000ULL, 0);
+    t("BAS* 44-bit overflow", BOP_MUL, 0x1000000, 0x100000, 0, 1);
+    t("RL 44-bit", BOP_RL, 0, 0x80000000000ULL, 1, 1);
+    t("REVB 44-bit", BOP_REVB, 0, 1, 0x80000000000ULL, -1);
+    t("SLn 40 in 44 bits", BOP_SLN, 1, 40, 0x10000000000ULL, 0);
+    B.bits = 12;
+    t("NOT in a 12-bit word", BOP_NOT, 0, 0, 0xFFF, -1);
+    t("RR in a 12-bit word", BOP_RR, 0, 1, 0x800, 1);
 
     printf("%d failures\n", fails);
     return fails != 0;

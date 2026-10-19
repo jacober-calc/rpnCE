@@ -18,7 +18,8 @@ bottom of the screen, on a dot-matrix LCD-style display.
   up to 12 digits, thousands separators, and FIX/SCI/ENG/ALL formats.
 - **Functions:** MATH, NUM, PROB, HYP, CONV (polar, H.MMSS), STAT with
   curve fits, TVM (shared with TI's TVM Solver), 169 unit conversions,
-  BASE (HEX/OCT/BIN, logic, shifts, rotates, bit operations), and DATE
+  BASE (HEX/OCT/BIN words up to 44 bits, logic, shifts, rotates, bit
+  operations), and DATE
   (dates, times, time zones, durations, epochs, and the CE's clock).
 - **Remembers everything:** the stack, registers, statistics, and settings
   are saved when you quit and restored next time.

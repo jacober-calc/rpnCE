@@ -16,7 +16,7 @@
 #include "datetime.h"
 #include "datefn.h"
 
-#define ENTRY_MAX 34      /* room for 32 binary digits */
+#define ENTRY_MAX 46      /* room for 44 binary digits */
 /* Stack: 4 levels like the HP-32SII, up to 12 with SSIZ. */
 #define STACK_MIN 4
 #define STACK_MAX 12

@@ -33,6 +33,12 @@ leave it as it was.
 | `LOG` / `LN` | LOG / LN | 10^X / e^X |
 | `SIN COS TAN` | trig (DEG or RAD) | ASIN ACOS ATAN |
 
+Negative bases follow the HP rule (HP-32SII / DM32): Y^X with a negative Y
+needs a whole-number X, and ˣ√Y (MATH menu) with a negative Y needs an odd
+whole-number X. Anything else is "Err: Domain", even where a real value
+exists: (-8)^3 = -512 and ˣ√ of -8 with X = 3 is -2, but (-8)^0.4 and ˣ√ of
+-32 with X = 2.5 are errors. To get those, use |Y| and apply the sign.
+
 ## Registers
 
 Registers are numbered as on the HP-32SII:
@@ -138,9 +144,15 @@ digits that would overflow the word size, are ignored. Long values scroll
 with the left and right arrows.
 
 In HEX, OCT and BIN the `+ - × ÷` keys do word arithmetic (BAS+ BAS- BAS×
-BAS/) and `(-)` is NEG. Values are unsigned words of 8, 16, 24 or 32 bits
-(BCFS > WSIZ, from X; default 32). Larger words aren't offered because the
-calculator's 14-digit numbers can't hold them exactly.
+BAS/) and `(-)` is NEG. Values are unsigned words of 1 to 44 bits (BCFS >
+WSIZ, from X; default 32). The calculator's 14-digit numbers hold every
+44-bit value exactly.
+
+A value that isn't a word of the current size (too big, negative, or not a
+whole number) stays in decimal with a small `dec` beside it, and when it's
+in X the status line says why: "Exceeds 32-bit word", "Negative: not a
+word", or "Not a whole number". BASE operations on a value too big for the
+word size give "Err: Word Size"; raise WSIZ to use it.
 
 - LOGI: AND, OR, XOR, NOT, NEG (two's complement).
 - ROTS: SL, SR, ASR (keeps the sign bit), SLn and SRn (shift Y by X bits);

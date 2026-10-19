@@ -2,6 +2,6 @@
 #define RPNCE_CORE_VERSION_H
 
 #define RPNCE_NAME    "RPNCE"
-#define RPNCE_VERSION "0.6.0"
+#define RPNCE_VERSION "0.6.2"
 
 #endif
