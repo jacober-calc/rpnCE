@@ -1,4 +1,5 @@
 # RPNCE
+![RPMCE Screenshot](assets/rpnce-promo1.png)
 
 An RPN calculator for the TI-84 Plus CE, written in C. It turns the CE into
 an HP-style RPN calculator: a 4-level stack (up to 12), numbered registers
