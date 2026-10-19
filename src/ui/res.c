@@ -14,7 +14,7 @@ typedef struct {
     uint8_t unit_count;
     uint16_t id_count;
     uint32_t stamp;
-    uint16_t nodes, groups, parents, parent_rows, units, unit_base, unit_map, text;
+    uint16_t nodes, groups, parents, parent_rows, units, unit_base, unit_map, help, text;
 } res_header_t;
 
 typedef struct {
@@ -91,6 +91,37 @@ int unit_for_menu(menu_id_t id)
 {
     uint8_t u = g_res[g_hdr->unit_map + id];
     return u == 0xFF ? -1 : u;
+}
+
+/* ---------- HELP pages ----------
+ * u8 page count; then per page a u8 line count and a u16 text offset per
+ * line. */
+
+uint8_t res_help_pages(void)
+{
+    return g_res[g_hdr->help];
+}
+
+/* The start of a page's entry. */
+static const uint8_t *help_page(uint8_t page)
+{
+    const uint8_t *p = g_res + g_hdr->help + 1;
+    for (uint8_t i = 0; i < page; i++)
+        p += 1 + 2 * p[0];
+    return p;
+}
+
+uint8_t res_help_lines(uint8_t page)
+{
+    return page < res_help_pages() ? help_page(page)[0] : 0;
+}
+
+const char *res_help_line(uint8_t page, uint8_t line)
+{
+    if (line >= res_help_lines(page))
+        return "";
+    const uint8_t *p = help_page(page) + 1 + 2 * line;
+    return res_text((uint16_t)(p[0] | p[1] << 8));
 }
 
 /* ---------- the unit table (declared in core/units.h) ---------- */

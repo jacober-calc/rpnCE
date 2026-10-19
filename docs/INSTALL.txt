@@ -24,8 +24,8 @@ is missing or from a different version, RPNCE says so when it starts.
 Your data
 ---------
 RPNCE saves the stack, registers, statistics and settings when you quit
-(2ND QUIT) in two appvars it creates: RPNCEdat and RPNCEcfg. Deleting them
-resets RPNCE. They are kept when you upgrade.
+(2ND QUIT) in appvars it creates: RPNCEdat, RPNCEcfg, and RPNCEunt when a
+register holds a unit. Deleting them resets RPNCE. They are kept when you upgrade.
 
 Getting started
 ---------------

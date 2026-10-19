@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""Builds RPNCE's resources from menus/menus.txt and the unit definitions.
+"""Builds RPNCE's resources from menus/menus.txt, help/help.txt and the unit
+definitions.
 
     python3 tools/genres.py
 
 Writes:
   data/RPNCEres.bin      the RPNCEres appvar's contents (the makefile turns it
-                         into bin/RPNCEres.8xv): menu tree, unit tables, text
+                         into bin/RPNCEres.8xv): menu tree, unit tables, HELP
+                         pages, text
   src/ui/menu_data.h     menu IDs, counts, and the record layouts
   src/ui/res_info.h      the resource format and version stamp
   src/core/units_count.h unit and dimension counts
@@ -30,7 +32,10 @@ OUT_INFO_H = os.path.join(ROOT, 'src', 'ui', 'res_info.h')
 OUT_COUNT_H = os.path.join(ROOT, 'src', 'core', 'units_count.h')
 OUT_UNITS_C = os.path.join(ROOT, 'tests', 'units_data.c')
 
-RES_FORMAT = 1      # bump when the layout below changes
+RES_FORMAT = 2      # bump when the layout below changes (2: HELP pages)
+HELP_FILE = os.path.join(ROOT, 'help', 'help.txt')
+HELP_MAX_LINES = 8      # a page's lines, title included
+HELP_MAX_CHARS = 44     # fits the screen in the system font
 # (still format 1: no RPNCEres with 5-byte groups was ever released)
 NONE16 = 0xFFFF
 
@@ -38,18 +43,19 @@ NONE16 = 0xFFFF
 # Appvar layout (little-endian, no padding):
 #   header   "RPNR" u16 format, u16 node_count, u8 group_count, u8 unit_count,
 #            u16 id_count, u32 hash (FNV-1a of everything after the header)
-#   offsets  u16 x 8: nodes, groups, parents, parent_rows, units, unit_base,
-#            unit_map, text (from the start of the appvar)
+#   offsets  u16 x 9: nodes, groups, parents, parent_rows, units, unit_base,
+#            unit_map, help, text (from the start of the appvar)
 #   nodes    8 bytes each: u16 label, u16 alt_label, u16 id, u8 kind, u8 group
 #   groups   6 bytes each: u16 label, u16 first node, u8 rows, u8 spare
 #   parents  u8 per group (0xFF for a top-level menu), then parent rows
 #   units    8 bytes each: u16 label, u8 dim, u8 reciprocal, u16 factor,
 #            u16 offset (0xFFFF for none)
 #   unit_base u8 per dimension; unit_map u8 per menu ID (0xFF: not a unit)
+#   help     u8 page count; then per page u8 line count and u16 per line
 #   text     NUL-terminated strings; the u16 fields above are offsets here
 # ---------------------------------------------------------------------------
 HEADER_FMT = '<4sHHBBHI'
-OFFSETS_FMT = '<8H'
+OFFSETS_FMT = '<9H'
 
 
 def label_bytes(text):
@@ -154,8 +160,44 @@ def build_units():
     return units, dims, base
 
 
+def build_help():
+    """HELP pages from help/help.txt: a list of pages, each a list of lines."""
+    pages, page = [], []
+    with open(HELP_FILE, encoding='utf-8') as f:
+        for n, raw in enumerate(f, 1):
+            line = raw.rstrip('\n')
+            if line.startswith('#'):
+                continue
+            if line.strip() == '---':
+                pages.append(page)
+                page = []
+                continue
+            if not page and not line.strip():
+                continue                    # blank lines before a title
+            if len(line) > HELP_MAX_CHARS:
+                sys.exit(f'help.txt:{n}: longer than {HELP_MAX_CHARS} characters')
+            try:
+                line.encode('ascii')
+            except UnicodeEncodeError:
+                sys.exit(f'help.txt:{n}: use plain ASCII characters')
+            page.append(line)
+    pages.append(page)
+    pages = [[l for l in p] for p in pages]
+    for i, p in enumerate(pages, 1):
+        while p and not p[-1].strip():
+            p.pop()
+        if not p:
+            sys.exit(f'help.txt: page {i} is empty')
+        if len(p) > HELP_MAX_LINES:
+            sys.exit(f'help.txt: page {i} has {len(p)} lines (at most {HELP_MAX_LINES})')
+    if len(pages) > 255:
+        sys.exit('help.txt: too many pages')
+    return pages
+
+
 def main():
     roots, groups, ids, nodes, group_rows, parent, prow = build_menus()
+    help_pages = build_help()
     units, dims, base = build_units()
     id_num = {ident: i for i, ident in enumerate(ids)}
     text = Text()
@@ -176,9 +218,14 @@ def main():
                                   text.add(offset.encode()) if offset else NONE16)
     unit_index = {u[0]: k for k, u in enumerate(units)}
     unit_map = bytes(unit_index.get(ident, 0xFF) for ident in ids)
+    help_bytes = bytearray([len(help_pages)])
+    for page in help_pages:
+        help_bytes.append(len(page))
+        for line in page:
+            help_bytes += struct.pack('<H', text.add(line.encode('ascii')))
 
     sections = [node_bytes, group_bytes, bytes(parent), bytes(prow), unit_bytes,
-                bytes(base), unit_map, bytes(text.data)]
+                bytes(base), unit_map, bytes(help_bytes), bytes(text.data)]
     start = struct.calcsize(HEADER_FMT) + struct.calcsize(OFFSETS_FMT)
     offsets, pos = [], start
     for sec in sections:
@@ -271,7 +318,8 @@ def main():
         f.write('uint8_t unit_base_of(uint8_t dim) { return base[dim]; }\n')
 
     print(f'{len(groups)} menus, {len(nodes)} slots, {len(ids) - 1} ids, '
-          f'{len(units)} units; RPNCEres {len(header) + len(body)} bytes, '
+          f'{len(units)} units, {len(help_pages)} help pages; '
+          f'RPNCEres {len(header) + len(body)} bytes, '
           f'stamp {stamp:08X}')
 
 

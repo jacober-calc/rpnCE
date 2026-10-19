@@ -1,8 +1,6 @@
 /* Tests for the calculator core: stack, registers, (i), units on the stack.
  * Runs the real calc.c on a PC with stand-ins for the OS number routines:
- *   gcc -DRPNCE_HOST_TEST -Itests/mock -Isrc/core -o test_calc tests/test_calc.c src/core/calc.c \
- *       src/core/mathx.c src/core/stats.c src/core/tvm.c src/core/units.c \
- *       tests/units_data.c src/core/base.c -lm && ./test_calc
+ *   sh tests/run_tests.sh
  */
 #include <stdio.h>
 #include <string.h>
@@ -11,34 +9,7 @@
 #include "calc.h"
 #include "dateobj.h"
 
-real_t mock_fin[7];
-jmp_buf mock_jmp;
-real_t os_RealDiv(const real_t *a, const real_t *b)
-{ if (b->v == 0) os_ThrowError(OS_E_DIVBY0); return mk(a->v / b->v); }
-real_t os_RealLog(const real_t *a)
-{ if (a->v <= 0) os_ThrowError(OS_E_DOMAIN); return mk(log(a->v)); }
-static long long g(long long a, long long b) { while (b) { long long t = a % b; a = b; b = t; } return a; }
-real_t os_RealGcd(const real_t *a, const real_t *b) { return mk((double)g((long long)a->v, (long long)b->v)); }
-real_t os_RealLcm(const real_t *a, const real_t *b)
-{ long long x = (long long)a->v, y = (long long)b->v; return mk((double)(x / g(x, y) * y)); }
-void format_real(char *out, const real_t *v, uint8_t style, int8_t digits, int maxd, int maxe, bool group)
-{ (void)style; (void)digits; (void)maxd; (void)maxe; (void)group; sprintf(out, "%.14g", v->v); }
-
-/* decimal rounding stand-ins (the real ones work on the calculator's digits) */
-real_t round_decimals(const real_t *v, int n) { double p = pow(10, n); return mk(round(v->v * p) / p); }
-real_t round_significant(const real_t *v, int n)
-{
-    if (v->v == 0) return *v;
-    int e = (int)floor(log10(fabs(v->v)));
-    return round_decimals(v, n - 1 - e);
-}
-
-/* a stand-in hardware clock */
-static int clk[6] = { 2026, 10, 18, 9, 30, 0 };
-bool sys_clock_read(int *y, int *mo, int *d, int *h, int *mi, int *s)
-{ *y = clk[0]; *mo = clk[1]; *d = clk[2]; *h = clk[3]; *mi = clk[4]; *s = clk[5]; return true; }
-void sys_clock_write(int y, int mo, int d, int h, int mi, int s)
-{ clk[0] = y; clk[1] = mo; clk[2] = d; clk[3] = h; clk[4] = mi; clk[5] = s; }
+#include "mock_calc_runtime.h"
 
 static calc_t C;
 static int fails = 0;
@@ -447,13 +418,99 @@ int main(void)
     cmd(CMD_DATE_FN, DF_NOW_DATE);
     XOBJ("NOWD (local date)", "D{2026,10,18}");
     REC("{2026,12,31,23,59,59,0,0"); cmd(CMD_DATE_FN, DF_SET_CLOCK);
-    expect("SETC wrote the clock", clk[0] == 2026 && clk[1] == 12 && clk[3] == 23, 1);
+    expect("SETC wrote the clock", mock_clock[0] == 2026 && mock_clock[1] == 12 && mock_clock[3] == 23, 1);
 
     /* epochs */
     cmd(CMD_DATE_FN, DF_EPOCH_NTP);
     REC("{2024,3,14,15,36,1,-7,0"); cmd(CMD_DATE_FN, DF_TO_ES);
     expect("NTP epoch seconds = 3919444561", X, 3919444561.0);
     cmd(CMD_DATE_FN, DF_EPOCH_UNIX);
+
+    /* Result bookkeeping: unary, binary, register, BASE, and statistics
+     * commands must keep their distinct stack-lift and LASTX rules. */
+    {
+        static const struct {
+            calc_cmd_t command;
+            uint8_t arg;
+            double result;
+            bool drops, lift;
+        } cases[] = {
+            { CMD_SQUARE, 0, 4, false, true },
+            { CMD_ADD, 0, 12, true, true },
+            { CMD_PERCENT, 0, 0.2, false, true },
+            { CMD_PERCENT_CHANGE, 0, -80, false, true },
+            { CMD_RCL_ADD, REG_A, 5, false, true },
+            { CMD_BASE_OP, BOP_ADD, 12, true, true },
+            { CMD_BASE_OP, BOP_NOT, 4294967293.0, false, true },
+            { CMD_STAT_PLUS, 0, 1, false, false },
+        };
+        for (int depth = STACK_MIN; depth <= STACK_MAX; depth += STACK_MAX - STACK_MIN)
+            for (unsigned i = 0; i < sizeof cases / sizeof cases[0]; i++) {
+                calc_init(&C);
+                C.depth = (uint8_t)depth;
+                C.lift = false;
+                for (int k = 0; k < depth; k++) {
+                    C.stack[k] = mk(k == 0 ? 2 : k == 1 ? 10 : 100 + k);
+                    C.unit[k] = k < 2 ? 0 : (uint8_t)(k + 1);
+                }
+                C.regs[0] = mk(3);
+                cmd(cases[i].command, cases[i].arg);
+                expect("result matches operation", C.stack[0].v, cases[i].result);
+                expect("LASTX keeps the original X and unit", C.lastx.v == 2 && C.unit_lastx == 0, 1);
+                expect("result has no unit", C.unit[0], 0);
+                expect("operation keeps its lift rule", C.lift, cases[i].lift);
+                expect("Y and its unit follow the drop rule",
+                       C.stack[1].v == (cases[i].drops ? 102 : 10) &&
+                       C.unit[1] == (cases[i].drops ? 3 : 0), 1);
+                expect("top stack level stays duplicated", C.stack[depth - 1].v, 100 + depth - 1);
+                expect("no unexpected result error", C.message == NULL, 1);
+            }
+
+        calc_init(&C);
+        C.stack[0] = mk(0);
+        C.stack[1] = mk(10);
+        C.lastx = mk(42);
+        C.unit[0] = 3;
+        C.unit[1] = 4;
+        C.unit_lastx = 3;
+        C.lift = false;
+        cmd(CMD_DIV, 0);
+        expect_msg("failed result reports division by zero", "Err: Division By 0");
+        expect("failed result preserves values, tags, LASTX and lift",
+               C.stack[0].v == 0 && C.stack[1].v == 10 && C.lastx.v == 42 &&
+               C.unit[0] == 3 && C.unit[1] == 4 && C.unit_lastx == 3 && !C.lift, 1);
+    }
+
+    /* DATE conversion boundaries: ordinary epoch/duration functions need
+     * whole values, whereas timezone commands also accept quarter hours. */
+    {
+        static const double hours[] = { -23.75, -7.75, -0.25, 0, 5.5, 23.75 };
+        for (unsigned i = 0; i < sizeof hours / sizeof hours[0]; i++) {
+            calc_init(&C);
+            C.stack[0] = mk(hours[i]);
+            cmd(CMD_DATE_FN, DF_HR_TO_TZ);
+            dt_obj_t zone = obj_unpack(&C.stack[0]);
+            expect("hours convert exactly to quarter-hour offsets",
+                   obj_is(&C.stack[0]) && zone.type == OBJ_TZ &&
+                   dt_tz_quarters(&zone) == (int)(hours[i] * 4), 1);
+            cmd(CMD_DATE_FN, DF_SET_APP_TZ);
+            expect("object offset sets application timezone", C.app_tz, hours[i] * 4);
+            C.stack[0] = mk(hours[i]);
+            cmd(CMD_DATE_FN, DF_SET_CLOCK_TZ);
+            expect("numeric offset sets clock timezone", C.clock_tz, hours[i] * 4);
+        }
+        calc_init(&C);
+        C.stack[0] = mk(1.1);
+        cmd(CMD_DATE_FN, DF_SET_APP_TZ);
+        expect_msg("fractional quarter-hour offset is rejected", "Err: Domain");
+        expect("rejected timezone keeps setting and X", C.app_tz == 0 && C.stack[0].v == 1.1, 1);
+        C.stack[0] = mk(86401);
+        cmd(CMD_DATE_FN, DF_ES_TO_D);
+        XOBJ("whole epoch seconds still convert to a date", "D{1970,1,2}");
+        C.stack[0] = mk(0.25);
+        cmd(CMD_DATE_FN, DF_SECONDS_TO_DR);
+        expect_msg("duration seconds still require whole values", "Err: Domain");
+    }
 
     printf("%d failures\n", fails);
     return fails != 0;

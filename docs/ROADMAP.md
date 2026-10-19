@@ -35,7 +35,15 @@
 - [x] NUM (PRIM, RNDF, RNDN, RNDG), HYP, CONV (polar, HMS), BASE
 - [x] DATE: seven object types, entry, arithmetic, all D/T/DT/TZ/DZ/DR/DW,
       EPCH and CLK functions, {..} / ".." display
-- [ ] Remaining: CPLX (and its MODE settings), HELP
+- [x] HELP: three reference pages, with 2ND CATALOG access, from
+      help/help.txt in the RPNCEres appvar
+- [x] Dedicated menu shortcuts (2ND LINK and 2ND ANGLE kept free for
+      complex numbers) and quantities in ordinary registers, with register
+      units in their own checksummed appvar (RPNCEunt)
+- [ ] Remaining: CPLX (and its MODE settings)
+- [ ] Check each UNIT function against RPN83P's rules, including which NUM
+      functions accept TEMP and FUEL values
+- [ ] Finish the user guide (docs/USER_GUIDE.md) for 0.7.0
 - [x] Menu tree generated from a menu definition file (menus/menus.txt)
 - [x] Menu navigation: softkeys, row up/down, HOME, EXIT
 - [x] DEG/RAD mode
@@ -56,4 +64,4 @@
 - [x] Menus and unit tables in the RPNCEres appvar, read from archive (no
       RAM); version-stamped, with a clear message if it's missing
 - [x] Release packaging: tools/release.sh builds RPNCE-<version>.zip
-- [ ] HELP text in an appvar
+- [x] HELP text in the RPNCEres appvar

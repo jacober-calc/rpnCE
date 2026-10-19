@@ -14,7 +14,9 @@ bottom of the screen, on a dot-matrix LCD-style display.
   functions; everything else is in the menu row, opened with MATH.
 - **Registers:** A-Z, i, indirect (i), the statistics registers, and up to
   100 extra numbered registers, with STO/RCL arithmetic, x<>, and a VARS
-  catalog of everything stored.
+  catalog of stored registers and all seven TVM values. Unit values retain
+  their units in ordinary
+  registers and convert compatible units during arithmetic.
 - **Accurate numbers:** the calculator's 14-digit decimal math, shown with
   up to 12 digits, thousands separators, and FIX/SCI/ENG/ALL formats.
 - **Functions:** MATH, NUM, PROB, HYP, CONV (polar, H.MMSS), STAT with
@@ -24,11 +26,12 @@ bottom of the screen, on a dot-matrix LCD-style display.
   (dates, times, time zones, durations, epochs, and the CE's clock).
 - **Remembers everything:** the stack, registers, statistics, and settings
   are saved when you quit and restored next time.
-- **Screen tints:** LCD, LCD+ (for real screens), GRAY, and DARK.
+- **Screen tints:** LCD, LCD+ (for real screens), GRAY, INVERTED, AYU DARK,
+  MONOKAI, PASTEL, and COMMODORE.
 
 See [docs/KEYS.md](docs/KEYS.md) for the full key and menu reference, and
 [docs/ROADMAP.md](docs/ROADMAP.md) for what's done and what's next
-(complex numbers and help are still to come).
+(complex numbers are still to come).
 
 ## Installing
 
@@ -46,9 +49,9 @@ See [docs/KEYS.md](docs/KEYS.md) for the full key and menu reference, and
 
 The program and `RPNCEres` must come from the same release; if the appvar
 is missing or doesn't match, RPNCE says so at startup. RPNCE saves its own
-data in two more appvars, `RPNCEdat` (calculator state) and `RPNCEcfg`
-(display and DATE settings). Deleting them resets RPNCE; upgrading keeps
-them.
+data in up to three more appvars: `RPNCEdat` (calculator state), `RPNCEcfg`
+(display and DATE settings) and `RPNCEunt` (units on registers, only when
+some register has one). Deleting them resets RPNCE; upgrading keeps them.
 
 ## Quick start
 
@@ -77,9 +80,11 @@ To try it without a calculator, load both files and `clibs.8xg` into the
 
 ### Memory
 
-The menu tree and unit tables (about 11 KB) live in `RPNCEres` and are
-read straight from archive, so they use no RAM. Unpacked, the program takes
-about 72 KB of RAM plus about 5 KB for its variables.
+The menu tree, unit tables and HELP pages (about 12 KB) live in `RPNCEres`
+and are read straight from archive, so they use no RAM. The 0.7.0 build has
+an 82,968-byte program image and 3,855 bytes of static variables, excluding
+runtime stack and library allocations. See the
+[refactor measurements](docs/REFACTOR.md) for the comparison with the original.
 
 ## Tests
 
@@ -90,10 +95,24 @@ tested on a PC. With a C compiler installed:
 sh tests/run_tests.sh
 ```
 
-This builds and runs nine suites (number formatting, decimal rounding,
+This builds and runs fifteen suites (number formatting, decimal rounding,
 math, BASE, statistics, TVM and units, DATE, the RPNCEres appvar reader,
-and the calculator core), using
+menu actions, keyboard shortcuts, dot-font rendering, saved state, the
+calculator core, reported bug regressions, and display redraws), using
 stand-ins for the calculator's number routines.
+
+To compare the refactored core against the original in a Git checkout:
+
+```
+sh tests/check_core_equivalence.sh
+```
+
+This checks 22,848 command/state combinations, including DATE and BASE
+arguments, both stack depths, unit tags, errors, TVM variables and the clock,
+plus 8,568 entry-sequence steps. Intentional quantity behavior, PRIM's stack
+push and percentage DATE type checks are covered separately by regression
+tests. A baseline from before the core was split can also be passed as an
+argument (for example, `2e29e01`).
 
 ## Layout
 
@@ -101,10 +120,13 @@ stand-ins for the calculator's number routines.
 src/main.c   entry point and main loop
 src/core/    calculator logic: stack, registers, math, formatting, rounding,
              TVM, statistics, units, BASE (no screen or key code)
+             calc_entry.c handles editing; calc_date.c integrates DATE
+             with the stack; calc.c dispatches commands and runs math
 src/ui/      display, dot-matrix font, keypad, menus, VARS catalog,
              res.c (reads the RPNCEres appvar)
 src/sys/     saving and loading state, the hardware clock
 menus/       menus.txt: the whole menu tree as editable text
+help/        help.txt: the HELP pages as editable text
 data/        RPNCEres.bin: the RPNCEres appvar's contents (generated)
 tools/       genres.py: builds RPNCEres and the matching headers from
              menus.txt (via genmenu.py) and the unit definitions
@@ -116,8 +138,8 @@ prod/        the current build: RPNCE.8xp, RPNCEres.8xv, INSTALL.txt
 
 ## Editing menus and units
 
-Change `menus/menus.txt` (or the unit definitions in `tools/genunits.py`),
-then run `python3 tools/genres.py` and rebuild. It regenerates
+Change `menus/menus.txt`, `help/help.txt` (or the unit definitions in
+`tools/genunits.py`), then run `python3 tools/genres.py` and rebuild. It regenerates
 `data/RPNCEres.bin` and the headers that go with it, with a new version
 stamp, so a program and appvar built from different sources can't be mixed
 up. The generated files are committed, so building doesn't need Python.

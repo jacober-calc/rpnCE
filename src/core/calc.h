@@ -129,6 +129,10 @@ typedef struct {
     real_t regs[REG_BASE_COUNT];        /* A-Z and i (registers 001-027) */
     real_t extra[REG_EXTRA_MAX];        /* registers 041 and up */
     uint8_t extra_count;
+    /* A quantity is its full-precision value plus its unit, just as on the
+     * stack. Statistics registers remain plain numbers. */
+    uint8_t reg_unit[REG_BASE_COUNT];
+    uint8_t extra_unit[REG_EXTRA_MAX];
 
     tvm_settings_t tvm;
     stats_t stats;
@@ -163,6 +167,8 @@ void calc_seed_random(uint32_t seed);
 
 /* The register with this number (1..140), or NULL if it doesn't exist. */
 real_t *calc_register(calc_t *c, uint8_t num);
+/* Unit metadata for an ordinary register; NULL for statistics or no register. */
+uint8_t *calc_register_unit(calc_t *c, uint8_t num);
 
 /* Ends number entry, if any, so the state can be saved. */
 void calc_finish_entry(calc_t *c);

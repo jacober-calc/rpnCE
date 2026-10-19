@@ -347,7 +347,14 @@ event_t keys_translate(keys_t *k, sk_key_t key)
     if (second) {
         if (key == sk_Mode) {
             ev.kind = EV_QUIT;
+        } else if (key == sk_0) {               /* CATALOG */
+            ev.kind = EV_HELP;
+        } else if (key == sk_Add || key == sk_Stat) {   /* MEM, LIST */
+            ev.kind = EV_MENU;
+            ev.arg = key == sk_Add ? MENU_GROUP_CLEAR : MENU_GROUP_STACK;
         } else {
+            /* 2ND LINK (on X,T,theta,n) and 2ND ANGLE (on APPS) are left
+             * free on purpose: complex-number entry will need them. */
             ev.cmd = second_cmd(key);
             if (ev.cmd != CMD_NONE)
                 ev.kind = EV_CMD;
@@ -363,6 +370,10 @@ event_t keys_translate(keys_t *k, sk_key_t key)
         case sk_Down:   ev.kind = EV_ROW_DOWN; return ev;
         case sk_Math:   ev.kind = EV_MENU; ev.arg = MENU_GROUP_HOME; return ev;
         case sk_Mode:   ev.kind = EV_MENU; ev.arg = MENU_GROUP_MODE; return ev;
+        case sk_Stat:   ev.kind = EV_MENU; ev.arg = MENU_GROUP_STAT; return ev;
+        case sk_GraphVar: ev.kind = EV_MENU; ev.arg = MENU_GROUP_UNIT; return ev;
+        case sk_Apps:   ev.kind = EV_MENU; ev.arg = MENU_GROUP_BASE; return ev;
+        case sk_Prgm:   ev.kind = EV_MENU; ev.arg = MENU_GROUP_HYPERBOLIC; return ev;
         default:        break;
     }
 

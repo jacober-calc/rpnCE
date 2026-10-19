@@ -2,7 +2,7 @@
 #define RPNCE_UI_RES_H
 
 /*
- * RPNCE's resources: the menu tree and unit tables, kept in the RPNCEres
+ * RPNCE's resources: the menu tree, unit tables and HELP pages, kept in the RPNCEres
  * appvar (built by tools/genres.py) and read straight from archive, so they
  * use no RAM. res_open() must succeed before anything else here is used.
  *
@@ -29,5 +29,11 @@ const char *res_text(uint16_t offset);
 
 /* The unit (index) for a UNIT menu item, or -1. */
 int unit_for_menu(menu_id_t id);
+
+/* HELP pages (from help/help.txt): how many there are, how many lines a
+ * page has (its title first), and the text of each line. */
+uint8_t res_help_pages(void);
+uint8_t res_help_lines(uint8_t page);
+const char *res_help_line(uint8_t page, uint8_t line);
 
 #endif
