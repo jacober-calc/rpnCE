@@ -8,7 +8,6 @@
 
 void display_open(void);
 
-#define HELP_PAGE_COUNT 3
 void display_help(uint8_t page);
 
 /* A full-screen notice (missing resources, say): a title and a detail line,

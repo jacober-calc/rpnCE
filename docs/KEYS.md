@@ -291,9 +291,7 @@ screen tint in `RPNCEcfg`.
 | `PRGM` | HYP menu |
 | `2ND MEM` (`2ND +`) | CLR menu |
 | `2ND CATALOG` (`2ND 0`) | HELP reference pages |
-| `2ND LINK` (`2ND X,T,theta,n`) | DATE menu |
 | `2ND LIST` (`2ND STAT`) | STK menu |
-| `2ND ANGLE` (`2ND APPS`) | CONV menu |
 | `VARS` | the register catalog (see Registers) |
 | `ON` | EXIT: back one menu level |
 | left / right arrows | scroll a value too long for the X line |
@@ -309,14 +307,23 @@ X digits and dark green menu panels. The selection is saved on exit. See
 [TINTS.md](TINTS.md) for palette details.
 
 HOME has TVM in the fifth position on its first row and HELP in the fifth
-position on its second row. HELP opens three reference pages: UP / DOWN
-change pages; ENTER, CLEAR, DEL or ON returns to the calculator. ALPHA
+position on its second row. HELP opens the reference pages: UP / DOWN
+change pages; ENTER, CLEAR, DEL or ON returns to the calculator. The pages
+are written in `help/help.txt` and stored in the RPNCEres appvar. 2ND LINK
+and 2ND ANGLE are deliberately unassigned: complex-number entry will use
+them. ALPHA
 letters and STO/RCL variable selection take priority over menu shortcuts.
 
 Numbers show up to 12 digits with thousands commas, or up to 10 next to an
 exponent; SHOW (2ND ENTRY) shows all 14.
 
 The stack, LASTX, variables, angle mode, and display format are saved on exit
-(in the archived appvar `RPNCEdat`) and restored on the next run. After 5
+(in the archived appvar `RPNCEdat`) and restored on the next run. Units on
+registers are saved separately in `RPNCEunt`, with a checksum and a
+fingerprint of the register values they belong to: if it's missing,
+damaged, or belongs to different values, the registers load without units
+and every value is kept. Earlier refactor unit footers migrate automatically
+when `RPNCEunt` is absent, and the next save writes the new units appvar.
+After 5
 minutes without a key press, RPNCE saves and exits so the calculator can
 power down.

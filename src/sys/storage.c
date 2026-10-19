@@ -36,10 +36,128 @@ typedef struct {
 /* Loading and saving run sequentially. Share one scratch buffer, kept off
  * the stack because it includes space for every extra register. */
 static saved_state_t s;
-/* Keep the v5 payload readable by earlier builds. Those readers ignore
- * trailing bytes; this optional extension preserves register units. */
-static const uint8_t unit_extension[] = { 'U', 1 };
-static uint8_t saved_units[REG_BASE_COUNT + REG_EXTRA_MAX];
+
+/* ---------- register units: their own appvar ----------
+ *
+ * Units on the registers (A-Z, i and the extra registers) are kept in
+ * RPNCEunt, separate from RPNCEdat, so a problem with them can never cost
+ * the saved values: RPNCEdat keeps exactly the 0.6.6 layout, and if
+ * RPNCEunt is missing, damaged, or doesn't belong to the registers just
+ * loaded, the registers simply load without units.
+ *
+ *   'U' 'N'  version  count        header (count = number of tags)
+ *   u32      fingerprint           FNV-1a of the register values the tags
+ *                                  belong to, so tags never attach to
+ *                                  different values (e.g. an older RPNCEdat)
+ *   u8 x count                     a unit tag per register (0: none)
+ *   u32      checksum              FNV-1a of everything before it
+ *
+ * (Stack and LASTX units are part of RPNCEdat, as in 0.6.6.)
+ */
+#define UNITS_NAME    "RPNCEunt"
+#define UNITS_VERSION 1
+#define UNITS_MAX     (REG_BASE_COUNT + REG_EXTRA_MAX)
+
+static uint8_t unit_file[4 + 4 + UNITS_MAX + 4];
+
+static uint32_t fnv1a(uint32_t h, const void *data, size_t n)
+{
+    const uint8_t *p = data;
+    while (n--) {
+        h ^= *p++;
+        h *= 16777619UL;
+    }
+    return h;
+}
+
+static uint32_t register_fingerprint(const real_t *regs, const real_t *extra, uint8_t extra_count)
+{
+    uint32_t h = fnv1a(2166136261UL, regs, sizeof(real_t) * REG_BASE_COUNT);
+    h = fnv1a(h, &extra_count, 1);
+    return fnv1a(h, extra, sizeof(real_t) * extra_count);
+}
+
+static void put32(uint8_t *p, uint32_t v)
+{
+    for (int i = 0; i < 4; i++)
+        p[i] = (uint8_t)(v >> (8 * i));
+}
+
+static uint32_t get32(const uint8_t *p)
+{
+    return (uint32_t)p[0] | (uint32_t)p[1] << 8 | (uint32_t)p[2] << 16 | (uint32_t)p[3] << 24;
+}
+
+static void save_units(const calc_t *c)
+{
+    size_t count = REG_BASE_COUNT + c->extra_count;
+    bool any = false;
+    for (int i = 0; i < REG_BASE_COUNT; i++)
+        any |= c->reg_unit[i] != 0;
+    for (int i = 0; i < c->extra_count; i++)
+        any |= c->extra_unit[i] != 0;
+    if (!any) {
+        ti_Delete(UNITS_NAME);              /* nothing to keep: no stale file */
+        return;
+    }
+
+    uint8_t *p = unit_file;
+    p[0] = 'U';
+    p[1] = 'N';
+    p[2] = UNITS_VERSION;
+    p[3] = (uint8_t)count;
+    put32(p + 4, register_fingerprint(c->regs, c->extra, c->extra_count));
+    memcpy(p + 8, c->reg_unit, REG_BASE_COUNT);
+    memcpy(p + 8 + REG_BASE_COUNT, c->extra_unit, c->extra_count);
+    put32(p + 8 + count, fnv1a(2166136261UL, p, 8 + count));
+
+    uint8_t h = ti_Open(UNITS_NAME, "w");
+    if (!h)
+        return;
+    ti_Write(p, 1, 8 + count + 4, h);
+    ti_SetArchiveStatus(true, h);
+    ti_Close(h);
+}
+
+static void apply_unit_tags(calc_t *c, const uint8_t *tags)
+{
+    for (int i = 0; i < REG_BASE_COUNT; i++)
+        c->reg_unit[i] = tags[i] <= UNIT_COUNT ? tags[i] : 0;
+    for (int i = 0; i < c->extra_count; i++) {
+        uint8_t u = tags[REG_BASE_COUNT + i];
+        c->extra_unit[i] = u <= UNIT_COUNT ? u : 0;
+    }
+}
+
+/* Validate RPNCEunt against the loaded values. Only when it is absent may
+ * a complete legacy footer supply the tags instead. */
+static void load_units(calc_t *c, bool have_legacy_units)
+{
+    memset(c->reg_unit, 0, sizeof c->reg_unit);
+    memset(c->extra_unit, 0, sizeof c->extra_unit);
+
+    uint8_t h = ti_Open(UNITS_NAME, "r");
+    if (!h) {
+        /* Before the new file exists, migrate the earlier refactor footer.
+         * A subsequent save writes these tags to RPNCEunt. */
+        if (have_legacy_units)
+            apply_unit_tags(c, unit_file + 8);
+        return;
+    }
+    size_t count = REG_BASE_COUNT + c->extra_count;
+    size_t want = 8 + count + 4;
+    size_t n = ti_Read(unit_file, 1, sizeof unit_file, h);
+    ti_Close(h);
+
+    const uint8_t *p = unit_file;
+    if (n != want || p[0] != 'U' || p[1] != 'N' || p[2] != UNITS_VERSION || p[3] != count)
+        return;
+    if (get32(p + 8 + count) != fnv1a(2166136261UL, p, 8 + count))
+        return;                             /* damaged */
+    if (get32(p + 4) != register_fingerprint(c->regs, c->extra, c->extra_count))
+        return;                             /* belongs to other register values */
+    apply_unit_tags(c, p + 8);
+}
 
 void storage_save(calc_t *c)
 {
@@ -67,11 +185,10 @@ void storage_save(calc_t *c)
     if (!h)
         return;
     ti_Write(&s, SAVED_FIXED_SIZE + sizeof(real_t) * c->extra_count, 1, h);
-    ti_Write(unit_extension, 1, sizeof unit_extension, h);
-    ti_Write(c->reg_unit, 1, REG_BASE_COUNT, h);
-    ti_Write(c->extra_unit, 1, c->extra_count, h);
     ti_SetArchiveStatus(true, h);   /* archived: survives a RAM clear */
     ti_Close(h);
+
+    save_units(c);
 }
 
 bool storage_load(calc_t *c)
@@ -87,17 +204,17 @@ bool storage_load(calc_t *c)
         size_t tail = sizeof(real_t) * s.extra_count;
         valid = ti_Read(s.extra, 1, tail, h) == tail;
     }
-    memset(saved_units, 0, sizeof saved_units);
+    /* Earlier refactor builds appended 'U', 1 and one tag per register.
+     * Keep a complete, recognized footer in the existing scratch buffer
+     * for migration if RPNCEunt does not exist. Bad metadata never rejects
+     * an otherwise valid numeric/DATE save. */
+    bool have_legacy_units = false;
     if (valid) {
-        uint8_t extension[sizeof unit_extension];
-        size_t n = ti_Read(extension, 1, sizeof extension, h);
-        /* No extension means an original v5 save, with scalar registers. */
-        if (n != 0) {
-            size_t tags = REG_BASE_COUNT + s.extra_count;
-            valid = n == sizeof extension &&
-                    memcmp(extension, unit_extension, sizeof extension) == 0 &&
-                    ti_Read(saved_units, 1, tags, h) == tags;
-        }
+        uint8_t header[2];
+        size_t count = REG_BASE_COUNT + s.extra_count;
+        have_legacy_units = ti_Read(header, 1, sizeof header, h) == sizeof header &&
+                            header[0] == 'U' && header[1] == 1 &&
+                            ti_Read(unit_file + 8, 1, count, h) == count;
     }
     ti_Close(h);
     if (!valid)
@@ -110,15 +227,9 @@ bool storage_load(calc_t *c)
     c->lastx = s.lastx;
     c->unit_lastx = (s.unit_lastx <= UNIT_COUNT) ? s.unit_lastx : 0;
     memcpy(c->regs, s.regs, sizeof c->regs);
-    for (int i = 0; i < REG_BASE_COUNT; i++)
-        c->reg_unit[i] = saved_units[i] <= UNIT_COUNT ? saved_units[i] : 0;
-    memset(c->extra_unit, 0, sizeof c->extra_unit);
-    for (int i = 0; i < s.extra_count; i++) {
-        uint8_t u = saved_units[REG_BASE_COUNT + i];
-        c->extra_unit[i] = u <= UNIT_COUNT ? u : 0;
-    }
     c->extra_count = s.extra_count;
     memcpy(c->extra, s.extra, sizeof(real_t) * s.extra_count);
+    load_units(c, have_legacy_units);
     c->lift = s.lift != 0;
     c->degrees = s.degrees != 0;
     if (s.disp_style >= DISP_FIX && s.disp_style <= DISP_ENG &&

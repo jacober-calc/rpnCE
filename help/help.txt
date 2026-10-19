@@ -1,0 +1,33 @@
+# RPNCE quick reference (HELP, or 2ND CATALOG).
+#
+# Built into the RPNCEres appvar by tools/genres.py: after editing, run
+#   python3 tools/genres.py
+# and rebuild. Pages are separated by a line of three dashes. A page's
+# first line is its title; each page has at most 8 lines, title included,
+# of at most 44 characters. Lines starting with # are comments.
+
+HELP 1/3 - KEYS
+MATH: home    MODE: settings
+STAT: STAT    X,T,theta,n: UNIT
+APPS: BASE    PRGM: HYP
+2ND MEM: CLR    2ND LIST: STK
+2ND CATALOG: HELP    VARS: recall
+2ND MODE or 2ND ON: quit
+---
+HELP 2/3 - STACK / REGISTERS
+ENTER: duplicate X; type to replace X
+( : roll down    ) : swap X and Y
+2ND ANS: LASTX    DEL: edit / clear X
+STO + letter: store X
+2ND STO + letter: recall
+STO + . : i    STO + 2ND . : (i)
+PRIM: factor in X, original in Y
+---
+HELP 3/3 - UNITS
+Choose a unit to attach it to X.
+Choose a compatible unit to convert.
+STO / RCL / X<> keep value and unit.
++ and - convert X to Y's unit.
+%CH: (X - Y) / Y * 100, after conversion
+TEMP / FUEL: convert or round only.
+UVAL: remove unit    UBAS: base unit

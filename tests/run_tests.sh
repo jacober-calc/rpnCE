@@ -1,7 +1,8 @@
 #!/bin/sh
 # Builds and runs every PC test suite. Run from the project root:
 #   sh tests/run_tests.sh
-# Needs a C compiler (gcc or clang) and the math library.
+# Needs a C compiler (gcc or clang) and the math library. EXTRA_CFLAGS adds
+# compiler flags, e.g. EXTRA_CFLAGS='-fsanitize=address,undefined'.
 set -e
 CC=${CC:-cc}
 OUT=$(mktemp -d)
@@ -11,7 +12,7 @@ fail=0
 
 run() {
     name=$1; shift
-    if ! $CC -w "$@" -o "$OUT/$name" -lm; then
+    if ! $CC ${EXTRA_CFLAGS:-} -w "$@" -o "$OUT/$name" -lm; then
         echo "$name: did not build"; fail=1; return
     fi
     if ! "$OUT/$name" > "$OUT/$name.log"; then

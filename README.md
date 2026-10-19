@@ -49,9 +49,9 @@ See [docs/KEYS.md](docs/KEYS.md) for the full key and menu reference, and
 
 The program and `RPNCEres` must come from the same release; if the appvar
 is missing or doesn't match, RPNCE says so at startup. RPNCE saves its own
-data in two more appvars, `RPNCEdat` (calculator state) and `RPNCEcfg`
-(display and DATE settings). Deleting them resets RPNCE; upgrading keeps
-them.
+data in up to three more appvars: `RPNCEdat` (calculator state), `RPNCEcfg`
+(display and DATE settings) and `RPNCEunt` (units on registers, only when
+some register has one). Deleting them resets RPNCE; upgrading keeps them.
 
 ## Quick start
 
@@ -80,9 +80,9 @@ To try it without a calculator, load both files and `clibs.8xg` into the
 
 ### Memory
 
-The menu tree and unit tables (about 11 KB) live in `RPNCEres` and are
-read straight from archive, so they use no RAM. The v15.0 source build has a
-77,767-byte program image and 3,577 bytes of static variables, excluding
+The menu tree, unit tables and HELP pages (about 12 KB) live in `RPNCEres`
+and are read straight from archive, so they use no RAM. The 0.7.0 build has
+an 82,968-byte program image and 3,855 bytes of static variables, excluding
 runtime stack and library allocations. See the
 [refactor measurements](docs/REFACTOR.md) for the comparison with the original.
 
@@ -126,6 +126,7 @@ src/ui/      display, dot-matrix font, keypad, menus, VARS catalog,
              res.c (reads the RPNCEres appvar)
 src/sys/     saving and loading state, the hardware clock
 menus/       menus.txt: the whole menu tree as editable text
+help/        help.txt: the HELP pages as editable text
 data/        RPNCEres.bin: the RPNCEres appvar's contents (generated)
 tools/       genres.py: builds RPNCEres and the matching headers from
              menus.txt (via genmenu.py) and the unit definitions
@@ -137,8 +138,8 @@ prod/        the current build: RPNCE.8xp, RPNCEres.8xv, INSTALL.txt
 
 ## Editing menus and units
 
-Change `menus/menus.txt` (or the unit definitions in `tools/genunits.py`),
-then run `python3 tools/genres.py` and rebuild. It regenerates
+Change `menus/menus.txt`, `help/help.txt` (or the unit definitions in
+`tools/genunits.py`), then run `python3 tools/genres.py` and rebuild. It regenerates
 `data/RPNCEres.bin` and the headers that go with it, with a new version
 stamp, so a program and appvar built from different sources can't be mixed
 up. The generated files are committed, so building doesn't need Python.

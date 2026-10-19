@@ -16,14 +16,14 @@ typedef struct {
     size_t size, pos;
     bool exists, archived;
 } appvar_t;
-static appvar_t vars[2];
+static appvar_t vars[3];               /* RPNCEdat, RPNCEcfg, RPNCEunt */
 static bool open_fails;
 static int finishes, fails;
 
 uint8_t ti_Open(const char *name, const char *mode)
 {
-    int i = strcmp(name, "RPNCEdat") == 0 ? 0 : 1;
-    assert(i == 0 || strcmp(name, "RPNCEcfg") == 0);
+    int i = strcmp(name, "RPNCEdat") == 0 ? 0 : strcmp(name, "RPNCEcfg") == 0 ? 1 : 2;
+    assert(i != 2 || strcmp(name, "RPNCEunt") == 0);
     if (open_fails || (*mode == 'r' && !vars[i].exists)) return 0;
     if (*mode == 'w') {
         vars[i].size = 0;
@@ -53,6 +53,13 @@ size_t ti_Write(const void *data, size_t size, size_t count, uint8_t handle)
 int ti_Close(uint8_t handle) { (void)handle; return 1; }
 bool ti_SetArchiveStatus(bool archived, uint8_t handle)
 { vars[handle - 1].archived = archived; return true; }
+int ti_Delete(const char *name)
+{
+    assert(strcmp(name, "RPNCEunt") == 0);
+    vars[2].exists = false;
+    vars[2].size = 0;
+    return 1;
+}
 
 /* Entry parsing is tested in test_calc.c; storage must still call it. */
 void calc_finish_entry(calc_t *c) { assert(!c->editing); finishes++; }
@@ -169,11 +176,27 @@ int main(void)
         storage_save(&original);
         check("save finalizes entry and archives the appvar", finishes == previous_finishes + 1 && vars[0].archived);
         if (n == 0) fixed_size = vars[0].size;
-        check("save writes only the configured extra registers",
-              vars[0].size == fixed_size + (sizeof(real_t) + 1) * counts[n]);
+        check("RPNCEdat keeps the 0.6.6 layout: only the configured extra registers",
+              vars[0].size == fixed_size + sizeof(real_t) * counts[n]);
+        check("register units go to an archived RPNCEunt",
+              vars[2].exists && vars[2].archived &&
+              vars[2].size == 8 + REG_BASE_COUNT + (size_t)counts[n] + 4);
         memset(&loaded, 0, sizeof loaded);
         check("all persistent state survives repeated save/load",
               storage_load(&loaded) && same_saved(&original, &loaded));
+        if (n < 2) {  /* legacy footer boundaries: no extras and five extras */
+            size_t base_size = vars[0].size;
+            vars[0].data[base_size] = 'U'; vars[0].data[base_size + 1] = 1;
+            memcpy(vars[0].data + base_size + 2, original.reg_unit, REG_BASE_COUNT);
+            memcpy(vars[0].data + base_size + 2 + REG_BASE_COUNT, original.extra_unit, original.extra_count);
+            vars[0].size += 2 + REG_BASE_COUNT + original.extra_count;
+            vars[2].exists = false;
+            check("legacy unit footer migrates with zero or five extra registers",
+                  storage_load(&loaded) && same_saved(&original, &loaded));
+            storage_save(&loaded);
+            check("migration removes footer and archives the separate units file",
+                  vars[0].size == base_size && vars[2].exists && vars[2].archived);
+        }
     }
 
     unsigned char saved[16384];
@@ -193,29 +216,112 @@ int main(void)
     check("valid load after failed loads recovers the saved state",
           storage_load(&loaded) && same_saved(&original, &loaded));
 
-    size_t legacy_size = saved_size - 2 - REG_BASE_COUNT - original.extra_count;
-    vars[0].size = legacy_size + 1;
-    rejected_unchanged("truncated extension header is rejected", &loaded);
-    vars[0].size = saved_size;
-    vars[0].data[legacy_size] = '?';
-    rejected_unchanged("unknown unit extension is rejected", &loaded);
-    memcpy(vars[0].data, saved, saved_size);
-    vars[0].data[saved_size - 1] = 255;
-    check("invalid saved unit tags become scalar values",
-          storage_load(&loaded) && loaded.extra_unit[original.extra_count - 1] == 0 &&
-          same_real(&loaded.extra[original.extra_count - 1], &original.extra[original.extra_count - 1]));
-    memcpy(vars[0].data, saved, saved_size);
+    /* Every way RPNCEunt can fail keeps every value, dropping only the
+     * register units. */
+    calc_t no_units = original;
+    memset(no_units.reg_unit, 0, sizeof no_units.reg_unit);
+    memset(no_units.extra_unit, 0, sizeof no_units.extra_unit);
+    unsigned char units_saved[16384];
+    size_t units_size = vars[2].size;
+    memcpy(units_saved, vars[2].data, units_size);
 
-    /* Legacy v5 ends before the optional unit extension. Preserve its values
-     * and stack units while initializing the new register metadata. */
-    vars[0].size = saved_size - 2 - REG_BASE_COUNT - original.extra_count;
-    memset(original.reg_unit, 0, sizeof original.reg_unit);
-    memset(original.extra_unit, 0, sizeof original.extra_unit);
-    check("legacy saves load without losing numeric or DATE values",
+    vars[2].exists = false;
+    check("missing RPNCEunt: values load, registers without units",
+          storage_load(&loaded) && same_saved(&no_units, &loaded));
+    vars[2].exists = true;
+    vars[2].data[10] ^= 1;
+    check("damaged RPNCEunt (checksum): values load, units dropped",
+          storage_load(&loaded) && same_saved(&no_units, &loaded));
+    memcpy(vars[2].data, units_saved, units_size);
+    vars[2].size = units_size - 1;
+    check("truncated RPNCEunt: values load, units dropped",
+          storage_load(&loaded) && same_saved(&no_units, &loaded));
+    vars[2].size = units_size;
+    vars[2].data[2] = 99;
+    check("unknown RPNCEunt version: values load, units dropped",
+          storage_load(&loaded) && same_saved(&no_units, &loaded));
+    memcpy(vars[2].data, units_saved, units_size);
+    check("intact RPNCEunt restores every register unit",
           storage_load(&loaded) && same_saved(&original, &loaded));
-    storage_save(&loaded);
-    check("legacy state gains unit extension and reloads",
-          vars[0].data[1] == 5 && vars[0].size == saved_size && storage_load(&loaded) && same_saved(&original, &loaded));
+
+    /* Units must never attach to different values: an RPNCEdat saved with
+     * other register values (an older copy, say) leaves the units off. */
+    {
+        calc_t other = original;
+        other.regs[0] = mk(12345);
+        unsigned char dat_saved[16384];
+        memcpy(dat_saved, vars[0].data, saved_size);
+        storage_save(&other);
+        memcpy(vars[2].data, units_saved, units_size);    /* the older units file */
+        vars[2].size = units_size;
+        vars[2].exists = true;
+        calc_t other_no_units = other;
+        memset(other_no_units.reg_unit, 0, sizeof other_no_units.reg_unit);
+        memset(other_no_units.extra_unit, 0, sizeof other_no_units.extra_unit);
+        check("RPNCEunt for other register values is ignored",
+              storage_load(&loaded) && same_saved(&other_no_units, &loaded));
+        memcpy(vars[0].data, dat_saved, saved_size);
+        vars[0].size = saved_size;
+        memcpy(vars[2].data, units_saved, units_size);
+    }
+    vars[2].data[8] = 255;      /* a unit tag out of range, checksum fixed up */
+    {
+        uint32_t h = 2166136261UL;
+        size_t body = units_size - 4;
+        for (size_t i = 0; i < body; i++) { h ^= vars[2].data[i]; h *= 16777619UL; }
+        for (int i = 0; i < 4; i++) vars[2].data[body + i] = (unsigned char)(h >> (8 * i));
+    }
+    check("an out-of-range unit tag becomes no unit",
+          storage_load(&loaded) && loaded.reg_unit[0] == 0 && loaded.reg_unit[1] == original.reg_unit[1]);
+    memcpy(vars[2].data, units_saved, units_size);
+
+    /* Migrate old register-unit footers when no RPNCEunt exists, without
+     * rejecting valid numbers if the optional footer is damaged. */
+    {
+        unsigned char tail[2 + REG_BASE_COUNT + REG_EXTRA_MAX] = { 'U', 1 };
+        size_t tail_size = 2 + REG_BASE_COUNT + original.extra_count;
+        memcpy(tail + 2, original.reg_unit, REG_BASE_COUNT);
+        memcpy(tail + 2 + REG_BASE_COUNT, original.extra_unit, original.extra_count);
+        memcpy(vars[0].data + saved_size, tail, tail_size);
+        vars[0].size = saved_size + tail_size;
+        vars[2].exists = false;
+        check("older refactor saves preserve both values and register units",
+              storage_load(&loaded) && same_saved(&original, &loaded));
+        storage_save(&loaded);
+        check("migrated units are saved separately and survive reopening",
+              vars[0].size == saved_size && vars[2].exists && vars[2].archived &&
+              storage_load(&loaded) && same_saved(&original, &loaded));
+
+        memcpy(vars[0].data + saved_size, tail, tail_size);
+        vars[0].size = saved_size + tail_size - 1;
+        vars[2].exists = false;
+        check("truncated legacy unit footer drops only units, retaining values",
+              storage_load(&loaded) && same_saved(&no_units, &loaded));
+        vars[0].size = saved_size + tail_size;
+        vars[0].data[saved_size] = '?';
+        check("unknown legacy unit footer does not reject saved values",
+              storage_load(&loaded) && same_saved(&no_units, &loaded));
+        vars[0].data[saved_size] = 'U';
+
+        vars[2].exists = true;
+        memcpy(vars[2].data, units_saved, units_size);
+        vars[2].size = units_size;
+        vars[0].data[saved_size + 2] = 2;  /* differs from the matching file's tag */
+        check("a matching RPNCEunt takes precedence over legacy tags",
+              storage_load(&loaded) && same_saved(&original, &loaded));
+        vars[2].data[10] ^= 1;
+        check("damaged RPNCEunt does not fall back to potentially stale legacy tags",
+              storage_load(&loaded) && same_saved(&no_units, &loaded));
+        vars[0].size = saved_size;
+        memcpy(vars[2].data, units_saved, units_size);
+    }
+
+    /* No register units at all: RPNCEunt is removed rather than kept stale. */
+    storage_save(&no_units);
+    check("saving with no register units removes RPNCEunt", !vars[2].exists);
+    check("...and loads with no register units",
+          storage_load(&loaded) && same_saved(&no_units, &loaded));
+    storage_save(&original);
 
     /* Loading and then saving a smaller state must not retain old registers. */
     populate(&original, 0);

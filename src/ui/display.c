@@ -257,28 +257,15 @@ void display_problem(const char *title, const char *detail)
     gfx_SwapDraw();
 }
 
-/* Compact reference pages, also available through 2ND CATALOG. */
+/* A HELP page (also 2ND CATALOG), from the RPNCEres appvar. */
 void display_help(uint8_t page)
 {
-    static const char *const lines[HELP_PAGE_COUNT][8] = {
-        { "HELP 1/3 - KEYS", "MATH: home    MODE: settings",
-          "STAT: STAT    X,T,theta,n: UNIT", "APPS: BASE    PRGM: HYP",
-          "2ND MEM: CLR    2ND LIST: STK", "2ND LINK: DATE    2ND ANGLE: CONV",
-          "2ND CATALOG: HELP    VARS: recall", "2ND MODE or 2ND ON: quit" },
-        { "HELP 2/3 - STACK / REGISTERS", "ENTER: duplicate X; type to replace X",
-          "( : roll down    ) : swap X and Y", "2ND ANS: LASTX    DEL: edit / clear X",
-          "STO + letter: store X", "2ND STO + letter: recall",
-          "STO + . : i    STO + 2ND . : (i)", "PRIM: factor in X, original in Y" },
-        { "HELP 3/3 - UNITS", "Choose a unit to attach it to X.",
-          "Choose a compatible unit to convert.", "STO / RCL / X<> keep value and unit.",
-          "+ and - convert X to Y's unit.", "%CH: (X - Y) / Y * 100, after conversion",
-          "TEMP / FUEL: convert or round only.", "UVAL: remove unit    UBAS: base unit" },
-    };
-    if (page >= HELP_PAGE_COUNT) page = 0;
+    if (page >= res_help_pages())
+        page = 0;
     gfx_FillScreen(COL_PANEL);
     gfx_SetTextScale(1, 1);
-    for (int i = 0; i < 8; i++)
-        draw_label(lines[page][i], LABEL_X, 12 + i * 24, COL_INK);
+    for (uint8_t i = 0; i < res_help_lines(page); i++)
+        draw_label(res_help_line(page, i), LABEL_X, 12 + i * 24, COL_INK);
     draw_label("UP / DOWN: page    ENTER / CLEAR / ON: back", LABEL_X, 222, COL_INK);
     gfx_SwapDraw();
 }

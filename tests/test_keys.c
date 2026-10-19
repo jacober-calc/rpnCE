@@ -24,8 +24,7 @@ int main(void)
         { sk_Math, MENU_GROUP_HOME, false }, { sk_Mode, MENU_GROUP_MODE, false },
         { sk_Stat, MENU_GROUP_STAT, false }, { sk_GraphVar, MENU_GROUP_UNIT, false },
         { sk_Apps, MENU_GROUP_BASE, false }, { sk_Prgm, MENU_GROUP_HYPERBOLIC, false },
-        { sk_Add, MENU_GROUP_CLEAR, true }, { sk_GraphVar, MENU_GROUP_DATE, true },
-        { sk_Stat, MENU_GROUP_STACK, true }, { sk_Apps, MENU_GROUP_CONV, true },
+        { sk_Add, MENU_GROUP_CLEAR, true }, { sk_Stat, MENU_GROUP_STACK, true },
     };
     for (unsigned i = 0; i < sizeof cases / sizeof cases[0]; i++) {
         keys_t k = {0};
@@ -42,6 +41,16 @@ int main(void)
             check("ON returns from shortcut to correct HOME row", m.group == MENU_GROUP_HOME &&
                   m.row == menu_parent_row_of(e.arg));
         }
+    }
+    /* 2ND LINK and 2ND ANGLE stay free for complex-number entry */
+    {
+        keys_t k2 = {0};
+        keys_translate(&k2, sk_2nd);
+        check("2ND LINK does nothing (reserved for complex numbers)",
+              keys_translate(&k2, sk_GraphVar).kind == EV_NONE && !k2.second);
+        keys_translate(&k2, sk_2nd);
+        check("2ND ANGLE does nothing (reserved for complex numbers)",
+              keys_translate(&k2, sk_Apps).kind == EV_NONE && !k2.second);
     }
     keys_t k = {0};
     keys_translate(&k, sk_2nd);

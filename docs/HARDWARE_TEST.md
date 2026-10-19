@@ -1,16 +1,27 @@
-# Refactor hardware testing
+# Hardware testing: 0.7.0
 
-This is a development build of 0.6.6 on `refactor`. Send both files from
-`bin/` using TI Connect CE, replacing the matching files on the calculator:
+This is the 0.7.0 development build: the `refactor` branch prepared for
+merging into `dev`. Send both files from `bin/` using TI Connect CE,
+replacing the matching files on the calculator:
 
-- `bin/RPNCE.8xp` — 45,976 bytes
-- `bin/RPNCEres.8xv` — 11,545 bytes; resource stamp `37704715`
+- `bin/RPNCE.8xp`: 46,287 bytes
+- `bin/RPNCEres.8xv`: 12,308 bytes; resource stamp `4A1F17C6` (format 2,
+  now with the HELP pages)
 
-Use the existing CE libraries. This build does not replace `prod/` or create
-a release. Existing v5 `RPNCEdat` state loads without a reset. New register
-unit metadata is appended to the existing save format; older builds can
-read the numeric and DATE values, but cannot retain register units when
-saving again.
+Use the existing CE libraries. An existing `RPNCEdat` from 0.6.6, or from
+an earlier `refactor` test build, loads without a reset. Earlier refactor
+register-unit footers migrate when no `RPNCEunt` exists; the next save moves
+the recovered tags into `RPNCEunt`.
+
+How things are saved:
+
+- `RPNCEdat` keeps exactly the 0.6.6 layout (stack, stack units, LASTX,
+  registers, settings), so 0.6.6 can still read a 0.7.0 save.
+- Units on registers are saved in a separate appvar, `RPNCEunt`, written
+  only when some register holds a unit (and deleted when none do). It has
+  a checksum and a fingerprint of the register values it belongs to. If
+  it's missing, damaged, or belongs to different values, the registers load
+  without units; no value is ever lost.
 
 ## Reported cases
 
@@ -40,6 +51,17 @@ Temperature and fuel-economy units support conversion and rounding;
 arithmetic on them is refused. Compound units are not supported. Use UVAL
 to remove a unit explicitly. Statistics and TVM continue to use plain values.
 
+## Register units: RPNCEunt
+
+| Check | Expected |
+| --- | --- |
+| Store `5 ft` in a register, quit | `RPNCEunt` appears in 2ND MEM > Mem Management > AppVars |
+| Reopen, recall it | 5 ft |
+| Clear every register holding a unit (CLRG), quit | `RPNCEunt` is gone |
+| Store `5 ft` again, quit; delete `RPNCEunt` in Mem Management; reopen, recall it | 5, with no unit: the value is kept |
+| Store `5 ft`, quit; reopen; check that `RPNCEdat` loads | All values present |
+| Upgrade an earlier refactor save containing a unit footer, without `RPNCEunt`; recall the register | Both value and unit retained; quitting creates `RPNCEunt` |
+
 ## Menus and keys
 
 | Key | Opens |
@@ -50,12 +72,15 @@ to remove a unit explicitly. Statistics and TVM continue to use plain values.
 | PRGM | HYP |
 | 2ND MEM (`2ND +`) | CLR |
 | 2ND CATALOG (`2ND 0`) | HELP |
-| 2ND LINK (`2ND X,T,theta,n`) | DATE |
 | 2ND LIST (`2ND STAT`) | STK |
-| 2ND ANGLE (`2ND APPS`) | CONV |
+
+`2ND LINK` (`2ND X,T,theta,n`) and `2ND ANGLE` (`2ND APPS`) should do
+nothing: they are kept free for complex-number entry.
 
 TVM occupies HOME row 1, slot 5; HELP occupies row 2, slot 5. HELP has three
-pages: UP / DOWN changes page; ENTER, CLEAR, DEL or ON returns. Check that
+pages, now read from the RPNCEres appvar: UP / DOWN changes page, wrapping
+from the last page to the first; ENTER, CLEAR, DEL or ON returns. Page 1
+should not mention 2ND LINK or 2ND ANGLE. Check that
 ALPHA APPS still enters B, STO APPS still selects B, and 2ND + a TVM softkey
 still recalls its variable.
 

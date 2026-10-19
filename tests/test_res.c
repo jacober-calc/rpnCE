@@ -76,6 +76,24 @@ int main(void)
     ok("the base unit of length is m", strcmp(unit_label(unit_base_of(DIM_LENGTH)), "m") == 0, unit_label(unit_base_of(DIM_LENGTH)));
     ok("CUBE is not a unit", unit_for_menu(MID_CUBE) < 0, NULL);
 
+    /* HELP pages, from help/help.txt */
+    ok("three HELP pages", res_help_pages() == 3, NULL);
+    ok("page 1's title", strcmp(res_help_line(0, 0), "HELP 1/3 - KEYS") == 0, res_help_line(0, 0));
+    ok("page 1 has no LINK or ANGLE shortcuts", ({
+        bool clean = true;
+        for (uint8_t i = 0; i < res_help_lines(0); i++)
+            if (strstr(res_help_line(0, i), "LINK") || strstr(res_help_line(0, i), "ANGLE")) clean = false;
+        clean; }), NULL);
+    ok("page 3 ends with UVAL / UBAS", strcmp(res_help_line(2, res_help_lines(2) - 1),
+       "UVAL: remove unit    UBAS: base unit") == 0, res_help_line(2, res_help_lines(2) - 1));
+    ok("every page fits (1-8 lines)", ({
+        bool fits = true;
+        for (uint8_t p = 0; p < res_help_pages(); p++)
+            if (res_help_lines(p) < 1 || res_help_lines(p) > 8) fits = false;
+        fits; }), NULL);
+    ok("past the last line or page is empty, not garbage",
+       res_help_line(0, 99)[0] == '\0' && res_help_lines(99) == 0, NULL);
+
     /* a changed file is caught */
     mock_res[RES_SIZE - 1] ^= 1;
     mock_res[12] ^= 1;

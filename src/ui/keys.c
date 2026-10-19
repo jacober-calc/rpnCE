@@ -347,16 +347,14 @@ event_t keys_translate(keys_t *k, sk_key_t key)
     if (second) {
         if (key == sk_Mode) {
             ev.kind = EV_QUIT;
-        } else if (key == sk_0) {
+        } else if (key == sk_0) {               /* CATALOG */
             ev.kind = EV_HELP;
-        } else if (key == sk_Apps) {      /* ANGLE */
+        } else if (key == sk_Add || key == sk_Stat) {   /* MEM, LIST */
             ev.kind = EV_MENU;
-            ev.arg = MENU_GROUP_CONV;
-        } else if (key == sk_Add || key == sk_GraphVar || key == sk_Stat) {
-            ev.kind = EV_MENU;
-            ev.arg = key == sk_Add ? MENU_GROUP_CLEAR :
-                     key == sk_GraphVar ? MENU_GROUP_DATE : MENU_GROUP_STACK;
+            ev.arg = key == sk_Add ? MENU_GROUP_CLEAR : MENU_GROUP_STACK;
         } else {
+            /* 2ND LINK (on X,T,theta,n) and 2ND ANGLE (on APPS) are left
+             * free on purpose: complex-number entry will need them. */
             ev.cmd = second_cmd(key);
             if (ev.cmd != CMD_NONE)
                 ev.kind = EV_CMD;

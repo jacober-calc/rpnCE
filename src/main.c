@@ -31,7 +31,7 @@ static calc_t calc;
 static keys_t keys;
 static menu_t menu;
 static catalog_t catalog;
-static uint8_t help_page;       /* 0: closed, 1..HELP_PAGE_COUNT: reference */
+static uint8_t help_page;       /* 0: closed, 1..res_help_pages(): reference */
 static uint8_t tint;            /* screen color preset */
 
 /* Runs the item under a softkey, or opens its submenu. As in RPN83P, the
@@ -185,9 +185,9 @@ int main(void)
                     if (keys.second && key == sk_Mode) break;
                     keys.second = false;
                     if (key == sk_Up)
-                        help_page = help_page == 1 ? HELP_PAGE_COUNT : help_page - 1;
+                        help_page = help_page == 1 ? res_help_pages() : help_page - 1;
                     else if (key == sk_Down)
-                        help_page = help_page == HELP_PAGE_COUNT ? 1 : help_page + 1;
+                        help_page = help_page == res_help_pages() ? 1 : help_page + 1;
                     else if (key == sk_Enter || key == sk_Clear || key == sk_Del || key == sk_Math)
                         help_page = 0;
                 }

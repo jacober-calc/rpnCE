@@ -20,6 +20,48 @@ These measurements exclude runtime stack and library allocations.
 `RPNCEres.8xv` is unchanged at 11,545 bytes. No release files in `prod/`
 were replaced.
 
+## Merge preparation (0.7.0)
+
+Before merging into `dev`, the branch was adjusted as follows. The
+old-core comparison and every host suite still pass.
+
+- **Shortcuts:** 2ND LINK (DATE) and 2ND ANGLE (CONV) were removed, leaving
+  seven shortcuts. Both keys are kept free for complex-number entry, as in
+  RPN83P; `test_keys.c` checks that they do nothing.
+- **Register units moved to their own appvar.** `RPNCEdat` is back to the
+  exact 0.6.6 layout, with no extension. Register units are saved in
+  `RPNCEunt` (written only when a register holds a unit), with a version,
+  a checksum, and an FNV-1a fingerprint of the register values the tags
+  belong to. A missing, damaged, truncated or mismatched `RPNCEunt` only
+  drops the register units; every value still loads. Saves from earlier
+  test builds of this branch also retain their register units: when no
+  `RPNCEunt` exists, a complete recognized unit footer is read and migrated
+  on the next save. A damaged or unknown footer drops only its unit labels,
+  leaving numeric and DATE state available. A present `RPNCEunt` takes
+  precedence, including its checksum and value-fingerprint validation.
+- **HELP moved into the RPNCEres appvar.** The pages are written in
+  `help/help.txt` and packed by `tools/genres.py` (resource format 2), which
+  checks that each page fits the screen. Page 1 no longer lists the removed
+  shortcuts.
+- **Version 0.7.0.**
+
+| Measurement | Before merge preparation (`8800256`) | 0.7.0 | Change |
+| --- | ---: | ---: | ---: |
+| Program image | 82,593 bytes | 82,968 bytes | +375 bytes |
+| Static variables (`.bss`) | 3,843 bytes | 3,855 bytes | +12 bytes |
+| Compressed `RPNCE.8xp` | 45,976 bytes | 46,287 bytes | +311 bytes |
+| `RPNCEres.8xv` | 11,545 bytes | 12,308 bytes | +763 bytes (HELP text) |
+
+The local ZIP integration also preserves earlier refactor register-unit
+footers during the move to `RPNCEunt`. The migration shares the unit-file
+scratch buffer. It adds 118 bytes to the program image and 40 bytes to the
+compressed program compared with the supplied ZIP's build, with no extra
+static RAM. Storage regressions and direct old/new writer-reader checks
+cover migration with 0, 5 and 100 extra registers.
+
+The HELP text left the program, but the unit-file checks and the HELP
+reader were added, so the program is slightly larger overall.
+
 ## Hardware bug fixes and quantity support
 
 The current `refactor` development build adds behavior and tint presets to
@@ -63,8 +105,9 @@ HELP moved. Transfer both files from `bin/` together. The release files in
   includes all 140 numbered registers, LASTX and TVM; regression cases check
   live values, zero FV, lift behavior, scrolling and preservation of TVM data.
   A percent glyph makes I%YR readable in the dot font.
-- All nine requested shortcuts are implemented, TVM is on HOME's first
-  row, HELP is on its second, and HELP has three reference pages.
+- Nine shortcuts were implemented at first (two were later removed; see
+  "Merge preparation" above), TVM is on HOME's first row, HELP is on its
+  second, and HELP has three reference pages.
 
 The tint update renames DARK to INVERTED and adds AYU DARK, MONOKAI and PASTEL.
 Before the subsequent ANGLE shortcut, these presets added 567 bytes to the
@@ -127,6 +170,7 @@ Run from the repository root:
 ```sh
 sh tests/run_tests.sh
 sh tests/check_core_equivalence.sh
+EXTRA_CFLAGS='-fsanitize=address,undefined -fno-omit-frame-pointer' sh tests/run_tests.sh
 EXTRA_CFLAGS='-fsanitize=address,undefined -fno-omit-frame-pointer' sh tests/check_core_equivalence.sh
 make
 ```
