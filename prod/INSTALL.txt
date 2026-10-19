@@ -1,0 +1,38 @@
+RPNCE 0.6.6 - an RPN calculator for the TI-84 Plus CE
+==========================================================
+
+Files
+-----
+  RPNCE.8xp      the program
+  RPNCEres.8xv   its menus and unit tables (required)
+
+RPNCE also needs the CE C libraries (clibs.8xg), which many CE programs
+use. If you don't have them, download clibs.8xg from
+https://github.com/CE-Programming/libraries/releases
+
+Installing
+----------
+1. Send RPNCE.8xp, RPNCEres.8xv and clibs.8xg to the calculator with
+   TI Connect CE. All three can stay in archive memory.
+2. On the home screen run Asm(prgmRPNCE), or just prgmRPNCE on newer
+   OS versions. Calculators on OS 5.5 or newer need the arTIfiCE jailbreak
+   to run C programs.
+
+RPNCE.8xp and RPNCEres.8xv must come from the same release. If RPNCEres
+is missing or from a different version, RPNCE says so when it starts.
+
+Your data
+---------
+RPNCE saves the stack, registers, statistics and settings when you quit
+(2ND QUIT) in two appvars it creates: RPNCEdat and RPNCEcfg. Deleting them
+resets RPNCE. They are kept when you upgrade.
+
+Getting started
+---------------
+  2 ENTER 3 +           5
+  MATH                  the menu tree (ON goes back)
+  MODE                  display format, angle mode, and more
+  2ND QUIT              save and exit
+
+The full key and menu reference is docs/KEYS.md in the project:
+https://github.com/jacober-calc/rpnce

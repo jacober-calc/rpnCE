@@ -58,11 +58,12 @@ const char *display_tint_name(uint8_t tint)
 #define SCREEN_W     320
 #define STATUS_H     18
 #define MSG_Y        STATUS_H            /* the message line, under the status bar */
-#define MSG_H        22                  /* 8-pixel text with padding */
+#define MSG_H        30                  /* 16-pixel text, padded above and below */
+#define MSG_SCALE_Y  2                   /* message text: system font, double height */
 #define MENU_H       24
 #define MENU_Y       (240 - MENU_H - 3)
 #define STACK_TOP    (MSG_Y + MSG_H)
-#define ROW_H        ((MENU_Y - 3 - STACK_TOP) / 4)
+#define ROW_H        39                  /* stack row spacing */
 #define LABEL_X      6
 #define VALUE_LEFT   26      /* values never draw left of this */
 #define VALUE_RIGHT  (SCREEN_W - 6)
@@ -138,6 +139,30 @@ static void draw_label(const char *s, int x, int y, uint8_t color)
     draw_label_scaled(s, x, y, color, 1);
 }
 
+/* A label at normal width and double height (the message line). */
+static void draw_label_tall(const char *s, int x, int y, uint8_t color)
+{
+    gfx_SetTextFGColor(color);
+    gfx_SetColor(color);
+    for (; *s; s++) {
+        if (is_glyph(*s)) {
+            uint8_t g = (uint8_t)*s - 1;
+            for (int row = 0; row < 8; row++)
+                for (int col = 0; col < 8; col++)
+                    if (glyph_bits[g][row] & (0x80 >> col))
+                        gfx_FillRectangle(x + col, y + row * MSG_SCALE_Y, 1, MSG_SCALE_Y);
+            x += glyph_width[g];
+        } else {
+            gfx_SetTextScale(1, MSG_SCALE_Y);
+            gfx_SetTextXY(x, y);
+            gfx_PrintChar(*s);
+            gfx_SetTextScale(1, 1);
+            x += gfx_GetCharWidth(*s);
+        }
+    }
+    gfx_SetTextScale(1, 1);
+}
+
 void display_open(void)
 {
     gfx_Begin();
@@ -201,103 +226,81 @@ static void clock_text(char *out)
 }
 
 /* The status bar, dark with the text cut out: the calculator's state. The
- * clock, then the display format, angle mode, base, stack and register
- * sizes, and 2ND or ALPHA when pending. Messages go on the line below. */
+ * clock on the left; on the right the display format, angle mode, base
+ * (with C when the carry flag is set), and 2ND or ALPHA when pending.
+ * Messages go on the line below. */
 #define STATUS_GAP 6
-static void draw_status(const calc_t *c, const menu_t *m, bool second, bool alpha)
+
+static void draw_status(const calc_t *c, bool second, bool alpha)
 {
     const int y = (STATUS_H - 8) / 2;
-    int x = LABEL_X;
-    char buf[16];
+    char clock[20], fmt[8], base[6];
 
     gfx_SetColor(COL_INK);
     gfx_FillRectangle(0, 0, SCREEN_W, STATUS_H);
     gfx_SetTextScale(1, 1);
     gfx_SetTextFGColor(COL_PANEL);
-    x = 4;
 
-    clock_text(buf);
-    if (buf[0]) {
-        gfx_PrintStringXY(buf, x, y);
-        x += (int)gfx_GetStringWidth(buf) + STATUS_GAP;
-    }
+    clock_text(clock);
+    if (clock[0])
+        gfx_PrintStringXY(clock, 4, y);
 
-    (void)m;
+    /* the annunciators, right-aligned */
     static const char names[][4] = { "", "FIX", "SCI", "ENG" };
-    memcpy(buf, names[c->disp_style], 3);
+    memcpy(fmt, names[c->disp_style], 3);
     if (c->disp_digits == DISP_FLOAT) {
-        buf[3] = '-';
-        buf[4] = '\0';
-    } else if (c->disp_digits >= 10) {     /* FIX10, FIX11 */
-        buf[3] = '1';
-        buf[4] = (char)('0' + c->disp_digits - 10);
-        buf[5] = '\0';
+        fmt[3] = '-';
+        fmt[4] = '\0';
+    } else if (c->disp_digits >= 10) {      /* FIX10, FIX11 */
+        fmt[3] = '1';
+        fmt[4] = (char)('0' + c->disp_digits - 10);
+        fmt[5] = '\0';
     } else {
-        buf[3] = (char)('0' + c->disp_digits);
-        buf[4] = '\0';
+        fmt[3] = (char)('0' + c->disp_digits);
+        fmt[4] = '\0';
     }
-    gfx_PrintStringXY(buf, x, y);
-    x += (int)gfx_GetStringWidth(buf) + STATUS_GAP;
-
-    gfx_PrintStringXY(c->degrees ? "DEG" : "RAD", x, y);
-    x += (int)gfx_GetStringWidth("DEG") + STATUS_GAP;
-
-    /* DEC / HEX / OCT / BIN, with C when the carry flag is set */
-    {
-        const char *rn = (c->base.radix == 16) ? "HEX" : (c->base.radix == 8) ? "OCT" :
-                         (c->base.radix == 2) ? "BIN" : "DEC";
-        gfx_PrintStringXY(rn, x, y);
-        x += (int)gfx_GetStringWidth(rn) + 4;
-        if (c->base.radix != 10 && c->base.carry) {
-            gfx_PrintStringXY("C", x, y);
-            x += (int)gfx_GetStringWidth("C");
-        }
-        x += STATUS_GAP - 4;
-    }
-
-    /* stack depth and total registers, always shown: 4S-40R */
-    {
-        int regs = REG_STAT_LAST + c->extra_count;
-        int k = 0;
-        if (c->depth >= 10)
-            buf[k++] = '1';
-        buf[k++] = (char)('0' + c->depth % 10);
-        buf[k++] = 'S';
-        buf[k++] = '-';
-        if (regs >= 100)
-            buf[k++] = (char)('0' + regs / 100);
-        buf[k++] = (char)('0' + regs / 10 % 10);
-        buf[k++] = (char)('0' + regs % 10);
-        buf[k++] = 'R';
-        buf[k] = '\0';
-        gfx_PrintStringXY(buf, x, y);
-        x += (int)gfx_GetStringWidth(buf) + STATUS_GAP;
-    }
-
+    strcpy(base, (c->base.radix == 16) ? "HEX" : (c->base.radix == 8) ? "OCT" :
+                 (c->base.radix == 2) ? "BIN" : "DEC");
+    if (c->base.radix != 10 && c->base.carry)
+        strcat(base, " C");
+    const char *angle = c->degrees ? "DEG" : "RAD";
     const char *shift = second ? "2ND" : alpha ? "A" : NULL;     /* A: ALPHA pending */
-    if (shift) {
-        /* a light badge on the dark bar */
+
+    int w = (int)gfx_GetStringWidth(fmt) + STATUS_GAP + (int)gfx_GetStringWidth(angle) +
+            STATUS_GAP + (int)gfx_GetStringWidth(base);
+    if (shift)
+        w += STATUS_GAP + 2 + (int)gfx_GetStringWidth(shift) + 2;
+    int x = SCREEN_W - 4 - w;
+
+    gfx_PrintStringXY(fmt, x, y);
+    x += (int)gfx_GetStringWidth(fmt) + STATUS_GAP;
+    gfx_PrintStringXY(angle, x, y);
+    x += (int)gfx_GetStringWidth(angle) + STATUS_GAP;
+    gfx_PrintStringXY(base, x, y);
+    x += (int)gfx_GetStringWidth(base) + STATUS_GAP;
+    if (shift) {                            /* a light badge on the dark bar */
         gfx_SetColor(COL_PANEL);
-        gfx_FillRectangle(x - 2, y - 2, (int)gfx_GetStringWidth(shift) + 4, 12);
+        gfx_FillRectangle(x, y - 2, (int)gfx_GetStringWidth(shift) + 4, 12);
         gfx_SetTextFGColor(COL_INK);
-        gfx_PrintStringXY(shift, x, y);
+        gfx_PrintStringXY(shift, x + 2, y);
         gfx_SetTextFGColor(COL_PANEL);
     }
 }
 
 /* The message line: a message from the last command, or else a warning
- * about X in HEX, OCT or BIN, left-justified in the system font. At the
+ * about X in HEX, OCT or BIN, left-justified in the system font at double
+ * height. At the
  * right end, up/down arrows when the current menu has more rows. */
 static void draw_message_line(const calc_t *c, const menu_t *m)
 {
-    const int y = MSG_Y + (MSG_H - 8) / 2;
+    const int y = MSG_Y + (MSG_H - 8 * MSG_SCALE_Y) / 2;
     char warn[24];
     const char *msg = c->message ? c->message : base_warning(c, warn);
     if (msg)
-        draw_label(msg, LABEL_X, y, COL_INK);
+        draw_label_tall(msg, LABEL_X, y, COL_INK);
     if (menu_group(m->group)->rows > 1) {
         char arrows[3] = { MSYM_DOWN, MSYM_UP, '\0' };
-        draw_label(arrows, VALUE_RIGHT - label_width(arrows), y, COL_INK);
+        draw_label_tall(arrows, VALUE_RIGHT - label_width(arrows), y, COL_INK);
     }
 }
 
@@ -548,7 +551,7 @@ void display_draw(const calc_t *c, const menu_t *m, bool second, bool alpha,
                   const char *prompt, bool prompt_lifts, const catalog_t *cat)
 {
     gfx_FillScreen(COL_PANEL);
-    draw_status(c, m, second, alpha);
+    draw_status(c, second, alpha);
     draw_message_line(c, m);
     if (cat && cat->open)
         draw_catalog(c, cat);

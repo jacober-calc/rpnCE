@@ -14,5 +14,9 @@ mkdir -p "$DIR"
 cp bin/RPNCE.8xp bin/RPNCEres.8xv "$DIR/"
 sed "s/@VERSION@/$VERSION/" docs/INSTALL.txt > "$DIR/INSTALL.txt"
 (cd release && zip -q -r "RPNCE-$VERSION.zip" "RPNCE-$VERSION")
+
+# keep prod/ (the current build in the repo) up to date too
+mkdir -p prod
+cp "$DIR/RPNCE.8xp" "$DIR/RPNCEres.8xv" "$DIR/INSTALL.txt" prod/
 echo "release/RPNCE-$VERSION.zip:"
 ls -l "$DIR"

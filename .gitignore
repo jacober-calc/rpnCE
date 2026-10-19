@@ -1,24 +1,15 @@
-# Build output (make)
+# Build output
 bin/
 obj/
 
-# macOS
+# Editor and OS clutter
+.vscode/
 .DS_Store
-._*
+*.swp
 
-# Windows
-Thumbs.db
-desktop.ini
-
-# Python (tools/genmenu.py, tools/genunits.py)
+# Python
 __pycache__/
 *.pyc
 
-# Editors
-.vscode/
-.idea/
-*.swp
-*~
-
-# Local test builds
-tests/*.out
+# Release builds (tools/release.sh)
+release/

@@ -1,5 +1,4 @@
 # RPNCE
-![RPNCE Screenshot](assets/rpnce-promo1.png)
 
 An RPN calculator for the TI-84 Plus CE, written in C. It turns the CE into
 an HP-style RPN calculator: a 4-level stack (up to 12), numbered registers
@@ -33,8 +32,9 @@ See [docs/KEYS.md](docs/KEYS.md) for the full key and menu reference, and
 ## Installing
 
 1. Download the latest `RPNCE-<version>.zip` from the releases and unzip
-   it. It holds `RPNCE.8xp` (the program) and `RPNCEres.8xv` (its menus and
-   unit tables); both are needed. Also get the
+   it, or take the two files straight from the [`prod/`](prod) folder,
+   which always holds the current build. You need `RPNCE.8xp` (the program)
+   and `RPNCEres.8xv` (its menus and unit tables). Also get the
    [CE C libraries](https://github.com/CE-Programming/libraries/releases)
    (`clibs.8xg`) if you don't already have them.
 2. Send all three to the calculator with TI Connect CE. They can all stay
@@ -110,6 +110,7 @@ tools/       genres.py: builds RPNCEres and the matching headers from
              (genunits.py); release.sh: packages a release
 tests/       PC test suites and run_tests.sh
 docs/        key reference, roadmap, and install notes
+prod/        the current build: RPNCE.8xp, RPNCEres.8xv, INSTALL.txt
 ```
 
 ## Editing menus and units

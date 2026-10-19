@@ -113,9 +113,8 @@ is 120 fathoms.
 The stack has 4 levels (T, Z, Y, X) like the HP-32SII; MODE > SSIZ makes
 it up to 12. Only the bottom four are shown; deeper levels sit above T. A
 two-number operation drops the whole stack and copies the top level down;
-R-down and R-up roll through every level. The status line always shows the
-stack depth and the total number of registers together: `4S-40R` is the
-default 4 levels and 40 registers.
+R-down and R-up roll through every level. MODE > SSZ? shows the current
+depth, and RSZ? the number of registers.
 
 A value too long for its line (a 32-bit BIN number, say) stays on one line:
 the rightmost digits show, with a small arrow where more are hidden. Left
@@ -240,11 +239,11 @@ screen tint in `RPNCEcfg`.
 ## The screen
 
 - **Status bar:** a dark strip with the calculator's state: the date and
-  time from the CE's clock (`2026-10-18 14:05`, in the clock's own time
-  zone), the display format (FIX4, SCI3, FIX- for as many digits as
-  needed), DEG or RAD, the base (DEC, HEX, OCT or BIN, with C when the carry
-  flag is set), the stack depth and register count (4S-40R), and a 2ND or A
-  (ALPHA) badge when one is pending.
+  time from the CE's clock on the left (`2026-10-18 14:05`, in the clock's
+  own time zone), and on the right the display format (FIX4, SCI3, FIX- for
+  as many digits as needed), DEG or RAD, the base (DEC, HEX, OCT or BIN,
+  with C when the carry flag is set), and a 2ND or A (ALPHA) badge when one
+  is pending.
 - **Message line:** under the status bar: errors, SHOW, notices, and BASE
   warnings about X, in the system font. Up/down arrows at its right end
   mean the current menu has more rows.
