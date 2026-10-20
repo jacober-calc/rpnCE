@@ -16,6 +16,11 @@ RPNCE 0.7.0 · User Guide
 
 **Menu location:** **HOME** row 1 → **TVM**.
 
+- <img src="../../assets/guide/menu/home-tvm.png" alt="HOME > TVM" width="320">
+    - <img src="../../assets/guide/menu/home-tvm-1.png" alt="HOME > TVM > Row 1" width="320">
+    - <img src="../../assets/guide/menu/home-tvm-2.png" alt="HOME > TVM > Row 2" width="320">
+    - <img src="../../assets/guide/menu/home-tvm-3.png" alt="HOME > TVM > Row 3" width="320">
+
 TVM solves for an unknown in a series of equal payments with compound
 interest: loan payments, a remaining balance, an investment's future value,
 or the rate or number of periods implied by the other values.
@@ -79,13 +84,13 @@ with monthly compounding, end-of-month payments, and no remaining balance.
 **Setup:** **CLTV**, **RSTV**. Confirm P/YR = 12, C/YR = 12, END. Return
 to TVM row 1. N is 30 × 12 = 360.
 
-| Keys | Message or result | Explanation |
-| --- | --- | --- |
-| `360` **N** | TVM Stored | Store the number of monthly payments. |
-| `6.5` **I%YR** | TVM Stored | Store the annual percentage rate. |
-| `200000` **PV** | TVM Stored | Money received by the borrower. |
-| `0` **FV** | TVM Stored | The loan is fully repaid. |
-| **PMT** | approximately −1,264.1360 | Solve immediately after FV. |
+| Keys | Message or result | Explanation | Screen |
+| --- | --- | --- | --- |
+| `360` **N** | TVM Stored | Store the number of monthly payments. | <img src="../../assets/guide/screens/tvm-loan-1.png" alt="After 360 N" width="320"> |
+| `6.5` **I%YR** | TVM Stored | Store the annual percentage rate. | <img src="../../assets/guide/screens/tvm-loan-2.png" alt="After 6.5 I%YR" width="320"> |
+| `200000` **PV** | TVM Stored | Money received by the borrower. | <img src="../../assets/guide/screens/tvm-loan-3.png" alt="After 200000 PV" width="320"> |
+| `0` **FV** | TVM Stored | The loan is fully repaid. | <img src="../../assets/guide/screens/tvm-loan-4.png" alt="After 0 FV" width="320"> |
+| **PMT** | approximately −1,264.1360 | Solve immediately after FV. | <img src="../../assets/guide/screens/tvm-loan-5.png" alt="PMT, solved" width="320"> |
 
 The negative sign means a payment made by the borrower. The stored answer
 has more digits than the four displayed decimal places.
@@ -97,6 +102,8 @@ without typing another number. The payment is approximately −1,199.1011.
 RPNCE replaces the rate and recomputes the unknown; there is no need to
 re-enter N, PV, and FV.
 
+<img src="../../assets/guide/screens/tvm-loan-6.png" alt="PMT at 6%" width="320">
+
 ## Example: a single deposit grows
 
 Find the value after ten years of a 1,000 deposit at 5% annual interest,
@@ -105,13 +112,13 @@ compounded yearly, with no additional payments.
 **Setup:** **CLTV**, **RSTV**. On row 2, store `1` **P/YR** and `1`
 **C/YR**; leave END selected. Return to row 1.
 
-| Keys | Result or meaning |
-| --- | --- |
-| `10` **N** | Ten annual periods. |
-| `5` **I%YR** | 5% per year. |
-| `1000 (−)` **PV** | Deposit is an outflow. |
-| `0` **PMT** | No recurring payments. |
-| **FV** | approximately 1,628.8946, an inflow at the end. |
+| Keys | Result or meaning | Screen |
+| --- | --- | --- |
+| `10` **N** | Ten annual periods. | |
+| `5` **I%YR** | 5% per year. | |
+| `1000 (−)` **PV** | Deposit is an outflow. | |
+| `0` **PMT** | No recurring payments. | |
+| **FV** | approximately 1,628.8946, an inflow at the end. | <img src="../../assets/guide/screens/tvm-save.png" alt="FV, solved" width="320"> |
 
 ## Example: solve an interest rate
 
@@ -120,13 +127,13 @@ final balance. Find the annual rate for monthly compounding.
 
 **Setup:** **CLTV**, **RSTV**. Confirm P/YR = C/YR = 12 and END.
 
-| Keys | Result or meaning |
-| --- | --- |
-| `60` **N** | Sixty payments. |
-| `25000` **PV** | Loan received. |
-| `480 (−)` **PMT** | Monthly outflow. |
-| `0` **FV** | No final balance. |
-| **I%YR** | approximately 5.7138 percent annually. |
+| Keys | Result or meaning | Screen |
+| --- | --- | --- |
+| `60` **N** | Sixty payments. | |
+| `25000` **PV** | Loan received. | |
+| `480 (−)` **PMT** | Monthly outflow. | |
+| `0` **FV** | No final balance. | |
+| **I%YR** | approximately 5.7138 percent annually. | <img src="../../assets/guide/screens/tvm-rate.png" alt="I%YR, solved" width="320"> |
 
 Unlike the other variables, I%YR is found by iteration. `TVM Not Found`
 means the current search did not find a valid rate; review the signs,

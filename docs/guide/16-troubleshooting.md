@@ -19,6 +19,8 @@ arithmetic operation retains its operands and LASTX, so you can inspect
 the inputs before trying again. An invalid DATE entry remains open for
 correction with DEL; it is not a completed stack object.
 
+<img src="../../assets/guide/screens/trouble-domain.png" alt="Err: Domain after 2 (−) 2ND √, with −2 still in X" width="320"> <img src="../../assets/guide/screens/trouble-invalid.png" alt="Err: Invalid, with the DATE entry still open" width="320">
+
 ## Errors
 
 | Message | Meaning |
@@ -62,6 +64,8 @@ If its resource appvar is missing or doesn't match the program, RPNCE shows
 a notice instead of starting: "RPNCEres not found", "RPNCEres is damaged"
 or "RPNCEres is the wrong version". Send `RPNCEres.8xv` from the same
 release as `RPNCE.8xp`.
+
+<img src="../../assets/guide/screens/trouble-no-res.png" alt="The startup notice when RPNCEres is missing" width="320">
 
 
 ## Choosing the next action

@@ -64,6 +64,8 @@ The following visible menu items are reserved for a later implementation:
 | **MODE** row 2 | RRES, CRES, RECT, PRAD, PDEG | Reports `Not available yet`; does not enable complex calculation. |
 | Keyboard | 2ND LINK, 2ND ANGLE | Unassigned; does not enter or combine complex values. |
 
+<img src="../../assets/guide/screens/compat-cplx.png" alt="A CPLX item: Not available yet" width="320">
+
 A menu label is not evidence that the corresponding function is available.
 For example, a negative square root remains a real-domain error rather
 than producing a complex result. Do not follow RPN83P complex-entry

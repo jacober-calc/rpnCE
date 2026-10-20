@@ -23,7 +23,7 @@ Type a value, then press a unit in the **UNIT** menu to attach it: X shows
 `3.6576 m`. The unit label moves with the value on the stack, into
 registers, and through quitting and restarting.
 
-![A value with a unit, and after converting it](../../assets/guide/units.png)
+<img src="../../assets/guide/screens/units-convert.png" alt="12 ft in Y, and converted to metres in X" width="320">
 
 | Example | Result |
 | --- | --- |
@@ -47,13 +47,13 @@ RPN83P:
 | unit value `÷` number | the unit is kept |
 | unit value `÷` unit value (same kind) | a plain number, the ratio |
 
-| Example | Result |
-| --- | --- |
-| `6` **ft** `2` **in** `+` | 6.1667 ft |
-| ...then `3 ÷` | 2.0556 ft |
-| ...then **in** | 24.6667 in |
-| `3` **kg** `4 ×` | 12 kg |
-| `6` **ft** `2` **in** `÷` | 36 (6 ft is 36 times 2 in) |
+| Example | Result | Screen |
+| --- | --- | --- |
+| `6` **ft** `2` **in** `+` | 6.1667 ft | <img src="../../assets/guide/screens/units-arith-1.png" alt="6 ft 2 in +" width="320"> |
+| ...then `3 ÷` | 2.0556 ft | <img src="../../assets/guide/screens/units-arith-2.png" alt="...then 3 ÷" width="320"> |
+| ...then **in** | 24.6667 in | <img src="../../assets/guide/screens/units-arith-3.png" alt="...then in" width="320"> |
+| `3` **kg** `4 ×` | 12 kg | |
+| `6` **ft** `2` **in** `÷` | 36 (6 ft is 36 times 2 in) | |
 
 The result of `+` and `−` keeps **Y's** unit, which suits adding up
 measurements: put the first one in place, then add the rest in any unit.
@@ -91,11 +91,24 @@ and a value with a unit can't be used as a register index.
 
 ## UFCN
 
+- <img src="../../assets/guide/menu/home-unit-ufcn.png" alt="HOME > UNIT > UFCN" width="320">
+    - <img src="../../assets/guide/menu/home-unit-ufcn-1.png" alt="HOME > UNIT > UFCN > Row 1" width="320">
+
 **UFCN** has **UVAL** (remove the unit, keeping the number shown) and
 **UBAS** (convert to the kind's base unit: m, m², m³, K, kg, N, Pa, J, W,
 s, m/s or L/100 km).
 
 ## Categories
+
+- <img src="../../assets/guide/menu/home-unit.png" alt="HOME > UNIT" width="320">
+    - <img src="../../assets/guide/menu/home-unit-1.png" alt="HOME > UNIT > Row 1" width="320">
+    - <img src="../../assets/guide/menu/home-unit-2.png" alt="HOME > UNIT > Row 2" width="320">
+    - <img src="../../assets/guide/menu/home-unit-3.png" alt="HOME > UNIT > Row 3" width="320">
+- <img src="../../assets/guide/menu/home-unit-leng.png" alt="HOME > UNIT > LENG" width="320">
+    - <img src="../../assets/guide/menu/home-unit-leng-1.png" alt="HOME > UNIT > LENG > Row 1" width="320">
+    - <img src="../../assets/guide/menu/home-unit-leng-2.png" alt="HOME > UNIT > LENG > Row 2" width="320">
+    - <img src="../../assets/guide/menu/home-unit-leng-3.png" alt="HOME > UNIT > LENG > Row 3" width="320">
+    - <img src="../../assets/guide/menu/home-unit-leng-4.png" alt="HOME > UNIT > LENG > Row 4" width="320">
 
 **LENG** (length), **AREA**, **VOL** (volume), **TEMP** (temperature),
 **MASS**, **FORC** (force), **PRES** (pressure), **ENER** (energy), **PWR**
@@ -115,13 +128,13 @@ zones, and a cable of 120 fathoms.
 
 **Setup:** DEC, FIX 4. Open **UNIT** → **LENG**. This exercise replaces A.
 
-| Keys or selection | Result | Explanation |
-| --- | --- | --- |
-| `12` **ft** | `12.0000 ft` | Attach feet to the numeric X value. |
-| `STO→ MATH` | X unchanged | Store the value and its unit in A. |
-| `CLEAR` | `0.0000` | Clear X. |
-| `2ND RCL MATH` | `12.0000 ft` | Restore the complete measurement. |
-| **m** | `3.6576 m` | Convert X; the stored A remains 12 ft. |
+| Keys or selection | Result | Explanation | Screen |
+| --- | --- | --- | --- |
+| `12` **ft** | `12.0000 ft` | Attach feet to the numeric X value. | <img src="../../assets/guide/screens/units-store-1.png" alt="After 12 ft" width="320"> |
+| `STO→ MATH` | X unchanged | Store the value and its unit in A. | <img src="../../assets/guide/screens/units-store-2.png" alt="After STO→ MATH" width="320"> |
+| `CLEAR` | `0.0000` | Clear X. | <img src="../../assets/guide/screens/units-store-3.png" alt="After CLEAR" width="320"> |
+| `2ND RCL MATH` | `12.0000 ft` | Restore the complete measurement. | <img src="../../assets/guide/screens/units-store-4.png" alt="After 2ND RCL MATH" width="320"> |
+| **m** | `3.6576 m` | Convert X; the stored A remains 12 ft. | <img src="../../assets/guide/screens/units-store-5.png" alt="After m" width="320"> |
 
 VARS also shows the unit on A. Ordinary stored quantities survive a normal
 exit and restart. Recalling, exchanging, or rolling a value carries its
@@ -132,11 +145,11 @@ the displayed numeric magnitude.
 
 **Setup:** DEC, FIX 4; **UNIT** → **ENER**.
 
-| Keys | Y | X | Explanation |
-| --- | --- | --- | --- |
-| `2` **kWh** | — | 2 kWh | Initial energy. |
-| `2000` **kcal** | 2 kWh | 2000 kcal | New entry lifts the first measurement. |
-| **HOME** → **NUM** → **%CH** | 2 kWh | approximately 16.2222 | Convert internally, then calculate percentage change. |
+| Keys | Y | X | Explanation | Screen |
+| --- | --- | --- | --- | --- |
+| `2` **kWh** | — | 2 kWh | Initial energy. | <img src="../../assets/guide/screens/units-energy-1.png" alt="After 2 kWh" width="320"> |
+| `2000` **kcal** | 2 kWh | 2000 kcal | New entry lifts the first measurement. | <img src="../../assets/guide/screens/units-energy-2.png" alt="After 2000 kcal" width="320"> |
+| **HOME** → **NUM** → **%CH** | 2 kWh | approximately 16.2222 | Convert internally, then calculate percentage change. | <img src="../../assets/guide/screens/units-energy-3.png" alt="After %CH" width="320"> |
 
 Use kWh from **ENER**, not kW from **PWR**: power and energy are different
 quantities. A kilowatt is a rate of energy use; a kilowatt-hour is energy.

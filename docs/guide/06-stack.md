@@ -30,17 +30,17 @@ and `T` (the top).
 - `ENTER` finishes a number and copies X into Y, so you can type the next
   one.
 
-![(2 + 3) × 4 step by step](../../assets/guide/stack-example.png)
+<img src="../../assets/guide/screens/stack-ex-1.png" alt="(2 + 3) × 4: after 2 ENTER 3" width="240"> <img src="../../assets/guide/screens/stack-ex-2.png" alt="(2 + 3) × 4: after +" width="240"> <img src="../../assets/guide/screens/stack-ex-3.png" alt="(2 + 3) × 4: after 4 ×" width="240">
 
 To work out (2 + 3) × 4: `2 ENTER 3 +` leaves 5, then `4 ×` gives 20. You
 never need parentheses; you just do the inner parts first, and the stack
 holds the pieces until you need them. A longer example, (3 + 4) × (5 + 6):
 
-| Keys | X | Y | Notes |
-| --- | --- | --- | --- |
-| `3 ENTER 4 +` | 7 | | first bracket |
-| `5 ENTER 6 +` | 11 | 7 | second bracket; 7 waits in Y |
-| `×` | 77 | | 7 × 11 |
+| Keys | X | Y | Notes | Screen |
+| --- | --- | --- | --- | --- |
+| `3 ENTER 4 +` | 7 | | first bracket | <img src="../../assets/guide/screens/stack-sums-1.png" alt="After 3 ENTER 4 +" width="320"> |
+| `5 ENTER 6 +` | 11 | 7 | second bracket; 7 waits in Y | <img src="../../assets/guide/screens/stack-sums-2.png" alt="After 5 ENTER 6 +" width="320"> |
+| `×` | 77 | | 7 × 11 | <img src="../../assets/guide/screens/stack-sums-3.png" alt="After ×" width="320"> |
 
 ## Stack lift
 
@@ -89,13 +89,13 @@ the current depth in X. CLEAR CLEAR and **CLST** clear every level.
 **Starting settings:** DEC, a four-level stack, FIX 4. Clear the stack
 with `CLEAR CLEAR` before this exercise. Work out `(2 + 3) × 4`:
 
-| Keys | T | Z | Y | X | What changed |
-| --- | --- | --- | --- | --- | --- |
-| `2 ENTER` | 0 | 0 | 2 | 2 | ENTER makes a copy of X. |
-| `3` | 0 | 0 | 2 | 3 | Entry replaces X because ENTER disabled lift. |
-| `+` | 0 | 0 | 0 | 5 | Addition combines Y and X and drops the stack. |
-| `4` | 0 | 0 | 5 | 4 | A new entry lifts the previous result into Y. |
-| `×` | 0 | 0 | 0 | 20 | Multiplication produces the answer. |
+| Keys | T | Z | Y | X | What changed | Screen |
+| --- | --- | --- | --- | --- | --- | --- |
+| `2 ENTER` | 0 | 0 | 2 | 2 | ENTER makes a copy of X. | <img src="../../assets/guide/screens/stack-levels-1.png" alt="After 2 ENTER" width="320"> |
+| `3` | 0 | 0 | 2 | 3 | Entry replaces X because ENTER disabled lift. | <img src="../../assets/guide/screens/stack-levels-2.png" alt="After 3" width="320"> |
+| `+` | 0 | 0 | 0 | 5 | Addition combines Y and X and drops the stack. | <img src="../../assets/guide/screens/stack-levels-3.png" alt="After +" width="320"> |
+| `4` | 0 | 0 | 5 | 4 | A new entry lifts the previous result into Y. | <img src="../../assets/guide/screens/stack-levels-4.png" alt="After 4" width="320"> |
+| `×` | 0 | 0 | 0 | 20 | Multiplication produces the answer. | <img src="../../assets/guide/screens/stack-levels-5.png" alt="After ×" width="320"> |
 
 The table omits decimal zeros for readability. On the calculator, FIX 4
 shows the final result as `20.0000`.
@@ -107,6 +107,8 @@ drops. Fill all four levels with 2 using `2 ENTER ENTER ENTER`, then
 press `×` repeatedly. X becomes 4, 8, 16, and so on; T continues to supply
 2. An expanded stack has the same rule at its highest level.
 
+<img src="../../assets/guide/screens/stack-const-1.png" alt="2 in every level" width="240"> <img src="../../assets/guide/screens/stack-const-2.png" alt="After ×" width="240"> <img src="../../assets/guide/screens/stack-const-3.png" alt="After × ×" width="240"> <img src="../../assets/guide/screens/stack-const-4.png" alt="After × × ×" width="240">
+
 ## Correcting an operation with LASTX
 
 Suppose you entered `12 ENTER 3 ÷`, but intended multiplication. X is 4
@@ -114,6 +116,8 @@ and LASTX is 3. `2ND ANS ×` reconstructs 12. A second `2ND ANS ×` gives
 36, the intended product. LASTX is an operand-recovery register, rather
 than a complete undo history: it does not restore overwritten registers,
 cleared statistics, or an earlier session.
+
+<img src="../../assets/guide/screens/stack-lastx-1.png" alt="After 12 ENTER 3 ÷" width="240"> <img src="../../assets/guide/screens/stack-lastx-2.png" alt="After 2ND ANS ×" width="240"> <img src="../../assets/guide/screens/stack-lastx-3.png" alt="After a second 2ND ANS ×" width="240">
 
 ---
 

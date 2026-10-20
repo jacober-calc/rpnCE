@@ -30,7 +30,7 @@ typing negates X.
 ## How numbers are shown
 
 - Up to 12 significant digits are shown, with commas between thousands:
-  `1,264.136046985`.
+  `1,264.13604699`.
 - A number too large or too small to show that way switches to scientific
   notation automatically, with up to 10 digits beside a small floating E:
   `6.02214076 ᴇ23`.
@@ -46,12 +46,12 @@ stored value. See [chapter 9](09-settings.md#9-display-formats-and-mode-settings
 
 **Starting settings:** DEC; FIX 4. This example enters 6.02 × 10⁻².
 
-| Keys | Entry or result | Explanation |
-| --- | --- | --- |
-| `6.02` | `6.02_` | Enter the mantissa. |
-| `,` | exponent entry | The comma key acts as EE outside a DATE record. |
-| `2 (−)` | exponent −2 | CHS changes the exponent's sign after EE. |
-| `ENTER` | `0.0602` | Finish entry. |
+| Keys | Entry or result | Explanation | Screen |
+| --- | --- | --- | --- |
+| `6.02` | `6.02_` | Enter the mantissa. | <img src="../../assets/guide/screens/entry-exp-1.png" alt="Typing 6.02" width="320"> |
+| `,` | exponent entry | The comma key acts as EE outside a DATE record. | <img src="../../assets/guide/screens/entry-exp-2.png" alt="After , : the exponent" width="320"> |
+| `2 (−)` | exponent −2 | CHS changes the exponent's sign after EE. | <img src="../../assets/guide/screens/entry-exp-3.png" alt="After 2 (−): exponent −2" width="320"> |
+| `ENTER` | `0.0602` | Finish entry. | <img src="../../assets/guide/screens/entry-exp-4.png" alt="After ENTER: 0.0602" width="320"> |
 
 Do not use the subtraction key to type a negative sign: subtraction
 performs an operation on Y and X. If you enter the wrong digit, use DEL

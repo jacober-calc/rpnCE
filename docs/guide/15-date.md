@@ -78,7 +78,7 @@ Outside a record, `2ND }` is still DROP.
 mode, scroll with ◂ and ▸. SHOW (`2ND ENTRY`) always shows the typed
 form.
 
-![DATE objects in ".." mode](../../assets/guide/date-strings.png)
+<img src="../../assets/guide/screens/date-strings.png" alt="DATE objects in &quot;..&quot; mode: a Date, a Time, a DayOfWeek and a Duration" width="320">
 
 ## Arithmetic with dates
 
@@ -114,16 +114,16 @@ Other math on a DATE object gives "Err: Data Type".
 
 ## Examples
 
-| Keys | Result |
-| --- | --- |
-| `2ND { 2024,12,25 ENTER 2ND { 2024,3,14 −` | 286 (days from March 14 to Christmas 2024) |
-| `2ND { 2024,3,14 ENTER 100 +` | `D{2024,6,22}` |
-| `2ND { 2024,3,14`, then **D** > **DOW** | `DW{4}` (a Thursday) |
-| `2ND { 2024,3,14,15,36,1,7 (−) ,0 ENTER 13 ×` | `DZ{2024,3,15,11,36,1,13,0}`: the same moment in Auckland (UTC+13) |
-| then `x⁻¹` (DCUT) | X is the TimeZone `TZ{13,0}`, Y the DateTime |
-| then **DT** > **DLNK** | joined back into the ZonedDateTime |
-| `2ND { 2024,12,25,0,0,0 ENTER 2ND { 2024,3,14,15,36,1 −` | 24,654,239 (seconds) |
-| then **DR** > **SEC→** | `DR{285,8,23,59}`: 285 days 8 h 23 min 59 s |
+| Keys | Result | Screen |
+| --- | --- | --- |
+| `2ND { 2024,12,25 ENTER 2ND { 2024,3,14 −` | 286 (days from March 14 to Christmas 2024) | |
+| `2ND { 2024,3,14 ENTER 100 +` | `D{2024,6,22}` | |
+| `2ND { 2024,3,14`, then **D** > **DOW** | `DW{4}` (a Thursday) | |
+| `2ND { 2024,3,14,15,36,1,7 (−) ,0 ENTER 13 ×` | `DZ{2024,3,15,11,36,1,13,0}`: the same moment in Auckland (UTC+13) | <img src="../../assets/guide/screens/date-cvtz-1.png" alt="The ZonedDateTime converted to UTC+13" width="320"> |
+| then `x⁻¹` (DCUT) | X is the TimeZone `TZ{13,0}`, Y the DateTime | <img src="../../assets/guide/screens/date-cvtz-2.png" alt="After DCUT: the DateTime in Y, the TimeZone in X" width="320"> |
+| then **DT** > **DLNK** | joined back into the ZonedDateTime | <img src="../../assets/guide/screens/date-cvtz-3.png" alt="After DLNK" width="320"> |
+| `2ND { 2024,12,25,0,0,0 ENTER 2ND { 2024,3,14,15,36,1 −` | 24,654,239 (seconds) | |
+| then **DR** > **SEC→** | `DR{285,8,23,59}`: 285 days 8 h 23 min 59 s | |
 
 ### Reading a time difference
 
@@ -132,16 +132,24 @@ example, `T{12,47,0} ENTER T{20,17,0} −` gives **−27,000**, which is
 −7 hours 30 minutes. Reversing the entries gives **+27,000**.
 RPN subtraction always calculates **Y − X**.
 
+<img src="../../assets/guide/screens/date-tdiff-1.png" alt="T{12,47,0} ENTER T{20,17,0} −" width="320">
+
 To show the result as a Duration, select **DATE** → **DR** → **SEC→**.
 The positive result becomes `DR{0,7,30,0}`; in string display mode it
 reads `7h 30m`. The negative result becomes `DR{0,-7,-30,0}`, shown as
 `-7h 30m` in string mode.
+
+<img src="../../assets/guide/screens/date-tdiff-2.png" alt="After SEC→: DR{0,-7,-30,0}" width="320">
 
 A Time has no date, so subtraction does not assume an overnight interval:
 `T{1,0,0} − T{23,0,0}` is −22 hours. Use DateTime objects with the actual
 dates when an interval crosses midnight.
 
 ## The DATE submenus
+
+- <img src="../../assets/guide/menu/home-date.png" alt="HOME > DATE" width="320">
+    - <img src="../../assets/guide/menu/home-date-1.png" alt="HOME > DATE > Row 1" width="320">
+    - <img src="../../assets/guide/menu/home-date-2.png" alt="HOME > DATE > Row 2" width="320">
 
 | Menu | Holds |
 | --- | --- |
@@ -154,6 +162,37 @@ dates when an interval crosses midnight.
 | **DW** | DayOfWeek: **DW{}**; **→ISO** and **ISO→** (Monday 1 to Sunday 7), **→UNX** and **UNX→** (Sunday 0 to Saturday 6) |
 | **EPCH** | the epoch for epoch days and seconds |
 | **CLK** | the CE's clock and time zones |
+
+- <img src="../../assets/guide/menu/home-date-d.png" alt="HOME > DATE > D" width="320">
+    - <img src="../../assets/guide/menu/home-date-d-1.png" alt="HOME > DATE > D > Row 1" width="320">
+    - <img src="../../assets/guide/menu/home-date-d-2.png" alt="HOME > DATE > D > Row 2" width="320">
+    - <img src="../../assets/guide/menu/home-date-d-3.png" alt="HOME > DATE > D > Row 3" width="320">
+    - <img src="../../assets/guide/menu/home-date-d-4.png" alt="HOME > DATE > D > Row 4" width="320">
+- <img src="../../assets/guide/menu/home-date-t.png" alt="HOME > DATE > T" width="320">
+    - <img src="../../assets/guide/menu/home-date-t-1.png" alt="HOME > DATE > T > Row 1" width="320">
+    - <img src="../../assets/guide/menu/home-date-t-2.png" alt="HOME > DATE > T > Row 2" width="320">
+- <img src="../../assets/guide/menu/home-date-dt.png" alt="HOME > DATE > DT" width="320">
+    - <img src="../../assets/guide/menu/home-date-dt-1.png" alt="HOME > DATE > DT > Row 1" width="320">
+    - <img src="../../assets/guide/menu/home-date-dt-2.png" alt="HOME > DATE > DT > Row 2" width="320">
+    - <img src="../../assets/guide/menu/home-date-dt-3.png" alt="HOME > DATE > DT > Row 3" width="320">
+- <img src="../../assets/guide/menu/home-date-tz.png" alt="HOME > DATE > TZ" width="320">
+    - <img src="../../assets/guide/menu/home-date-tz-1.png" alt="HOME > DATE > TZ > Row 1" width="320">
+- <img src="../../assets/guide/menu/home-date-dz.png" alt="HOME > DATE > DZ" width="320">
+    - <img src="../../assets/guide/menu/home-date-dz-1.png" alt="HOME > DATE > DZ > Row 1" width="320">
+    - <img src="../../assets/guide/menu/home-date-dz-2.png" alt="HOME > DATE > DZ > Row 2" width="320">
+    - <img src="../../assets/guide/menu/home-date-dz-3.png" alt="HOME > DATE > DZ > Row 3" width="320">
+    - <img src="../../assets/guide/menu/home-date-dz-4.png" alt="HOME > DATE > DZ > Row 4" width="320">
+- <img src="../../assets/guide/menu/home-date-dr.png" alt="HOME > DATE > DR" width="320">
+    - <img src="../../assets/guide/menu/home-date-dr-1.png" alt="HOME > DATE > DR > Row 1" width="320">
+    - <img src="../../assets/guide/menu/home-date-dr-2.png" alt="HOME > DATE > DR > Row 2" width="320">
+- <img src="../../assets/guide/menu/home-date-dw.png" alt="HOME > DATE > DW" width="320">
+    - <img src="../../assets/guide/menu/home-date-dw-1.png" alt="HOME > DATE > DW > Row 1" width="320">
+- <img src="../../assets/guide/menu/home-date-epch.png" alt="HOME > DATE > EPCH" width="320">
+    - <img src="../../assets/guide/menu/home-date-epch-1.png" alt="HOME > DATE > EPCH > Row 1" width="320">
+    - <img src="../../assets/guide/menu/home-date-epch-2.png" alt="HOME > DATE > EPCH > Row 2" width="320">
+- <img src="../../assets/guide/menu/home-date-clk.png" alt="HOME > DATE > CLK" width="320">
+    - <img src="../../assets/guide/menu/home-date-clk-1.png" alt="HOME > DATE > CLK > Row 1" width="320">
+    - <img src="../../assets/guide/menu/home-date-clk-2.png" alt="HOME > DATE > CLK > Row 2" width="320">
 
 **DLNK** joins a Date and a Time into a DateTime, or a DateTime and a
 TimeZone into a ZonedDateTime, in either order in X and Y.
@@ -229,11 +268,11 @@ conversion, including changes of calendar date across midnight.
 **Setup:** DEC; **MODE** row 4 **".."** for readable DATE output. A prior
 DATE or time-zone setting is not required for this date-only example.
 
-| Keys | X | Explanation |
-| --- | --- | --- |
-| `2ND { 2024 , 3 , 14 ENTER` | `2024-03-14` | Three fields identify a Date. |
-| `100 +` | `2024-06-22` | A plain number adds calendar days to a Date. |
-| **DATE** → **D** → **DOW** | `Sat` | Extract the day of the week. |
+| Keys | X | Explanation | Screen |
+| --- | --- | --- | --- |
+| `2ND { 2024 , 3 , 14 ENTER` | `2024-03-14` | Three fields identify a Date. | <img src="../../assets/guide/screens/date-days-1.png" alt="After 2ND { 2024 , 3 , 14 ENTER" width="320"> |
+| `100 +` | `2024-06-22` | A plain number adds calendar days to a Date. | <img src="../../assets/guide/screens/date-days-2.png" alt="After 100 +" width="320"> |
+| **DATE** → **D** → **DOW** | `Sat` | Extract the day of the week. | <img src="../../assets/guide/screens/date-days-3.png" alt="After DOW" width="320"> |
 
 The braces are the second functions of the parenthesis keys. The comma
 inside the record separates fields; it does not begin an exponent. A

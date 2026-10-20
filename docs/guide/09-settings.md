@@ -21,6 +21,12 @@ RPNCE 0.7.0 · User Guide
 | 3 | **RSIZ** **RSZ?** **TINT** **SSIZ** **SSZ?** |
 | 4 | **{..}** **".."** (how DATE objects are shown) |
 
+- <img src="../../assets/guide/menu/home-mode.png" alt="HOME > MODE" width="320">
+    - <img src="../../assets/guide/menu/home-mode-1.png" alt="HOME > MODE > Row 1" width="320">
+    - <img src="../../assets/guide/menu/home-mode-2.png" alt="HOME > MODE > Row 2" width="320">
+    - <img src="../../assets/guide/menu/home-mode-3.png" alt="HOME > MODE > Row 3" width="320">
+    - <img src="../../assets/guide/menu/home-mode-4.png" alt="HOME > MODE > Row 4" width="320">
+
 ## FIX, SCI and ENG
 
 Each asks for a number of digits: the prompt shows `FIX _`.
@@ -33,12 +39,12 @@ Each asks for a number of digits: the prompt shows `FIX _`.
   the status bar as `FIX-`. This is the default, and the same as ALL on an
   HP calculator.
 
-| Format | 1234.5678 shows as | 0.000012345 shows as |
-| --- | --- | --- |
-| FIX- | `1,234.5678` | `0.000012345` |
-| FIX 2 | `1,234.57` | `1.23 ᴇ-5` |
-| SCI 3 | `1.235 ᴇ3` | `1.235 ᴇ-5` |
-| ENG 2 | `1.23 ᴇ3` | `12.3 ᴇ-6` |
+| Format | 1234.5678 shows as | 0.000012345 shows as | Screen |
+| --- | --- | --- | --- |
+| FIX- | `1,234.5678` | `0.000012345` | <img src="../../assets/guide/screens/settings-fmt-all.png" alt="FIX-" width="320"> |
+| FIX 2 | `1,234.57` | `1.23 ᴇ-5` | <img src="../../assets/guide/screens/settings-fmt-fix2.png" alt="FIX 2" width="320"> |
+| SCI 3 | `1.235 ᴇ3` | `1.235 ᴇ-5` | <img src="../../assets/guide/screens/settings-fmt-sci3.png" alt="SCI 3" width="320"> |
+| ENG 2 | `1.23 ᴇ3` | `12.3 ᴇ-6` | <img src="../../assets/guide/screens/settings-fmt-eng2.png" alt="ENG 2" width="320"> |
 
 FIX switches to scientific notation by itself when a number is too large
 for 12 digits, or so small that it would show as zero. ENG is like SCI but
@@ -70,13 +76,13 @@ exact quarter turns give exact answers: `180 SIN` is exactly 0.
 
 Enter `1 ENTER 7 ÷`, then perform these steps:
 
-| Selection | Display or message | Meaning |
-| --- | --- | --- |
-| **FIX** `4` | `0.1429` | Four places after the decimal point. |
-| **SCI** `4` | approximately `1.4286 E−1` | Four places in the scientific mantissa. |
-| **ENG** `4` | approximately `142.86 E−3` | Engineering notation uses an exponent divisible by three. |
-| `2ND ENTRY` | approximately `0.14285714285714` | SHOW reveals the stored value. |
-| **FIX** `. 2` | approximately `0.142857142857` | Return to all available display digits. |
+| Selection | Display or message | Meaning | Screen |
+| --- | --- | --- | --- |
+| **FIX** `4` | `0.1429` | Four places after the decimal point. | <img src="../../assets/guide/screens/settings-pres-1.png" alt="FIX 4" width="320"> |
+| **SCI** `4` | approximately `1.4286 E−1` | Four places in the scientific mantissa. | <img src="../../assets/guide/screens/settings-pres-2.png" alt="SCI 4" width="320"> |
+| **ENG** `4` | approximately `142.86 E−3` | Engineering notation uses an exponent divisible by three. | <img src="../../assets/guide/screens/settings-pres-3.png" alt="ENG 4" width="320"> |
+| `2ND ENTRY` | approximately `0.14285714285714` | SHOW reveals the stored value. | <img src="../../assets/guide/screens/settings-pres-4.png" alt="SHOW" width="320"> |
+| **FIX** `. 2` | approximately `0.142857142857` | Return to all available display digits. | <img src="../../assets/guide/screens/settings-pres-5.png" alt="FIX . 2" width="320"> |
 
 The E notation in the table represents the display's small exponent
 marker. The numerical value remains unchanged throughout. A later RNDF

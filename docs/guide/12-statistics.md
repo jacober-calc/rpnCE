@@ -16,6 +16,11 @@ RPNCE 0.7.0 · User Guide
 
 ## Entering data
 
+- <img src="../../assets/guide/menu/home-stat.png" alt="HOME > STAT" width="320">
+    - <img src="../../assets/guide/menu/home-stat-1.png" alt="HOME > STAT > Row 1" width="320">
+    - <img src="../../assets/guide/menu/home-stat-2.png" alt="HOME > STAT > Row 2" width="320">
+    - <img src="../../assets/guide/menu/home-stat-3.png" alt="HOME > STAT > Row 3" width="320">
+
 Each data point is a pair (x, y). Enter `y ENTER x`, then press **Σ+** in
 the **STAT** menu. X then shows the number of points so far, and the next
 number you type replaces it, so entering data is quick. For one-variable
@@ -29,6 +34,11 @@ Example, five points: `3.1 ENTER 1` **Σ+**, `4.9 ENTER 2` **Σ+**,
 
 ## Results
 
+- <img src="../../assets/guide/menu/home-stat-sigma.png" alt="HOME > STAT > Σ" width="320">
+    - <img src="../../assets/guide/menu/home-stat-sigma-1.png" alt="HOME > STAT > Σ > Row 1" width="320">
+    - <img src="../../assets/guide/menu/home-stat-sigma-2.png" alt="HOME > STAT > Σ > Row 2" width="320">
+    - <img src="../../assets/guide/menu/home-stat-sigma-3.png" alt="HOME > STAT > Σ > Row 3" width="320">
+
 | Item | Gives (for the example data) |
 | --- | --- |
 | **SUM** | Σx in X and Σy in Y (15 and 35.1) |
@@ -41,6 +51,10 @@ Example, five points: `3.1 ENTER 1` **Σ+**, `4.9 ENTER 2` **Σ+**,
 | **Σ** | a submenu that recalls any of the 13 sums |
 
 ## Curve fitting
+
+- <img src="../../assets/guide/menu/home-stat-cfit.png" alt="HOME > STAT > CFIT" width="320">
+    - <img src="../../assets/guide/menu/home-stat-cfit-1.png" alt="HOME > STAT > CFIT > Row 1" width="320">
+    - <img src="../../assets/guide/menu/home-stat-cfit-2.png" alt="HOME > STAT > CFIT > Row 2" width="320">
 
 **CFIT** fits a curve to the data. Choose the model in its row 2:
 
@@ -81,17 +95,19 @@ data, and choose **ALLΣ**. Open **CFIT**, select **LINF**, then return to
 STAT. This explicitly selects the data mode and fit model rather than
 relying on remembered settings.
 
-| Keys | X after Σ+ | Explanation |
-| --- | --- | --- |
-| `3.1 ENTER 1` **Σ+** | 1 | Enter y first, then x. |
-| `4.9 ENTER 2` **Σ+** | 2 | Add the second point. |
-| `7.2 ENTER 3` **Σ+** | 3 | Add the third point. |
-| `8.8 ENTER 4` **Σ+** | 4 | Add the fourth point. |
-| `11.1 ENTER 5` **Σ+** | 5 | The displayed result is the observation count. |
+| Keys | X after Σ+ | Explanation | Screen |
+| --- | --- | --- | --- |
+| `3.1 ENTER 1` **Σ+** | 1 | Enter y first, then x. | <img src="../../assets/guide/screens/stat-entry-1.png" alt="After the first Σ+" width="320"> |
+| `4.9 ENTER 2` **Σ+** | 2 | Add the second point. | |
+| `7.2 ENTER 3` **Σ+** | 3 | Add the third point. | |
+| `8.8 ENTER 4` **Σ+** | 4 | Add the fourth point. | |
+| `11.1 ENTER 5` **Σ+** | 5 | The displayed result is the observation count. | <img src="../../assets/guide/screens/stat-entry-5.png" alt="After the fifth Σ+" width="320"> |
 
 Request **MEAN**: X = 3 and Y = 7.02. In **CFIT**, request **SLOP** for
 1.99 and **YINT** for 1.05. Enter `6`, then **X→Y**, to forecast 12.99
 from the fitted equation `y = 1.05 + 1.99x`.
+
+<img src="../../assets/guide/screens/stat-mean.png" alt="MEAN" width="240"> <img src="../../assets/guide/screens/stat-slop.png" alt="SLOP" width="240"> <img src="../../assets/guide/screens/stat-yint.png" alt="YINT" width="240"> <img src="../../assets/guide/screens/stat-forecast.png" alt="6 X→Y" width="240">
 
 To correct the last observation, re-enter `11.1 ENTER 5` and press **Σ−**.
 The count becomes 4. Enter the corrected y and x and use **Σ+** again.

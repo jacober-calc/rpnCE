@@ -13,3 +13,6 @@ __pycache__/
 
 # Release builds (tools/release.sh)
 release/
+
+# Screenshot tool downloads and builds (tools/screenshots/run.py)
+tools/screenshots/.cache/

@@ -41,6 +41,10 @@ get such values, work with the positive number and apply the sign yourself.
 
 ## MATH menu
 
+- <img src="../../assets/guide/menu/home-math.png" alt="HOME > MATH" width="320">
+    - <img src="../../assets/guide/menu/home-math-1.png" alt="HOME > MATH > Row 1" width="320">
+    - <img src="../../assets/guide/menu/home-math-2.png" alt="HOME > MATH > Row 2" width="320">
+
 | Item | Function | Example |
 | --- | --- | --- |
 | **X^3** | X³ | `3` **X^3** → 27 |
@@ -60,6 +64,12 @@ science where X is very small: for X = 0.00000000000001, ordinary
 ln(1 + X) loses every digit, but **LN1+** gives the right answer.
 
 ## NUM menu
+
+- <img src="../../assets/guide/menu/home-num.png" alt="HOME > NUM" width="320">
+    - <img src="../../assets/guide/menu/home-num-1.png" alt="HOME > NUM > Row 1" width="320">
+    - <img src="../../assets/guide/menu/home-num-2.png" alt="HOME > NUM > Row 2" width="320">
+    - <img src="../../assets/guide/menu/home-num-3.png" alt="HOME > NUM > Row 3" width="320">
+    - <img src="../../assets/guide/menu/home-num-4.png" alt="HOME > NUM > Row 4" width="320">
 
 | Item | Function |
 | --- | --- |
@@ -87,7 +97,12 @@ the factor out: `91` **PRIM** gives 7 (with 91 in Y), `÷` gives 13, and
 longer factorizations: `1981` **PRIM** gives 7, `÷` gives 283, and
 **PRIM** gives 1.
 
+<img src="../../assets/guide/screens/math-prim-1.png" alt="91 PRIM: 7, with 91 in Y" width="240"> <img src="../../assets/guide/screens/math-prim-2.png" alt="After ÷: 13" width="240"> <img src="../../assets/guide/screens/math-prim-3.png" alt="PRIM again: 1, so 13 is prime" width="240">
+
 ## PROB menu
+
+- <img src="../../assets/guide/menu/home-prob.png" alt="HOME > PROB" width="320">
+    - <img src="../../assets/guide/menu/home-prob-1.png" alt="HOME > PROB > Row 1" width="320">
 
 | Item | Function |
 | --- | --- |
@@ -99,11 +114,19 @@ longer factorizations: `1981` **PRIM** gives 7, `÷` gives 283, and
 
 ## HYP menu
 
+- <img src="../../assets/guide/menu/home-hyp.png" alt="HOME > HYP" width="320">
+    - <img src="../../assets/guide/menu/home-hyp-1.png" alt="HOME > HYP > Row 1" width="320">
+    - <img src="../../assets/guide/menu/home-hyp-2.png" alt="HOME > HYP > Row 2" width="320">
+
 **SINH**, **COSH**, **TANH** and their inverses **ASNH**, **ACSH**,
 **ATNH**, all accurate near zero. **ACSH** needs X ≥ 1 and **ATNH** needs
 −1 < X < 1.
 
 ## CONV menu
+
+- <img src="../../assets/guide/menu/home-conv.png" alt="HOME > CONV" width="320">
+    - <img src="../../assets/guide/menu/home-conv-1.png" alt="HOME > CONV > Row 1" width="320">
+    - <img src="../../assets/guide/menu/home-conv-2.png" alt="HOME > CONV > Row 2" width="320">
 
 | Item | Function |
 | --- | --- |
@@ -118,6 +141,13 @@ Example: in DEG mode, `4 ENTER 3` **→POL** gives r = 5 in X and an angle of
 53.1301° in Y.
 
 ## STK and CLR menus
+
+- <img src="../../assets/guide/menu/home-stk.png" alt="HOME > STK" width="320">
+    - <img src="../../assets/guide/menu/home-stk-1.png" alt="HOME > STK > Row 1" width="320">
+    - <img src="../../assets/guide/menu/home-stk-2.png" alt="HOME > STK > Row 2" width="320">
+- <img src="../../assets/guide/menu/home-clr.png" alt="HOME > CLR" width="320">
+    - <img src="../../assets/guide/menu/home-clr-1.png" alt="HOME > CLR > Row 1" width="320">
+    - <img src="../../assets/guide/menu/home-clr-2.png" alt="HOME > CLR > Row 2" width="320">
 
 **STK** holds the stack operations from [chapter 6](06-stack.md#moving-things-around)
 and **X<>** ([chapter 8](08-registers.md#exchanging-x-with-a-register)).
@@ -162,11 +192,11 @@ Find the total of 85 plus 7.5%.
 
 **Setup:** DEC, FIX 4; open **HOME** → **NUM**.
 
-| Keys | Y | X | Explanation |
-| --- | --- | --- | --- |
-| `85 ENTER 7.5` | 85 | 7.5 | Base amount in Y, percentage in X. |
-| **%** | 85 | 6.375 | Calculate the percentage; Y is preserved. |
-| `+` | — | 91.375 | Add the percentage amount to the original. |
+| Keys | Y | X | Explanation | Screen |
+| --- | --- | --- | --- | --- |
+| `85 ENTER 7.5` | 85 | 7.5 | Base amount in Y, percentage in X. | <img src="../../assets/guide/screens/math-pct-1.png" alt="After 85 ENTER 7.5" width="320"> |
+| **%** | 85 | 6.375 | Calculate the percentage; Y is preserved. | <img src="../../assets/guide/screens/math-pct-2.png" alt="After %" width="320"> |
+| `+` | — | 91.375 | Add the percentage amount to the original. | <img src="../../assets/guide/screens/math-pct-3.png" alt="After +" width="320"> |
 
 Use **RNDN** `2` if the next calculation must use 91.38 rather than the
 unrounded 91.375. Selecting FIX 2 alone changes only its appearance.
@@ -178,11 +208,15 @@ X is 20, because `(114 − 95) / 95 × 100 = 20%`; Y remains 95.
 The old amount belongs in Y. Reversing the operands answers a different
 question. A zero old amount gives division by zero.
 
+<img src="../../assets/guide/screens/math-pctch.png" alt="95 ENTER 114 %CH" width="320">
+
 ### Example: greatest divisor and least multiple
 
 Enter `18 ENTER 24`, then **GCD**, to obtain 6. Enter the pair again and
 select **LCM** to obtain 72. Both inputs must be nonnegative whole numbers;
 LCM with either input zero is zero. These functions do not accept quantities.
+
+<img src="../../assets/guide/screens/math-gcd.png" alt="18 ENTER 24 GCD" width="320"> <img src="../../assets/guide/screens/math-lcm.png" alt="18 ENTER 24 LCM" width="320">
 
 ### Integer and fractional parts
 
@@ -222,11 +256,11 @@ for it. The decimal-rounding implementation also gives `2.675` **RNDN** `2`
 
 **Setup:** DEC, DEG, FIX 4; open **HOME** row 2 → **CONV**.
 
-| Keys | Y | X | Meaning |
-| --- | --- | --- | --- |
-| `4 ENTER 3` | 4 | 3 | Point (x, y) = (3, 4). |
-| **→POL** | approximately 53.1301 | 5 | Angle in Y, radius in X. |
-| **→REC** | approximately 4 | approximately 3 | Convert back to y in Y, x in X. |
+| Keys | Y | X | Meaning | Screen |
+| --- | --- | --- | --- | --- |
+| `4 ENTER 3` | 4 | 3 | Point (x, y) = (3, 4). | <img src="../../assets/guide/screens/math-pol-1.png" alt="After 4 ENTER 3" width="320"> |
+| **→POL** | approximately 53.1301 | 5 | Angle in Y, radius in X. | <img src="../../assets/guide/screens/math-pol-2.png" alt="After →POL" width="320"> |
+| **→REC** | approximately 4 | approximately 3 | Convert back to y in Y, x in X. | <img src="../../assets/guide/screens/math-pol-3.png" alt="After →REC" width="320"> |
 
 For **ATN2**, use the same rectangular operand order: y in Y, x in X.
 Its result is the angle in the selected DEG or RAD mode. Selecting RAD
@@ -237,6 +271,8 @@ For hours/minutes/seconds, 1.30 means 1 hour 30 minutes, not 1.3 hours.
 Enter `1.30` **→HR** for 1.5 hours. With **HMS+**, `1.45 ENTER 0.30`
 produces 2.15, meaning 2 hours 15 minutes. These numeric H.MMSS functions
 are separate from the typed Time and Duration objects in DATE.
+
+<img src="../../assets/guide/screens/math-hms-1.png" alt="1.30 →HR" width="320"> <img src="../../assets/guide/screens/math-hms-2.png" alt="1.45 ENTER 0.30 HMS+" width="320">
 
 ## Hyperbolic domains
 

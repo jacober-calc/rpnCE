@@ -55,6 +55,8 @@ will run it on an unmodified newer OS.
    documented program-selection procedure.
 4. Confirm that the RPN display appears with T, Z, Y, and X and a menu row.
 
+   <img src="../../assets/guide/screens/install-first-run.png" alt="RPNCE on its first run" width="320">
+
 On the first run, the stack and ordinary registers begin at zero. On later
 runs, saved values and settings are restored. The shared TI-OS TVM values
 can already contain data; use CLTV before a new TVM problem when you intend

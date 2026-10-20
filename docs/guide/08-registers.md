@@ -38,7 +38,7 @@ prompt shows `STO _` in the X row, and the next key completes it. So
 `STO→ MATH` stores X in **A**, `STO→ SIN` in **E**, and so on. `2ND RCL`
 works the same way.
 
-![The STO prompt, completed](../../assets/guide/sto-prompt.png)
+<img src="../../assets/guide/screens/reg-sto-prompt.png" alt="The STO prompt, waiting for a register" width="320"> <img src="../../assets/guide/screens/reg-sto-flash.png" alt="The completed prompt, STO A, shown briefly" width="320">
 
 When you complete a prompt, it shows the full command, such as `STO A`, for
 a moment before it runs.
@@ -120,7 +120,7 @@ stays available until you clear the statistics with **CLΣ**.
    `C/YR`, always, even when zero ([chapter 13](13-tvm.md#13-tvm-time-value-of-money));
 3. `LASTX`, always, as the last entry.
 
-![The VARS catalog](../../assets/guide/vars-catalog.png)
+<img src="../../assets/guide/screens/reg-vars.png" alt="The VARS catalog" width="320">
 
 The up and down arrows move through the list; `ENTER` copies the selected
 value to X (with the usual stack lift) and closes the catalog; `ON`,
@@ -136,13 +136,13 @@ statistics are kept; clear them with **CLΣ**.
 
 **Starting settings:** DEC, FIX 4. This exercise replaces A.
 
-| Keys | A | X | Explanation |
-| --- | --- | --- | --- |
-| `100 STO→ MATH` | 100 | 100 | Store the starting amount in A. |
-| `25 STO→ + MATH` | 125 | 25 | Add X to A without moving the stack. |
-| `2ND RCL MATH` | 125 | 125 | Recall the updated register. |
-| `5` | 125 | 5 | Start a second operand; 125 moves into Y. |
-| `2ND RCL ÷ MATH` | 125 | 0.04 | RCL÷ divides X by A; A remains 125. |
+| Keys | A | X | Explanation | Screen |
+| --- | --- | --- | --- | --- |
+| `100 STO→ MATH` | 100 | 100 | Store the starting amount in A. | <img src="../../assets/guide/screens/reg-acc-1.png" alt="After 100 STO→ MATH" width="320"> |
+| `25 STO→ + MATH` | 125 | 25 | Add X to A without moving the stack. | <img src="../../assets/guide/screens/reg-acc-2.png" alt="After 25 STO→ + MATH" width="320"> |
+| `2ND RCL MATH` | 125 | 125 | Recall the updated register. | <img src="../../assets/guide/screens/reg-acc-3.png" alt="After 2ND RCL MATH" width="320"> |
+| `5` | 125 | 5 | Start a second operand; 125 moves into Y. | <img src="../../assets/guide/screens/reg-acc-4.png" alt="After 5" width="320"> |
+| `2ND RCL ÷ MATH` | 125 | 0.04 | RCL÷ divides X by A; A remains 125. | <img src="../../assets/guide/screens/reg-acc-5.png" alt="After 2ND RCL ÷ MATH" width="320"> |
 
 STO arithmetic writes to the named register. RCL arithmetic replaces X.
 For subtraction and division, the order is important:
@@ -166,7 +166,12 @@ set. A larger existing register set need not be reduced.
 1. Enter `41 STO→ .` to put the destination number in i.
 2. Enter `123 STO→ 2ND .` to store 123 in register 041.
 3. Clear X and press `2ND RCL 2ND .` to recall 123.
+
+   <img src="../../assets/guide/screens/reg-extra-1.png" alt="Register 041 recalled through (i)" width="320">
+
 4. Open VARS to find `R041=123`.
+
+   <img src="../../assets/guide/screens/reg-extra-2.png" alt="VARS, showing i and R041" width="320">
 
 Selecting **RSIZ** replaces the size setting; reducing the size discards
 registers above the new limit. **CLRG** clears ordinary register values

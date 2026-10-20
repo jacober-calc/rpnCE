@@ -22,6 +22,10 @@ its top, **HOME**, which has three rows:
 | 2 | **BASE** **HYP** **STAT** **CONV** **HELP** |
 | 3 | **CLR** **MODE** **STK** **UNIT** **DATE** |
 
+- <img src="../../assets/guide/menu/home-1.png" alt="HOME > Row 1" width="320">
+- <img src="../../assets/guide/menu/home-2.png" alt="HOME > Row 2" width="320">
+- <img src="../../assets/guide/menu/home-3.png" alt="HOME > Row 3" width="320">
+
 [Appendix B](19-reference.md#appendix-b-menu-map) lists every menu and item.
 
 ## Using menus
@@ -40,7 +44,7 @@ its top, **HOME**, which has three rows:
 - **Settings** show which choice is active with a ■: **FIX■**, **DEG■**,
   **BEG■**, **HEX■**.
 
-![The MODE menu, with FIX and DEG active](../../assets/guide/mode-menu.png)
+<img src="../../assets/guide/screens/menus-mode.png" alt="The MODE menu, with FIX and DEG active" width="320">
 
 ## Menu shortcuts
 
@@ -68,6 +72,8 @@ using HELP and the menus, the RPN stack, variables, key shortcuts, one page
 per main menu, and About (the version and GitHub repository). The up and
 down arrows change pages and wrap around; `UP` from the first page opens
 About. `ENTER`, `CLEAR`, `DEL` or `ON` returns to the calculator.
+
+<img src="../../assets/guide/screens/menus-help-1.png" alt="HELP, page 1" width="320"> <img src="../../assets/guide/screens/menus-help-about.png" alt="HELP, the About page" width="320">
 
 ---
 

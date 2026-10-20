@@ -23,7 +23,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GUIDE = os.path.join(ROOT, 'docs', 'guide', '19-reference.md')
 
 # menu label symbols, as shown on the calculator
-SYMBOLS = {'sq': '²', 'cube': '³', 'cuberoot': '³√', 'root': '√', 'sigma': 'Σ',
+SYMBOLS = {'sq': '²', 'cube': '³', 'cuberoot': '³', 'root': '√', 'sigma': 'Σ',
            'to': '→', 'block': '', 'mu': 'µ', 'deg': '°', 'up': '↑', 'down': '↓',
            'left': '←', 'times': '×', 'supx': 'ˣ'}
 
@@ -52,23 +52,31 @@ def menu_map(roots):
     lines = ['Submenus are shown in brackets, such as [NUM]; · is an empty slot.',
              'Each row lists the five menu keys, from Y= to GRAPH.', '']
 
-    def walk(g, path):
+    def walk(g, path, raw):
         lines.append(f'**{" > ".join(path)}**')
         lines.append('')
-        lines.append('| Row | Keys |')
-        lines.append('| --- | --- |')
+        lines.append('| Row | Keys | Screen |')
+        lines.append('| --- | --- | --- |')
         for i, row in enumerate(g.rows, 1):
             cells = [node_label(n) for n in row] + ['·'] * (5 - len(row))
-            lines.append(f'| {i} | ' + ' &nbsp; '.join(cells) + ' |')
+            shot = (f'<img src="../../assets/guide/menu/{menu_file(raw)}-{i}.png" '
+                    f'alt="{" > ".join(path)} > Row {i}" width="320">')
+            lines.append(f'| {i} | ' + ' &nbsp; '.join(cells) + f' | {shot} |')
         lines.append('')
         for row in g.rows:
             for n in row:
                 if isinstance(n, genmenu.Group):
-                    walk(n, path + [label(n.label)])
+                    walk(n, path + [label(n.label)], raw + [n.label])
 
     for r in roots:
-        walk(r, [label(r.label)])
+        walk(r, [label(r.label)], [r.label])
     return lines
+
+
+def menu_file(raw_path):
+    """The menu-row image name made by tools/screenshots/run.py:
+    ['HOME', 'STAT', '{sigma}'] -> 'home-stat-sigma'."""
+    return '-'.join(re.sub(r'[^a-z0-9]+', '', re.sub(r'\{(\w+)\}', r'\1', p.lower())) for p in raw_path)
 
 
 def unit_list(roots):

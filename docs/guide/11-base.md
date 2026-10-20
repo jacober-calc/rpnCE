@@ -17,13 +17,17 @@ RPNCE 0.7.0 · User Guide
 
 ## Choosing a base
 
+- <img src="../../assets/guide/menu/home-base.png" alt="HOME > BASE" width="320">
+    - <img src="../../assets/guide/menu/home-base-1.png" alt="HOME > BASE > Row 1" width="320">
+    - <img src="../../assets/guide/menu/home-base-2.png" alt="HOME > BASE > Row 2" width="320">
+
 **BASE** row 1 sets how whole numbers are shown and typed: **DEC**
 (ordinary numbers), **HEX**, **OCT** or **BIN**. The status bar shows the
 base. In HEX, OCT and BIN every stack value that's a whole number within the
 word size is shown in that base; the values themselves don't change, so
 switching back to DEC shows them as before.
 
-![HEX mode, with a value too big for the word size](../../assets/guide/base-hex.png)
+<img src="../../assets/guide/screens/base-hex.png" alt="HEX mode, with a value too big for the word size" width="320">
 
 ## Typing in a base
 
@@ -73,6 +77,19 @@ gives the quotient in Y and the remainder in X. Example in HEX:
 | **BFCN** | **BAS+**, **BAS−** (carry on overflow or borrow), **BAS×**, **BAS/**, **BDIV** |
 | **BCFS** | **CCF**, **SCF**, **CF?**: clear, set or test the carry flag; **WSIZ**, **WSZ?** |
 
+- <img src="../../assets/guide/menu/home-base-logi.png" alt="HOME > BASE > LOGI" width="320">
+    - <img src="../../assets/guide/menu/home-base-logi-1.png" alt="HOME > BASE > LOGI > Row 1" width="320">
+- <img src="../../assets/guide/menu/home-base-rots.png" alt="HOME > BASE > ROTS" width="320">
+    - <img src="../../assets/guide/menu/home-base-rots-1.png" alt="HOME > BASE > ROTS > Row 1" width="320">
+    - <img src="../../assets/guide/menu/home-base-rots-2.png" alt="HOME > BASE > ROTS > Row 2" width="320">
+    - <img src="../../assets/guide/menu/home-base-rots-3.png" alt="HOME > BASE > ROTS > Row 3" width="320">
+- <img src="../../assets/guide/menu/home-base-bits.png" alt="HOME > BASE > BITS" width="320">
+    - <img src="../../assets/guide/menu/home-base-bits-1.png" alt="HOME > BASE > BITS > Row 1" width="320">
+- <img src="../../assets/guide/menu/home-base-bfcn.png" alt="HOME > BASE > BFCN" width="320">
+    - <img src="../../assets/guide/menu/home-base-bfcn-1.png" alt="HOME > BASE > BFCN > Row 1" width="320">
+- <img src="../../assets/guide/menu/home-base-bcfs.png" alt="HOME > BASE > BCFS" width="320">
+    - <img src="../../assets/guide/menu/home-base-bcfs-1.png" alt="HOME > BASE > BCFS > Row 1" width="320">
+
 Shifts and rotates set the carry to the last bit moved out, and the status
 bar shows **C** after the base while the carry flag is set.
 
@@ -83,11 +100,11 @@ bar shows **C** after the base while the carry flag is set.
 row 2 **BCFS** → **WSIZ**. Return to **BASE** and select **HEX**.
 Changing word size replaces the saved BASE word-size setting.
 
-| Keys or selection | X | Carry | Explanation |
-| --- | --- | --- | --- |
-| `ALPHA COS ALPHA COS ENTER` | FF | unchanged | Enter 255 and copy it into Y. |
-| `2 +` | 1 | set | 255 + 2 wraps at 256. |
-| **DEC** | 1 | set | The base changes how the same value is shown. |
+| Keys or selection | X | Carry | Explanation | Screen |
+| --- | --- | --- | --- | --- |
+| `ALPHA COS ALPHA COS ENTER` | FF | unchanged | Enter 255 and copy it into Y. | <img src="../../assets/guide/screens/base-ovf-1.png" alt="FF in an 8-bit word" width="320"> |
+| `2 +` | 1 | set | 255 + 2 wraps at 256. | <img src="../../assets/guide/screens/base-ovf-2.png" alt="After 2 +: 1, with the carry flag set" width="320"> |
+| **DEC** | 1 | set | The base changes how the same value is shown. | <img src="../../assets/guide/screens/base-ovf-3.png" alt="The same value in DEC" width="320"> |
 
 The display does not pad a word with leading zeros. `1` is the eight-bit
 result 00000001. Carry remains set until an operation changes it or you
@@ -100,9 +117,20 @@ not interpret an old carry flag as the result of an unrelated operation.
 ALPHA plus their letter keys.
 
 1. Enter `ALPHA APPS 6 ENTER 6 5` for B6 in Y and 65 in X.
+
+   <img src="../../assets/guide/screens/base-mask-1.png" alt="B6 in Y, 65 in X" width="320">
+
 2. Open **LOGI**, then press **AND**. X becomes 24 (hexadecimal).
+
+   <img src="../../assets/guide/screens/base-mask-2.png" alt="After AND: 24" width="320">
+
 3. Return to BASE and choose **BIN**: X is `100100`.
+
+   <img src="../../assets/guide/screens/base-mask-3.png" alt="In BIN: 100100" width="320">
+
 4. Choose **DEC**: X is 36.
+
+   <img src="../../assets/guide/screens/base-mask-4.png" alt="In DEC: 36" width="320">
 
 Bit numbering begins with zero at the right-hand, least significant bit.
 In **BITS**, **B?** uses the bit number in X and the word in Y, returning
@@ -125,6 +153,8 @@ its starting state.
 quotient in Y and remainder in X. In DEC, `17 ENTER 5`, followed by
 **BASE** → **BFCN** → **BDIV**, gives Y = 3 and X = 2. The BFCN menu
 functions explicitly perform word arithmetic even when DEC is selected.
+
+<img src="../../assets/guide/screens/base-bdiv.png" alt="17 ENTER 5 BDIV: quotient 3 in Y, remainder 2 in X" width="320">
 
 After these exercises, restore **DEC** and, if desired, set **WSIZ** to
 32. Selecting DEC returns the ordinary arithmetic keys to real arithmetic;

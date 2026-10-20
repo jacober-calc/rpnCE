@@ -12,7 +12,7 @@ RPNCE 0.7.0 · User Guide
 - [Menu row](#menu-row)
 - [Screen colors](#screen-colors)
 
-![The parts of the screen](../../assets/guide/screen-anatomy.png)
+<img src="../../assets/guide/screens/display-anatomy-labelled.png" alt="The parts of the screen" width="530">
 
 The display has four areas, arranged from top to bottom. The illustration
 identifies them; each is described in this chapter.
@@ -21,7 +21,7 @@ identifies them; each is described in this chapter.
 
 The dark strip at the top shows the calculator's state.
 
-![Status bar examples](../../assets/guide/status-bar.png)
+<img src="../../assets/guide/screens/display-status.png" alt="The status bar: FIX4 DEG DEC; RAD with the 2ND badge; SCI3 HEX with carry and the A badge" width="320">
 
 | Item | Meaning |
 | --- | --- |
@@ -57,6 +57,8 @@ font. `X` is where numbers are typed and where results appear.
   hidden. Press ◂ and ▸ (the left and right arrow keys) to scroll through X.
 - While you type a number, X shows it with a cursor: `3_`.
 
+  <img src="../../assets/guide/screens/display-scroll.png" alt="A 32-bit binary value in X, showing its right end with ◂" width="320">
+
 ## Menu row
 
 The bottom row shows five dark boxes, one for each menu key. A short line
@@ -69,16 +71,16 @@ setting, such as **DEG■**. An empty slot has no box.
 `MODE`, then row 3, **TINT**, cycles through eight color schemes; the
 message line names each one as you go, and the choice is remembered:
 
-| Tint | Look |
-| --- | --- |
-| **LCD** | gray-green, like a classic calculator LCD (the default) |
-| **LCD+** | a stronger green that holds up better on the CE's real screen, which tends to wash colors out |
-| **GRAY** | warm gray, like the SwissMicros calculators |
-| **INVERTED** | light digits on a near-black panel |
-| **AYU DARK** | a deep blue-gray background with amber and blue accents |
-| **MONOKAI** | charcoal, with purple, cyan, green and pink stack values |
-| **PASTEL** | a light background with distinct row colors and pastel menu keys |
-| **COMMODORE** | phosphor greens on near-black, with brighter X digits |
+| Tint | Look | Screen |
+| --- | --- | --- |
+| **LCD** | gray-green, like a classic calculator LCD (the default) | <img src="../../assets/guide/screens/tint-1.png" alt="The LCD tint" width="240"> |
+| **LCD+** | a stronger green that holds up better on the CE's real screen, which tends to wash colors out | <img src="../../assets/guide/screens/tint-2.png" alt="The LCD+ tint" width="240"> |
+| **GRAY** | warm gray, like the SwissMicros calculators | <img src="../../assets/guide/screens/tint-3.png" alt="The GRAY tint" width="240"> |
+| **INVERTED** | light digits on a near-black panel | <img src="../../assets/guide/screens/tint-4.png" alt="The INVERTED tint" width="240"> |
+| **AYU DARK** | a deep blue-gray background with amber and blue accents | <img src="../../assets/guide/screens/tint-5.png" alt="The AYU DARK tint" width="240"> |
+| **MONOKAI** | charcoal, with purple, cyan, green and pink stack values | <img src="../../assets/guide/screens/tint-6.png" alt="The MONOKAI tint" width="240"> |
+| **PASTEL** | a light background with distinct row colors and pastel menu keys | <img src="../../assets/guide/screens/tint-7.png" alt="The PASTEL tint" width="240"> |
+| **COMMODORE** | phosphor greens on near-black, with brighter X digits | <img src="../../assets/guide/screens/tint-8.png" alt="The COMMODORE tint" width="240"> |
 
 ---
 

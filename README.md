@@ -141,7 +141,8 @@ data/        RPNCEres.bin: the RPNCEres appvar's contents (generated)
 tools/       guide_appendix.py: regenerates the manual's menu map, unit list
              and function index; genres.py: builds RPNCEres and the matching headers from
              menus.txt (via genmenu.py) and the unit definitions
-             (genunits.py); release.sh: packages a release
+             (genunits.py); release.sh: packages a release;
+             screenshots/: makes the user guide's screenshots
 tests/       PC test suites and run_tests.sh
 docs/        USER_GUIDE.md: manual contents; guide/: chapters and reference
              tables; key reference, roadmap, and install notes
@@ -160,6 +161,13 @@ to refresh the menu map, unit list, and function index in
 `docs/guide/19-reference.md`. Update the operating instructions and examples
 in the corresponding chapter when behavior changes; generated tables do
 not replace those explanations. Both generators need the `mpmath` package.
+
+The user guide's screenshots are made by running RPNCE's real code on a PC:
+`python3 tools/screenshots/run.py` rebuilds every image in `assets/guide/`
+from the keystroke scripts in `tools/screenshots/shots.py`. It needs a C
+compiler and Pillow, and downloads the CE system font from the CE toolchain
+once. Run it after changes that affect what the screen shows, then run
+`tools/guide_appendix.py` so the menu map uses the new images.
 
 ## License
 

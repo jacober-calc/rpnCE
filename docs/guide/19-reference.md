@@ -68,399 +68,399 @@ Each row lists the five menu keys, from Y= to GRAPH.
 
 **HOME**
 
-| Row | Keys |
-| --- | --- |
-| 1 | [MATH] &nbsp; [NUM] &nbsp; [PROB] &nbsp; [CPLX] &nbsp; [TVM] |
-| 2 | [BASE] &nbsp; [HYP] &nbsp; [STAT] &nbsp; [CONV] &nbsp; HELP |
-| 3 | [CLR] &nbsp; [MODE] &nbsp; [STK] &nbsp; [UNIT] &nbsp; [DATE] |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | [MATH] &nbsp; [NUM] &nbsp; [PROB] &nbsp; [CPLX] &nbsp; [TVM] | <img src="../../assets/guide/menu/home-1.png" alt="HOME > Row 1" width="320"> |
+| 2 | [BASE] &nbsp; [HYP] &nbsp; [STAT] &nbsp; [CONV] &nbsp; HELP | <img src="../../assets/guide/menu/home-2.png" alt="HOME > Row 2" width="320"> |
+| 3 | [CLR] &nbsp; [MODE] &nbsp; [STK] &nbsp; [UNIT] &nbsp; [DATE] | <img src="../../assets/guide/menu/home-3.png" alt="HOME > Row 3" width="320"> |
 
 **HOME > MATH**
 
-| Row | Keys |
-| --- | --- |
-| 1 | X^3 &nbsp; ³√√X &nbsp; X√Y &nbsp; ATN2 &nbsp; · |
-| 2 | 2^X &nbsp; LOG2 &nbsp; LOGB &nbsp; E^X- &nbsp; LN1+ |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | X^3 &nbsp; ³√X &nbsp; X√Y &nbsp; ATN2 &nbsp; · | <img src="../../assets/guide/menu/home-math-1.png" alt="HOME > MATH > Row 1" width="320"> |
+| 2 | 2^X &nbsp; LOG2 &nbsp; LOGB &nbsp; E^X- &nbsp; LN1+ | <img src="../../assets/guide/menu/home-math-2.png" alt="HOME > MATH > Row 2" width="320"> |
 
 **HOME > NUM**
 
-| Row | Keys |
-| --- | --- |
-| 1 | % &nbsp; %CH &nbsp; GCD &nbsp; LCM &nbsp; PRIM |
-| 2 | IP &nbsp; FP &nbsp; FLR &nbsp; CEIL &nbsp; NEAR |
-| 3 | ABS &nbsp; SIGN &nbsp; MOD &nbsp; MIN &nbsp; MAX |
-| 4 | RNDF &nbsp; RNDN &nbsp; RNDG &nbsp; · &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | % &nbsp; %CH &nbsp; GCD &nbsp; LCM &nbsp; PRIM | <img src="../../assets/guide/menu/home-num-1.png" alt="HOME > NUM > Row 1" width="320"> |
+| 2 | IP &nbsp; FP &nbsp; FLR &nbsp; CEIL &nbsp; NEAR | <img src="../../assets/guide/menu/home-num-2.png" alt="HOME > NUM > Row 2" width="320"> |
+| 3 | ABS &nbsp; SIGN &nbsp; MOD &nbsp; MIN &nbsp; MAX | <img src="../../assets/guide/menu/home-num-3.png" alt="HOME > NUM > Row 3" width="320"> |
+| 4 | RNDF &nbsp; RNDN &nbsp; RNDG &nbsp; · &nbsp; · | <img src="../../assets/guide/menu/home-num-4.png" alt="HOME > NUM > Row 4" width="320"> |
 
 **HOME > PROB**
 
-| Row | Keys |
-| --- | --- |
-| 1 | COMB &nbsp; PERM &nbsp; N! &nbsp; RAND &nbsp; SEED |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | COMB &nbsp; PERM &nbsp; N! &nbsp; RAND &nbsp; SEED | <img src="../../assets/guide/menu/home-prob-1.png" alt="HOME > PROB > Row 1" width="320"> |
 
 **HOME > CPLX**
 
-| Row | Keys |
-| --- | --- |
-| 1 | REAL &nbsp; IMAG &nbsp; CONJ &nbsp; CABS &nbsp; CANG |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | REAL &nbsp; IMAG &nbsp; CONJ &nbsp; CABS &nbsp; CANG | <img src="../../assets/guide/menu/home-cplx-1.png" alt="HOME > CPLX > Row 1" width="320"> |
 
 **HOME > TVM**
 
-| Row | Keys |
-| --- | --- |
-| 1 | N &nbsp; I%YR &nbsp; PV &nbsp; PMT &nbsp; FV |
-| 2 | P/YR &nbsp; C/YR &nbsp; BEG &nbsp; END &nbsp; CLTV |
-| 3 | IYR1 &nbsp; IYR2 &nbsp; TMAX &nbsp; · &nbsp; RSTV |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | N &nbsp; I%YR &nbsp; PV &nbsp; PMT &nbsp; FV | <img src="../../assets/guide/menu/home-tvm-1.png" alt="HOME > TVM > Row 1" width="320"> |
+| 2 | P/YR &nbsp; C/YR &nbsp; BEG &nbsp; END &nbsp; CLTV | <img src="../../assets/guide/menu/home-tvm-2.png" alt="HOME > TVM > Row 2" width="320"> |
+| 3 | IYR1 &nbsp; IYR2 &nbsp; TMAX &nbsp; · &nbsp; RSTV | <img src="../../assets/guide/menu/home-tvm-3.png" alt="HOME > TVM > Row 3" width="320"> |
 
 **HOME > BASE**
 
-| Row | Keys |
-| --- | --- |
-| 1 | DEC &nbsp; HEX &nbsp; OCT &nbsp; BIN &nbsp; · |
-| 2 | [LOGI] &nbsp; [ROTS] &nbsp; [BITS] &nbsp; [BFCN] &nbsp; [BCFS] |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | DEC &nbsp; HEX &nbsp; OCT &nbsp; BIN &nbsp; · | <img src="../../assets/guide/menu/home-base-1.png" alt="HOME > BASE > Row 1" width="320"> |
+| 2 | [LOGI] &nbsp; [ROTS] &nbsp; [BITS] &nbsp; [BFCN] &nbsp; [BCFS] | <img src="../../assets/guide/menu/home-base-2.png" alt="HOME > BASE > Row 2" width="320"> |
 
 **HOME > BASE > LOGI**
 
-| Row | Keys |
-| --- | --- |
-| 1 | AND &nbsp; OR &nbsp; XOR &nbsp; NOT &nbsp; NEG |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | AND &nbsp; OR &nbsp; XOR &nbsp; NOT &nbsp; NEG | <img src="../../assets/guide/menu/home-base-logi-1.png" alt="HOME > BASE > LOGI > Row 1" width="320"> |
 
 **HOME > BASE > ROTS**
 
-| Row | Keys |
-| --- | --- |
-| 1 | SL &nbsp; SR &nbsp; ASR &nbsp; SLn &nbsp; SRn |
-| 2 | RL &nbsp; RR &nbsp; RLC &nbsp; RRC &nbsp; · |
-| 3 | RLn &nbsp; RRn &nbsp; RLCn &nbsp; RRCn &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | SL &nbsp; SR &nbsp; ASR &nbsp; SLn &nbsp; SRn | <img src="../../assets/guide/menu/home-base-rots-1.png" alt="HOME > BASE > ROTS > Row 1" width="320"> |
+| 2 | RL &nbsp; RR &nbsp; RLC &nbsp; RRC &nbsp; · | <img src="../../assets/guide/menu/home-base-rots-2.png" alt="HOME > BASE > ROTS > Row 2" width="320"> |
+| 3 | RLn &nbsp; RRn &nbsp; RLCn &nbsp; RRCn &nbsp; · | <img src="../../assets/guide/menu/home-base-rots-3.png" alt="HOME > BASE > ROTS > Row 3" width="320"> |
 
 **HOME > BASE > BITS**
 
-| Row | Keys |
-| --- | --- |
-| 1 | CB &nbsp; SB &nbsp; B? &nbsp; REVB &nbsp; CNTB |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | CB &nbsp; SB &nbsp; B? &nbsp; REVB &nbsp; CNTB | <img src="../../assets/guide/menu/home-base-bits-1.png" alt="HOME > BASE > BITS > Row 1" width="320"> |
 
 **HOME > BASE > BFCN**
 
-| Row | Keys |
-| --- | --- |
-| 1 | BAS+ &nbsp; BAS- &nbsp; BAS× &nbsp; BAS/ &nbsp; BDIV |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | BAS+ &nbsp; BAS- &nbsp; BAS× &nbsp; BAS/ &nbsp; BDIV | <img src="../../assets/guide/menu/home-base-bfcn-1.png" alt="HOME > BASE > BFCN > Row 1" width="320"> |
 
 **HOME > BASE > BCFS**
 
-| Row | Keys |
-| --- | --- |
-| 1 | CCF &nbsp; SCF &nbsp; CF? &nbsp; WSIZ &nbsp; WSZ? |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | CCF &nbsp; SCF &nbsp; CF? &nbsp; WSIZ &nbsp; WSZ? | <img src="../../assets/guide/menu/home-base-bcfs-1.png" alt="HOME > BASE > BCFS > Row 1" width="320"> |
 
 **HOME > HYP**
 
-| Row | Keys |
-| --- | --- |
-| 1 | · &nbsp; SINH &nbsp; COSH &nbsp; TANH &nbsp; · |
-| 2 | · &nbsp; ASNH &nbsp; ACSH &nbsp; ATNH &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | · &nbsp; SINH &nbsp; COSH &nbsp; TANH &nbsp; · | <img src="../../assets/guide/menu/home-hyp-1.png" alt="HOME > HYP > Row 1" width="320"> |
+| 2 | · &nbsp; ASNH &nbsp; ACSH &nbsp; ATNH &nbsp; · | <img src="../../assets/guide/menu/home-hyp-2.png" alt="HOME > HYP > Row 2" width="320"> |
 
 **HOME > STAT**
 
-| Row | Keys |
-| --- | --- |
-| 1 | Σ+ &nbsp; Σ- &nbsp; ALLΣ &nbsp; LINΣ &nbsp; CLΣ |
-| 2 | SUM &nbsp; MEAN &nbsp; WMN &nbsp; N &nbsp; [Σ] |
-| 3 | SDEV &nbsp; SCOV &nbsp; PDEV &nbsp; PCOV &nbsp; [CFIT] |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | Σ+ &nbsp; Σ- &nbsp; ALLΣ &nbsp; LINΣ &nbsp; CLΣ | <img src="../../assets/guide/menu/home-stat-1.png" alt="HOME > STAT > Row 1" width="320"> |
+| 2 | SUM &nbsp; MEAN &nbsp; WMN &nbsp; N &nbsp; [Σ] | <img src="../../assets/guide/menu/home-stat-2.png" alt="HOME > STAT > Row 2" width="320"> |
+| 3 | SDEV &nbsp; SCOV &nbsp; PDEV &nbsp; PCOV &nbsp; [CFIT] | <img src="../../assets/guide/menu/home-stat-3.png" alt="HOME > STAT > Row 3" width="320"> |
 
 **HOME > STAT > Σ**
 
-| Row | Keys |
-| --- | --- |
-| 1 | ΣX &nbsp; ΣX2 &nbsp; ΣY &nbsp; ΣY2 &nbsp; ΣXY |
-| 2 | ΣN &nbsp; ΣLX &nbsp; ΣLX2 &nbsp; ΣLY &nbsp; ΣLY2 |
-| 3 | ΣLXL &nbsp; ΣXLY &nbsp; ΣYLX &nbsp; · &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | ΣX &nbsp; ΣX2 &nbsp; ΣY &nbsp; ΣY2 &nbsp; ΣXY | <img src="../../assets/guide/menu/home-stat-sigma-1.png" alt="HOME > STAT > Σ > Row 1" width="320"> |
+| 2 | ΣN &nbsp; ΣLX &nbsp; ΣLX2 &nbsp; ΣLY &nbsp; ΣLY2 | <img src="../../assets/guide/menu/home-stat-sigma-2.png" alt="HOME > STAT > Σ > Row 2" width="320"> |
+| 3 | ΣLXL &nbsp; ΣXLY &nbsp; ΣYLX &nbsp; · &nbsp; · | <img src="../../assets/guide/menu/home-stat-sigma-3.png" alt="HOME > STAT > Σ > Row 3" width="320"> |
 
 **HOME > STAT > CFIT**
 
-| Row | Keys |
-| --- | --- |
-| 1 | Y→X &nbsp; X→Y &nbsp; SLOP &nbsp; YINT &nbsp; CORR |
-| 2 | LINF &nbsp; LOGF &nbsp; EXPF &nbsp; PWRF &nbsp; BEST |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | Y→X &nbsp; X→Y &nbsp; SLOP &nbsp; YINT &nbsp; CORR | <img src="../../assets/guide/menu/home-stat-cfit-1.png" alt="HOME > STAT > CFIT > Row 1" width="320"> |
+| 2 | LINF &nbsp; LOGF &nbsp; EXPF &nbsp; PWRF &nbsp; BEST | <img src="../../assets/guide/menu/home-stat-cfit-2.png" alt="HOME > STAT > CFIT > Row 2" width="320"> |
 
 **HOME > CONV**
 
-| Row | Keys |
-| --- | --- |
-| 1 | →DEG &nbsp; →RAD &nbsp; · &nbsp; →REC &nbsp; →POL |
-| 2 | →HR &nbsp; →HMS &nbsp; HMS+ &nbsp; HMS- &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | →DEG &nbsp; →RAD &nbsp; · &nbsp; →REC &nbsp; →POL | <img src="../../assets/guide/menu/home-conv-1.png" alt="HOME > CONV > Row 1" width="320"> |
+| 2 | →HR &nbsp; →HMS &nbsp; HMS+ &nbsp; HMS- &nbsp; · | <img src="../../assets/guide/menu/home-conv-2.png" alt="HOME > CONV > Row 2" width="320"> |
 
 **HOME > CLR**
 
-| Row | Keys |
-| --- | --- |
-| 1 | CLX &nbsp; CLST &nbsp; CLRG &nbsp; CLΣ &nbsp; CLTV |
-| 2 | CLD &nbsp; · &nbsp; · &nbsp; · &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | CLX &nbsp; CLST &nbsp; CLRG &nbsp; CLΣ &nbsp; CLTV | <img src="../../assets/guide/menu/home-clr-1.png" alt="HOME > CLR > Row 1" width="320"> |
+| 2 | CLD &nbsp; · &nbsp; · &nbsp; · &nbsp; · | <img src="../../assets/guide/menu/home-clr-2.png" alt="HOME > CLR > Row 2" width="320"> |
 
 **HOME > MODE**
 
-| Row | Keys |
-| --- | --- |
-| 1 | FIX &nbsp; SCI &nbsp; ENG &nbsp; RAD &nbsp; DEG |
-| 2 | RRES &nbsp; CRES &nbsp; RECT &nbsp; PRAD &nbsp; PDEG |
-| 3 | RSIZ &nbsp; RSZ? &nbsp; TINT &nbsp; SSIZ &nbsp; SSZ? |
-| 4 | {..} &nbsp; ".." &nbsp; · &nbsp; · &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | FIX &nbsp; SCI &nbsp; ENG &nbsp; RAD &nbsp; DEG | <img src="../../assets/guide/menu/home-mode-1.png" alt="HOME > MODE > Row 1" width="320"> |
+| 2 | RRES &nbsp; CRES &nbsp; RECT &nbsp; PRAD &nbsp; PDEG | <img src="../../assets/guide/menu/home-mode-2.png" alt="HOME > MODE > Row 2" width="320"> |
+| 3 | RSIZ &nbsp; RSZ? &nbsp; TINT &nbsp; SSIZ &nbsp; SSZ? | <img src="../../assets/guide/menu/home-mode-3.png" alt="HOME > MODE > Row 3" width="320"> |
+| 4 | {..} &nbsp; ".." &nbsp; · &nbsp; · &nbsp; · | <img src="../../assets/guide/menu/home-mode-4.png" alt="HOME > MODE > Row 4" width="320"> |
 
 **HOME > STK**
 
-| Row | Keys |
-| --- | --- |
-| 1 | DUP &nbsp; R↑ &nbsp; R↓ &nbsp; DROP &nbsp; X←→Y |
-| 2 | X<> &nbsp; · &nbsp; · &nbsp; · &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | DUP &nbsp; R↑ &nbsp; R↓ &nbsp; DROP &nbsp; X←→Y | <img src="../../assets/guide/menu/home-stk-1.png" alt="HOME > STK > Row 1" width="320"> |
+| 2 | X<> &nbsp; · &nbsp; · &nbsp; · &nbsp; · | <img src="../../assets/guide/menu/home-stk-2.png" alt="HOME > STK > Row 2" width="320"> |
 
 **HOME > UNIT**
 
-| Row | Keys |
-| --- | --- |
-| 1 | [UFCN] &nbsp; [LENG] &nbsp; [AREA] &nbsp; [VOL] &nbsp; [TEMP] |
-| 2 | [MASS] &nbsp; [FORC] &nbsp; [PRES] &nbsp; [ENER] &nbsp; [PWR] |
-| 3 | [TIME] &nbsp; [SPD] &nbsp; [FUEL] &nbsp; · &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | [UFCN] &nbsp; [LENG] &nbsp; [AREA] &nbsp; [VOL] &nbsp; [TEMP] | <img src="../../assets/guide/menu/home-unit-1.png" alt="HOME > UNIT > Row 1" width="320"> |
+| 2 | [MASS] &nbsp; [FORC] &nbsp; [PRES] &nbsp; [ENER] &nbsp; [PWR] | <img src="../../assets/guide/menu/home-unit-2.png" alt="HOME > UNIT > Row 2" width="320"> |
+| 3 | [TIME] &nbsp; [SPD] &nbsp; [FUEL] &nbsp; · &nbsp; · | <img src="../../assets/guide/menu/home-unit-3.png" alt="HOME > UNIT > Row 3" width="320"> |
 
 **HOME > UNIT > UFCN**
 
-| Row | Keys |
-| --- | --- |
-| 1 | UVAL &nbsp; UBAS &nbsp; · &nbsp; · &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | UVAL &nbsp; UBAS &nbsp; · &nbsp; · &nbsp; · | <img src="../../assets/guide/menu/home-unit-ufcn-1.png" alt="HOME > UNIT > UFCN > Row 1" width="320"> |
 
 **HOME > UNIT > LENG**
 
-| Row | Keys |
-| --- | --- |
-| 1 | ferm &nbsp; angs &nbsp; nm &nbsp; µm &nbsp; · |
-| 2 | mm &nbsp; cm &nbsp; m &nbsp; km &nbsp; · |
-| 3 | mil &nbsp; in &nbsp; ft &nbsp; yd &nbsp; mi |
-| 4 | [TYPO] &nbsp; [SURV] &nbsp; [NAUT] &nbsp; [ASTR] &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | ferm &nbsp; angs &nbsp; nm &nbsp; µm &nbsp; · | <img src="../../assets/guide/menu/home-unit-leng-1.png" alt="HOME > UNIT > LENG > Row 1" width="320"> |
+| 2 | mm &nbsp; cm &nbsp; m &nbsp; km &nbsp; · | <img src="../../assets/guide/menu/home-unit-leng-2.png" alt="HOME > UNIT > LENG > Row 2" width="320"> |
+| 3 | mil &nbsp; in &nbsp; ft &nbsp; yd &nbsp; mi | <img src="../../assets/guide/menu/home-unit-leng-3.png" alt="HOME > UNIT > LENG > Row 3" width="320"> |
+| 4 | [TYPO] &nbsp; [SURV] &nbsp; [NAUT] &nbsp; [ASTR] &nbsp; · | <img src="../../assets/guide/menu/home-unit-leng-4.png" alt="HOME > UNIT > LENG > Row 4" width="320"> |
 
 **HOME > UNIT > LENG > TYPO**
 
-| Row | Keys |
-| --- | --- |
-| 1 | twip &nbsp; pt &nbsp; pica &nbsp; · &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | twip &nbsp; pt &nbsp; pica &nbsp; · &nbsp; · | <img src="../../assets/guide/menu/home-unit-leng-typo-1.png" alt="HOME > UNIT > LENG > TYPO > Row 1" width="320"> |
 
 **HOME > UNIT > LENG > SURV**
 
-| Row | Keys |
-| --- | --- |
-| 1 | svft &nbsp; rod &nbsp; chai &nbsp; frlg &nbsp; svmi |
-| 2 | leag &nbsp; · &nbsp; · &nbsp; · &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | svft &nbsp; rod &nbsp; chai &nbsp; frlg &nbsp; svmi | <img src="../../assets/guide/menu/home-unit-leng-surv-1.png" alt="HOME > UNIT > LENG > SURV > Row 1" width="320"> |
+| 2 | leag &nbsp; · &nbsp; · &nbsp; · &nbsp; · | <img src="../../assets/guide/menu/home-unit-leng-surv-2.png" alt="HOME > UNIT > LENG > SURV > Row 2" width="320"> |
 
 **HOME > UNIT > LENG > NAUT**
 
-| Row | Keys |
-| --- | --- |
-| 1 | fath &nbsp; cabl &nbsp; nmi &nbsp; · &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | fath &nbsp; cabl &nbsp; nmi &nbsp; · &nbsp; · | <img src="../../assets/guide/menu/home-unit-leng-naut-1.png" alt="HOME > UNIT > LENG > NAUT > Row 1" width="320"> |
 
 **HOME > UNIT > LENG > ASTR**
 
-| Row | Keys |
-| --- | --- |
-| 1 | lsec &nbsp; AU &nbsp; ly &nbsp; pc &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | lsec &nbsp; AU &nbsp; ly &nbsp; pc &nbsp; · | <img src="../../assets/guide/menu/home-unit-leng-astr-1.png" alt="HOME > UNIT > LENG > ASTR > Row 1" width="320"> |
 
 **HOME > UNIT > AREA**
 
-| Row | Keys |
-| --- | --- |
-| 1 | mm² &nbsp; cm² &nbsp; m² &nbsp; km² &nbsp; · |
-| 2 | in² &nbsp; ft² &nbsp; yd² &nbsp; mi² &nbsp; nmi² |
-| 3 | acre &nbsp; ha &nbsp; usfb &nbsp; cafb &nbsp; [SURV] |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | mm² &nbsp; cm² &nbsp; m² &nbsp; km² &nbsp; · | <img src="../../assets/guide/menu/home-unit-area-1.png" alt="HOME > UNIT > AREA > Row 1" width="320"> |
+| 2 | in² &nbsp; ft² &nbsp; yd² &nbsp; mi² &nbsp; nmi² | <img src="../../assets/guide/menu/home-unit-area-2.png" alt="HOME > UNIT > AREA > Row 2" width="320"> |
+| 3 | acre &nbsp; ha &nbsp; usfb &nbsp; cafb &nbsp; [SURV] | <img src="../../assets/guide/menu/home-unit-area-3.png" alt="HOME > UNIT > AREA > Row 3" width="320"> |
 
 **HOME > UNIT > AREA > SURV**
 
-| Row | Keys |
-| --- | --- |
-| 1 | rod² &nbsp; chn² &nbsp; fur² &nbsp; · &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | rod² &nbsp; chn² &nbsp; fur² &nbsp; · &nbsp; · | <img src="../../assets/guide/menu/home-unit-area-surv-1.png" alt="HOME > UNIT > AREA > SURV > Row 1" width="320"> |
 
 **HOME > UNIT > VOL**
 
-| Row | Keys |
-| --- | --- |
-| 1 | mm³ &nbsp; cm³ &nbsp; m³ &nbsp; km³ &nbsp; · |
-| 2 | in³ &nbsp; ft³ &nbsp; yd³ &nbsp; mi³ &nbsp; nmi³ |
-| 3 | µL &nbsp; mL &nbsp; L &nbsp; mtsp &nbsp; mtbs |
-| 4 | [US] &nbsp; [IMP] &nbsp; [DRY] &nbsp; [MISC] &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | mm³ &nbsp; cm³ &nbsp; m³ &nbsp; km³ &nbsp; · | <img src="../../assets/guide/menu/home-unit-vol-1.png" alt="HOME > UNIT > VOL > Row 1" width="320"> |
+| 2 | in³ &nbsp; ft³ &nbsp; yd³ &nbsp; mi³ &nbsp; nmi³ | <img src="../../assets/guide/menu/home-unit-vol-2.png" alt="HOME > UNIT > VOL > Row 2" width="320"> |
+| 3 | µL &nbsp; mL &nbsp; L &nbsp; mtsp &nbsp; mtbs | <img src="../../assets/guide/menu/home-unit-vol-3.png" alt="HOME > UNIT > VOL > Row 3" width="320"> |
+| 4 | [US] &nbsp; [IMP] &nbsp; [DRY] &nbsp; [MISC] &nbsp; · | <img src="../../assets/guide/menu/home-unit-vol-4.png" alt="HOME > UNIT > VOL > Row 4" width="320"> |
 
 **HOME > UNIT > VOL > US**
 
-| Row | Keys |
-| --- | --- |
-| 1 | tsp &nbsp; tbsp &nbsp; floz &nbsp; gill &nbsp; cup |
-| 2 | pint &nbsp; qt &nbsp; gal &nbsp; · &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | tsp &nbsp; tbsp &nbsp; floz &nbsp; gill &nbsp; cup | <img src="../../assets/guide/menu/home-unit-vol-us-1.png" alt="HOME > UNIT > VOL > US > Row 1" width="320"> |
+| 2 | pint &nbsp; qt &nbsp; gal &nbsp; · &nbsp; · | <img src="../../assets/guide/menu/home-unit-vol-us-2.png" alt="HOME > UNIT > VOL > US > Row 2" width="320"> |
 
 **HOME > UNIT > VOL > IMP**
 
-| Row | Keys |
-| --- | --- |
-| 1 | tsp &nbsp; tbsp &nbsp; floz &nbsp; gill &nbsp; cup |
-| 2 | pint &nbsp; qt &nbsp; gal &nbsp; · &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | tsp &nbsp; tbsp &nbsp; floz &nbsp; gill &nbsp; cup | <img src="../../assets/guide/menu/home-unit-vol-imp-1.png" alt="HOME > UNIT > VOL > IMP > Row 1" width="320"> |
+| 2 | pint &nbsp; qt &nbsp; gal &nbsp; · &nbsp; · | <img src="../../assets/guide/menu/home-unit-vol-imp-2.png" alt="HOME > UNIT > VOL > IMP > Row 2" width="320"> |
 
 **HOME > UNIT > VOL > DRY**
 
-| Row | Keys |
-| --- | --- |
-| 1 | drpt &nbsp; drqt &nbsp; dgal &nbsp; peck &nbsp; bush |
-| 2 | dbbl &nbsp; · &nbsp; · &nbsp; · &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | drpt &nbsp; drqt &nbsp; dgal &nbsp; peck &nbsp; bush | <img src="../../assets/guide/menu/home-unit-vol-dry-1.png" alt="HOME > UNIT > VOL > DRY > Row 1" width="320"> |
+| 2 | dbbl &nbsp; · &nbsp; · &nbsp; · &nbsp; · | <img src="../../assets/guide/menu/home-unit-vol-dry-2.png" alt="HOME > UNIT > VOL > DRY > Row 2" width="320"> |
 
 **HOME > UNIT > VOL > MISC**
 
-| Row | Keys |
-| --- | --- |
-| 1 | bdft &nbsp; bbl &nbsp; olmp &nbsp; acft &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | bdft &nbsp; bbl &nbsp; olmp &nbsp; acft &nbsp; · | <img src="../../assets/guide/menu/home-unit-vol-misc-1.png" alt="HOME > UNIT > VOL > MISC > Row 1" width="320"> |
 
 **HOME > UNIT > TEMP**
 
-| Row | Keys |
-| --- | --- |
-| 1 | °C &nbsp; °F &nbsp; °R &nbsp; °K &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | °C &nbsp; °F &nbsp; °R &nbsp; °K &nbsp; · | <img src="../../assets/guide/menu/home-unit-temp-1.png" alt="HOME > UNIT > TEMP > Row 1" width="320"> |
 
 **HOME > UNIT > MASS**
 
-| Row | Keys |
-| --- | --- |
-| 1 | µg &nbsp; mg &nbsp; g &nbsp; kg &nbsp; t |
-| 2 | amu &nbsp; [US] &nbsp; [IMP] &nbsp; [TROY] &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | µg &nbsp; mg &nbsp; g &nbsp; kg &nbsp; t | <img src="../../assets/guide/menu/home-unit-mass-1.png" alt="HOME > UNIT > MASS > Row 1" width="320"> |
+| 2 | amu &nbsp; [US] &nbsp; [IMP] &nbsp; [TROY] &nbsp; · | <img src="../../assets/guide/menu/home-unit-mass-2.png" alt="HOME > UNIT > MASS > Row 2" width="320"> |
 
 **HOME > UNIT > MASS > US**
 
-| Row | Keys |
-| --- | --- |
-| 1 | grai &nbsp; dram &nbsp; oz &nbsp; lb &nbsp; slug |
-| 2 | scwt &nbsp; ston &nbsp; · &nbsp; · &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | grai &nbsp; dram &nbsp; oz &nbsp; lb &nbsp; slug | <img src="../../assets/guide/menu/home-unit-mass-us-1.png" alt="HOME > UNIT > MASS > US > Row 1" width="320"> |
+| 2 | scwt &nbsp; ston &nbsp; · &nbsp; · &nbsp; · | <img src="../../assets/guide/menu/home-unit-mass-us-2.png" alt="HOME > UNIT > MASS > US > Row 2" width="320"> |
 
 **HOME > UNIT > MASS > IMP**
 
-| Row | Keys |
-| --- | --- |
-| 1 | lb &nbsp; stne &nbsp; qrtr &nbsp; lcwt &nbsp; lton |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | lb &nbsp; stne &nbsp; qrtr &nbsp; lcwt &nbsp; lton | <img src="../../assets/guide/menu/home-unit-mass-imp-1.png" alt="HOME > UNIT > MASS > IMP > Row 1" width="320"> |
 
 **HOME > UNIT > MASS > TROY**
 
-| Row | Keys |
-| --- | --- |
-| 1 | grai &nbsp; dwt &nbsp; ozt &nbsp; lbt &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | grai &nbsp; dwt &nbsp; ozt &nbsp; lbt &nbsp; · | <img src="../../assets/guide/menu/home-unit-mass-troy-1.png" alt="HOME > UNIT > MASS > TROY > Row 1" width="320"> |
 
 **HOME > UNIT > FORC**
 
-| Row | Keys |
-| --- | --- |
-| 1 | dyne &nbsp; N &nbsp; kgf &nbsp; tonf &nbsp; · |
-| 2 | pdl &nbsp; lbf &nbsp; stnf &nbsp; ltnf &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | dyne &nbsp; N &nbsp; kgf &nbsp; tonf &nbsp; · | <img src="../../assets/guide/menu/home-unit-forc-1.png" alt="HOME > UNIT > FORC > Row 1" width="320"> |
+| 2 | pdl &nbsp; lbf &nbsp; stnf &nbsp; ltnf &nbsp; · | <img src="../../assets/guide/menu/home-unit-forc-2.png" alt="HOME > UNIT > FORC > Row 2" width="320"> |
 
 **HOME > UNIT > PRES**
 
-| Row | Keys |
-| --- | --- |
-| 1 | Pa &nbsp; hPa &nbsp; kPa &nbsp; torr &nbsp; atm |
-| 2 | mbar &nbsp; dbar &nbsp; bar &nbsp; psi &nbsp; · |
-| 3 | mmH &nbsp; inHg &nbsp; mmw &nbsp; inwg &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | Pa &nbsp; hPa &nbsp; kPa &nbsp; torr &nbsp; atm | <img src="../../assets/guide/menu/home-unit-pres-1.png" alt="HOME > UNIT > PRES > Row 1" width="320"> |
+| 2 | mbar &nbsp; dbar &nbsp; bar &nbsp; psi &nbsp; · | <img src="../../assets/guide/menu/home-unit-pres-2.png" alt="HOME > UNIT > PRES > Row 2" width="320"> |
+| 3 | mmH &nbsp; inHg &nbsp; mmw &nbsp; inwg &nbsp; · | <img src="../../assets/guide/menu/home-unit-pres-3.png" alt="HOME > UNIT > PRES > Row 3" width="320"> |
 
 **HOME > UNIT > ENER**
 
-| Row | Keys |
-| --- | --- |
-| 1 | eV &nbsp; erg &nbsp; J &nbsp; kJ &nbsp; ftlb |
-| 2 | Wh &nbsp; kWh &nbsp; cal &nbsp; kcal &nbsp; Btu |
-| 3 | tTNT &nbsp; Latm &nbsp; · &nbsp; · &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | eV &nbsp; erg &nbsp; J &nbsp; kJ &nbsp; ftlb | <img src="../../assets/guide/menu/home-unit-ener-1.png" alt="HOME > UNIT > ENER > Row 1" width="320"> |
+| 2 | Wh &nbsp; kWh &nbsp; cal &nbsp; kcal &nbsp; Btu | <img src="../../assets/guide/menu/home-unit-ener-2.png" alt="HOME > UNIT > ENER > Row 2" width="320"> |
+| 3 | tTNT &nbsp; Latm &nbsp; · &nbsp; · &nbsp; · | <img src="../../assets/guide/menu/home-unit-ener-3.png" alt="HOME > UNIT > ENER > Row 3" width="320"> |
 
 **HOME > UNIT > PWR**
 
-| Row | Keys |
-| --- | --- |
-| 1 | W &nbsp; kW &nbsp; fl/s &nbsp; Bt/h &nbsp; Bt/m |
-| 2 | ca/s &nbsp; hp &nbsp; · &nbsp; · &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | W &nbsp; kW &nbsp; fl/s &nbsp; Bt/h &nbsp; Bt/m | <img src="../../assets/guide/menu/home-unit-pwr-1.png" alt="HOME > UNIT > PWR > Row 1" width="320"> |
+| 2 | ca/s &nbsp; hp &nbsp; · &nbsp; · &nbsp; · | <img src="../../assets/guide/menu/home-unit-pwr-2.png" alt="HOME > UNIT > PWR > Row 2" width="320"> |
 
 **HOME > UNIT > TIME**
 
-| Row | Keys |
-| --- | --- |
-| 1 | ns &nbsp; µs &nbsp; ms &nbsp; sec &nbsp; min |
-| 2 | hour &nbsp; day &nbsp; week &nbsp; mon &nbsp; year |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | ns &nbsp; µs &nbsp; ms &nbsp; sec &nbsp; min | <img src="../../assets/guide/menu/home-unit-time-1.png" alt="HOME > UNIT > TIME > Row 1" width="320"> |
+| 2 | hour &nbsp; day &nbsp; week &nbsp; mon &nbsp; year | <img src="../../assets/guide/menu/home-unit-time-2.png" alt="HOME > UNIT > TIME > Row 2" width="320"> |
 
 **HOME > UNIT > SPD**
 
-| Row | Keys |
-| --- | --- |
-| 1 | m/s &nbsp; ft/s &nbsp; kph &nbsp; mph &nbsp; knot |
-| 2 | c &nbsp; · &nbsp; · &nbsp; · &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | m/s &nbsp; ft/s &nbsp; kph &nbsp; mph &nbsp; knot | <img src="../../assets/guide/menu/home-unit-spd-1.png" alt="HOME > UNIT > SPD > Row 1" width="320"> |
+| 2 | c &nbsp; · &nbsp; · &nbsp; · &nbsp; · | <img src="../../assets/guide/menu/home-unit-spd-2.png" alt="HOME > UNIT > SPD > Row 2" width="320"> |
 
 **HOME > UNIT > FUEL**
 
-| Row | Keys |
-| --- | --- |
-| 1 | Lkm &nbsp; mpg &nbsp; · &nbsp; · &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | Lkm &nbsp; mpg &nbsp; · &nbsp; · &nbsp; · | <img src="../../assets/guide/menu/home-unit-fuel-1.png" alt="HOME > UNIT > FUEL > Row 1" width="320"> |
 
 **HOME > DATE**
 
-| Row | Keys |
-| --- | --- |
-| 1 | [D] &nbsp; [T] &nbsp; [DT] &nbsp; [TZ] &nbsp; [DZ] |
-| 2 | [DR] &nbsp; [DW] &nbsp; [EPCH] &nbsp; [CLK] &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | [D] &nbsp; [T] &nbsp; [DT] &nbsp; [TZ] &nbsp; [DZ] | <img src="../../assets/guide/menu/home-date-1.png" alt="HOME > DATE > Row 1" width="320"> |
+| 2 | [DR] &nbsp; [DW] &nbsp; [EPCH] &nbsp; [CLK] &nbsp; · | <img src="../../assets/guide/menu/home-date-2.png" alt="HOME > DATE > Row 2" width="320"> |
 
 **HOME > DATE > D**
 
-| Row | Keys |
-| --- | --- |
-| 1 | D{} &nbsp; →ED &nbsp; ED→ &nbsp; →ES &nbsp; ES→ |
-| 2 | LEAP &nbsp; DOW &nbsp; CVTZ &nbsp; · &nbsp; · |
-| 3 | .YR &nbsp; .MON &nbsp; .DAY &nbsp; · &nbsp; · |
-| 4 | DSHK &nbsp; DEXD &nbsp; DCUT &nbsp; DLNK &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | D{} &nbsp; →ED &nbsp; ED→ &nbsp; →ES &nbsp; ES→ | <img src="../../assets/guide/menu/home-date-d-1.png" alt="HOME > DATE > D > Row 1" width="320"> |
+| 2 | LEAP &nbsp; DOW &nbsp; CVTZ &nbsp; · &nbsp; · | <img src="../../assets/guide/menu/home-date-d-2.png" alt="HOME > DATE > D > Row 2" width="320"> |
+| 3 | .YR &nbsp; .MON &nbsp; .DAY &nbsp; · &nbsp; · | <img src="../../assets/guide/menu/home-date-d-3.png" alt="HOME > DATE > D > Row 3" width="320"> |
+| 4 | DSHK &nbsp; DEXD &nbsp; DCUT &nbsp; DLNK &nbsp; · | <img src="../../assets/guide/menu/home-date-d-4.png" alt="HOME > DATE > D > Row 4" width="320"> |
 
 **HOME > DATE > T**
 
-| Row | Keys |
-| --- | --- |
-| 1 | T{} &nbsp; →S &nbsp; S→ &nbsp; · &nbsp; · |
-| 2 | .HR &nbsp; .MIN &nbsp; .SEC &nbsp; · &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | T{} &nbsp; →S &nbsp; S→ &nbsp; · &nbsp; · | <img src="../../assets/guide/menu/home-date-t-1.png" alt="HOME > DATE > T > Row 1" width="320"> |
+| 2 | .HR &nbsp; .MIN &nbsp; .SEC &nbsp; · &nbsp; · | <img src="../../assets/guide/menu/home-date-t-2.png" alt="HOME > DATE > T > Row 2" width="320"> |
 
 **HOME > DATE > DT**
 
-| Row | Keys |
-| --- | --- |
-| 1 | DT{} &nbsp; →ED &nbsp; ED→ &nbsp; →ES &nbsp; ES→ |
-| 2 | LEAP &nbsp; DOW &nbsp; CVTZ &nbsp; .D{} &nbsp; .T{} |
-| 3 | DSHK &nbsp; DEXD &nbsp; DCUT &nbsp; DLNK &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | DT{} &nbsp; →ED &nbsp; ED→ &nbsp; →ES &nbsp; ES→ | <img src="../../assets/guide/menu/home-date-dt-1.png" alt="HOME > DATE > DT > Row 1" width="320"> |
+| 2 | LEAP &nbsp; DOW &nbsp; CVTZ &nbsp; .D{} &nbsp; .T{} | <img src="../../assets/guide/menu/home-date-dt-2.png" alt="HOME > DATE > DT > Row 2" width="320"> |
+| 3 | DSHK &nbsp; DEXD &nbsp; DCUT &nbsp; DLNK &nbsp; · | <img src="../../assets/guide/menu/home-date-dt-3.png" alt="HOME > DATE > DT > Row 3" width="320"> |
 
 **HOME > DATE > TZ**
 
-| Row | Keys |
-| --- | --- |
-| 1 | TZ{} &nbsp; →HR &nbsp; HR→ &nbsp; .HR &nbsp; .MIN |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | TZ{} &nbsp; →HR &nbsp; HR→ &nbsp; .HR &nbsp; .MIN | <img src="../../assets/guide/menu/home-date-tz-1.png" alt="HOME > DATE > TZ > Row 1" width="320"> |
 
 **HOME > DATE > DZ**
 
-| Row | Keys |
-| --- | --- |
-| 1 | DZ{} &nbsp; →ED &nbsp; ED→ &nbsp; →ES &nbsp; ES→ |
-| 2 | ES→@ &nbsp; LEAP &nbsp; DOW &nbsp; CVTZ &nbsp; · |
-| 3 | .D{} &nbsp; .T{} &nbsp; .DT{ &nbsp; .TZ{ &nbsp; · |
-| 4 | DSHK &nbsp; DEXD &nbsp; DCUT &nbsp; DLNK &nbsp; · |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | DZ{} &nbsp; →ED &nbsp; ED→ &nbsp; →ES &nbsp; ES→ | <img src="../../assets/guide/menu/home-date-dz-1.png" alt="HOME > DATE > DZ > Row 1" width="320"> |
+| 2 | ES→@ &nbsp; LEAP &nbsp; DOW &nbsp; CVTZ &nbsp; · | <img src="../../assets/guide/menu/home-date-dz-2.png" alt="HOME > DATE > DZ > Row 2" width="320"> |
+| 3 | .D{} &nbsp; .T{} &nbsp; .DT{ &nbsp; .TZ{ &nbsp; · | <img src="../../assets/guide/menu/home-date-dz-3.png" alt="HOME > DATE > DZ > Row 3" width="320"> |
+| 4 | DSHK &nbsp; DEXD &nbsp; DCUT &nbsp; DLNK &nbsp; · | <img src="../../assets/guide/menu/home-date-dz-4.png" alt="HOME > DATE > DZ > Row 4" width="320"> |
 
 **HOME > DATE > DR**
 
-| Row | Keys |
-| --- | --- |
-| 1 | DR{} &nbsp; DAY→ &nbsp; HR→ &nbsp; MIN→ &nbsp; SEC→ |
-| 2 | →S &nbsp; .DAY &nbsp; .HR &nbsp; .MIN &nbsp; .SEC |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | DR{} &nbsp; DAY→ &nbsp; HR→ &nbsp; MIN→ &nbsp; SEC→ | <img src="../../assets/guide/menu/home-date-dr-1.png" alt="HOME > DATE > DR > Row 1" width="320"> |
+| 2 | →S &nbsp; .DAY &nbsp; .HR &nbsp; .MIN &nbsp; .SEC | <img src="../../assets/guide/menu/home-date-dr-2.png" alt="HOME > DATE > DR > Row 2" width="320"> |
 
 **HOME > DATE > DW**
 
-| Row | Keys |
-| --- | --- |
-| 1 | DW{} &nbsp; →ISO &nbsp; ISO→ &nbsp; →UNX &nbsp; UNX→ |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | DW{} &nbsp; →ISO &nbsp; ISO→ &nbsp; →UNX &nbsp; UNX→ | <img src="../../assets/guide/menu/home-date-dw-1.png" alt="HOME > DATE > DW > Row 1" width="320"> |
 
 **HOME > DATE > EPCH**
 
-| Row | Keys |
-| --- | --- |
-| 1 | UNIX &nbsp; NTP &nbsp; GPS &nbsp; TIOS &nbsp; Y2K |
-| 2 | CEPC &nbsp; · &nbsp; · &nbsp; EPC &nbsp; EPC? |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | UNIX &nbsp; NTP &nbsp; GPS &nbsp; TIOS &nbsp; Y2K | <img src="../../assets/guide/menu/home-date-epch-1.png" alt="HOME > DATE > EPCH > Row 1" width="320"> |
+| 2 | CEPC &nbsp; · &nbsp; · &nbsp; EPC &nbsp; EPC? | <img src="../../assets/guide/menu/home-date-epch-2.png" alt="HOME > DATE > EPCH > Row 2" width="320"> |
 
 **HOME > DATE > CLK**
 
-| Row | Keys |
-| --- | --- |
-| 1 | NOW &nbsp; NOWD &nbsp; NOWT &nbsp; NWDZ &nbsp; NWUT |
-| 2 | ATZ &nbsp; ATZ? &nbsp; CTZ &nbsp; CTZ? &nbsp; SETC |
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | NOW &nbsp; NOWD &nbsp; NOWT &nbsp; NWDZ &nbsp; NWUT | <img src="../../assets/guide/menu/home-date-clk-1.png" alt="HOME > DATE > CLK > Row 1" width="320"> |
+| 2 | ATZ &nbsp; ATZ? &nbsp; CTZ &nbsp; CTZ? &nbsp; SETC | <img src="../../assets/guide/menu/home-date-clk-2.png" alt="HOME > DATE > CLK > Row 2" width="320"> |
 
 <!-- END MENU MAP -->
 
@@ -941,7 +941,7 @@ are in [Appendix A](#appendix-a-key-reference).
 | YINT | HOME → STAT → CFIT | [Read](12-statistics.md#curve-fitting) |
 | Y→X | HOME → STAT → CFIT | [Read](12-statistics.md#curve-fitting) |
 | {..} | HOME → MODE | [Read](09-settings.md) |
-| ³√√X | HOME → MATH | [Read](10-mathematics.md#math-menu) |
+| ³√X | HOME → MATH | [Read](10-mathematics.md#math-menu) |
 | Σ+ | HOME → STAT | [Read](12-statistics.md) |
 | Σ- | HOME → STAT | [Read](12-statistics.md) |
 | ΣLX | HOME → STAT → Σ | [Read](12-statistics.md) |
