@@ -3,8 +3,8 @@
 This is the 0.7.0 development build from `dev`. Send both files from `bin/` using TI Connect CE,
 replacing the matching files on the calculator:
 
-- `bin/RPNCE.8xp`: 46,168 bytes
-- `bin/RPNCEres.8xv`: 17,019 bytes; resource stamp `5E2832E1` (format 2,
+- `bin/RPNCE.8xp`: 46,959 bytes
+- `bin/RPNCEres.8xv`: 17,043 bytes; resource stamp `898EE9EC` (format 2,
   with 19 HELP pages)
 
 Use the existing CE libraries. An existing `RPNCEdat` from 0.6.6, or from
@@ -21,6 +21,26 @@ How things are saved:
   a checksum and a fingerprint of the register values it belongs to. If
   it's missing, damaged, or belongs to different values, the registers load
   without units; no value is ever lost.
+
+## Display, brightness and numeric separators
+
+Send both new files together; the menu changes require the matching resource.
+Existing stack, register, unit and timezone data should remain intact.
+
+| Check | Expected |
+| --- | --- |
+| Enter `2 (−) 2ND x²` | Larger `Err: Domain`; menu arrows and status-bar text retain their previous size |
+| Enter `4294967296`, then BASE → HEX with a 32-bit word | Larger `Exceeds 32-bit word`; X retains the original decimal value with its `dec` tag |
+| Type `1234567.89` in DEC | `1,234,567.89_`; only the integer part is grouped |
+| Type `1234`, then DEL | `1,234_` becomes `123_`; no separator needs deleting |
+| MODE row 4 → **,**, then type `1234567.89` | `1.234.567,89_`; the physical decimal key still enters the decimal mark |
+| ENTER, then SHOW, STO/RCL and VARS | Each uses the selected numeric marks; stored values remain unchanged |
+| Perform arithmetic or select SCI/ENG in comma mode | Correct result; comma in the mantissa, exponent ungrouped |
+| Enter a DATE record and use SHOW in comma mode | Original field separators; no punctuation swap inside records |
+| `2ND ↑` / `2ND ↓`, repeated at the brightness limits | Brighter/dimmer in bounded steps; no wrap or black screen |
+| Use those shortcuts while typing, in STO/RCL or FIX prompts, HELP and VARS | Entry, prompt, page or selection is preserved |
+| Quit and reopen after selecting comma mode | Comma mode and existing timezone settings are restored; TI-OS uses the adjusted brightness |
+| MODE row 4 → **.** | Original decimal-point/comma-grouping display restored |
 
 ## Reported cases
 

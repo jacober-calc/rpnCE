@@ -327,6 +327,18 @@ int main(void)
     }
 
     /* ---- DATE objects through keystrokes ---- */
+    {
+        calc_init(&C);
+        num(1234567.89); cmd(CMD_ENTER, 0);
+        cmd(CMD_DECIMAL_COMMA, 0); cmd(CMD_SHOW, 0);
+        expect("decimal comma selection", C.decimal_comma, 1);
+        expect("SHOW localizes numbers", strchr(C.message, ',') != NULL && strchr(C.message, '.') == NULL, 1);
+        expect("separator setting preserves stored value", X, 1234567.89);
+        num(2); cmd(CMD_ADD, 0);
+        expect("arithmetic still uses canonical numeric entry", X, 1234569.89);
+        cmd(CMD_DECIMAL_POINT, 0);
+        expect("decimal point can be restored", C.decimal_comma, 0);
+    }
     cmd(CMD_CLEAR_STACK, 0);
     calc_execute(&C, CMD_DISP_FIX, 99);
     /* 2ND { 2024 , 3 , 14 ENTER */
@@ -390,6 +402,10 @@ int main(void)
     cmd(CMD_CLEAR_STACK, 0);
     cmd(CMD_RECORD_TAG, OBJ_TIME); REC("15,36,1"); calc_finish_entry(&C);
     XOBJ("T{} menu key", "T{15,36,1}");
+    cmd(CMD_DECIMAL_COMMA, 0);
+    cmd(CMD_SHOW, 0);
+    expect("SHOW keeps DATE record separators canonical", !strcmp(C.message, "T{15,36,1}"), 1);
+    cmd(CMD_DECIMAL_POINT, 0);
     cmd(CMD_ALPHA_LETTER, 'D' - 'A'); cmd(CMD_ALPHA_LETTER, 'W' - 'A'); REC("{4"); calc_finish_entry(&C);
     XOBJ("ALPHA D ALPHA W tag", "DW{4}");
     num(1); cmd(CMD_ALPHA_LETTER, 'D' - 'A'); cmd(CMD_DIGIT, 3); cmd(CMD_ALPHA_LETTER, 'M' - 'A');

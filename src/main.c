@@ -12,6 +12,7 @@
 
 #include "core/calc.h"
 #include "sys/storage.h"
+#include "sys/brightness.h"
 #include "ui/actions.h"
 #include "ui/catalog.h"
 #include "ui/res.h"
@@ -177,6 +178,13 @@ int main(void)
                     break;
                 continue;
             }
+            bool brighter;
+            if (keys_brightness_key(&keys, key, &brighter)) {
+                last_key = clock();
+                sys_brightness_adjust(brighter);
+                redraw();
+                continue;
+            }
             if (help_page) {
                 last_key = clock();
                 if (key == sk_2nd) {
@@ -196,7 +204,12 @@ int main(void)
             }
             if (catalog.open) {
                 last_key = clock();
-                catalog_key(key);
+                if (key == sk_2nd)
+                    keys.second = !keys.second;
+                else {
+                    keys.second = false;
+                    catalog_key(key);
+                }
                 redraw();
                 continue;
             }

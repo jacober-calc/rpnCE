@@ -200,7 +200,7 @@ Each row lists the five menu keys, from Y= to GRAPH.
 | 1 | FIX &nbsp; SCI &nbsp; ENG &nbsp; RAD &nbsp; DEG | <img src="../../assets/guide/menu/home-mode-1.png" alt="HOME > MODE > Row 1" width="320"> |
 | 2 | RRES &nbsp; CRES &nbsp; RECT &nbsp; PRAD &nbsp; PDEG | <img src="../../assets/guide/menu/home-mode-2.png" alt="HOME > MODE > Row 2" width="320"> |
 | 3 | RSIZ &nbsp; RSZ? &nbsp; TINT &nbsp; SSIZ &nbsp; SSZ? | <img src="../../assets/guide/menu/home-mode-3.png" alt="HOME > MODE > Row 3" width="320"> |
-| 4 | {..} &nbsp; ".." &nbsp; · &nbsp; · &nbsp; · | <img src="../../assets/guide/menu/home-mode-4.png" alt="HOME > MODE > Row 4" width="320"> |
+| 4 | {..} &nbsp; ".." &nbsp; . &nbsp; , &nbsp; · | <img src="../../assets/guide/menu/home-mode-4.png" alt="HOME > MODE > Row 4" width="320"> |
 
 **HOME > STK**
 
@@ -717,6 +717,8 @@ are in [Appendix A](#appendix-a-key-reference).
 | ".." | HOME → MODE | [Read](09-settings.md) |
 | % | HOME → NUM | [Read](10-mathematics.md#num-menu) |
 | %CH | HOME → NUM | [Read](10-mathematics.md#num-menu) |
+| , | HOME → MODE | [Read](09-settings.md) |
+| . | HOME → MODE | [Read](09-settings.md) |
 | .DAY | HOME → DATE → D | [Read](15-date.md#the-date-submenus) |
 | .DAY | HOME → DATE → DR | [Read](15-date.md#the-date-submenus) |
 | .DT{ | HOME → DATE → DZ | [Read](15-date.md#the-date-submenus) |

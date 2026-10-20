@@ -157,6 +157,10 @@ static event_t prompt_key(keys_t *k, sk_key_t key)
         k->prompt = PROMPT_NONE;
         return ev;
     }
+    if (key == sk_2nd) {
+        k->prompt_second = !k->prompt_second;
+        return ev;
+    }
     /* FIX / SCI / ENG / RNDN / RNDG, HP-32SII style: a digit 0-9 completes
      * the prompt; . then a digit means 10-19 (FIX . 1 is FIX 11). */
     if (k->prompt >= PROMPT_FIX) {
@@ -181,6 +185,7 @@ static event_t prompt_key(keys_t *k, sk_key_t key)
             ans[1] = '\0';
         }
         k->prompt_count = 0;                    /* flash shows the number: */
+        k->prompt_second = false;
         update_prompt_text(k);                  /* "FIX 3", "FIX 11" */
         set_flash(k, ans);
 
@@ -195,10 +200,6 @@ static event_t prompt_key(keys_t *k, sk_key_t key)
 
     if (key == sk_Alpha) {
         k->prompt_alpha = true;
-        return ev;
-    }
-    if (key == sk_2nd) {
-        k->prompt_second = !k->prompt_second;
         return ev;
     }
 
@@ -292,6 +293,16 @@ static calc_cmd_t plain_cmd(sk_key_t key)
         case sk_RParen: return CMD_SWAP;
         default:        return CMD_NONE;
     }
+}
+
+bool keys_brightness_key(keys_t *k, sk_key_t key, bool *brighter)
+{
+    if ((!k->second && !(k->prompt != PROMPT_NONE && k->prompt_second)) ||
+        (key != sk_Up && key != sk_Down))
+        return false;
+    *brighter = key == sk_Up;
+    k->second = k->prompt_second = false;
+    return true;
 }
 
 event_t keys_translate(keys_t *k, sk_key_t key)

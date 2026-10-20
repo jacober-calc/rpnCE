@@ -4,9 +4,13 @@
  * written. A simulated clock makes NOW* and time-zone checks reproducible. */
 #include <string.h>
 #include <ti/getcsc.h>
+#include <ti/ui.h>
+#include <sys/lcd.h>
 #include "calc.h"
+#include "format.h"
 #include "dateobj.h"
 #include "res.h"
+#include "../../../src/sys/brightness.h"
 
 #define RESULTS ((volatile uint8_t *)0xD40000)
 static calc_t c;
@@ -149,6 +153,37 @@ int main(void)
     check(x_number("27000"));
     cmd(CMD_DATE_FN, DF_SECONDS_TO_DR);
     check(x_object("DR{0,7,30,0}"));
+    cmd(CMD_DECIMAL_COMMA, 0);
+    number(1234567); cmd(CMD_DOT, 0); number(89);
+    char grouped[64];
+    format_entry(grouped, c.entry, c.decimal_comma);
+    check(!strcmp(grouped, "1.234.567,89") && !strcmp(c.entry, "1234567.89"));
+    cmd(CMD_SHOW, 0);
+    check(c.message && !strcmp(c.message, "1.234.567,89"));
+    real_t expected = os_StrToReal("1234567.89", NULL);
+    check(os_RealCompare(&c.stack[0], &expected) == 0);
+    number(2); cmd(CMD_ADD, 0);
+    check(x_number("1234569.89"));
+    cmd(CMD_DECIMAL_POINT, 0); cmd(CMD_SHOW, 0);
+    check(c.message && !strcmp(c.message, "1,234,569.89"));
+    cmd(CMD_DECIMAL_COMMA, 0);
+    record("9999,12,31,23,59,59,-23,-45"); cmd(CMD_SHOW, 0);
+    check(c.message && !strcmp(c.message, "DZ{9999,12,31,23,59,59,-23,-45}"));
+
+    uint8_t saved_lcd = lcd_BacklightLevel, saved_os = os_Brightness;
+    lcd_BacklightLevel = 100;
+    sys_brightness_adjust(true);
+    check(lcd_BacklightLevel == 92 && os_Brightness == 92);
+    sys_brightness_adjust(false);
+    check(lcd_BacklightLevel == 100 && os_Brightness == 100);
+    lcd_BacklightLevel = 0;
+    sys_brightness_adjust(true);
+    check(lcd_BacklightLevel == 0 && os_Brightness == 0);
+    lcd_BacklightLevel = 224;
+    sys_brightness_adjust(false);
+    check(lcd_BacklightLevel == 224 && os_Brightness == 224);
+    lcd_BacklightLevel = saved_lcd;
+    os_Brightness = saved_os;
     RESULTS[0] = checks;
     RESULTS[127] = 0xAA;
     while (!os_GetCSC()) { }

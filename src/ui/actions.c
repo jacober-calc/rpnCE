@@ -249,6 +249,8 @@ static const struct { uint8_t cmd, arg; } actions[] = {
     [MID_CLEAR_STACK] = { CMD_CLEAR_STACK, 0 },
     [MID_RAD] = { CMD_MODE_RAD, 0 },
     [MID_DEG] = { CMD_MODE_DEG, 0 },
+    [MID_DECIMAL_POINT] = { CMD_DECIMAL_POINT, 0 },
+    [MID_DECIMAL_COMMA] = { CMD_DECIMAL_COMMA, 0 },
     [MID_STACK_DUP] = { CMD_ENTER, 0 },
     [MID_STACK_ROLL_UP] = { CMD_ROLL_UP, 0 },
     [MID_STACK_ROLL_DOWN] = { CMD_ROLL_DOWN, 0 },
@@ -287,6 +289,8 @@ bool action_is_active(const calc_t *c, menu_id_t id)
         case MID_DEG: return c->degrees;
         case MID_FORMAT_RECORD_RAW:    return !c->date_as_string;
         case MID_FORMAT_RECORD_STRING: return c->date_as_string;
+        case MID_DECIMAL_POINT: return !c->decimal_comma;
+        case MID_DECIMAL_COMMA: return c->decimal_comma;
         case MID_EPOCH_UNIX:   return c->epoch == EPOCH_UNIX;
         case MID_EPOCH_NTP:    return c->epoch == EPOCH_NTP;
         case MID_EPOCH_GPS:    return c->epoch == EPOCH_GPS;

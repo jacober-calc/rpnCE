@@ -27,6 +27,12 @@ operation, `ENTER`, a menu key and so on all use the number you typed.
 `(−)` changes the sign; `−` subtracts. Pressing `(−)` when you're not
 typing negates X.
 
+While typing a decimal number, the whole-number part is grouped
+immediately: entering `1234567.89` shows `1,234,567.89_`. The fraction and
+exponent are not grouped. These separators are display aids; DEL removes
+typed characters, and the stored value is unchanged. MODE row 4 **,**
+switches the same entry to `1.234.567,89_`; **.** restores the default.
+
 ## How numbers are shown
 
 - Up to 12 significant digits are shown, with commas between thousands:

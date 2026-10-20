@@ -49,11 +49,26 @@ conversion when the offsets match, and rejects invalid clock readings.
 NWUT remains UTC, and NOW remains epoch seconds independent of ATZ.
 Neither time-zone setting writes the TI-OS clock; SETC does so explicitly.
 
-The native suite now includes 37 checks, covering matching and independent
+The native suite now includes 47 checks, covering matching and independent
 offsets, fractional offsets, year rollovers, hardware-clock preservation,
 and signed Time differences with conversion to Durations.
 Host display tests verify ATZ status text and preserve the existing default
 display fingerprint. Saved settings and appvar formats are unchanged.
+
+## Display and brightness controls (0.7.0, dev)
+
+Errors and BASE warnings use the system font at 2× width and height; menu
+arrows, the status bar and precision messages retain their previous size.
+Decimal entry gains display-only digit grouping. MODE row 4 now selects
+decimal-point or decimal-comma notation for entry, results, VARS and SHOW;
+DATE record syntax and calculator arithmetic remain canonical.
+
+RPNCEcfg version 3 appends the separator preference to the existing
+version-2 prefix. Old settings default to decimal point, and the RPNCEdat
+layout is unchanged. SHOW has room for the longest supported DATE record.
+`2ND UP/DOWN` adjusts the shared OS/LCD brightness with bounded steps,
+including inside prompts, HELP and VARS. Host and native CE checks cover
+the new formatting and brightness paths.
 
 ## Merge preparation (0.7.0)
 

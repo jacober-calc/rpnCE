@@ -81,6 +81,8 @@ void storage_save(calc_t *c) { (void)c; }
 bool storage_load(calc_t *c) { (void)c; return false; }
 void storage_save_settings(uint8_t tint, const calc_t *c) { (void)tint; (void)c; }
 uint8_t storage_load_settings(calc_t *c) { (void)c; return 0; }
+/* A PC screenshot has no physical backlight. */
+void sys_brightness_adjust(bool brighter) { (void)brighter; }
 
 /* the RPNCEres appvar, from data/RPNCEres.bin */
 uint8_t mock_res[65536];

@@ -25,6 +25,7 @@ run() {
 }
 
 run format   tests/test_format.c src/core/format.c
+run brightness -Itests/mock tests/test_brightness.c src/sys/brightness.c
 run rounding -Itests/bcd -Isrc/core tests/test_rounding.c src/core/rounding.c
 run mathx    $M tests/test_mathx.c src/core/mathx.c
 run base     $M tests/test_base.c src/core/base.c
@@ -46,16 +47,16 @@ run storage  -Itests/mock_storage $M tests/test_storage.c \
 run core     -DRPNCE_HOST_TEST $M tests/test_calc.c tests/mock_calc_runtime.c src/core/calc.c \
              src/core/calc_entry.c src/core/calc_date.c src/core/calc_quantity.c \
              src/core/mathx.c src/core/stats.c src/core/tvm.c src/core/units.c \
-             tests/units_data.c src/core/base.c src/core/datetime.c
+             tests/units_data.c src/core/base.c src/core/datetime.c src/core/format.c
 run fixes    -DRPNCE_HOST_TEST $M -Isrc/ui tests/test_fixes.c tests/mock_calc_runtime.c \
              src/ui/catalog.c src/core/calc.c src/core/calc_entry.c src/core/calc_date.c \
              src/core/calc_quantity.c src/core/mathx.c src/core/stats.c src/core/tvm.c \
-             src/core/units.c tests/units_data.c src/core/base.c src/core/datetime.c
+             src/core/units.c tests/units_data.c src/core/base.c src/core/datetime.c src/core/format.c
 run display  -DRPNCE_HOST_TEST -Itests/mock_graphx -Itests/mock_fileioc $M -Isrc/ui \
              tests/test_display.c tests/mock_calc_runtime.c \
              src/ui/display.c src/ui/dotfont.c src/ui/menu.c src/ui/catalog.c \
              src/ui/actions.c src/ui/res.c src/core/calc.c src/core/calc_entry.c \
              src/core/calc_date.c src/core/calc_quantity.c src/core/base.c src/core/datetime.c src/core/mathx.c \
-             src/core/stats.c src/core/tvm.c src/core/units.c
+             src/core/stats.c src/core/tvm.c src/core/units.c src/core/format.c
 
 [ $fail -eq 0 ] && echo "all tests passed" || { echo "some tests failed"; exit 1; }

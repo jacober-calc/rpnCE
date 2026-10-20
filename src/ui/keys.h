@@ -52,6 +52,10 @@ typedef struct {
 /* Turns a scan code into an event. */
 event_t keys_translate(keys_t *k, sk_key_t key);
 
+/* Global shortcut, checked before HELP, VARS and register prompt handling.
+ * Consumes only 2ND + up/down; leaves number entry and prompts untouched. */
+bool keys_brightness_key(keys_t *k, sk_key_t key, bool *brighter);
+
 /* Opens a prompt (used by menu items such as FIX). */
 void keys_open_prompt(keys_t *k, prompt_kind_t kind);
 

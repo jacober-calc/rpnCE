@@ -19,6 +19,8 @@ int main(void)
 
     uint64_t fingerprint = UINT64_C(14695981039346656037);
     for (unsigned id = 0; id < MID_COUNT; id++) {
+        if (id == MID_DECIMAL_POINT || id == MID_DECIMAL_COMMA)
+            continue; /* New settings are checked independently below. */
         for (int shifted = 0; shifted < 2; shifted++) {
             uint8_t arg = 255;
             calc_cmd_t cmd = action_for((menu_id_t)id, shifted != 0, &arg);
@@ -31,6 +33,18 @@ int main(void)
     int fails = fingerprint != UINT64_C(0x7552b9b30528ed15);
     printf("%s %u menu IDs, plain and shifted: %016" PRIx64 "\n",
            fails ? "FAIL" : "ok  ", (unsigned)MID_COUNT, fingerprint);
+    for (int comma = 0; comma <= 1; comma++) {
+        calc_t c = {0};
+        c.decimal_comma = comma != 0;
+        for (int shifted = 0; shifted <= 1; shifted++) {
+            uint8_t arg;
+            if (action_for(MID_DECIMAL_POINT, shifted, &arg) != CMD_DECIMAL_POINT ||
+                action_for(MID_DECIMAL_COMMA, shifted, &arg) != CMD_DECIMAL_COMMA ||
+                action_is_active(&c, MID_DECIMAL_POINT) != !comma ||
+                action_is_active(&c, MID_DECIMAL_COMMA) != !!comma)
+                fails++;
+        }
+    }
     printf("%d failures\n", fails);
     return fails != 0;
 }

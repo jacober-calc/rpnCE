@@ -53,6 +53,39 @@ int main(void)
               keys_translate(&k2, sk_Apps).kind == EV_NONE && !k2.second);
     }
     keys_t k = {0};
+    {
+        bool brighter = false;
+        check("plain UP is not a brightness shortcut", !keys_brightness_key(&k, sk_Up, &brighter));
+        keys_translate(&k, sk_2nd);
+        check("2ND UP brightens and consumes 2ND",
+              keys_brightness_key(&k, sk_Up, &brighter) && brighter && !k.second);
+        keys_translate(&k, sk_2nd);
+        check("2ND DOWN dims and consumes 2ND",
+              keys_brightness_key(&k, sk_Down, &brighter) && !brighter && !k.second);
+        keys_open_prompt(&k, PROMPT_STO);
+        keys_translate(&k, sk_Add);
+        keys_translate(&k, sk_2nd);
+        check("brightness works inside STO+ without losing the prompt",
+              keys_brightness_key(&k, sk_Up, &brighter) && brighter &&
+              k.prompt == PROMPT_STO && k.prompt_op == 1 && !k.prompt_second);
+        event_t stored = keys_translate(&k, sk_Math);
+        check("STO+ still completes after brightness adjustment",
+              stored.kind == EV_CMD && stored.cmd == CMD_STO_ADD && stored.arg == REG_A);
+        keys_open_prompt(&k, PROMPT_FIX);
+        keys_translate(&k, sk_DecPnt);
+        keys_translate(&k, sk_2nd);
+        check("brightness works inside FIX . without losing its precision prefix",
+              keys_brightness_key(&k, sk_Down, &brighter) && !brighter &&
+              k.prompt == PROMPT_FIX && k.prompt_count == 1);
+        event_t fixed = keys_translate(&k, sk_1);
+        check("FIX 11 completes after brightness adjustment",
+              fixed.kind == EV_CMD && fixed.cmd == CMD_DISP_FIX && fixed.arg == 11);
+        k = (keys_t){0};
+        keys_translate(&k, sk_2nd);
+        check("other shifted keys remain pending for their own handler",
+              !keys_brightness_key(&k, sk_Mode, &brighter) && k.second);
+        k = (keys_t){0};
+    }
     keys_translate(&k, sk_2nd);
     check("2ND CATALOG opens HELP", keys_translate(&k, sk_0).kind == EV_HELP && !k.second);
     keys_translate(&k, sk_2nd);

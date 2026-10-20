@@ -12,8 +12,8 @@ void storage_save(calc_t *c);
 bool storage_load(calc_t *c);
 
 /* Settings kept in their own small appvar: the screen tint and the DATE
- * settings (display mode, epoch, time zones). Loading returns the tint
- * (0 if none saved) and fills in the DATE settings of c. */
+ * settings (display mode, epoch, time zones), plus numeric separators.
+ * Loading returns the tint (0 if none saved) and fills in those settings. */
 void storage_save_settings(uint8_t tint, const calc_t *c);
 uint8_t storage_load_settings(calc_t *c);
 

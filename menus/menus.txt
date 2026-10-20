@@ -243,6 +243,8 @@ group HOME HOME
       row
         alt {..} {..}{block} FORMAT_RECORD_RAW
         alt ".." ".."{block} FORMAT_RECORD_STRING
+        alt . .{block} DECIMAL_POINT
+        alt , ,{block} DECIMAL_COMMA
     group STK STACK
       row
         item DUP STACK_DUP

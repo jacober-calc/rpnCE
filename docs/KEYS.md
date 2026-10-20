@@ -260,6 +260,12 @@ Keep the TI clock at local time and set CTZ to its UTC offset. ATZ controls
 application clock results and the status bar; changing either zone leaves
 the TI clock unchanged.
 
+MODE row 4 also selects **.** or **,** as the numeric decimal mark,
+swapping the grouping mark throughout entry, results, VARS and SHOW.
+The physical decimal key keeps its meaning, and DATE record commas stay
+field separators. `2ND UP/DOWN` changes the shared TI-OS brightness without
+interrupting entry or prompts.
+
 MODE row 4 chooses how objects are shown: `{..}` as typed (the default) or
 `".."` as RFC 3339 strings. Long values scroll with the arrow keys. SHOW
 (`2ND ENTRY`) always shows the raw record. DATE settings are saved with the

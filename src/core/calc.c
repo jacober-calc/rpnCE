@@ -1471,6 +1471,7 @@ void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg)
             } else {
                 format_real(c->show_buf, &c->stack[0], DISP_FIX, DISP_FLOAT,
                             SHOW_DIGITS, SHOW_DIGITS, true);
+                format_separators(c->show_buf, c->decimal_comma);
             }
             c->message = c->show_buf;
             break;
@@ -1704,6 +1705,11 @@ void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg)
 
         case CMD_MODE_RAD:
             c->degrees = false;
+            break;
+
+        case CMD_DECIMAL_POINT:
+        case CMD_DECIMAL_COMMA:
+            c->decimal_comma = cmd == CMD_DECIMAL_COMMA;
             break;
 
         case CMD_MODE_DEG:

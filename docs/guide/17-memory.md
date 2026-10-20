@@ -25,7 +25,7 @@ session; complete it before quitting.
 | --- | --- | --- |
 | `RPNCEres` | the menus, unit tables and HELP pages | sent by you, from each release |
 | `RPNCEdat` | the stack (with units), LASTX, registers, statistics and settings | RPNCE, when you quit |
-| `RPNCEcfg` | the screen tint and the DATE settings | RPNCE, when you quit |
+| `RPNCEcfg` | the screen tint, DATE settings and decimal separator preference | RPNCE, when you quit |
 | `RPNCEunt` | units on registers | RPNCE, only when a register holds a unit |
 
 All of them are kept in archive memory, so they survive a RAM clear. You
@@ -86,6 +86,9 @@ Archive protects saved appvars from a RAM clear, not from deleting files
 or clearing archive memory. A normal exit is the point at which RPNCE
 writes its private state; a forced interruption before saving cannot
 preserve work that has not yet been written.
+
+`2ND ↑` and `2ND ↓` adjust the calculator's shared TI-OS brightness
+preference and LCD backlight. They do not create an additional appvar.
 
 ## Removing RPNCE
 

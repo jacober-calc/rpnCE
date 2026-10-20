@@ -10,6 +10,7 @@ RPNCE 0.7.0 · User Guide
 - [Message line](#message-line)
 - [Stack](#stack)
 - [Menu row](#menu-row)
+- [Screen brightness](#screen-brightness)
 - [Screen colors](#screen-colors)
 
 <img src="../../assets/guide/screens/display-anatomy-labelled.png" alt="The parts of the screen" width="530">
@@ -43,6 +44,10 @@ warning about X. Messages disappear at the next key. A pair of arrows (↓↑)
 at the right end means the current menu has more rows; see
 [The menus](07-menus.md#7-the-menus).
 
+Errors and BASE warnings use larger text for readability on the physical
+LCD. The status bar, menu arrows, SHOW and informational messages retain
+their original sizes.
+
 ## Stack
 
 The middle of the screen shows the four stack registers, `T` at the top and
@@ -65,6 +70,14 @@ The bottom row shows five dark boxes, one for each menu key. A short line
 across the top of a box marks a submenu (pressing it opens another menu);
 other boxes are functions. A ■ after a label marks the active choice in a
 setting, such as **DEG■**. An empty slot has no box.
+
+## Screen brightness
+
+Press `2ND ↑` to brighten the LCD or `2ND ↓` to dim it. Repeat the
+shortcut for further steps. It works while entering numbers, at prompts,
+and in HELP or VARS. Brightness does not change stack values or menu rows.
+The setting is shared with TI-OS; the dimmest available step keeps the
+screen visible.
 
 ## Screen colors
 

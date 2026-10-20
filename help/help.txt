@@ -42,9 +42,9 @@ HELP 04/19 - KEY SHORTCUTS
 MATH: HOME    MODE: settings
 STAT: STAT    X,T,theta,n: UNIT
 APPS: BASE    PRGM: HYP
-2ND MEM: CLR    2ND LIST: STK
-2ND CATALOG: HELP    VARS: variables
-2ND ENTRY: SHOW    2ND ANS: LASTX
+2ND MEM: CLR; LIST: STK; CATALOG: HELP
+VARS: variables; 2ND ENTRY: SHOW
+2ND ANS: LASTX; 2ND UP/DOWN: brightness
 2ND MODE / 2ND ON: save and quit
 ---
 HELP 05/19 - MATH
@@ -144,7 +144,7 @@ RAD/DEG: angle unit. TINT: colors.
 RSIZ/RSZ?: set/get registers (40-140).
 SSIZ/SSZ?: set/get stack depth (4-12).
 {..}/"..": raw/readable DATE values.
-Row 2 complex modes: not available.
+. / ,: decimal mark; grouping swaps.
 ---
 HELP 16/19 - STK
 DUP: copy X into Y, like ENTER.

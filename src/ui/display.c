@@ -374,8 +374,14 @@ static void draw_message_line(const calc_t *c, const menu_t *m)
     const int y = MSG_Y + (MSG_H - 8 * MSG_SCALE_Y) / 2;
     char warn[24];
     const char *msg = c->message ? c->message : base_warning(c, warn);
-    if (msg)
-        draw_label_tall(msg, LABEL_X, y, COL_INK);
+    if (msg) {
+        /* Errors and BASE warnings use wider text for the physical LCD.
+         * SHOW, informational messages, and the arrows retain their size. */
+        if (!c->message || !strncmp(msg, "Err:", 4) || !strcmp(msg, "TVM Not Found"))
+            draw_label_scaled(msg, LABEL_X, y, COL_INK, 2);
+        else
+            draw_label_tall(msg, LABEL_X, y, COL_INK);
+    }
     if (menu_group(m->group)->rows > 1) {
         char arrows[3] = { MSYM_DOWN, MSYM_UP, '\0' };
         draw_label_tall(arrows, VALUE_RIGHT - label_width(arrows), y, COL_INK);
@@ -493,6 +499,7 @@ static fv_kind_t format_value(char *buf, const calc_t *c, const real_t *v)
     }
     format_real(buf, v, c->disp_style, c->disp_digits,
                 DISPLAY_DIGITS, DISPLAY_EXP_DIGITS, true);
+    format_separators(buf, c->decimal_comma);
     return c->base.radix != 10 ? FV_DECIMAL_IN_BASE : FV_NORMAL;
 }
 
@@ -515,7 +522,7 @@ static struct {
 static struct {
     uint8_t style, radix, bits;
     int8_t digits;
-    bool date_as_string, valid;
+    bool date_as_string, decimal_comma, valid;
 } value_cache_format;
 
 static void reset_value_cache(void)
@@ -529,7 +536,8 @@ static void prepare_value_cache(const calc_t *c)
 {
     if (value_cache_format.valid && value_cache_format.style == c->disp_style &&
         value_cache_format.digits == c->disp_digits && value_cache_format.radix == c->base.radix &&
-        value_cache_format.bits == c->base.bits && value_cache_format.date_as_string == c->date_as_string)
+        value_cache_format.bits == c->base.bits && value_cache_format.date_as_string == c->date_as_string &&
+        value_cache_format.decimal_comma == c->decimal_comma)
         return;
 
     reset_value_cache();
@@ -538,6 +546,7 @@ static void prepare_value_cache(const calc_t *c)
     value_cache_format.radix = c->base.radix;
     value_cache_format.bits = c->base.bits;
     value_cache_format.date_as_string = c->date_as_string;
+    value_cache_format.decimal_comma = c->decimal_comma;
     value_cache_format.valid = true;
 }
 
@@ -585,7 +594,7 @@ static void draw_stack(const calc_t *c, const char *prompt, bool lifted)
     static const uint8_t regs[4] = { REG_T, REG_Z, REG_Y, REG_X };
     const real_t *values[4] = { &c->stack[3], &c->stack[2], &c->stack[1], &c->stack[0] };
     const real_t *shown_lifted[4] = { &c->stack[2], &c->stack[1], &c->stack[0], &c->stack[0] };
-    char buf[VALUE_BUFFER_SIZE];
+    char buf[ENTRY_MAX + ENTRY_MAX / 3 + 2];  /* grouping, cursor, terminator */
 
     prepare_value_cache(c);
 
@@ -598,9 +607,14 @@ static void draw_stack(const calc_t *c, const char *prompt, bool lifted)
         dot_draw_small(labels[i], LABEL_X, y + (ROW_H - DOT_SMALL_HEIGHT) / 2, COL_FAINT);
 
         if (is_x && prompt) {
-            draw_value(prompt, y, NULL, NULL, ink);
+            strcpy(buf, prompt);
+            format_separators(buf, c->decimal_comma);
+            draw_value(buf, y, NULL, NULL, ink);
         } else if (is_x && c->editing) {
-            strcpy(buf, c->entry);
+            if (c->base.radix == 10 && !dt_text_is_object(c->entry))
+                format_entry(buf, c->entry, c->decimal_comma);
+            else
+                strcpy(buf, c->entry);
             strcat(buf, "_");
             draw_value(buf, y, NULL, NULL, ink);     /* typing: the end is shown */
         } else {

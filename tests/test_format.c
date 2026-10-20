@@ -26,6 +26,38 @@ static void num(const char *s, bool *neg, int *exp, uint8_t d[14])
 
 static int fails = 0;
 static int g_cap = 0;   /* exponent-digit cap for the next tests (0 = none) */
+static void entry_text(void)
+{
+    static const struct { const char *entry, *point, *comma; } cases[] = {
+        { "", "", "" },
+        { "123", "123", "123" },
+        { "1234", "1,234", "1.234" },
+        { "1234567.8900", "1,234,567.8900", "1.234.567,8900" },
+        { "-1234567.89E-12", "-1,234,567.89E-12", "-1.234.567,89E-12" },
+        { ".", ".", "," },
+        { "-.5", "-.5", "-,5" },
+        { "0.00001", "0.00001", "0,00001" },
+        { "1234.", "1,234.", "1.234," },
+        { "1234E-", "1,234E-", "1.234E-" },
+        { "1234.56789E12", "1,234.56789E12", "1.234,56789E12" },
+        { "12345678901234", "12,345,678,901,234", "12.345.678.901.234" },
+    };
+    for (unsigned i = 0; i < sizeof cases / sizeof cases[0]; i++)
+        for (int comma = 0; comma <= 1; comma++) {
+            char out[80];
+            format_entry(out, cases[i].entry, comma != 0);
+            const char *want = comma ? cases[i].comma : cases[i].point;
+            if (strcmp(out, want)) {
+                printf("FAIL entry %s -> %s (want %s)\n", cases[i].entry, out, want);
+                fails++;
+            }
+        }
+    char text[] = "-1,234,567.8900E-12";
+    format_separators(text, true);
+    if (strcmp(text, "-1.234.567,8900E-12")) fails++;
+    format_separators(text, true);
+    if (strcmp(text, "-1,234,567.8900E-12")) fails++;
+}
 static void tg(const char *in, int style, int digits, int max, bool group, const char *want);
 static void t(const char *in, int style, int digits, int max, const char *want)
 {
@@ -45,6 +77,7 @@ static void tg(const char *in, int style, int digits, int max, bool group, const
 
 int main(void)
 {
+    entry_text();
     int M = DISPLAY_DIGITS;
     /* FIX */
     t("123456.1234", DISP_FIX, 4, M, "123456.1234");

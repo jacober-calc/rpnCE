@@ -254,7 +254,7 @@ bool storage_load(calc_t *c)
 
 typedef struct {
     uint8_t magic;
-    uint8_t version;        /* 1: tint only; 2: and the DATE settings */
+    uint8_t version;        /* 1: tint; 2: DATE; 3: appended decimal preference */
     uint8_t tint;
     uint8_t date_as_string;
     uint8_t epoch;
@@ -265,8 +265,9 @@ typedef struct {
 void storage_save_settings(uint8_t tint, const calc_t *c)
 {
     settings_t s;
+    memset(&s, 0, sizeof s);
     s.magic = STATE_MAGIC;
-    s.version = 2;
+    s.version = 3;
     s.tint = tint;
     s.date_as_string = c->date_as_string;
     s.epoch = c->epoch;
@@ -277,6 +278,9 @@ void storage_save_settings(uint8_t tint, const calc_t *c)
     if (!h)
         return;
     ti_Write(&s, sizeof s, 1, h);
+    /* Keep the version-2 prefix byte-for-byte compatible with old readers. */
+    uint8_t decimal_comma = c->decimal_comma;
+    ti_Write(&decimal_comma, 1, 1, h);
     ti_SetArchiveStatus(true, h);
     ti_Close(h);
 }
@@ -288,9 +292,13 @@ uint8_t storage_load_settings(calc_t *c)
     if (!h)
         return 0;
     size_t n = ti_Read(&s, 1, sizeof s, h);
+    uint8_t decimal_comma = 0;
+    if (n == sizeof s && s.version >= 3)
+        ti_Read(&decimal_comma, 1, 1, h);
     ti_Close(h);
     if (n < 3 || s.magic != STATE_MAGIC)
         return 0;
+    c->decimal_comma = decimal_comma == 1;
     if (s.version >= 2 && n >= sizeof s) {
         c->date_as_string = s.date_as_string != 0;
         if (s.epoch <= EPOCH_CUSTOM)

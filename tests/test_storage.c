@@ -333,13 +333,32 @@ int main(void)
     check("failed save leaves the previous appvar intact", vars[0].size == fixed_size);
     open_fails = false;
 
+    original.decimal_comma = true;
     storage_save_settings(3, &original);
     memset(&loaded, 0, sizeof loaded);
     check("settings preserve tint, DATE format, epoch and time zones",
           vars[1].archived && storage_load_settings(&loaded) == 3 && loaded.date_as_string &&
           loaded.epoch == EPOCH_CUSTOM && loaded.custom_epoch.year == 2026 &&
           loaded.custom_epoch.month == 10 && loaded.custom_epoch.day == 18 &&
-          loaded.app_tz == -28 && loaded.clock_tz == 4);
+          loaded.app_tz == -28 && loaded.clock_tz == 4 && loaded.decimal_comma);
+    /* A genuine version-2 file has exactly the old prefix, no new byte. */
+    size_t settings_size = vars[1].size;
+    vars[1].data[1] = 2;
+    vars[1].size = settings_size - 1;
+    memset(&loaded, 0, sizeof loaded);
+    loaded.decimal_comma = true;
+    check("version-2 settings retain DATE/time zones and default to decimal point",
+          storage_load_settings(&loaded) == 3 && !loaded.decimal_comma &&
+          loaded.date_as_string && loaded.app_tz == -28 && loaded.clock_tz == 4);
+    vars[1].data[1] = 3;
+    loaded.decimal_comma = true;
+    check("truncated new settings default to decimal point",
+          storage_load_settings(&loaded) == 3 && !loaded.decimal_comma && loaded.app_tz == -28);
+    vars[1].size = settings_size;
+    vars[1].data[settings_size - 1] = 2;
+    loaded.decimal_comma = true;
+    check("invalid separator preference falls back to decimal point",
+          storage_load_settings(&loaded) == 3 && !loaded.decimal_comma);
     vars[1].data[1] = 1;
     vars[1].size = 3;
     memset(&loaded, 0, sizeof loaded);

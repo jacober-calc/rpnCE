@@ -18,7 +18,9 @@ uint8_t mock_res[65536];
 size_t mock_res_size;
 uint16_t gfx_palette[256];
 static uint64_t fingerprint;
-static uint8_t scale_x = 1;
+static uint8_t scale_x = 1, scale_y = 1;
+static int text_y;
+static unsigned large_message_chars, bad_status_scale, arrow_pixels, bad_arrow_size;
 static int fails;
 static char printed[4096];
 static size_t printed_count;
@@ -45,7 +47,13 @@ void gfx_SwapDraw(void) { record(4); }
 uint8_t gfx_SetColor(uint8_t c) { record(5); record(c); return 0; }
 void gfx_FillScreen(uint8_t c) { record(6); record(c); }
 void gfx_FillRectangle(int x, int y, int w, int h)
-{ record(7); record((uint32_t)x); record((uint32_t)y); record((uint32_t)w); record((uint32_t)h); }
+{
+    record(7); record((uint32_t)x); record((uint32_t)y); record((uint32_t)w); record((uint32_t)h);
+    if (x >= 302 && y >= 18 && y < 48) {
+        arrow_pixels++;
+        if (w != 1 || h != 2) bad_arrow_size++;
+    }
+}
 void gfx_HorizLine(int x, int y, int w)
 { record(8); record((uint32_t)x); record((uint32_t)y); record((uint32_t)w); }
 uint16_t gfx_RGBTo1555(uint8_t r, uint8_t g, uint8_t b)
@@ -54,8 +62,8 @@ uint8_t gfx_SetTextFGColor(uint8_t c) { record(9); record(c); return 0; }
 uint8_t gfx_SetTextBGColor(uint8_t c) { record(10); record(c); return 0; }
 uint8_t gfx_SetTextTransparentColor(uint8_t c) { record(11); record(c); return 0; }
 void gfx_SetTextScale(uint8_t x, uint8_t y)
-{ scale_x = x; record(12); record(x); record(y); }
-void gfx_SetTextXY(int x, int y) { record(13); record((uint32_t)x); record((uint32_t)y); }
+{ scale_x = x; scale_y = y; record(12); record(x); record(y); }
+void gfx_SetTextXY(int x, int y) { text_y = y; record(13); record((uint32_t)x); record((uint32_t)y); }
 void gfx_SetTextConfig(uint8_t c) { record(14); record(c); }
 void gfx_SetClipRegion(int a, int b, int c, int d)
 { record(15); record((uint32_t)a); record((uint32_t)b); record((uint32_t)c); record((uint32_t)d); }
@@ -63,9 +71,15 @@ unsigned int gfx_GetCharWidth(char c)
 { return (unsigned)(c == ' ' || c == '.' || c == ',' || c == ':' ? 3 : 6) * scale_x; }
 unsigned int gfx_GetStringWidth(const char *s)
 { unsigned w = 0; for (; *s; s++) w += gfx_GetCharWidth(*s); return w; }
-void gfx_PrintChar(char c) { record(16); record((uint8_t)c); printed_char(c); }
+void gfx_PrintChar(char c)
+{
+    record(16); record((uint8_t)c); printed_char(c);
+    if (text_y >= 18 && text_y < 48 && scale_x == 2 && scale_y == 2)
+        large_message_chars++;
+}
 void gfx_PrintStringXY(const char *s, int x, int y)
 {
+    if (y < 18 && (scale_x != 1 || scale_y != 1)) bad_status_scale++;
     record(17); record((uint32_t)x); record((uint32_t)y);
     for (; *s; s++) { record((uint8_t)*s); printed_char(*s); }
     record(0);
@@ -167,7 +181,8 @@ static void appearance(void)
     draw(&c, &m, &cat, NULL, false);
     display_close();
     printf("display fingerprint: %016" PRIx64 "\n", fingerprint);
-    check("whole-display drawing commands match baseline", fingerprint == UINT64_C(0x9cca3371ee56ce8a));
+    /* Intentional appearance change: double-width warnings. */
+    check("whole-display drawing commands match approved layout", fingerprint == UINT64_C(0x4394cc5a585995ef));
 }
 
 static void formatting_work(void)
@@ -224,6 +239,10 @@ static void formatting_work(void)
     mock_format_calls = 0;
     draw(&c, &m, &cat, NULL, false);
     check("DATE representation changes invalidate all rows", mock_format_calls == 4);
+    c.decimal_comma = true;
+    mock_format_calls = 0;
+    draw(&c, &m, &cat, NULL, false);
+    check("numeric separator changes invalidate every cached row", mock_format_calls == 4);
     /* Fractions stay decimal in BASE mode, so format_real calls also reveal
      * whether radix and word-size changes invalidate the cache. */
     for (int i = 0; i < 4; i++) c.stack[i] = mk(i + 0.125);
@@ -324,6 +343,32 @@ static void application_clock(void)
     memcpy(mock_clock, saved, sizeof saved);
 }
 
+static void warning_size(void)
+{
+    calc_t c;
+    menu_t m;
+    catalog_t cat = {0};
+    calc_init(&c);
+    menu_home(&m);
+    display_open();
+    c.message = "Err: Unit Mismatch";
+    large_message_chars = bad_status_scale = arrow_pixels = bad_arrow_size = 0;
+    draw(&c, &m, &cat, NULL, false);
+    check("error text is double width and height", large_message_chars == strlen(c.message));
+    check("status bar font and menu arrows retain their original size",
+          !bad_status_scale && arrow_pixels && !bad_arrow_size);
+    c.message = NULL;
+    c.base.radix = 16; c.base.bits = 8; c.stack[0] = mk(256);
+    large_message_chars = 0;
+    draw(&c, &m, &cat, NULL, false);
+    check("BASE warnings use the larger text", large_message_chars == strlen("Exceeds 8-bit word"));
+    c.message = "1,234.5678901234";
+    large_message_chars = 0;
+    draw(&c, &m, &cat, NULL, false);
+    check("precision messages keep their existing size", !large_message_chars);
+    display_close();
+}
+
 int main(void)
 {
     FILE *f = fopen("data/RPNCEres.bin", "rb");
@@ -335,6 +380,7 @@ int main(void)
     formatting_work();
     quantity_catalog_and_help();
     application_clock();
+    warning_size();
     printf("%d failures\n", fails);
     return fails != 0;
 }

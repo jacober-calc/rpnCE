@@ -10,6 +10,7 @@ RPNCE 0.7.0 · User Guide
 - [Angle mode](#angle-mode)
 - [Sizes and tint](#sizes-and-tint)
 - [DATE display](#date-display)
+- [Decimal and grouping marks](#decimal-and-grouping-marks)
 - [Example: changing presentation without changing the number](#example-changing-presentation-without-changing-the-number)
 
 `MODE` opens the MODE menu.
@@ -19,7 +20,7 @@ RPNCE 0.7.0 · User Guide
 | 1 | **FIX** **SCI** **ENG** **RAD** **DEG** |
 | 2 | **RRES** **CRES** **RECT** **PRAD** **PDEG** (complex numbers: not yet available) |
 | 3 | **RSIZ** **RSZ?** **TINT** **SSIZ** **SSZ?** |
-| 4 | **{..}** **".."** (how DATE objects are shown) |
+| 4 | **{..}** **".."** (DATE display), **.** **,** (decimal mark) |
 
 - <img src="../../assets/guide/menu/home-mode.png" alt="HOME > MODE" width="320">
     - <img src="../../assets/guide/menu/home-mode-1.png" alt="HOME > MODE > Row 1" width="320">
@@ -71,6 +72,29 @@ exact quarter turns give exact answers: `180 SIN` is exactly 0.
 **".."** shows them as readable text, like `2024-03-14`. See
 [chapter 15](15-date.md#15-date-dates-times-and-the-clock).
 
+
+## Decimal and grouping marks
+
+MODE row 4 has two numeric display choices:
+
+| Selection | Decimal mark | Grouping mark | Example |
+| --- | --- | --- | --- |
+| **.** (default) | period | comma | `1,234,567.89` |
+| **,** | comma | period | `1.234.567,89` |
+
+The choice applies to numbers while typing, completed stack values, VARS,
+and SHOW, including scientific and engineering mantissas. It is saved when
+you quit. Grouping is inserted automatically; it does not round the value
+or add characters to the underlying entry. DEL still removes one typed
+character at a time.
+
+The physical decimal-point key enters the decimal mark in either mode.
+The comma key keeps its EE function outside a DATE record and separates
+fields inside a record. DATE records, dates, times and menu labels retain
+their established syntax. This prevents display preferences from changing
+how stored values or DATE records are interpreted.
+
+The examples in this manual use decimal-point mode unless stated otherwise.
 
 ## Example: changing presentation without changing the number
 
