@@ -49,7 +49,7 @@ conversion when the offsets match, and rejects invalid clock readings.
 NWUT remains UTC, and NOW remains epoch seconds independent of ATZ.
 Neither time-zone setting writes the TI-OS clock; SETC does so explicitly.
 
-The native suite now includes 52 checks, covering matching and independent
+The native suite now includes 54 checks, covering matching and independent
 offsets, fractional offsets, year rollovers, hardware-clock preservation,
 and signed Time differences with conversion to Durations.
 Host display tests verify ATZ status text and preserve the existing default
@@ -57,12 +57,15 @@ display fingerprint. Saved settings and appvar formats are unchanged.
 
 ## Display and brightness controls (0.7.0, dev)
 
-Errors and BASE warnings retain their original horizontal spacing and use
-actual double-height glyphs. GraphX v15's clipped-text path ignores scaling,
-so warnings temporarily use unclipped text and then restore clipping.
+Every message-line item retains its original horizontal spacing and uses
+actual double-height glyphs, including errors, clear confirmations, TVM
+notices, mode messages, theme names and SHOW. GraphX v15's clipped-text path ignores scaling,
+so the message line temporarily uses unclipped text and restores clipping
+before drawing the arrows.
 Native pixel checks verify 14-pixel-tall ink instead of 7 pixels, unchanged
 status/arrow pixels, and the original width. The desktop screenshot renderer
-now models this GraphX behavior too. Other messages retain their prior size.
+now models this GraphX behavior too. Status text and arrows retain their
+previous size.
 Decimal entry gains display-only digit grouping. MODE row 4 now selects
 decimal-point or decimal-comma notation for entry, results, VARS and SHOW;
 DATE record syntax and calculator arithmetic remain canonical.

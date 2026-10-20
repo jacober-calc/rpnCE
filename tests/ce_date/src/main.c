@@ -236,7 +236,12 @@ int main(void)
     c.message = "TVM Stored";
     display_draw(&c, &menu, false, false, NULL, false, &catalog);
     message_bounds(&width, &height);
-    check(height == 7); /* normal informational text is still unscaled */
+    check(height == 14); /* notices use the same size as errors */
+    cmd(CMD_CLEAR, 0); cmd(CMD_CLEAR, 0);
+    check(c.message && !strcmp(c.message, "Stack cleared"));
+    display_draw(&c, &menu, false, false, NULL, false, &catalog);
+    message_bounds(&width, &height);
+    check(height == 14 && width > 0 && width <= (int)gfx_GetStringWidth(c.message));
     display_close();
     RESULTS[0] = checks;
     RESULTS[127] = 0xAA;

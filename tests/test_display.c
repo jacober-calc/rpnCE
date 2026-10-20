@@ -365,10 +365,26 @@ static void warning_size(void)
     large_message_chars = 0;
     draw(&c, &m, &cat, NULL, false);
     check("BASE warnings use the larger text", large_message_chars == strlen("Exceeds 8-bit word"));
-    c.message = "1,234.5678901234";
-    large_message_chars = 0;
-    draw(&c, &m, &cat, NULL, false);
-    check("precision messages keep their existing size", !large_message_chars);
+    static const char *const messages[] = {
+        "Stack cleared", "Registers Cleared", "Stats Cleared",
+        "Register Size Set", "Stack Size Set", "Word Size Set",
+        "Epoch Set", "Time Zone Set", "Clock Set",
+        "TVM Stored", "TVM Calculated", "TVM Not Found", "TVM Cleared", "TVM Reset",
+        "Not available yet", "VARS", "All Vars = 0",
+        "LINF", "LOGF", "EXPF", "PWRF",
+        "Err: Division By 0", "Err: Domain", "Err: Overflow", "Err: Stat",
+        "Err: Data Type", "Err: Unit Mismatch", "Err: Math", "Err: Index",
+        "Err: Word Size", "Err: Syntax", "Err: Invalid", "Err: Clock",
+        "1,234.5678901234", "DZ{9999,12,31,23,59,59,-23,-45}",
+    };
+    const unsigned message_count = sizeof messages / sizeof messages[0];
+    for (unsigned i = 0; i < message_count + TINT_COUNT; i++) {
+        c.message = i < message_count ? messages[i] : display_tint_name((uint8_t)(i - message_count));
+        large_message_chars = bad_status_scale = arrow_pixels = bad_arrow_size = 0;
+        draw(&c, &m, &cat, NULL, false);
+        check(c.message, large_message_chars == strlen(c.message) &&
+              !bad_status_scale && arrow_pixels && !bad_arrow_size && text_config == gfx_text_clip);
+    }
     display_close();
 }
 

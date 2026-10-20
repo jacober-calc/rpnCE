@@ -44,9 +44,10 @@ warning about X. Messages disappear at the next key. A pair of arrows (↓↑)
 at the right end means the current menu has more rows; see
 [The menus](07-menus.md#7-the-menus).
 
-Errors and BASE warnings use taller letters with the original horizontal
-spacing for readability on the physical LCD. The status bar, menu arrows, SHOW and informational messages retain
-their original sizes.
+All text in the message line uses taller letters with the original
+horizontal spacing: errors, warnings, confirmations such as "Stack cleared",
+TVM and settings notices, theme names, and SHOW. The status bar and menu
+arrows retain their original sizes.
 
 ## Stack
 

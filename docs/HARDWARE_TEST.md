@@ -3,7 +3,7 @@
 This is the 0.7.0 development build from `dev`. Send both files from `bin/` using TI Connect CE,
 replacing the matching files on the calculator:
 
-- `bin/RPNCE.8xp`: 46,898 bytes
+- `bin/RPNCE.8xp`: 46,832 bytes
 - `bin/RPNCEres.8xv`: 17,043 bytes; resource stamp `898EE9EC` (format 2,
   with 19 HELP pages)
 
@@ -30,6 +30,7 @@ Existing stack, register, unit and timezone data should remain intact.
 | Check | Expected |
 | --- | --- |
 | Enter `2 (−) 2ND x²` | Taller `Err: Domain` with original spacing; menu arrows and status-bar text retain their previous size |
+| CLEAR twice, CLRG, CLTV, TVM store/solve, DATE clock/zone settings, TINT and SHOW | Every message in the line uses the same taller text with original spacing |
 | Enter `4294967296`, then BASE → HEX with a 32-bit word | Larger `Exceeds 32-bit word`; X retains the original decimal value with its `dec` tag |
 | Type `1234567.89` in DEC | `1,234,567.89_`; only the integer part is grouped |
 | Type `1234`, then DEL | `1,234_` becomes `123_`; no separator needs deleting |
