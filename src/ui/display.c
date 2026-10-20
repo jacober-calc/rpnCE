@@ -375,11 +375,14 @@ static void draw_message_line(const calc_t *c, const menu_t *m)
     char warn[24];
     const char *msg = c->message ? c->message : base_warning(c, warn);
     if (msg) {
-        /* Errors and BASE warnings use wider text for the physical LCD.
-         * SHOW, informational messages, and the arrows retain their size. */
-        if (!c->message || !strncmp(msg, "Err:", 4) || !strcmp(msg, "TVM Not Found"))
-            draw_label_scaled(msg, LABEL_X, y, COL_INK, 2);
-        else
+        /* GraphX's clipped text path ignores scaling. These short warnings
+         * fit the line, so enable scaling just here: taller letters with
+         * the original width and spacing. Restore clipping for other text. */
+        if (!c->message || !strncmp(msg, "Err:", 4) || !strcmp(msg, "TVM Not Found")) {
+            gfx_SetTextConfig(gfx_text_noclip);
+            draw_label_tall(msg, LABEL_X, y, COL_INK);
+            gfx_SetTextConfig(gfx_text_clip);
+        } else
             draw_label_tall(msg, LABEL_X, y, COL_INK);
     }
     if (menu_group(m->group)->rows > 1) {

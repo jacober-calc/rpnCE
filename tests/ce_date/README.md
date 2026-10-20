@@ -6,7 +6,7 @@ they use the host compiler and its calling conventions. The native build
 reproduced `1987-01-17 + 15000` failing and corrupted date differences.
 
 This suite compiles the real calculator core with release `-Oz` and LTO,
-uses TI-OS real-number routines, and checks 47 results in CEmu. It covers
+uses TI-OS real-number routines, and checks 52 results in CEmu. It covers
 the reported addition, subtraction in both directions, NOWD, scalar-first
 addition, leap days, STO arithmetic, epoch and zoned conversions, years 1
 and 9999, and the 2038 boundary. Clock checks cover CTZ/ATZ alignment,
@@ -17,6 +17,13 @@ Additional checks cover decimal-comma entry formatting, SHOW, arithmetic,
 raw DATE records, and backlight adjustment bounds. The backlight and OS
 brightness are restored after those checks. A simulated clock is used in
 this test. It does not load or write RPNCE's saved-data appvars.
+
+Five checks exercise the real GraphX display renderer and inspect the
+visible LCD buffer: warning glyph height, original horizontal spacing,
+unchanged status bar and arrows, and unchanged informational text size.
+This catches GraphX's clipped-text path ignoring scaling, which desktop
+scale-call checks previously missed. Results are buffered outside VRAM
+until drawing is finished, then published for the emulator's CRC check.
 
 With the CE toolchain and `cemu-autotester` on PATH, point these environment
 variables to your own ROM and CE libraries:

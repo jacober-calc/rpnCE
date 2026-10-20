@@ -6,7 +6,7 @@
 uint8_t gfx_SetColor(uint8_t color);
 void gfx_FillRectangle(int x, int y, int width, int height);
 extern uint16_t gfx_palette[256];
-enum { gfx_text_clip = 0 };
+enum { gfx_text_clip = 0, gfx_text_noclip };
 void gfx_Begin(void);
 void gfx_End(void);
 void gfx_SetDrawBuffer(void);

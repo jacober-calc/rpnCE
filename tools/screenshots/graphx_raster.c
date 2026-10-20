@@ -2,8 +2,8 @@
  * graphx.asm (CE toolchain v15.0): two 320x240 8-bit buffers swapped by
  * gfx_SwapDraw, palette colors, and the default font drawn as graphx does
  * (each character's spacing-table width in columns, 8 rows, high bit first,
- * transparent pixels skipped, each pixel repeated by the text scale, and
- * clipped to the clip region when gfx_text_clip is set). */
+ * transparent pixels skipped). As in GraphX v15, the clipped text path
+ * ignores text scaling; only the unclipped path repeats scaled pixels. */
 #include <string.h>
 #include "graphx.h"
 #include "font.h"           /* generated from graphx.asm by run.py */
@@ -68,21 +68,22 @@ void gfx_PrintChar(const char ch)
 {
     uint8_t c = (uint8_t)ch;
     int width = font_spacing[c & 127];
+    int draw_sx = clip_text ? 1 : sx, draw_sy = clip_text ? 1 : sy;
     const uint8_t *g = font_data[c & 127];
     for (int row = 0; row < 8; row++)
         for (int col = 0; col < width; col++) {
             uint8_t v = (g[row] & (0x80 >> col)) ? fg : bg;
             if (v == tp)
                 continue;
-            for (int a = 0; a < sy; a++)
-                for (int b = 0; b < sx; b++) {
-                    int px = tx + col * sx + b, py = ty + row * sy + a;
+            for (int a = 0; a < draw_sy; a++)
+                for (int b = 0; b < draw_sx; b++) {
+                    int px = tx + col * draw_sx + b, py = ty + row * draw_sy + a;
                     if (clip_text && (px < cx0 || px >= cx1 || py < cy0 || py >= cy1))
                         continue;
                     put(px, py, v);
                 }
         }
-    tx += width * sx;
+    tx += width * draw_sx;
 }
 
 void gfx_PrintStringXY(const char *s, int x, int y)

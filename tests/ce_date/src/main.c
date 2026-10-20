@@ -6,13 +6,17 @@
 #include <ti/getcsc.h>
 #include <ti/ui.h>
 #include <sys/lcd.h>
+#include <graphx.h>
 #include "calc.h"
 #include "format.h"
 #include "dateobj.h"
 #include "res.h"
+#include "display.h"
 #include "../../../src/sys/brightness.h"
 
-#define RESULTS ((volatile uint8_t *)0xD40000)
+/* Keep results outside VRAM while the real display renderer is exercised. */
+static uint8_t results[128];
+#define RESULTS results
 static calc_t c;
 static uint8_t checks;
 static int clock_fields[6] = {2026, 10, 19, 0, 0, 0};
@@ -57,6 +61,32 @@ bool sys_clock_read(int *y, int *m, int *d, int *h, int *mi, int *s)
   *h = clock_fields[3]; *mi = clock_fields[4]; *s = clock_fields[5]; return true; }
 void sys_clock_write(int y, int m, int d, int h, int mi, int s)
 { (void)y; (void)m; (void)d; (void)h; (void)mi; (void)s; clock_writes++; }
+
+static uint32_t screen_hash(int x, int y, int w, int h)
+{
+    const uint8_t *screen = (const uint8_t *)lcd_UpBase;
+    uint32_t hash = UINT32_C(2166136261);
+    for (int row = y; row < y + h; row++)
+        for (int col = x; col < x + w; col++)
+            hash = (hash ^ screen[row * 320 + col]) * UINT32_C(16777619);
+    return hash;
+}
+
+static void message_bounds(int *width, int *height)
+{
+    const uint8_t *screen = (const uint8_t *)lcd_UpBase;
+    int left = 320, right = -1, top = 48, bottom = -1;
+    for (int y = 18; y < 48; y++)
+        for (int x = 6; x < 290; x++)
+            if (screen[y * 320 + x] == 1) { /* COL_INK; excludes menu arrows */
+                if (x < left) left = x;
+                if (x > right) right = x;
+                if (y < top) top = y;
+                if (y > bottom) bottom = y;
+            }
+    *width = right < left ? 0 : right - left + 1;
+    *height = bottom < top ? 0 : bottom - top + 1;
+}
 
 int main(void)
 {
@@ -184,8 +214,33 @@ int main(void)
     check(lcd_BacklightLevel == 224 && os_Brightness == 224);
     lcd_BacklightLevel = saved_lcd;
     os_Brightness = saved_os;
+
+    /* Real GraphX clipped text ignores scaling: host mocks cannot prove
+     * that warning glyphs actually grow on a CE. Inspect the visible LCD. */
+    calc_init(&c);
+    menu_t menu;
+    catalog_t catalog = {0};
+    menu_home(&menu);
+    display_open();
+    display_draw(&c, &menu, false, false, NULL, false, &catalog);
+    uint32_t status = screen_hash(0, 0, 320, 18);
+    uint32_t arrows = screen_hash(302, 25, 12, 16);
+    c.message = "Err: Domain";
+    display_draw(&c, &menu, false, false, NULL, false, &catalog);
+    int width, height;
+    message_bounds(&width, &height);
+    check(height == 14); /* seven ink rows, rendered twice instead of once */
+    check(width > 0 && width <= (int)gfx_GetStringWidth(c.message));
+    check(screen_hash(0, 0, 320, 18) == status);
+    check(screen_hash(302, 25, 12, 16) == arrows);
+    c.message = "TVM Stored";
+    display_draw(&c, &menu, false, false, NULL, false, &catalog);
+    message_bounds(&width, &height);
+    check(height == 7); /* normal informational text is still unscaled */
+    display_close();
     RESULTS[0] = checks;
     RESULTS[127] = 0xAA;
+    memcpy((void *)0xD40000, results, sizeof results);
     while (!os_GetCSC()) { }
     return 0;
 }

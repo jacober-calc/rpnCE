@@ -19,6 +19,7 @@ size_t mock_res_size;
 uint16_t gfx_palette[256];
 static uint64_t fingerprint;
 static uint8_t scale_x = 1, scale_y = 1;
+static uint8_t text_config;
 static int text_y;
 static unsigned large_message_chars, bad_status_scale, arrow_pixels, bad_arrow_size;
 static int fails;
@@ -64,7 +65,7 @@ uint8_t gfx_SetTextTransparentColor(uint8_t c) { record(11); record(c); return 0
 void gfx_SetTextScale(uint8_t x, uint8_t y)
 { scale_x = x; scale_y = y; record(12); record(x); record(y); }
 void gfx_SetTextXY(int x, int y) { text_y = y; record(13); record((uint32_t)x); record((uint32_t)y); }
-void gfx_SetTextConfig(uint8_t c) { record(14); record(c); }
+void gfx_SetTextConfig(uint8_t c) { text_config = c; record(14); record(c); }
 void gfx_SetClipRegion(int a, int b, int c, int d)
 { record(15); record((uint32_t)a); record((uint32_t)b); record((uint32_t)c); record((uint32_t)d); }
 unsigned int gfx_GetCharWidth(char c)
@@ -74,7 +75,8 @@ unsigned int gfx_GetStringWidth(const char *s)
 void gfx_PrintChar(char c)
 {
     record(16); record((uint8_t)c); printed_char(c);
-    if (text_y >= 18 && text_y < 48 && scale_x == 2 && scale_y == 2)
+    if (text_y >= 18 && text_y < 48 && text_config == gfx_text_noclip &&
+        scale_x == 1 && scale_y == 2)
         large_message_chars++;
 }
 void gfx_PrintStringXY(const char *s, int x, int y)
@@ -181,8 +183,8 @@ static void appearance(void)
     draw(&c, &m, &cat, NULL, false);
     display_close();
     printf("display fingerprint: %016" PRIx64 "\n", fingerprint);
-    /* Intentional appearance change: double-width warnings. */
-    check("whole-display drawing commands match approved layout", fingerprint == UINT64_C(0x4394cc5a585995ef));
+    /* Intentional appearance change: scaled warning glyphs, original spacing. */
+    check("whole-display drawing commands match approved layout", fingerprint == UINT64_C(0xd371a9a120421e02));
 }
 
 static void formatting_work(void)
@@ -354,9 +356,10 @@ static void warning_size(void)
     c.message = "Err: Unit Mismatch";
     large_message_chars = bad_status_scale = arrow_pixels = bad_arrow_size = 0;
     draw(&c, &m, &cat, NULL, false);
-    check("error text is double width and height", large_message_chars == strlen(c.message));
+    check("error glyphs are taller, with their original width and spacing",
+          large_message_chars == strlen(c.message));
     check("status bar font and menu arrows retain their original size",
-          !bad_status_scale && arrow_pixels && !bad_arrow_size);
+          !bad_status_scale && arrow_pixels && !bad_arrow_size && text_config == gfx_text_clip);
     c.message = NULL;
     c.base.radix = 16; c.base.bits = 8; c.stack[0] = mk(256);
     large_message_chars = 0;

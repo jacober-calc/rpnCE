@@ -12,7 +12,7 @@ import subprocess
 import sys
 
 HERE = Path(__file__).resolve().parent
-CHECK_COUNT = 47
+CHECK_COUNT = 52
 
 
 def crc32c(data):
@@ -55,7 +55,7 @@ def main():
         'target': target,
         'sequence': sequence + ['hash|date'],
         'hashes': {'date': {
-            'description': f'{CHECK_COUNT} native checks: DATE, numeric separators and brightness',
+            'description': f'{CHECK_COUNT} native checks: DATE, numeric display, brightness and warning pixels',
             'start': '0xD40000', 'size': '128',
             'expected_CRCs': [f'{crc32c(expected):08X}'],
         }},
