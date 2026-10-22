@@ -273,9 +273,49 @@ static void tvm_catalog(void)
     check("catalog wraps back to the first register", !cat.sel && !cat.top);
 }
 
+static void unit_matrix(void)
+{
+    static const calc_cmd_t rounding[] = { CMD_INT_PART, CMD_FRAC_PART, CMD_FLOOR,
+        CMD_CEIL, CMD_NEAR, CMD_ROUND_FIX, CMD_ROUND_N, CMD_ROUND_G };
+    static const calc_cmd_t arithmetic[] = { CMD_ADD, CMD_SUB, CMD_MUL, CMD_DIV,
+        CMD_MOD, CMD_MIN, CMD_MAX, CMD_PERCENT, CMD_PERCENT_CHANGE, CMD_ABS, CMD_SIGN };
+    for (uint8_t i = 0; i < UNIT_COUNT; i++) {
+        uint8_t tag = i + 1;
+        uint8_t dimension = unit_dim(i);
+        pair(0, 0, 123.25, tag);
+        cmd(CMD_UNIT, unit_base_of(dimension)); cmd(CMD_UNIT, i);
+        check("each unit converts to its base and back", !c.message &&
+              near(c.stack[0].v, 123.25) && c.unit[0] == tag);
+        cmd(CMD_STO, REG_A); cmd(CMD_CLEAR, 0); cmd(CMD_RCL, REG_A);
+        check("each unit survives ordinary register storage and recall",
+              !c.message && near(c.stack[0].v, 123.25) && c.unit[0] == tag);
+        for (unsigned k = 0; k < sizeof rounding / sizeof *rounding; k++) {
+            pair(0, 0, 12.75, 0); cmd(rounding[k], 2);
+            double expected = c.stack[0].v;
+            pair(0, 0, 12.75, tag); cmd(rounding[k], 2);
+            check("each unit supports documented numeric rounding",
+                  !c.message && near(c.stack[0].v, expected) && c.unit[0] == tag);
+        }
+        if (dimension == DIM_TEMP || dimension == DIM_FUEL) {
+            for (unsigned k = 0; k < sizeof arithmetic / sizeof *arithmetic; k++) {
+                pair(6, tag, 2, tag);
+                refused("TEMP/FUEL arithmetic preserves state on refusal",
+                        arithmetic[k], 0, "Err: Data Type");
+            }
+        } else {
+            pair(6, tag, 2, tag); cmd(CMD_ADD, 0);
+            check("each linear unit supports quantity addition",
+                  !c.message && near(c.stack[0].v, 8) && c.unit[0] == tag);
+            pair(6, tag, 2, tag); cmd(CMD_DIV, 0);
+            check("each linear unit supports a dimensionless ratio",
+                  !c.message && near(c.stack[0].v, 3) && !c.unit[0]);
+        }
+    }
+}
+
 int main(void)
 {
-    numbers(); quantities(); registers(); tvm_catalog();
+    numbers(); quantities(); registers(); tvm_catalog(); unit_matrix();
     printf("%d failures\n", fails);
     return fails != 0;
 }

@@ -3,9 +3,15 @@
 This is the 0.7.0 development build from `dev`. Send both files from `bin/` using TI Connect CE,
 replacing the matching files on the calculator:
 
-- `bin/RPNCE.8xp`: 46,832 bytes
+- `bin/RPNCE.8xp`: 46,743 bytes
 - `bin/RPNCEres.8xv`: 17,043 bytes; resource stamp `898EE9EC` (format 2,
   with 19 HELP pages)
+
+The [release workflow](RELEASING.md) runs the computer checks, records
+source and artifact hashes, and creates the device-acceptance template.
+The physical checks below remain pending until recorded against those
+files. Use `bin/` or the candidate ZIP for development testing; `prod/`
+is updated after final acceptance.
 
 Use the existing CE libraries. An existing `RPNCEdat` from 0.6.6, or from
 an earlier `refactor` test build, loads without a reset. Earlier refactor
@@ -164,11 +170,14 @@ selection and HELP in each new preset. Quit and reopen to check persistence.
 
 ## Completed checks
 
-All 15 host suites pass, also under AddressSanitizer and
+All 16 host suites pass, also under AddressSanitizer and
 UndefinedBehaviorSanitizer. The old-core comparison matches 22,848 scalar
 command/state cases and 8,568 entry steps, with intentional changes covered
 separately. Old/new storage readers and writers were checked in both
 directions at 0, 5 and 100 extra registers. The CE toolchain v15 build
 succeeds; both TI file checksums and the appvar's resource payload validate.
 
-Hardware execution remains to be verified by these calculator tests.
+The native suite has 83 checks, including all-unit round trips and all
+four curve-fit models. Five separate CEmu checks exercise the shipped
+program's keyboard loop and actual save/load appvars. Physical execution
+remains to be verified by the calculator tests above.

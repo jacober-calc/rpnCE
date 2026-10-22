@@ -6,7 +6,7 @@ they use the host compiler and its calling conventions. The native build
 reproduced `1987-01-17 + 15000` failing and corrupted date differences.
 
 This suite compiles the real calculator core with release `-Oz` and LTO,
-uses TI-OS real-number routines, and checks 54 results in CEmu. It covers
+uses TI-OS real-number routines, and checks 83 results in CEmu. It covers
 the reported addition, subtraction in both directions, NOWD, scalar-first
 addition, leap days, STO arithmetic, epoch and zoned conversions, years 1
 and 9999, and the 2038 boundary. Clock checks cover CTZ/ATZ alignment,
@@ -25,6 +25,12 @@ confirmations. The stack-clear case executes the real CLEAR commands.
 This catches GraphX's clipped-text path ignoring scaling, which desktop
 scale-call checks previously missed. Results are buffered outside VRAM
 until drawing is finished, then published for the emulator's CRC check.
+
+Additional release checks exercise PRIM, LCM, quantities and registers,
+temperature/fuel restrictions, every unit's base round trip, all four
+curve-fit models, TVM and VARS. The total is defined in `checks.h`; a
+count mismatch fails the suite. See [the release workflow](../../docs/RELEASING.md)
+for the consolidated runner and actual-program persistence tests.
 
 With the CE toolchain and `cemu-autotester` on PATH, point these environment
 variables to your own ROM and CE libraries:

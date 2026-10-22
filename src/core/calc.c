@@ -17,7 +17,7 @@
 /* ---------- constants ---------- */
 
 static real_t r_three, r_360;
-static real_t r_ln10, r_ln2, r_pi, r_e, r_half_pi, r_quarter_pi, r_tenth;
+static real_t r_ln10, r_ln2, r_pi, r_e, r_half_pi, r_quarter_pi;
 
 static void init_constants(void)
 {
@@ -31,7 +31,6 @@ static void init_constants(void)
     r_half_pi = os_RealDiv(&r_pi, &mx_two);
     real_t four = os_Int24ToReal(4);
     r_quarter_pi = os_RealDiv(&r_pi, &four);
-    r_tenth = os_RealDiv(&mx_one, &mx_ten);
 }
 
 /* ---------- stack primitives ---------- */

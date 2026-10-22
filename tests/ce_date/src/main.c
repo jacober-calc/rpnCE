@@ -3,6 +3,7 @@
  * zero padding and a completion marker. No RPNCE saved data is loaded or
  * written. A simulated clock makes NOW* and time-zone checks reproducible. */
 #include <string.h>
+#include <stddef.h>
 #include <ti/getcsc.h>
 #include <ti/ui.h>
 #include <sys/lcd.h>
@@ -12,7 +13,14 @@
 #include "dateobj.h"
 #include "res.h"
 #include "display.h"
+#include "units.h"
+#include "../checks.h"
 #include "../../../src/sys/brightness.h"
+
+_Static_assert(sizeof(real_t) == 9 && offsetof(calc_t, regs) == 131,
+               "update the release UI smoke test for the new CE value layout");
+_Static_assert(NATIVE_CHECK_COUNT > 0 && NATIVE_CHECK_COUNT <= 126,
+               "native results must fit before the completion marker");
 
 /* Keep results outside VRAM while the real display renderer is exercised. */
 static uint8_t results[128];
@@ -21,7 +29,11 @@ static calc_t c;
 static uint8_t checks;
 static int clock_fields[6] = {2026, 10, 19, 0, 0, 0};
 static unsigned clock_writes;
-static void check(bool pass) { RESULTS[++checks] = pass ? 1 : 0; }
+static void check(bool pass)
+{
+    if (checks < 126) RESULTS[++checks] = pass ? 1 : 0;
+    else checks = 127;                       /* fail a count mismatch safely */
+}
 static void cmd(calc_cmd_t k, uint8_t arg) { calc_execute(&c, k, arg); }
 static void number(int n)
 {
@@ -55,6 +67,145 @@ static bool x_object(const char *text)
     dt_obj_t o = obj_unpack(&c.stack[0]);
     dt_format(actual, &o, false);
     return !strcmp(actual, text);
+}
+
+static uint8_t unit_tag(const char *label)
+{
+    for (uint8_t i = 0; i < UNIT_COUNT; i++)
+        if (!strcmp(unit_label(i), label)) return i + 1;
+    return 0;
+}
+
+static bool x_close(const char *text)
+{
+    if (c.message || obj_is(&c.stack[0])) return false;
+    real_t target = os_StrToReal(text, NULL), tolerance = os_StrToReal("1E-10", NULL);
+    real_t zero = os_Int24ToReal(0);
+    real_t delta = os_RealSub(&c.stack[0], &target);
+    if (os_RealCompare(&delta, &zero) < 0) delta = os_RealNeg(&delta);
+    return os_RealCompare(&delta, &tolerance) <= 0;
+}
+
+static void pair(int y, uint8_t uy, int x, uint8_t ux)
+{
+    calc_init(&c);
+    c.stack[1] = os_Int24ToReal(y); c.unit[1] = uy;
+    c.stack[0] = os_Int24ToReal(x); c.unit[0] = ux;
+}
+
+static bool rejected(calc_cmd_t operation, const char *error)
+{
+    real_t x = c.stack[0], y = c.stack[1], lastx = c.lastx;
+    uint8_t ux = c.unit[0], uy = c.unit[1], ul = c.unit_lastx;
+    bool lift = c.lift;
+    cmd(operation, 0);
+    return c.message && !strcmp(c.message, error) &&
+           !memcmp(&x, &c.stack[0], sizeof x) && !memcmp(&y, &c.stack[1], sizeof y) &&
+           !memcmp(&lastx, &c.lastx, sizeof lastx) && c.unit[0] == ux &&
+           c.unit[1] == uy && c.unit_lastx == ul && c.lift == lift;
+}
+
+static void release_regressions(void)
+{
+    pair(0, 0, 1981, 0); cmd(CMD_PRIME, 0);
+    check(x_number("7") && os_RealToInt24(&c.stack[1]) == 1981);
+    cmd(CMD_DIV, 0); cmd(CMD_PRIME, 0);
+    check(x_number("1") && os_RealToInt24(&c.stack[1]) == 283);
+    pair(6, 0, 8, 0); cmd(CMD_LCM, 0); check(x_number("24"));
+    pair(21, 0, 6, 0); cmd(CMD_LCM, 0); check(x_number("42"));
+    pair(0, 0, 6, 0); cmd(CMD_LCM, 0); check(x_number("0"));
+    pair(6, 0, 0, 0); cmd(CMD_LCM, 0); check(x_number("0"));
+
+    bool formats_ok = true;
+    const uint8_t radices[] = {2, 8, 16};
+    base_state_t base = {0};
+    for (uint8_t bits = 1; bits <= BASE_MAX_BITS; bits++)
+        for (uint8_t r = 0; r < 3; r++) {
+            char text[48];
+            base.bits = bits; base.radix = radices[r];
+            base_word_t value = base_mask(&base), parsed = 0;
+            base_format(text, &base, value);
+            for (const char *p = text; *p; p++)
+                parsed = parsed * base.radix + (base_word_t)base_digit_value(&base, *p);
+            formats_ok = formats_ok && parsed == value && text[0] != '0';
+        }
+    check(formats_ok);
+
+    uint8_t ft = unit_tag("ft"), in = unit_tag("in");
+    uint8_t kwh = unit_tag("kWh"), kcal = unit_tag("kcal"), kw = unit_tag("kW");
+    pair(2, kwh, 2000, kcal); cmd(CMD_PERCENT_CHANGE, 0);
+    check(kwh && kcal && x_close("16.222222222222") && !c.unit[0] && c.unit[1] == kwh);
+    pair(6, ft, 2, in); cmd(CMD_ADD, 0); cmd(CMD_UNIT, in - 1);
+    check(ft && in && x_close("74") && c.unit[0] == in);
+    pair(6, ft, 2, in); cmd(CMD_DIV, 0);
+    check(x_close("36") && !c.unit[0]);
+    pair(2, kw, 2000, kcal);
+    check(kw && rejected(CMD_PERCENT_CHANGE, "Err: Unit Mismatch"));
+    pair(6, ft, 2, 0); check(rejected(CMD_ADD, "Err: Data Type"));
+    pair(0, 0, 5, ft); cmd(CMD_STO, REG_A); cmd(CMD_CLEAR, 0); cmd(CMD_RCL, REG_A);
+    check(x_number("5") && c.unit[0] == ft);
+    pair(0, 0, 6, ft); cmd(CMD_STO, REG_A);
+    number(2); cmd(CMD_UNIT, in - 1); cmd(CMD_STO_ADD, REG_A); cmd(CMD_RCL, REG_A);
+    check(x_close("6.1666666666667") && c.unit[0] == ft);
+    pair(0, 0, 6, ft); cmd(CMD_STO, REG_A);
+    number(2); cmd(CMD_UNIT, in - 1); cmd(CMD_XCH, REG_A);
+    check(x_number("6") && c.unit[0] == ft && c.reg_unit[0] == in &&
+          os_RealToInt24(&c.regs[0]) == 2);
+
+    uint8_t cel = unit_tag("\x09" "C"), kel = unit_tag("\x09" "K");
+    pair(0, 0, 0, cel); cmd(CMD_UNIT, kel - 1);
+    check(cel && kel && x_close("273.15") && c.unit[0] == kel);
+    pair(10, cel, 20, cel); check(rejected(CMD_ADD, "Err: Data Type"));
+    pair(0, 0, 0, cel); cmd(CMD_UNIT, kel - 1); cmd(CMD_ROUND_N, 0);
+    check(x_number("273") && c.unit[0] == kel);
+    uint8_t mpg = unit_tag("mpg"), lkm = unit_tag("Lkm");
+    pair(0, 0, 30, mpg); cmd(CMD_UNIT, lkm - 1);
+    check(mpg && lkm && x_close("7.840486111111") && c.unit[0] == lkm);
+    pair(2, 0, 30, mpg); check(rejected(CMD_MUL, "Err: Data Type"));
+    pair(0, 0, 30, mpg); cmd(CMD_UNIT, lkm - 1); cmd(CMD_ROUND_N, 0);
+    check(x_number("8") && c.unit[0] == lkm);
+
+    pair(2, 0, 1, 0); cmd(CMD_STAT_PLUS, 0);
+    c.stack[0] = os_Int24ToReal(3); c.stack[1] = os_Int24ToReal(4);
+    cmd(CMD_STAT_PLUS, 0); cmd(CMD_STAT_MEAN, 0);
+    check(x_number("2") && os_RealToInt24(&c.stack[1]) == 3);
+
+    pair(2, 0, 1, 0); cmd(CMD_STAT_PLUS, 0);
+    c.stack[0] = os_Int24ToReal(2); c.stack[1] = os_Int24ToReal(4);
+    cmd(CMD_STAT_PLUS, 0);
+    for (uint8_t model = 0; model < FIT_COUNT; model++) {
+        cmd(CMD_FIT_MODEL, model);
+        c.stack[0] = os_Int24ToReal(model == FIT_LOG ? 4 : 3);
+        cmd(CMD_FIT_Y, 0);
+        check(x_close(model == FIT_EXP ? "8" : "6"));
+    }
+
+    real_t finance[TVM_VAR_COUNT];
+    for (uint8_t i = 0; i < TVM_VAR_COUNT; i++) finance[i] = *tvm_var(i);
+    os_Fin_N = os_Int24ToReal(10); os_Fin_I = os_Int24ToReal(0);
+    os_Fin_PV = os_Int24ToReal(1000); os_Fin_PMT = os_Int24ToReal(0);
+    os_Fin_FV = os_Int24ToReal(0); os_Fin_PY = os_Fin_CY = os_Int24ToReal(12);
+    c.last_cmd = CMD_TVM_VAR; cmd(CMD_TVM_VAR, TVM_PMT);
+    check(c.message && !strcmp(c.message, "TVM Calculated") &&
+          os_RealToInt24(&c.stack[0]) == -100);
+    catalog_t catalog = {0};
+    bool vars_ok = catalog_open(&catalog, &c) && catalog.items[catalog.count - 1] == CAT_LASTX;
+    for (uint8_t item = CAT_TVM_FIRST; item <= CAT_TVM_LAST; item++) {
+        bool found = false;
+        for (uint8_t i = 0; i < catalog.count; i++) found |= catalog.items[i] == item;
+        vars_ok &= found;
+    }
+    check(vars_ok);
+    for (uint8_t i = 0; i < TVM_VAR_COUNT; i++) *tvm_var(i) = finance[i];
+
+    bool units_ok = true;
+    for (uint8_t i = 0; i < UNIT_COUNT; i++) {
+        calc_init(&c);
+        c.stack[0] = os_StrToReal("123.25", NULL); c.unit[0] = i + 1;
+        cmd(CMD_UNIT, unit_base_of(unit_dim(i))); cmd(CMD_UNIT, i);
+        units_ok &= x_close("123.25") && c.unit[0] == i + 1;
+    }
+    check(units_ok);
 }
 bool sys_clock_read(int *y, int *m, int *d, int *h, int *mi, int *s)
 { *y = clock_fields[0]; *m = clock_fields[1]; *d = clock_fields[2];
@@ -243,7 +394,9 @@ int main(void)
     message_bounds(&width, &height);
     check(height == 14 && width > 0 && width <= (int)gfx_GetStringWidth(c.message));
     display_close();
+    release_regressions();
     RESULTS[0] = checks;
+    if (checks != NATIVE_CHECK_COUNT) RESULTS[0] = 0;
     RESULTS[127] = 0xAA;
     memcpy((void *)0xD40000, results, sizeof results);
     while (!os_GetCSC()) { }

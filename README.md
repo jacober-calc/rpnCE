@@ -39,7 +39,7 @@ with operating procedures, worked keystroke examples, and a
 
 1. Download the latest `RPNCE-<version>.zip` from the releases and unzip
    it, or take the two files straight from the [`prod/`](prod) folder,
-   which always holds the current build. You need `RPNCE.8xp` (the program)
+   which holds the production build. You need `RPNCE.8xp` (the program)
    and `RPNCEres.8xv` (its menus and unit tables). Also get the
    [CE C libraries](https://github.com/CE-Programming/libraries/releases)
    (`clibs.8xg`) if you don't already have them.
@@ -76,9 +76,10 @@ some register has one). Deleting them resets RPNCE; upgrading keeps them.
 2. Run `make` in this folder. It writes `bin/RPNCE.8xp` (stored compressed
    and archived; it unpacks itself into RAM when started) and
    `bin/RPNCEres.8xv` (archived).
-3. For a release, run `sh tools/release.sh`: it builds and bundles both
-   files with install notes as `release/RPNCE-<version>.zip`. The version
-   is set in `src/core/version.h`.
+3. For release preparation, run `sh tools/release.sh`: it runs the full
+   checks and packages `release/RPNCE-<version>-rc.zip`. After device
+   acceptance, promote the files using the [release workflow](docs/RELEASING.md).
+   The version is set in `src/core/version.h`.
 
 To try it without a calculator, load both files and `clibs.8xg` into the
 [CEmu](https://ce-programming.github.io/CEmu/) emulator.
@@ -87,7 +88,7 @@ To try it without a calculator, load both files and `clibs.8xg` into the
 
 The menu tree, unit tables and HELP pages (about 17 KB) live in `RPNCEres`
 and are read straight from archive, so they use no RAM. The 0.7.0 build has
-an 83,249-byte program image and 3,860 bytes of static variables, excluding
+an 82,935-byte program image and 3,860 bytes of static variables, excluding
 runtime stack and library allocations. See the
 [refactor measurements](docs/REFACTOR.md) for the comparison with the original.
 
@@ -107,9 +108,13 @@ calculator core, reported bug regressions, display redraws, and brightness contr
 stand-ins for the calculator's number routines.
 
 The [native DATE regressions](tests/ce_date/README.md) additionally compile
-the real core with the CE toolchain and run 54 checks in CEmu using TI-OS
+the real core with the CE toolchain and run 83 checks in CEmu using TI-OS
 number routines. They cover a CE-specific compiler failure that the desktop
-stand-ins cannot reproduce, and verify CTZ/ATZ clock conversions.
+stand-ins cannot reproduce, CTZ/ATZ conversions, unit round trips and all
+four curve-fit models. Five further checks exercise the shipped program's
+keyboard loop and saving/reopening in CEmu. The
+[release workflow](docs/RELEASING.md) consolidates these with sanitized
+desktop tests, resource checks, file validation and size measurements.
 
 To compare the refactored core against the original in a Git checkout:
 

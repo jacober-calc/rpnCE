@@ -12,7 +12,10 @@ __pycache__/
 *.pyc
 
 # Release builds (tools/release.sh)
-release/
+/release/
+
+# Local Python environment
+.venv/
 
 # Screenshot tool downloads and builds (tools/screenshots/run.py)
 tools/screenshots/.cache/

@@ -8,11 +8,13 @@ pass the local arTIfiCE .8xp file as the optional first argument.
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 
 HERE = Path(__file__).resolve().parent
-CHECK_COUNT = 54
+CHECK_COUNT = int(re.search(r'NATIVE_CHECK_COUNT (\d+)',
+                           (HERE / 'checks.h').read_text()).group(1))
 
 
 def crc32c(data):
@@ -29,7 +31,7 @@ def main():
         sys.exit('Set AUTOTESTER_ROM to your local TI-84 Plus CE ROM file.')
     if len(sys.argv) > 2:
         sys.exit('Usage: python3 tests/ce_date/run.py [arTIfiCE-v2.8xp]')
-    subprocess.run(['make', '-C', str(HERE)], check=True)
+    subprocess.run(['make', '-B', '-C', str(HERE)], check=True)
     files = [str(HERE / 'bin' / name) for name in ('RPNDATE.8xp', 'RPNCEres.8xv')]
     target = {'name': 'RPNDATE', 'isASM': True}
     sequence = ['action|launch', 'delay|2000']
@@ -55,9 +57,10 @@ def main():
         'target': target,
         'sequence': sequence + ['hash|date'],
         'hashes': {'date': {
-            'description': f'{CHECK_COUNT} native checks: DATE, numeric display, brightness and warning pixels',
+            'description': f'{CHECK_COUNT} native release checks: arithmetic, units, statistics, TVM, DATE and display',
             'start': '0xD40000', 'size': '128',
             'expected_CRCs': [f'{crc32c(expected):08X}'],
+            'timeout': 30000,
         }},
     }
     config_path = HERE / 'bin' / 'autotest.json'

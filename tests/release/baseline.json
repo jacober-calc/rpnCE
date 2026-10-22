@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "status": "measurement_only",
+  "commit": "8c8590b935c71697028f05e1d4211c502f65b39c",
+  "toolchain": "v15.0",
+  "build_settings": {
+    "makefile_sha256": "a2afbc56f56971bf38c987fdfe49168e5a66d6220970b3766d51b9b02960932a"
+  },
+  "artifacts": {
+    "metrics": {
+      "image_bytes": 83249,
+      "static_ram_bytes": 3860,
+      "program_bytes": 46832,
+      "resource_bytes": 17043
+    }
+  }
+}

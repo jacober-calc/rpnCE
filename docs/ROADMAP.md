@@ -41,8 +41,9 @@
       complex numbers) and quantities in ordinary registers, with register
       units in their own checksummed appvar (RPNCEunt)
 - [ ] Remaining: CPLX (and its MODE settings)
-- [ ] Check each UNIT function against RPN83P's rules, including which NUM
-      functions accept TEMP and FUEL values
+- [x] Release tests cover all units' base round trips, storage and rounding,
+      with explicit TEMP/FUEL arithmetic restrictions. The documented
+      supported operations define the 0.7.0 release scope.
 - [x] Chapter-based [user manual for 0.7.0](USER_GUIDE.md), with worked
       examples, troubleshooting, and generated menu map, unit list and
       alphabetical function index (tools/guide_appendix.py)
@@ -56,8 +57,8 @@
 - [x] Remaining MATH/NUM/PROB/CONV items (ATN2, E^X-, LN1+, PRIM, rounding, RAND)
 
 ## Later
-- Lite 32SII-style menus on keys like MATH, STAT, APPS (angle), PRGM, VARS
-- BASE, STAT, TVM, complex numbers, units, dates
+- Complex-number entry, storage, display and arithmetic
+- General dimensional algebra and compound units
 
 ## Size
 - [x] Program stored compressed (COMPRESSED = YES in the makefile); it
@@ -65,5 +66,6 @@
       longer caps the program's real size
 - [x] Menus and unit tables in the RPNCEres appvar, read from archive (no
       RAM); version-stamped, with a clear message if it's missing
-- [x] Release packaging: tools/release.sh builds RPNCE-<version>.zip
+- [x] Consolidated release tests, optimization review, candidate packaging,
+      and final promotion after device acceptance; see [RELEASING.md](RELEASING.md)
 - [x] HELP text in the RPNCEres appvar
