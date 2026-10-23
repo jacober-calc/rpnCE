@@ -10,6 +10,10 @@ ARCHIVED = YES
 CFLAGS = -Wall -Wextra -Oz
 CXXFLAGS = -Wall -Wextra -Oz
 
+# Keep linker output with the other intermediate files.
+TARGETOBJ = ../$(OBJDIR)/$(NAME).obj
+TARGETMAP = ../$(OBJDIR)/$(NAME).map
+
 # Sources in subfolders of src/ are picked up automatically.
 
 # ----------------------------

@@ -1,10 +1,16 @@
-RPNCE @VERSION@ - an RPN calculator for the TI-84 Plus CE
+RPNCE 0.7.0 - an RPN calculator for the TI-84 Plus CE
 ==========================================================
+
+An HP-style RPN calculator with scientific functions, statistics, TVM,
+units, BASE arithmetic, and dates and times. Complex numbers are not
+supported in this release.
 
 Files
 -----
   RPNCE.8xp      the program
   RPNCEres.8xv   its menus, unit tables and HELP pages (required)
+  README.txt    installation, basic use, documentation and support
+  LICENSE       redistribution terms
 
 RPNCE also needs the CE C libraries (clibs.8xg), which many CE programs
 use. If you don't have them, download clibs.8xg from
@@ -33,11 +39,32 @@ private state; it does not clear shared TI-OS TVM values or reset the clock.
 
 Getting started
 ---------------
+RPN calculations use ENTER to separate numbers, followed by an operation.
+The current number is X; the previous number is Y.
+
   2 ENTER 3 +           5
   MATH                  the menu tree (ON goes back)
   MODE                  display format, angle mode, and more
+  2ND 0                 on-device HELP
   2ND QUIT              save and exit
 
-The full user manual starts at docs/USER_GUIDE.md in the project.
-The compact key and menu reference is docs/KEYS.md:
+User documentation
+------------------
+The illustrated User Guide explains the stack, registers, menus and
+functions, with worked examples:
+https://github.com/jacober-calc/rpnce/blob/main/docs/USER_GUIDE.md
+
+Key and menu reference:
+https://github.com/jacober-calc/rpnce/blob/main/docs/KEYS.md
+
+Bug reports and issues
+----------------------
+Check existing issues, or report a problem at:
+https://github.com/jacober-calc/rpnce/issues
+
+Include the RPNCE version (shown in HELP / ABOUT), calculator model,
+TI-OS version, exact keys and inputs, expected result and actual result.
+Mention relevant settings such as angle mode, units or time zones.
+
+Project and source code:
 https://github.com/jacober-calc/rpnce

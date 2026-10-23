@@ -29,7 +29,6 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, os.path.join(ROOT, 'tools'))
 import genmenu  # noqa: E402
-from project_files import referenced_assets
 
 from PIL import Image, ImageDraw  # noqa: E402
 
@@ -295,6 +294,23 @@ def screen_images(menus, sequences, tmp):
             save(img, os.path.join(OUT, 'screens', name + '.png'))
 
 
+def referenced_images():
+    root = Path(ROOT)
+    assets = (root / 'assets').resolve()
+    images = set()
+    for page in [root / 'README.md', *(root / 'docs').rglob('*.md')]:
+        text = page.read_text()
+        targets = re.findall(r'!?\[[^\]]*\]\(([^\s)]+)(?:\s+"[^"]*")?\)', text)
+        targets += re.findall(r'<img\s[^>]*src="([^"]+)"', text)
+        for target in targets:
+            if '://' in target or target.startswith(('#', 'mailto:')):
+                continue
+            path = (page.parent / target.split('#', 1)[0]).resolve()
+            if assets in path.parents:
+                images.add(path)
+    return images
+
+
 def main():
     global OUT
     os.chdir(ROOT)
@@ -303,7 +319,7 @@ def main():
     import shots
     menus = Menus()
     published = OUT
-    wanted = referenced_assets(Path(ROOT))
+    wanted = referenced_images()
     with tempfile.TemporaryDirectory() as tmp:
         OUT = os.path.join(tmp, 'images')
         menu_images(menus, shots.MENUS, tmp)

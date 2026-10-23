@@ -84,8 +84,7 @@ restrictions described in [Units](14-units.md).
 
 This guide describes 0.7.0. Check the ABOUT help page for the installed
 version. The reference tables follow the program's menu and unit
-definitions. Future plans are maintained in the
-[roadmap](../ROADMAP.md), rather than presented as current capabilities.
+definitions.
 
 ---
 

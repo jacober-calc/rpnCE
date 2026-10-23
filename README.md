@@ -32,8 +32,7 @@ bottom of the screen, on a dot-matrix LCD-style display.
 The **[User Guide](docs/USER_GUIDE.md)** is a chapter-based manual for 0.7.0,
 with operating procedures, worked keystroke examples, and a
 [function index](docs/guide/19-reference.md#appendix-d-alphabetical-function-index).
-[docs/KEYS.md](docs/KEYS.md) is a compact key and menu reference, and
-[docs/ROADMAP.md](docs/ROADMAP.md) shows what's done and what's next.
+[docs/KEYS.md](docs/KEYS.md) is a compact key and menu reference.
 
 ## Installing
 
@@ -75,11 +74,9 @@ some register has one). Deleting them resets RPNCE; upgrading keeps them.
    (developed against v15.0).
 2. Run `make` in this folder. It writes `bin/RPNCE.8xp` (stored compressed
    and archived; it unpacks itself into RAM when started) and
-   `bin/RPNCEres.8xv` (archived).
-3. For release preparation, run `sh tools/release.sh`: it runs the full
-   checks and packages `release/RPNCE-<version>-rc.zip`. After device
-   acceptance, promote the files using the [release workflow](docs/RELEASING.md).
-   The version is set in `src/core/version.h`.
+   `bin/RPNCEres.8xv` (archived). Intermediate files stay in `obj/`.
+
+The version is set in `src/core/version.h`.
 
 To try it without a calculator, load both files and `clibs.8xg` into the
 [CEmu](https://ce-programming.github.io/CEmu/) emulator.
@@ -109,10 +106,8 @@ stand-ins for the calculator's number routines.
 The [native tests](tests/README.md#native-ce-checks) additionally compile
 the real core with the CE toolchain and run 83 checks in CEmu using TI-OS
 number routines. They cover CE execution, CTZ/ATZ conversions, unit round trips and all
-four curve-fit models. Five further checks exercise the shipped program's
-keyboard loop and saving/reopening in CEmu. The
-[release workflow](docs/RELEASING.md) consolidates these with sanitized
-desktop tests, resource checks, file validation and size measurements.
+four curve-fit models. Five further checks exercise the program's
+keyboard loop and saving/reopening in CEmu.
 
 ## Layout
 
@@ -131,11 +126,11 @@ data/        RPNCEres.bin: the RPNCEres appvar's contents (generated)
 tools/       guide_appendix.py: regenerates the manual's menu map, unit list
              and function index; genres.py: builds RPNCEres and the matching headers from
              menus.txt (via genmenu.py) and the unit definitions
-             (genunits.py); release.sh: packages a release;
+             (genunits.py);
              screenshots/: makes the user guide's screenshots
 tests/       PC test suites and run_tests.sh
 docs/        USER_GUIDE.md: manual contents; guide/: chapters and reference
-             tables; key reference, roadmap, and install notes
+             tables; key reference and install notes
 ```
 
 ## Editing menus and units

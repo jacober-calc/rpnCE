@@ -1,4 +1,4 @@
-/* Entry, stack and record contracts, independent of Git history. */
+/* Entry, stack and record contracts. */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

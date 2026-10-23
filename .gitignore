@@ -11,9 +11,6 @@ obj/
 __pycache__/
 *.pyc
 
-# Release builds (tools/release.sh)
-/release/
-
 # Local Python environment
 .venv/
 
