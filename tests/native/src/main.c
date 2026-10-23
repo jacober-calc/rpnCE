@@ -1,4 +1,4 @@
-/* Release-compiled checks with TI-OS arithmetic and a fixed test clock.
+/* Optimized-build checks with TI-OS arithmetic and a fixed test clock.
  * The count, pass flags and completion marker are published to VRAM. */
 #include <string.h>
 #include <stddef.h>
@@ -16,7 +16,7 @@
 #include "../../../src/sys/brightness.h"
 
 _Static_assert(sizeof(real_t) == 9 && offsetof(calc_t, regs) == 131,
-               "update the release UI smoke test for the new CE value layout");
+               "update the UI smoke test for the new CE value layout");
 _Static_assert(NATIVE_CHECK_COUNT > 0 && NATIVE_CHECK_COUNT <= 126,
                "native results must fit before the completion marker");
 
@@ -56,7 +56,7 @@ static bool x_number(const char *text)
 {
     real_t expected = os_StrToReal(text, NULL);
     return !c.message && !obj_is(&c.stack[0]) &&
-           os_RealCompare(&c.stack[0], &expected) == 0;
+           !memcmp(&c.stack[0], &expected, sizeof expected);
 }
 static bool x_object(const char *text)
 {
@@ -77,11 +77,129 @@ static uint8_t unit_tag(const char *label)
 static bool x_close(const char *text)
 {
     if (c.message || obj_is(&c.stack[0])) return false;
-    real_t target = os_StrToReal(text, NULL), tolerance = os_StrToReal("1E-10", NULL);
+    real_t target = os_StrToReal(text, NULL), tolerance = os_StrToReal("1E-12", NULL);
     real_t zero = os_Int24ToReal(0);
-    real_t delta = os_RealSub(&c.stack[0], &target);
+    if (!memcmp(&c.stack[0], &target, sizeof target)) return true;
+    if (os_RealCompare(&target, &zero) == 0)
+        return os_RealCompare(&c.stack[0], &zero) == 0;
+    int difference = (uint8_t)c.stack[0].exp - (uint8_t)target.exp;
+    if (difference < -1 || difference > 1 || os_RealCompare(&c.stack[0], &zero) == 0)
+        return false;
+    real_t one = os_Int24ToReal(1);
+    real_t ratio = os_RealDiv(&c.stack[0], &target);
+    real_t delta = os_RealSub(&ratio, &one);
     if (os_RealCompare(&delta, &zero) < 0) delta = os_RealNeg(&delta);
     return os_RealCompare(&delta, &tolerance) <= 0;
+}
+
+static bool rejected(calc_cmd_t operation, const char *error);
+
+/* Independent decimal references; error cases also protect X/Y/LASTX. */
+static void numeric_boundaries(void)
+{
+    static const struct {
+        const char *name;
+        calc_cmd_t operation;
+        const char *y, *x, *expected, *error;
+        uint8_t argument;
+    } cases[] = {
+        {"decimal sum", CMD_ADD, "0.1", "0.2", "0.3", NULL, 0},
+        {"last stored digit", CMD_SUB, "1.0000000000001", "1", "1E-13", NULL, 0},
+        {"maximum value", CMD_ADD, "9.9999999999999E99", "0", "9.9999999999999E99", NULL, 0},
+        {"minimum scale", CMD_ADD, "1E-99", "1E-99", "2E-99", NULL, 0},
+        {"underflow range", CMD_DIV, "1E-99", "10", NULL, NULL, 0},
+        {"addition overflow", CMD_ADD, "9E99", "9E99", NULL, "Err: Overflow", 0},
+        {"multiplication overflow", CMD_MUL, "1E99", "10", NULL, "Err: Overflow", 0},
+        {"division overflow", CMD_DIV, "1E99", "0.1", NULL, "Err: Overflow", 0},
+        {"reciprocal at minimum", CMD_RECIP, "0", "1E-99", "1E99", NULL, 0},
+        {"positive tiny expm1", CMD_EXP_MINUS_ONE, "0", "1E-99", "1E-99", NULL, 0},
+        {"negative tiny expm1", CMD_EXP_MINUS_ONE, "0", "-1E-99", "-1E-99", NULL, 0},
+        {"tiny ln1p", CMD_LN_ONE_PLUS, "0", "1E-99", "1E-99", NULL, 0},
+        {"tiny sinh", CMD_SINH, "0", "1E-99", "1E-99", NULL, 0},
+        {"tiny asinh", CMD_ASINH, "0", "1E-99", "1E-99", NULL, 0},
+        {"tiny tanh", CMD_TANH, "0", "1E-99", "1E-99", NULL, 0},
+        {"tiny atanh", CMD_ATANH, "0", "1E-99", "1E-99", NULL, 0},
+        {"tiny cosh", CMD_COSH, "0", "1E-99", "1", NULL, 0},
+        {"atanh upper domain", CMD_ATANH, "0", "1", NULL, "Err: Domain", 0},
+        {"atanh lower domain", CMD_ATANH, "0", "-1", NULL, "Err: Domain", 0},
+        {"acosh outside domain", CMD_ACOSH, "0", "0.9", NULL, "Err: Domain", 0},
+        {"ln1p outside domain", CMD_LN_ONE_PLUS, "0", "-1", NULL, "Err: Domain", 0},
+        {"asin outside domain", CMD_ASIN, "0", "1.01", NULL, "Err: Domain", 0},
+        {"log at minimum", CMD_LN, "0", "1E-99", "-227.95592420641", NULL, 0},
+        {"division by zero", CMD_RECIP, "0", "0", NULL, "Err: Division By 0", 0},
+        {"negative square root", CMD_SQRT, "0", "-1", NULL, "Err: Domain", 0},
+        {"large square", CMD_SQUARE, "0", "1E49", "1E98", NULL, 0},
+        {"small square", CMD_SQUARE, "0", "1E-49", "1E-98", NULL, 0},
+        {"large polar radius", CMD_TO_POL, "3E90", "4E90", "5E90", NULL, 0},
+        {"small polar radius", CMD_TO_POL, "3E-90", "4E-90", "5E-90", NULL, 0},
+        {"representable large sinh", CMD_SINH, "0", "230.5", "6.3657280768316E99", NULL, 0},
+        {"acosh next to one", CMD_ACOSH, "0", "1.0000000000001", "4.4721359549995E-7", NULL, 0},
+        {"atanh next to one", CMD_ATANH, "0", "0.99999999999999", "16.464669241238", NULL, 0},
+        {"ln1p next to minus one", CMD_LN_ONE_PLUS, "0", "-0.99999999999999", "-32.236191301917", NULL, 0},
+        {"large asinh", CMD_ASINH, "0", "9E99", "230.84629596431", NULL, 0},
+        {"factorial 69", CMD_FACTORIAL, "0", "69", "1.7112245242814E98", NULL, 0},
+        {"factorial 70", CMD_FACTORIAL, "0", "70", NULL, "Err: Domain", 0},
+        {"decimal halfway rounding", CMD_ROUND_N, "0", "2.675", "2.68", NULL, 2},
+    };
+    for (unsigned i = 0; i < sizeof cases / sizeof *cases; i++) {
+        calc_init(&c);
+        c.stack[1] = os_StrToReal(cases[i].y, NULL);
+        c.stack[0] = os_StrToReal(cases[i].x, NULL);
+        if (cases[i].error) {
+            check(rejected(cases[i].operation, cases[i].error));
+        } else {
+            cmd(cases[i].operation, cases[i].argument);
+            if (cases[i].expected) check(x_close(cases[i].expected));
+            else {
+                int exponent = (uint8_t)c.stack[0].exp - 128;
+                check(c.message || (!obj_is(&c.stack[0]) &&
+                      exponent >= -99 && exponent <= 99));
+            }
+        }
+    }
+    real_t finance[TVM_VAR_COUNT];
+    for (uint8_t i = 0; i < TVM_VAR_COUNT; i++) finance[i] = *tvm_var(i);
+    const char *rates[] = {"0", "1E-10", "-1E-10"};
+    const char *payments[] = {"-100", "-100.00000000055", "-99.99999999945"};
+    for (unsigned i = 0; i < 3; i++) {
+        calc_init(&c);
+        os_Fin_N = os_Int24ToReal(10); os_Fin_I = os_StrToReal(rates[i], NULL);
+        os_Fin_PV = os_Int24ToReal(1000); os_Fin_PMT = os_Fin_FV = os_Int24ToReal(0);
+        os_Fin_PY = os_Fin_CY = os_Int24ToReal(1);
+        c.last_cmd = CMD_TVM_VAR;
+        cmd(CMD_TVM_VAR, TVM_PMT);
+        bool solved = c.message && !strcmp(c.message, "TVM Calculated");
+        c.message = NULL;
+        check(solved && x_close(payments[i]));
+    }
+    for (uint8_t i = 0; i < TVM_VAR_COUNT; i++) *tvm_var(i) = finance[i];
+
+    calc_init(&c);
+    c.stats.linear_only = true;
+    const char *offset_data[] = {"100000001", "100000002", "100000003"};
+    for (unsigned i = 0; i < 3; i++) {
+        c.stack[0] = c.stack[1] = os_StrToReal(offset_data[i], NULL);
+        cmd(CMD_STAT_PLUS, 0);
+    }
+    cmd(CMD_STAT_SDEV, 0);
+    check(x_close("1"));
+
+    uint8_t meter = 0, km = 0;
+    for (uint8_t i = 0; i < UNIT_COUNT; i++) {
+        if (!strcmp(unit_label(i), "m")) meter = i + 1;
+        if (!strcmp(unit_label(i), "km")) km = i + 1;
+    }
+    calc_init(&c);
+    c.stack[0] = os_StrToReal("1E99", NULL); c.unit[0] = km;
+    real_t before = c.stack[0];
+    cmd(CMD_UNIT, meter - 1);
+    check(km && meter && c.message && !strcmp(c.message, "Err: Overflow") &&
+          !memcmp(&before, &c.stack[0], sizeof before) && c.unit[0] == km);
+    calc_init(&c);
+    c.stack[0] = os_StrToReal("1E-99", NULL); c.unit[0] = meter;
+    cmd(CMD_UNIT, km - 1);
+    int exponent = (uint8_t)c.stack[0].exp - 128;
+    check(km && meter && (c.message || (exponent >= -99 && exponent <= 99)));
 }
 
 static void pair(int y, uint8_t uy, int x, uint8_t ux)
@@ -103,7 +221,7 @@ static bool rejected(calc_cmd_t operation, const char *error)
            c.unit[1] == uy && c.unit_lastx == ul && c.lift == lift;
 }
 
-static void release_regressions(void)
+static void calculator_regressions(void)
 {
     pair(0, 0, 1981, 0); cmd(CMD_PRIME, 0);
     check(x_number("7") && os_RealToInt24(&c.stack[1]) == 1981);
@@ -392,7 +510,8 @@ int main(void)
     message_bounds(&width, &height);
     check(height == 14 && width > 0 && width <= (int)gfx_GetStringWidth(c.message));
     display_close();
-    release_regressions();
+    calculator_regressions();
+    numeric_boundaries();
     RESULTS[0] = checks;
     if (checks != NATIVE_CHECK_COUNT) RESULTS[0] = 0;
     RESULTS[127] = 0xAA;

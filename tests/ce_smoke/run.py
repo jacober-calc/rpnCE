@@ -30,9 +30,9 @@ def main():
         launch += ['key|enter', 'delay|1500']
     hashes = {}
 
-    def expectation(name, offset, digit):
+    def expectation(name, offset, digit, exponent=0):
         # TI real_t: sign, biased decimal exponent, fourteen packed digits.
-        value = bytes([0, 0x80, digit << 4]) + bytes(6)
+        value = bytes([0, 0x80 + exponent, digit << 4]) + bytes(6)
         hashes[name] = {'description': name, 'start': hex(address + offset), 'size': 9,
                         'expected_CRCs': [f'{crc32c(value):08X}']}
         return 'hash|' + name
@@ -48,6 +48,16 @@ def main():
     sequence += launch + ['key|1', 'key|+',
                           expectation('reopen-restores-X-before-addition', 0, 6),
                           expectation('reopen-restores-register-A', 131, 5),
+                          'key|clear', 'key|1', 'key|,', 'key|neg', 'key|9', 'key|9', 'key|enter',
+                          expectation('keyboard-minimum-exponent', 0, 1, -99),
+                          'key|sto', 'key|apps', 'key|2nd', 'key|mode', 'delay|1500']
+    sequence += launch + ['key|2nd', 'key|sto', 'key|apps',
+                          expectation('reopen-restores-tiny-register-B', 0, 1, -99),
+                          'key|clear', 'key|1', 'key|,', 'key|9', 'key|9', 'key|enter',
+                          expectation('keyboard-maximum-exponent', 0, 1, 99),
+                          'key|sto', 'key|prgm', 'key|2nd', 'key|mode', 'delay|1500']
+    sequence += launch + ['key|2nd', 'key|sto', 'key|prgm',
+                          expectation('reopen-restores-large-register-C', 0, 1, 99),
                           'key|2nd', 'key|mode', 'delay|1500']
     config = {'transfer_files': files, 'target': target, 'delay_after_key': 100,
               'sequence': sequence, 'hashes': hashes}

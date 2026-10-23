@@ -74,6 +74,30 @@ int main(void)
     t("RNDG", "-6.02214076E23", 4, 1, "-6.022E23");
     t("RNDG", "1.23456789012345", 14, 1, "1.2345678901234E0");
     t("RNDG", "0", 3, 1, "0");
+    t("RNDN", "-0.005", 2, 0, "-1E-2");
+    t("RNDN", "1E-99", 11, 0, "0");
+    t("RNDG", "1E-99", 1, 1, "1E-99");
+    t("RNDG", "9.9999999999999E-99", 13, 1, "1E-98");
+    t("RNDG", "9.9999999999999E99", 13, 1, "9.9999999999999E99");
+    t("RNDG", "-9.9999999999999E99", 1, 1, "-9.9999999999999E99");
+    t("RNDG", "1.2345678901234E99", 13, 1, "1.234567890123E99");
+    for (int exp = -99; exp <= 99; exp++) {
+        char input[40], expected[40];
+        snprintf(input, sizeof input, "-1.2345678901234E%d", exp);
+        for (int digits = 1; digits <= 14; digits++) {
+            /* Independent decimal half-up rounding of the integer mantissa. */
+            uint64_t scale = 1;
+            for (int k = digits; k < 14; k++) scale *= 10;
+            uint64_t mantissa = ((UINT64_C(12345678901234) + scale / 2) / scale) * scale;
+            char whole[16];
+            snprintf(whole, sizeof whole, "%llu", (unsigned long long)mantissa);
+            int last = 13;
+            while (last > 0 && whole[last] == '0') last--;
+            if (last == 0) snprintf(expected, sizeof expected, "-%cE%d", whole[0], exp);
+            else snprintf(expected, sizeof expected, "-%c.%.*sE%d", whole[0], last, whole + 1, exp);
+            t("RNDG", input, digits, 1, expected);
+        }
+    }
     printf("%d failures\n", fails);
     return fails != 0;
 }

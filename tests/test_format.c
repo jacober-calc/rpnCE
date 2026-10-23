@@ -159,6 +159,28 @@ int main(void)
     t("9.99999999999E20", DISP_FIX, -1, M, "1.E21");
     t("123456789012.5", DISP_FIX, 2, M, "123456789013.");
     g_cap = 0;
+    unsigned bad_bounds = 0;
+    for (int exp = -99; exp <= 99; exp++)
+    for (int style = DISP_FIX; style <= DISP_ENG; style++)
+    for (int digits = 0; digits <= DISP_MAX_DIGITS; digits++)
+    for (int sign = 0; sign < 2; sign++)
+    for (int group = 0; group < 2; group++) {
+        uint8_t d[14]; memset(d, 9, sizeof d);
+        struct { unsigned char before; char text[FORMAT_MAX]; unsigned char after; } out;
+        memset(&out, 0x5A, sizeof out);
+        format_digits(out.text, sign != 0, exp, d, (uint8_t)style, (int8_t)digits,
+                      DISPLAY_DIGITS, DISPLAY_EXP_DIGITS, group != 0);
+        if (out.before != 0x5A || out.after != 0x5A ||
+            !memchr(out.text, '\0', sizeof out.text)) bad_bounds++;
+        else {
+            char original[FORMAT_MAX]; strcpy(original, out.text);
+            format_separators(out.text, true); format_separators(out.text, true);
+            if (strcmp(original, out.text)) bad_bounds++;
+        }
+    }
+    printf("%s signed formatting across exponents -99..99, every style/digit setting\n",
+           bad_bounds ? "FAIL" : "ok  ");
+    fails += bad_bounds != 0;
     printf("%d failures\n", fails);
     return fails != 0;
 }

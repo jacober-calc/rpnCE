@@ -19,19 +19,29 @@ static void num(double v)
 {
     char buf[32];
     sprintf(buf, "%.12g", v);
+    bool exponent = false;
     for (char *p = buf; *p; p++) {
-        if (*p == '-') continue;
+        if (*p == '-') {
+            if (exponent) calc_execute(&C, CMD_CHS, 0);
+            continue;
+        }
+        if (*p == '+') continue;
         if (*p == '.') calc_execute(&C, CMD_DOT, 0);
-        else if (*p == 'e') calc_execute(&C, CMD_EE, 0);
+        else if (*p == 'e') {
+            if (v < 0) calc_execute(&C, CMD_CHS, 0);
+            calc_execute(&C, CMD_EE, 0);
+            exponent = true;
+        }
         else calc_execute(&C, CMD_DIGIT, (uint8_t)(*p - '0'));
     }
-    if (v < 0) calc_execute(&C, CMD_CHS, 0);
+    if (v < 0 && !exponent) calc_execute(&C, CMD_CHS, 0);
 }
 static void cmd(calc_cmd_t k, uint8_t arg) { calc_execute(&C, k, arg); }
 
 static void expect(const char *name, double got, double want)
 {
-    int ok = fabs(got - want) <= 1e-9 * (fabs(want) > 1 ? fabs(want) : 1);
+    double error = want == 0 ? fabs(got) : fabs((got - want) / want);
+    int ok = isfinite(got) && error <= 1e-9;
     if (!ok) fails++;
     printf("%s %-46s %.12g (want %.12g)\n", ok ? "ok  " : "FAIL", name, got, want);
 }
@@ -51,6 +61,12 @@ static double x_now(void) { calc_finish_entry(&C); return C.stack[0].v; }
 
 int main(void)
 {
+    const double entries[] = {1e99, -1e99, 1e-99, -1e-99, 1.2345e-20, -1.2345e20};
+    for (unsigned i = 0; i < sizeof entries / sizeof *entries; i++) {
+        calc_init(&C);
+        num(entries[i]);
+        expect("scientific entry preserves sign and exponent", X, entries[i]);
+    }
     calc_init(&C);
 
     /* ---- 4-level stack, HP rules ---- */

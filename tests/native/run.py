@@ -52,7 +52,7 @@ def main():
         'target': target,
         'sequence': sequence + ['hash|native'],
         'hashes': {'native': {
-            'description': f'{CHECK_COUNT} native release checks: arithmetic, units, statistics, TVM, DATE and display',
+            'description': f'{CHECK_COUNT} native calculator checks',
             'start': '0xD40000', 'size': '128',
             'expected_CRCs': [f'{crc32c(expected):08X}'],
             'timeout': 30000,
@@ -60,7 +60,23 @@ def main():
     }
     config_path = HERE / 'bin' / 'autotest.json'
     config_path.write_text(json.dumps(config, indent=2) + '\n')
-    subprocess.run(['cemu-autotester', str(config_path)], check=True)
+    dump = HERE / 'bin/failure_hashnative_num1_dump.bin'
+    dump.unlink(missing_ok=True)
+    result = subprocess.run(['cemu-autotester', '-d', str(config_path)],
+                            cwd=HERE / 'bin', capture_output=True, text=True)
+    for line in result.stdout.splitlines():
+        if 'Autotest ' in line or 'Test failed!' in line:
+            print(line)
+    if result.returncode:
+        (HERE / 'bin/autotest.log').write_text(result.stdout + result.stderr)
+        if dump.exists():
+            values = dump.read_bytes()
+            if len(values) == 128 and values[0] == CHECK_COUNT and values[127] == 0xAA:
+                failed = [str(i) for i in range(1, CHECK_COUNT + 1) if values[i] != 1]
+                print(f'{len(failed)} of {CHECK_COUNT} native checks failed: ' + ', '.join(failed))
+            else:
+                print('Native program did not complete the expected check sequence.')
+        sys.exit(f'Native tests failed; details: {HERE / "bin/autotest.log"}')
 
 
 if __name__ == '__main__':

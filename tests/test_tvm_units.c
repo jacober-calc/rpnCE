@@ -1,9 +1,4 @@
-/* Tests for the TVM solver and unit conversions. Runs on a PC with
- * stand-ins for the calculator's number routines:
- *   gcc -Itests/mock -Isrc/core -o test_tvm tests/test_tvm_units.c \
- *       src/core/tvm.c src/core/mathx.c src/core/units.c tests/units_data.c -lm
- *   ./test_tvm
- */
+/* TVM examples, rate round trips and independent unit conversions. */
 #include <stdio.h>
 #include <string.h>
 #include <ti/real.h>
@@ -11,21 +6,6 @@
 #include "tvm.h"
 #include "mathx.h"
 #include "units.h"
-
-real_t mock_fin[7];
-jmp_buf mock_jmp;
-real_t round_decimals(const real_t *v, int n)   /* decimal rounding stand-in */
-{ double p = pow(10, n); return mk(round(v->v * p) / p); }
-real_t os_RealDiv(const real_t *a, const real_t *b)
-{
-    if (b->v == 0) os_ThrowError(OS_E_DIVBY0);
-    return mk(a->v / b->v);
-}
-real_t os_RealLog(const real_t *a)
-{
-    if (a->v <= 0) os_ThrowError(OS_E_DOMAIN);
-    return mk(log(a->v));
-}
 
 static int fails = 0;
 static tvm_settings_t S;
@@ -47,15 +27,20 @@ static void check(const char *name, int which, double want, double reltol)
     }
     real_t r = tvm_solve((uint8_t)which, &S);
     double rel = want == 0 ? fabs(r.v) : fabs((r.v - want) / want);
-    int ok = rel <= reltol;
+    int ok = isfinite(r.v) && rel <= reltol;
     if (!ok) fails++;
     printf("%s %-40s %.12g (want %.12g)\n", ok ? "ok  " : "FAIL", name, r.v, want);
 }
 
-static void check_error(const char *name, int which)
+static void check_error(const char *name, int which, int expected)
 {
     int err = setjmp(mock_jmp);
-    if (err) { printf("ok   %-40s error %d as expected\n", name, err); return; }
+    if (err) {
+        bool good = (err & OS_E_MASK) == (expected & OS_E_MASK);
+        printf("%s %-40s error %d (want %d)\n", good ? "ok  " : "FAIL", name, err, expected);
+        if (!good) fails++;
+        return;
+    }
     real_t r = tvm_solve((uint8_t)which, &S);
     printf("FAIL %-40s expected an error, got %.12g\n", name, r.v);
     fails++;
@@ -68,7 +53,7 @@ static void unit(const char *name, double v, int from, int to, double want)
     real_t x = mk(v);
     real_t r = unit_convert(&x, (uint8_t)from, (uint8_t)to);
     double rel = want == 0 ? fabs(r.v) : fabs((r.v - want) / want);
-    int ok = rel <= 1e-12;
+    int ok = isfinite(r.v) && rel <= 1e-12;
     if (!ok) fails++;
     printf("%s %-40s %.12g (want %.12g)\n", ok ? "ok  " : "FAIL", name, r.v, want);
 }
@@ -81,15 +66,13 @@ static int find_unit_f(const char *label, const char *factor)
             (!factor || strncmp(unit_factor((uint8_t)i), factor, strlen(factor)) == 0))
             return i;
     printf("no unit %s\n", label);
+    fails++;
     return 0;
 }
 
 static int find_unit(const char *label)
 {
-    for (int i = 0; i < UNIT_COUNT; i++)
-        if (strcmp(unit_label((uint8_t)i), label) == 0) return i;
-    printf("no unit %s\n", label);
-    return 0;
+    return find_unit_f(label, NULL);
 }
 
 int main(void)
@@ -131,6 +114,10 @@ int main(void)
     check("zero rate PMT", TVM_PMT, -100, 1e-12);
     set(0, 0, 1000, -100, 0, 12, 12, 0);
     check("zero rate N", TVM_N, 10, 1e-12);
+    set(10, -5, 1000, 0, 0, 1, 1, 0);
+    check("negative rate PMT", TVM_PMT, -74.606535934548856, 1e-12);
+    set(10, 0, 1000, -74.606535934548856, 0, 1, 1, 0);
+    check("negative rate I%YR", TVM_IYR, -5, 1e-10);
 
     /* car lease with a residual, payments in advance */
     set(36, 0, 30000, -450, -15000, 12, 12, 1);
@@ -164,7 +151,7 @@ int main(void)
             }
             real_t i = tvm_solve(TVM_IYR, &S);
             total++;
-            if (fabs(i.v - rates[r]) > 1e-8 * rates[r] + 1e-9) {
+            if (!isfinite(i.v) || fabs(i.v - rates[r]) > 1e-8 * rates[r] + 1e-9) {
                 printf("     round trip off: N=%g I=%g PY=%g CY=%g beg=%d fv=%d got %.12g\n", terms[n], rates[r], comp[c][0], comp[c][1], beg, with_fv, i.v);
                 bad++;
             }
@@ -176,12 +163,18 @@ int main(void)
 
     /* no solution */
     set(0, 5, 1000, 100, 0, 12, 12, 0);
-    check_error("N with payments the wrong sign", TVM_N);
+    check_error("N with payments the wrong sign", TVM_N, OS_E_SIGNCHANGE);
     set(10, 0, 1000, 100, 500, 12, 12, 0);
-    check_error("I%YR with all cash flows positive", TVM_IYR);
+    check_error("I%YR with all cash flows positive", TVM_IYR, OS_E_ITERATIONS);
     set(0, 5, 1000, -100, 0, 12, 12, 0);
     mock_fin[0] = mk(0);
-    check_error("PMT with N = 0", TVM_PMT);
+    check_error("PMT with N = 0", TVM_PMT, OS_E_DIVBY0);
+    set(10, 5, 1000, 0, 0, 0, 12, 0);
+    check_error("P/YR = 0", TVM_PMT, OS_E_DOMAIN);
+    set(10, 5, 1000, 0, 0, 12, -1, 0);
+    check_error("negative C/YR", TVM_PMT, OS_E_DOMAIN);
+    set(10, -100, 1000, 0, 0, 1, 1, 0);
+    check_error("periodic rate = -100%", TVM_PMT, OS_E_DOMAIN);
 
     /* units */
     unit("1 mi -> km", 1, find_unit("mi"), find_unit("km"), 1.609344);

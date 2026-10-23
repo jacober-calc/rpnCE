@@ -1,5 +1,4 @@
-/* Reported hardware regressions and quantity semantics. Exercise complete
- * commands, including stack lift, LASTX, registers and rejection paths. */
+/* Quantity arithmetic, register metadata, VARS and numeric command regressions. */
 #include <stdio.h>
 #include <string.h>
 #include "calc.h"
@@ -15,7 +14,7 @@ static void check(const char *name, bool pass)
     printf("%s %s\n", pass ? "ok  " : "FAIL", name);
 }
 static bool near(double a, double b)
-{ return fabs(a - b) < 1e-9 * fmax(1, fabs(b)); }
+{ return isfinite(a) && (b == 0 ? fabs(a) : fabs((a - b) / b)) <= 1e-10; }
 static uint8_t unit(const char *name)
 {
     for (uint8_t i = 0; i < UNIT_COUNT; i++)

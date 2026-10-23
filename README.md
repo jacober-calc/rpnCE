@@ -104,10 +104,11 @@ calculator core, quantities, entry sequences, display redraws, and brightness co
 stand-ins for the calculator's number routines.
 
 The [native tests](tests/README.md#native-ce-checks) additionally compile
-the real core with the CE toolchain and run 83 checks in CEmu using TI-OS
+the real core with the CE toolchain and run 126 checks in CEmu using TI-OS
 number routines. They cover CE execution, CTZ/ATZ conversions, unit round trips and all
-four curve-fit models. Five further checks exercise the program's
-keyboard loop and saving/reopening in CEmu.
+four curve-fit models and numeric boundaries. Nine further checks exercise
+the program's keyboard loop and saving/reopening in CEmu. Known numerical
+failures and coverage limits are described in [tests/README.md](tests/README.md#numeric-failures-under-investigation).
 
 ## Layout
 
