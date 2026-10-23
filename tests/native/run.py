@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
-"""Run release-compiled DATE checks in CEmu using the owner's local ROM.
-
-Requires cedev-config, make, cemu-autotester and AUTOTESTER_ROM. Set
-AUTOTESTER_LIBS_GROUP to clibs.8xg. For a newer OS that needs arTIfiCE v2,
-pass the local arTIfiCE .8xp file as the optional first argument.
-"""
+"""Run the native CE suite in CEmu; optionally pass a TI-BASIC launcher."""
 import json
 import os
 from pathlib import Path
@@ -30,10 +25,10 @@ def main():
     if not os.environ.get('AUTOTESTER_ROM'):
         sys.exit('Set AUTOTESTER_ROM to your local TI-84 Plus CE ROM file.')
     if len(sys.argv) > 2:
-        sys.exit('Usage: python3 tests/ce_date/run.py [arTIfiCE-v2.8xp]')
+        sys.exit('Usage: python3 tests/native/run.py [launcher.8xp]')
     subprocess.run(['make', '-B', '-C', str(HERE)], check=True)
-    files = [str(HERE / 'bin' / name) for name in ('RPNDATE.8xp', 'RPNCEres.8xv')]
-    target = {'name': 'RPNDATE', 'isASM': True}
+    files = [str(HERE / 'bin' / name) for name in ('RPNTEST.8xp', 'RPNCEres.8xv')]
+    target = {'name': 'RPNTEST', 'isASM': True}
     sequence = ['action|launch', 'delay|2000']
     if len(sys.argv) == 2:
         launcher = Path(sys.argv[1]).resolve()
@@ -55,8 +50,8 @@ def main():
     config = {
         'transfer_files': files,
         'target': target,
-        'sequence': sequence + ['hash|date'],
-        'hashes': {'date': {
+        'sequence': sequence + ['hash|native'],
+        'hashes': {'native': {
             'description': f'{CHECK_COUNT} native release checks: arithmetic, units, statistics, TVM, DATE and display',
             'start': '0xD40000', 'size': '128',
             'expected_CRCs': [f'{crc32c(expected):08X}'],

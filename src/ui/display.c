@@ -9,14 +9,6 @@
 #include "../core/units.h"
 #include "../core/dateobj.h"
 
-/*
- * Screen layout (320 x 240), RPN83P style:
- *   status bar    dark, with the clock and the annunciators: the state
- *   message line  warnings, errors, SHOW, notices; menu row arrows
- *   stack         T: Z: Y: X: in a dot-matrix LCD font
- *   menu row      always showing: five dark boxes with inverted labels
- */
-
 /* ---------- colors ---------- */
 
 enum {
@@ -26,8 +18,7 @@ enum {
     COL_DOTS,           /* the stack's digits and units */
 };
 
-/* The original four palette slots stay fixed. Optional accents separate
- * status/menu colors from stack values, keeping dark themes readable. */
+/* Accent slots separate status/menu colors from stack values. */
 enum {
     COL_BAR = COL_DOTS + 1,
     COL_BAR_TEXT,
@@ -80,7 +71,7 @@ static const accents_t commodore_accents = { {
     { 121, 231, 149 },
 } };
 
-/* Existing indices 0..3 are persistent settings; append new presets. */
+/* Preset indices are saved settings; append rather than reorder. */
 static const tint_t tints[TINT_COUNT] = {
     { "LCD",  { { 34, 46, 49 },   { 156, 170, 155 }, { 56, 68, 68 },  { 26, 32, 32 } }, NULL },
     { "LCD+", { { 16, 30, 20 },   { 146, 178, 122 }, { 44, 66, 44 },  { 10, 20, 12 } }, NULL },
@@ -156,7 +147,6 @@ static bool is_glyph(char ch)
     return (uint8_t)ch >= 1 && (uint8_t)ch <= MSYM_COUNT;
 }
 
-/* Width in pixels of a label at a text scale. */
 static int label_width_scaled(const char *s, uint8_t scale)
 {
     int w = 0;
@@ -171,7 +161,6 @@ static int label_width(const char *s)
     return label_width_scaled(s, 1);
 }
 
-/* Draws a label, mixing font characters and symbols, at a text scale. */
 static void draw_label_scaled(const char *s, int x, int y, uint8_t color, uint8_t scale)
 {
     gfx_SetTextFGColor(color);
@@ -276,9 +265,6 @@ void display_close(void)
 
 /* ---------- status line ---------- */
 
-/* Left: annunciators, RPN83P style ("up/down" when the menu has more rows,
- * the display format such as FIX4 or FIX- for as many digits as needed,
- * then RAD or DEG, then 2ND when pending). Right: messages. */
 static const char *base_warning(const calc_t *c, char *buf);
 
 /* "2026-10-18 14:05" (ISO 8601, as DATE's ".." mode writes dates) from the
@@ -303,10 +289,6 @@ static void clock_text(const calc_t *c, char *out)
     }
 }
 
-/* The status bar, dark with the text cut out: the calculator's state. The
- * clock on the left; on the right the display format, angle mode, base
- * (with C when the carry flag is set), and 2ND or ALPHA when pending.
- * Messages go on the line below. */
 #define STATUS_GAP 6
 
 static void draw_status(const calc_t *c, bool second, bool alpha)
@@ -365,19 +347,13 @@ static void draw_status(const calc_t *c, bool second, bool alpha)
     }
 }
 
-/* The message line: a message from the last command, or else a warning
- * about X in HEX, OCT or BIN, left-justified in the system font at double
- * height. At the
- * right end, up/down arrows when the current menu has more rows. */
 static void draw_message_line(const calc_t *c, const menu_t *m)
 {
     const int y = MSG_Y + (MSG_H - 8 * MSG_SCALE_Y) / 2;
     char warn[24];
     const char *msg = c->message ? c->message : base_warning(c, warn);
     if (msg) {
-        /* GraphX's clipped text path ignores scaling. Every message on this
-         * line uses the same taller glyphs and original horizontal spacing.
-         * Restore clipping before drawing the arrows and the rest of the UI. */
+        /* GraphX clipped text ignores scaling. Restore clipping after the message. */
         gfx_SetTextConfig(gfx_text_noclip);
         draw_label_tall(msg, LABEL_X, y, COL_INK);
         gfx_SetTextConfig(gfx_text_clip);
@@ -503,10 +479,8 @@ static fv_kind_t format_value(char *buf, const calc_t *c, const real_t *v)
     return c->base.radix != 10 ? FV_DECIMAL_IN_BASE : FV_NORMAL;
 }
 
-/* Cache only formatted stack text. Every frame is still drawn in full, and
- * unit labels, prompts, warnings and the catalog are drawn from live state.
- * The key contains every setting used by format_value(), plus the value's
- * bytes (including DATE objects, which must not enter real-number math). */
+/* Cache keys cover value bytes and every format setting. DATE values must
+ * bypass real-number math; labels and messages use live state. */
 #define VALUE_BUFFER_SIZE 48
 _Static_assert(VALUE_BUFFER_SIZE >= FORMAT_MAX && VALUE_BUFFER_SIZE >= DT_FORMAT_MAX &&
                VALUE_BUFFER_SIZE >= BASE_MAX_BITS + 1 && VALUE_BUFFER_SIZE >= ENTRY_MAX + 2,

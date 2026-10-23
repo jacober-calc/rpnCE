@@ -82,10 +82,9 @@ restrictions described in [Units](14-units.md).
 
 ## Scope of the documentation
 
-This edition describes 0.7.0. Installed production builds can differ from
-a development checkout; check the ABOUT help page or release label when
-comparing behavior. The generated reference tables follow the menu and
-unit definitions in this checkout. Future plans are maintained in the
+This guide describes 0.7.0. Check the ABOUT help page for the installed
+version. The reference tables follow the program's menu and unit
+definitions. Future plans are maintained in the
 [roadmap](../ROADMAP.md), rather than presented as current capabilities.
 
 ---

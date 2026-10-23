@@ -1,4 +1,4 @@
-/* Shared host stand-ins for the core regression and equivalence tests. */
+/* Shared host stand-ins for calculator tests. */
 #include <stdio.h>
 #include <ti/real.h>
 #include <ti/error.h>
@@ -15,8 +15,6 @@ real_t os_RealLog(const real_t *a)
 { if (a->v <= 0) os_ThrowError(OS_E_DOMAIN); return mk(log(a->v)); }
 static long long g(long long a, long long b) { while (b) { long long t = a % b; a = b; b = t; } return a; }
 real_t os_RealGcd(const real_t *a, const real_t *b) { return mk((double)g((long long)a->v, (long long)b->v)); }
-real_t os_RealLcm(const real_t *a, const real_t *b)
-{ long long x = (long long)a->v, y = (long long)b->v; return mk((double)(x / g(x, y) * y)); }
 void format_real(char *out, const real_t *v, uint8_t style, int8_t digits, int maxd, int maxe, bool group)
 { (void)style; (void)digits; (void)maxd; (void)maxe; (void)group; mock_format_calls++; snprintf(out, FORMAT_MAX, "%.14g", v->v); }
 

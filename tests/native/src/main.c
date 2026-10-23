@@ -1,7 +1,5 @@
-/* Runs the real core and TI-OS reals on the CE, with the release -Oz/LTO
- * settings. Results go to VRAM for CEmu's CRC check: count, pass flags,
- * zero padding and a completion marker. No RPNCE saved data is loaded or
- * written. A simulated clock makes NOW* and time-zone checks reproducible. */
+/* Release-compiled checks with TI-OS arithmetic and a fixed test clock.
+ * The count, pass flags and completion marker are published to VRAM. */
 #include <string.h>
 #include <stddef.h>
 #include <ti/getcsc.h>

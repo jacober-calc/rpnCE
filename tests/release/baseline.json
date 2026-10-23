@@ -1,16 +1,16 @@
 {
   "schema": 1,
   "status": "measurement_only",
-  "commit": "8c8590b935c71697028f05e1d4211c502f65b39c",
+  "version": "0.7.0",
   "toolchain": "v15.0",
   "build_settings": {
     "makefile_sha256": "a2afbc56f56971bf38c987fdfe49168e5a66d6220970b3766d51b9b02960932a"
   },
   "artifacts": {
     "metrics": {
-      "image_bytes": 83249,
+      "image_bytes": 82935,
       "static_ram_bytes": 3860,
-      "program_bytes": 46832,
+      "program_bytes": 46743,
       "resource_bytes": 17043
     }
   }

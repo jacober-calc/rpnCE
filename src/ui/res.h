@@ -1,14 +1,9 @@
 #ifndef RPNCE_UI_RES_H
 #define RPNCE_UI_RES_H
 
-/*
- * RPNCE's resources: the menu tree, unit tables and HELP pages, kept in the RPNCEres
- * appvar (built by tools/genres.py) and read straight from archive, so they
- * use no RAM. res_open() must succeed before anything else here is used.
- *
- * The pointer stays valid as long as no archived variable is created,
- * deleted or moved. RPNCE only writes to archive when it exits.
- */
+/* Resources are read directly from archive after res_open(). Creating,
+ * deleting or moving archived variables invalidates the resource pointer;
+ * archive writes must wait until exit. */
 
 #include <stdbool.h>
 #include <stdint.h>

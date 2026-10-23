@@ -1,6 +1,4 @@
-/* Preserve every menu -> command/argument mapping, including 2ND behavior.
- * Baseline actions.c was recompiled against the reordered menu IDs to
- * confirm only ordering changed when TVM and HELP swapped places. */
+/* Menu command/argument mappings, including 2ND behavior. */
 #include <inttypes.h>
 #include <stdio.h>
 #include "actions.h"
@@ -20,7 +18,7 @@ int main(void)
     uint64_t fingerprint = UINT64_C(14695981039346656037);
     for (unsigned id = 0; id < MID_COUNT; id++) {
         if (id == MID_DECIMAL_POINT || id == MID_DECIMAL_COMMA)
-            continue; /* New settings are checked independently below. */
+            continue; /* Decimal settings are checked separately below. */
         for (int shifted = 0; shifted < 2; shifted++) {
             uint8_t arg = 255;
             calc_cmd_t cmd = action_for((menu_id_t)id, shifted != 0, &arg);

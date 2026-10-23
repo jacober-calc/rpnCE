@@ -63,7 +63,7 @@ SEQUENCES = [
     f'{FIX4_DEG} 30 SIN >first-sin',
     f'{FIX4_DEG} 9 {SQRT} >first-sqrt',
     f'{FIX4_DEG} [MATH] 3 [X^3] >first-cube',
-    f'{FIX4_DEG} 5 STO MATH !first-sto-flash >first-sto-1 CLEAR >first-sto-2 {RCL} MATH >first-rcl',
+    f'{FIX4_DEG} 5 STO MATH !first-sto-flash CLEAR >first-sto-2 {RCL} MATH >first-rcl',
     f'{FIX4_DEG} {PI} 2ND ENTER >first-show',
     f'{FIX4_DEG} {HELP_KEY} >first-help',
 
@@ -102,7 +102,6 @@ SEQUENCES = [
     'MATH CLEAR VARS >reg-vars',
 
     # 9. Settings
-    'MODE >settings-mode',
     '.000012345 ENTER 1234.5678 ) >settings-fmt-all MODE [FIX] 2 >settings-fmt-fix2 [SCI] 3 '
     '>settings-fmt-sci3 [ENG] 2 >settings-fmt-eng2',
     '1 ENTER 7 ÷ MODE [FIX] 4 >settings-pres-1 [SCI] 4 >settings-pres-2 [ENG] 4 >settings-pres-3 '
@@ -182,7 +181,7 @@ def _font(size, bold=False):
     return ImageFont.load_default()
 
 
-def compose(screens, guide):
+def compose(screens):
     from PIL import Image, ImageDraw
 
     # the parts of the screen, labelled (chapter 4)

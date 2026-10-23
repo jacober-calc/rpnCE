@@ -1,7 +1,4 @@
-/* Golden drawing-command fingerprints captured from dotfont.c at 0891326.
- * All-byte fingerprints include the percent glyph added for I%YR labels.
- * Update them only for an intentional change to the font's appearance.
- * Cover both sizes, every non-NUL byte, exponent context, and clipping. */
+/* Font snapshots cover both sizes, all non-NUL bytes, exponents and clipping. */
 #include <inttypes.h>
 #include <stdio.h>
 #include "dotfont.h"

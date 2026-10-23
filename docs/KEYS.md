@@ -313,7 +313,7 @@ with amber and blue accents. MONOKAI uses charcoal with purple, cyan, green
 and pink stack values. PASTEL uses a light background, distinct row colors and
 pastel menu keys. COMMODORE uses phosphor greens on near-black, with brighter
 X digits and dark green menu panels. The selection is saved on exit. See
-[TINTS.md](TINTS.md) for palette details.
+[Screen colors](guide/04-display.md#screen-colors) for the presets.
 
 HOME has TVM in the fifth position on its first row and HELP in the fifth
 position on its second row. HELP opens the reference pages: UP / DOWN
@@ -331,8 +331,6 @@ The stack, LASTX, variables, angle mode, and display format are saved on exit
 registers are saved separately in `RPNCEunt`, with a checksum and a
 fingerprint of the register values they belong to: if it's missing,
 damaged, or belongs to different values, the registers load without units
-and every value is kept. Earlier refactor unit footers migrate automatically
-when `RPNCEunt` is absent, and the next save writes the new units appvar.
-After 5
+and every value is kept. After 5
 minutes without a key press, RPNCE saves and exits so the calculator can
 power down.

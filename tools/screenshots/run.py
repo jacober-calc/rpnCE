@@ -17,7 +17,9 @@ fresh calculator, and the images go to assets/guide/:
 Needs a C compiler and the Pillow package.
 """
 import os
+from pathlib import Path
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -27,6 +29,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, os.path.join(ROOT, 'tools'))
 import genmenu  # noqa: E402
+from project_files import referenced_assets
 
 from PIL import Image, ImageDraw  # noqa: E402
 
@@ -86,7 +89,6 @@ class Menus:
 
     def __init__(self):
         self.roots = genmenu.parse()
-        self.by_label = {}
 
     @staticmethod
     def plain(label):
@@ -294,17 +296,28 @@ def screen_images(menus, sequences, tmp):
 
 
 def main():
+    global OUT
     os.chdir(ROOT)
     build()
     sys.path.insert(0, HERE)
     import shots
     menus = Menus()
+    published = OUT
+    wanted = referenced_assets(Path(ROOT))
     with tempfile.TemporaryDirectory() as tmp:
+        OUT = os.path.join(tmp, 'images')
         menu_images(menus, shots.MENUS, tmp)
         screen_images(menus, shots.SEQUENCES, tmp)
-    if hasattr(shots, 'compose'):
-        shots.compose(os.path.join(OUT, 'screens'), OUT)
-    print(f'{len(shots.MENUS)} menus and {len(shots.SEQUENCES)} sequences written to assets/guide/')
+        shots.compose(os.path.join(OUT, 'screens'))
+        for directory, _, names in os.walk(OUT):
+            for name in names:
+                source = os.path.join(directory, name)
+                target = Path(published, os.path.relpath(source, OUT))
+                if target.resolve() in wanted:
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copyfile(source, target)
+    OUT = published
+    print('Screenshots referenced by the documentation written to assets/guide/.')
 
 
 if __name__ == '__main__':

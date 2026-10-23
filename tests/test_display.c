@@ -1,8 +1,5 @@
-/* Whole-display drawing commands captured from display.c at 2e29e01.
- * Revalidated against HEAD display.c with the TVM/HELP resource reorder.
- * GraphX text metrics are deterministic stand-ins; dot-font drawing uses
- * the actual renderer. Only intentional appearance changes may update the
- * fingerprint. Tests also verify formatting work saved across redraws. */
+/* Display snapshots use fixed GraphX metrics and the actual dot renderer.
+ * Update snapshots only for an intended appearance change. */
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
@@ -167,13 +164,13 @@ static void appearance(void)
     c.regs[0] = mk(123.5);
     c.regs[1] = c.stack[0];
     catalog_open(&cat, &c);
-    /* This legacy appearance fixture contains only the seeded A and B. */
+    /* This snapshot isolates the seeded A and B registers. */
     cat.count = 2;
     draw(&c, &m, &cat, NULL, false);
     catalog_move(&cat, 1);
     draw(&c, &m, &cat, NULL, false);
     cat.open = false;
-    /* Golden fixture covers the original four persistent preset slots. */
+    /* Palette snapshots cover the first four preset slots. */
     for (uint8_t tint = 0; tint < 4; tint++) {
         display_set_tint(tint);
         draw(&c, &m, &cat, NULL, false);
@@ -183,7 +180,7 @@ static void appearance(void)
     draw(&c, &m, &cat, NULL, false);
     display_close();
     printf("display fingerprint: %016" PRIx64 "\n", fingerprint);
-    /* Intentional appearance change: scaled warning glyphs, original spacing. */
+    /* Warning glyphs use double height and normal width. */
     check("whole-display drawing commands match approved layout", fingerprint == UINT64_C(0xd371a9a120421e02));
 }
 

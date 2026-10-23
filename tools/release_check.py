@@ -13,6 +13,8 @@ import sys
 import tempfile
 from datetime import datetime, timezone
 
+from project_files import documentation_links, unused_assets
+
 ROOT = Path(__file__).resolve().parent.parent
 GENERATED = ('data/RPNCEres.bin', 'src/ui/menu_data.h', 'src/ui/res_info.h',
              'src/core/units_count.h', 'tests/units_data.c')
@@ -130,24 +132,14 @@ def check_generated(root=ROOT):
 
 
 def check_documentation(root=ROOT):
-    missing = []
-    count = 0
-    paths = [root / 'README.md', *(root / 'docs').rglob('*.md')]
-    for path in paths:
-        text = path.read_text()
-        targets = re.findall(r'!?\[[^\]]*\]\(([^\s)]+)(?:\s+"[^"]*")?\)', text)
-        targets += re.findall(r'<img\s[^>]*src="([^"]+)"', text)
-        for target in targets:
-            if '://' in target or target.startswith(('#', 'mailto:')):
-                continue
-            target = target.split('#', 1)[0]
-            if target:
-                count += 1
-                if not (path.parent / target).exists():
-                    missing.append(f'{path.relative_to(root)}: {target}')
+    links = list(documentation_links(root))
+    missing = [f'{page.relative_to(root)}: {target}' for page, target in links if not target.exists()]
     if missing:
         raise ValueError('missing documentation targets:\n' + '\n'.join(missing))
-    print(f'{count} local documentation/image targets exist (external URLs and anchors excluded).')
+    unused = unused_assets(root)
+    if unused:
+        raise ValueError('unreferenced assets:\n' + '\n'.join(str(p.relative_to(root)) for p in unused))
+    print(f'{len(links)} local documentation/image targets checked; no unused assets.')
 
 
 def validate_acceptance(acceptance, report):
@@ -216,12 +208,9 @@ def main():
             env = dict(os.environ, EXTRA_CFLAGS='-fsanitize=address,undefined -fno-omit-frame-pointer')
             env['UBSAN_OPTIONS'] = 'halt_on_error=1:print_stacktrace=1'
             run_command('desktop-sanitized', ['sh', 'tests/run_tests.sh'], out, report['steps'], env)
-            run_command('core-equivalence', ['sh', 'tests/check_core_equivalence.sh'], out, report['steps'])
-            run_command('core-equivalence-sanitized', ['sh', 'tests/check_core_equivalence.sh'],
-                        out, report['steps'], env)
             if not args.host_only:
                 run_command('ce-build', ['make', '-B'], out, report['steps'])
-                native = [sys.executable, 'tests/ce_date/run.py']
+                native = [sys.executable, 'tests/native/run.py']
                 if os.environ.get('AUTOTESTER_LAUNCHER'):
                     native.append(os.environ['AUTOTESTER_LAUNCHER'])
                 run_command('ce-native', native, out, report['steps'])

@@ -36,7 +36,6 @@ RES_FORMAT = 2      # bump when the layout below changes (2: HELP pages)
 HELP_FILE = os.path.join(ROOT, 'help', 'help.txt')
 HELP_MAX_LINES = 8      # a page's lines, title included
 HELP_MAX_CHARS = 44     # fits the screen in the system font
-# (still format 1: no RPNCEres with 5-byte groups was ever released)
 NONE16 = 0xFFFF
 
 # ---------------------------------------------------------------------------

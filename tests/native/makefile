@@ -1,6 +1,5 @@
-# Native eZ80 regressions: host doubles cannot check the CE calling convention.
-NAME = RPNDATE
-DESCRIPTION = "RPNCE DATE regression tests"
+NAME = RPNTEST
+DESCRIPTION = "RPNCE native tests"
 COMPRESSED = YES
 ARCHIVED = NO
 CFLAGS = -Wall -Wextra -Oz -I../../src/core -I../../src/ui

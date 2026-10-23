@@ -9,8 +9,7 @@
 #define STATE_MAGIC   0x52   /* 'R' */
 #define STATE_VERSION 5      /* bump when the saved layout changes */
 
-/* Everything that survives quitting. The TVM values themselves live in the
- * OS's own TVM variables, so they aren't stored here. */
+/* TVM values live in TI-OS variables and are not part of this payload. */
 typedef struct {
     uint8_t magic;
     uint8_t version;
@@ -33,27 +32,12 @@ typedef struct {
 
 #define SAVED_FIXED_SIZE (sizeof(saved_state_t) - sizeof(real_t) * REG_EXTRA_MAX)
 
-/* Loading and saving run sequentially. Share one scratch buffer, kept off
- * the stack because it includes space for every extra register. */
+/* Save/load share scratch storage rather than using the runtime stack. */
 static saved_state_t s;
 
-/* ---------- register units: their own appvar ----------
- *
- * Units on the registers (A-Z, i and the extra registers) are kept in
- * RPNCEunt, separate from RPNCEdat, so a problem with them can never cost
- * the saved values: RPNCEdat keeps exactly the 0.6.6 layout, and if
- * RPNCEunt is missing, damaged, or doesn't belong to the registers just
- * loaded, the registers simply load without units.
- *
- *   'U' 'N'  version  count        header (count = number of tags)
- *   u32      fingerprint           FNV-1a of the register values the tags
- *                                  belong to, so tags never attach to
- *                                  different values (e.g. an older RPNCEdat)
- *   u8 x count                     a unit tag per register (0: none)
- *   u32      checksum              FNV-1a of everything before it
- *
- * (Stack and LASTX units are part of RPNCEdat, as in 0.6.6.)
- */
+/* Register units are separate so damaged metadata cannot reject values.
+ * Layout: 'UN', version, count, u32 value fingerprint, tags[count],
+ * u32 checksum. Both hashes use FNV-1a; stack/LASTX units live in RPNCEdat. */
 #define UNITS_NAME    "RPNCEunt"
 #define UNITS_VERSION 1
 #define UNITS_MAX     (REG_BASE_COUNT + REG_EXTRA_MAX)
@@ -129,18 +113,15 @@ static void apply_unit_tags(calc_t *c, const uint8_t *tags)
     }
 }
 
-/* Validate RPNCEunt against the loaded values. Only when it is absent may
- * a complete legacy footer supply the tags instead. */
-static void load_units(calc_t *c, bool have_legacy_units)
+/* Embedded tags are used only when the separate unit appvar is absent. */
+static void load_units(calc_t *c, bool have_embedded_units)
 {
     memset(c->reg_unit, 0, sizeof c->reg_unit);
     memset(c->extra_unit, 0, sizeof c->extra_unit);
 
     uint8_t h = ti_Open(UNITS_NAME, "r");
     if (!h) {
-        /* Before the new file exists, migrate the earlier refactor footer.
-         * A subsequent save writes these tags to RPNCEunt. */
-        if (have_legacy_units)
+        if (have_embedded_units)
             apply_unit_tags(c, unit_file + 8);
         return;
     }
@@ -204,17 +185,15 @@ bool storage_load(calc_t *c)
         size_t tail = sizeof(real_t) * s.extra_count;
         valid = ti_Read(s.extra, 1, tail, h) == tail;
     }
-    /* Earlier refactor builds appended 'U', 1 and one tag per register.
-     * Keep a complete, recognized footer in the existing scratch buffer
-     * for migration if RPNCEunt does not exist. Bad metadata never rejects
-     * an otherwise valid numeric/DATE save. */
-    bool have_legacy_units = false;
+    /* Optional 'U',1 footer: incomplete tags never reject numeric state. */
+    bool have_embedded_units = false;
     if (valid) {
         uint8_t header[2];
         size_t count = REG_BASE_COUNT + s.extra_count;
-        have_legacy_units = ti_Read(header, 1, sizeof header, h) == sizeof header &&
-                            header[0] == 'U' && header[1] == 1 &&
-                            ti_Read(unit_file + 8, 1, count, h) == count;
+        have_embedded_units =
+            ti_Read(header, 1, sizeof header, h) == sizeof header &&
+            header[0] == 'U' && header[1] == 1 &&
+            ti_Read(unit_file + 8, 1, count, h) == count;
     }
     ti_Close(h);
     if (!valid)
@@ -229,7 +208,7 @@ bool storage_load(calc_t *c)
     memcpy(c->regs, s.regs, sizeof c->regs);
     c->extra_count = s.extra_count;
     memcpy(c->extra, s.extra, sizeof(real_t) * s.extra_count);
-    load_units(c, have_legacy_units);
+    load_units(c, have_embedded_units);
     c->lift = s.lift != 0;
     c->degrees = s.degrees != 0;
     if (s.disp_style >= DISP_FIX && s.disp_style <= DISP_ENG &&
@@ -278,7 +257,7 @@ void storage_save_settings(uint8_t tint, const calc_t *c)
     if (!h)
         return;
     ti_Write(&s, sizeof s, 1, h);
-    /* Keep the version-2 prefix byte-for-byte compatible with old readers. */
+    /* The decimal preference follows the fixed settings prefix. */
     uint8_t decimal_comma = c->decimal_comma;
     ti_Write(&decimal_comma, 1, 1, h);
     ti_SetArchiveStatus(true, h);

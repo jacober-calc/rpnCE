@@ -8,7 +8,7 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / 'tests/ce_date'))
+sys.path.insert(0, str(ROOT / 'tests/native'))
 from run import crc32c
 
 

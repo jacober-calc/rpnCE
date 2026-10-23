@@ -25,7 +25,6 @@ void display_scroll_x(int delta);
 void display_reset_scroll(void);
 void display_close(void);
 
-/* Redraws the whole screen from the calculator state. */
 /* cat: the VARS catalog, shown in place of the stack while open.
  * prompt: STO/RCL prompt to show in the X row, or NULL.
  * prompt_lifts: show the stack lifted under the prompt (plain RCL). */

@@ -37,9 +37,9 @@ with operating procedures, worked keystroke examples, and a
 
 ## Installing
 
-1. Download the latest `RPNCE-<version>.zip` from the releases and unzip
-   it, or take the two files straight from the [`prod/`](prod) folder,
-   which holds the production build. You need `RPNCE.8xp` (the program)
+1. Download `RPNCE-<version>.zip` from the
+   [releases](https://github.com/jacober-calc/rpnce/releases) and unzip it.
+   You need `RPNCE.8xp` (the program)
    and `RPNCEres.8xv` (its menus and unit tables). Also get the
    [CE C libraries](https://github.com/CE-Programming/libraries/releases)
    (`clibs.8xg`) if you don't already have them.
@@ -89,8 +89,7 @@ To try it without a calculator, load both files and `clibs.8xg` into the
 The menu tree, unit tables and HELP pages (about 17 KB) live in `RPNCEres`
 and are read straight from archive, so they use no RAM. The 0.7.0 build has
 an 82,935-byte program image and 3,860 bytes of static variables, excluding
-runtime stack and library allocations. See the
-[refactor measurements](docs/REFACTOR.md) for the comparison with the original.
+runtime stack and library allocations.
 
 ## Tests
 
@@ -101,33 +100,19 @@ tested on a PC. With a C compiler installed:
 sh tests/run_tests.sh
 ```
 
-This builds and runs sixteen suites (number formatting, decimal rounding,
+This builds and runs seventeen suites (number formatting, decimal rounding,
 math, BASE, statistics, TVM and units, DATE, the RPNCEres appvar reader,
 menu actions, keyboard shortcuts, dot-font rendering, saved state, the
-calculator core, reported bug regressions, display redraws, and brightness controls), using
+calculator core, quantities, entry sequences, display redraws, and brightness controls), using
 stand-ins for the calculator's number routines.
 
-The [native DATE regressions](tests/ce_date/README.md) additionally compile
+The [native tests](tests/README.md#native-ce-checks) additionally compile
 the real core with the CE toolchain and run 83 checks in CEmu using TI-OS
-number routines. They cover a CE-specific compiler failure that the desktop
-stand-ins cannot reproduce, CTZ/ATZ conversions, unit round trips and all
+number routines. They cover CE execution, CTZ/ATZ conversions, unit round trips and all
 four curve-fit models. Five further checks exercise the shipped program's
 keyboard loop and saving/reopening in CEmu. The
 [release workflow](docs/RELEASING.md) consolidates these with sanitized
 desktop tests, resource checks, file validation and size measurements.
-
-To compare the refactored core against the original in a Git checkout:
-
-```
-sh tests/check_core_equivalence.sh
-```
-
-This checks 22,848 command/state combinations, including DATE and BASE
-arguments, both stack depths, unit tags, errors, TVM variables and the clock,
-plus 8,568 entry-sequence steps. Intentional quantity behavior, PRIM's stack
-push and percentage DATE type checks are covered separately by regression
-tests. A baseline from before the core was split can also be passed as an
-argument (for example, `2e29e01`).
 
 ## Layout
 
@@ -151,7 +136,6 @@ tools/       guide_appendix.py: regenerates the manual's menu map, unit list
 tests/       PC test suites and run_tests.sh
 docs/        USER_GUIDE.md: manual contents; guide/: chapters and reference
              tables; key reference, roadmap, and install notes
-prod/        the current build: RPNCE.8xp, RPNCEres.8xv, INSTALL.txt
 ```
 
 ## Editing menus and units

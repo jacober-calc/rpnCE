@@ -14,8 +14,7 @@ def qualified_report(report):
     if report.get('schema') != 1 or report.get('status') != 'automated_passed':
         raise ValueError('run the full release checks first')
     required = {'release-tools', 'generated-resources', 'documentation', 'desktop',
-                'desktop-sanitized', 'core-equivalence', 'core-equivalence-sanitized',
-                'ce-build', 'ce-native', 'ce-smoke'}
+                'desktop-sanitized', 'ce-build', 'ce-native', 'ce-smoke'}
     passed = {step['name'] for step in report.get('steps', []) if step['status'] == 'pass'}
     if not required <= passed or any(step['status'] != 'pass' for step in report['steps']):
         raise ValueError('automated report is missing required checks')
@@ -72,6 +71,7 @@ def main():
                 if package.read(label + '/' + name) != (folder / name).read_bytes():
                     raise ValueError('release ZIP content mismatch: ' + name)
         if acceptance:
+            (ROOT / 'prod').mkdir(exist_ok=True)
             for name in members[:3]:
                 shutil.copyfile(folder / name, ROOT / 'prod' / name)
         print(archive)

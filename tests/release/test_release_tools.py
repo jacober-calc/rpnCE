@@ -10,6 +10,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'tools'))
 import release_check as release
 import package_release as package
+from project_files import referenced_assets, unused_assets
 
 
 def container(payload=b'example', name='RPNCEres', kind=21):
@@ -21,10 +22,26 @@ def container(payload=b'example', name='RPNCEres', kind=21):
 
 
 class ReleaseTests(unittest.TestCase):
+    def test_asset_inventory(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            (root / 'assets').mkdir()
+            (root / 'docs').mkdir()
+            used = root / 'assets/used.png'
+            extra = root / 'assets/extra.png'
+            used.write_bytes(b'image'); extra.write_bytes(b'image')
+            (root / 'README.md').write_text('<img src="assets/used.png">')
+            (root / 'docs/page.md').write_text('[image](../assets/used.png)')
+            self.assertEqual(referenced_assets(root), {used})
+            self.assertEqual(unused_assets(root), [extra])
+            with self.assertRaises(ValueError):
+                release.check_documentation(root)
+            extra.unlink()
+            release.check_documentation(root)
+
     def test_stale_package_inputs(self):
         names = ('release-tools', 'generated-resources', 'documentation', 'desktop',
-                 'desktop-sanitized', 'core-equivalence', 'core-equivalence-sanitized',
-                 'ce-build', 'ce-native', 'ce-smoke')
+                 'desktop-sanitized', 'ce-build', 'ce-native', 'ce-smoke')
         report = {'schema': 1, 'status': 'automated_passed', 'version': '0.7.0',
                   'source_sha256': 'source', 'artifacts': {'files': 'tested'},
                   'steps': [{'name': name, 'status': 'pass'} for name in names]}

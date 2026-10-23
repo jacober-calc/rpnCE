@@ -176,7 +176,7 @@ int main(void)
         storage_save(&original);
         check("save finalizes entry and archives the appvar", finishes == previous_finishes + 1 && vars[0].archived);
         if (n == 0) fixed_size = vars[0].size;
-        check("RPNCEdat keeps the 0.6.6 layout: only the configured extra registers",
+        check("state payload includes only the configured extra registers",
               vars[0].size == fixed_size + sizeof(real_t) * counts[n]);
         check("register units go to an archived RPNCEunt",
               vars[2].exists && vars[2].archived &&
@@ -184,14 +184,14 @@ int main(void)
         memset(&loaded, 0, sizeof loaded);
         check("all persistent state survives repeated save/load",
               storage_load(&loaded) && same_saved(&original, &loaded));
-        if (n < 2) {  /* legacy footer boundaries: no extras and five extras */
+        if (n < 2) {  /* embedded footer boundaries: zero and five extras */
             size_t base_size = vars[0].size;
             vars[0].data[base_size] = 'U'; vars[0].data[base_size + 1] = 1;
             memcpy(vars[0].data + base_size + 2, original.reg_unit, REG_BASE_COUNT);
             memcpy(vars[0].data + base_size + 2 + REG_BASE_COUNT, original.extra_unit, original.extra_count);
             vars[0].size += 2 + REG_BASE_COUNT + original.extra_count;
             vars[2].exists = false;
-            check("legacy unit footer migrates with zero or five extra registers",
+            check("embedded unit footer loads with zero or five extra registers",
                   storage_load(&loaded) && same_saved(&original, &loaded));
             storage_save(&loaded);
             check("migration removes footer and archives the separate units file",
@@ -285,7 +285,7 @@ int main(void)
         memcpy(vars[0].data + saved_size, tail, tail_size);
         vars[0].size = saved_size + tail_size;
         vars[2].exists = false;
-        check("older refactor saves preserve both values and register units",
+        check("embedded unit tags preserve values and units",
               storage_load(&loaded) && same_saved(&original, &loaded));
         storage_save(&loaded);
         check("migrated units are saved separately and survive reopening",
@@ -295,11 +295,11 @@ int main(void)
         memcpy(vars[0].data + saved_size, tail, tail_size);
         vars[0].size = saved_size + tail_size - 1;
         vars[2].exists = false;
-        check("truncated legacy unit footer drops only units, retaining values",
+        check("truncated embedded footer drops only units, retaining values",
               storage_load(&loaded) && same_saved(&no_units, &loaded));
         vars[0].size = saved_size + tail_size;
         vars[0].data[saved_size] = '?';
-        check("unknown legacy unit footer does not reject saved values",
+        check("unknown embedded footer does not reject saved values",
               storage_load(&loaded) && same_saved(&no_units, &loaded));
         vars[0].data[saved_size] = 'U';
 
@@ -307,10 +307,10 @@ int main(void)
         memcpy(vars[2].data, units_saved, units_size);
         vars[2].size = units_size;
         vars[0].data[saved_size + 2] = 2;  /* differs from the matching file's tag */
-        check("a matching RPNCEunt takes precedence over legacy tags",
+        check("a matching RPNCEunt takes precedence over embedded tags",
               storage_load(&loaded) && same_saved(&original, &loaded));
         vars[2].data[10] ^= 1;
-        check("damaged RPNCEunt does not fall back to potentially stale legacy tags",
+        check("damaged RPNCEunt does not fall back to stale embedded tags",
               storage_load(&loaded) && same_saved(&no_units, &loaded));
         vars[0].size = saved_size;
         memcpy(vars[2].data, units_saved, units_size);
@@ -363,7 +363,7 @@ int main(void)
     vars[1].size = 3;
     memset(&loaded, 0, sizeof loaded);
     loaded.app_tz = 12;
-    check("legacy tint-only settings retain DATE defaults",
+    check("tint-only settings retain DATE defaults",
           storage_load_settings(&loaded) == 3 && loaded.app_tz == 12 && !loaded.date_as_string);
     printf("%d failures\n", fails);
     return fails != 0;

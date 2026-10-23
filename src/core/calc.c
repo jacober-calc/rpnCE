@@ -35,7 +35,7 @@ static void init_constants(void)
 
 /* ---------- stack primitives ---------- */
 
-/* Moves every level up one (the top level falls off). X is left as is. */
+/* X is unchanged; the top level falls off. */
 static void lift_levels(calc_t *c)
 {
     for (int k = c->depth - 1; k > 0; k--) {
@@ -44,8 +44,7 @@ static void lift_levels(calc_t *c)
     }
 }
 
-/* Removes level `from`, moving the levels above it down one. The top level
- * keeps its value, so it is duplicated, as on HP calculators. */
+/* Dropping a level duplicates the top value, following HP stack rules. */
 static void drop_levels(calc_t *c, int from)
 {
     for (int k = from; k < c->depth - 1; k++) {
@@ -54,8 +53,7 @@ static void drop_levels(calc_t *c, int from)
     }
 }
 
-/* Commit a successful calculation. Save X and its unit before a binary
- * operation drops Y; errors return before reaching this point. */
+/* Preserve X and its unit before a binary result drops Y. */
 static void save_lastx(calc_t *c)
 {
     c->lastx = c->stack[0];
@@ -72,13 +70,11 @@ void calc_stack_set_result(calc_t *c, const real_t *v, bool drop)
     c->lift = true;
 }
 
-/* Replace X with a result (LASTX keeps the old X). */
 void calc_stack_set_x(calc_t *c, const real_t *v)
 {
     calc_stack_set_result(c, v, false);
 }
 
-/* Lifts the stack and puts v (with unit tag u) in X. */
 static void push_unit(calc_t *c, const real_t *v, uint8_t u)
 {
     lift_levels(c);
@@ -175,8 +171,7 @@ static bool is_integer(const real_t *v)
     return mx_is_zero(&f);
 }
 
-/* A whole number not divisible by 2 (any size: x / 2 is checked for a
- * fractional part, so no conversion to a native integer is needed). */
+/* Test parity without narrowing a TI real to a native integer. */
 static bool is_odd_integer(const real_t *v)
 {
     if (!is_integer(v))
@@ -194,17 +189,13 @@ static calc_err_t precheck(calc_cmd_t cmd, const real_t *y, const real_t *x)
         case CMD_RECIP:
         case CMD_MOD:
             return mx_is_zero(x) ? ERR_DIV0 : ERR_NONE;
-        /* Negative bases follow the HP rule (as on the HP-32SII / DM32): a
-         * root of a negative number needs an odd whole-number index, and a
-         * power of one a whole-number exponent. Anything else is an error,
-         * even where a real value exists (such as (-8)^0.4), and the OS's
-         * power routine never sees a negative base with any other exponent
-         * (it would return the real part of a complex result). */
+        /* Negative bases require integer powers or odd integer roots.
+         * Other exponents can make the OS return a complex result's real part. */
         case CMD_XROOT_Y:
             if (mx_is_zero(x))
                 return ERR_DIV0;
             if (mx_is_zero(y) && mx_is_neg(x))
-                return ERR_DOMAIN;          /* 0 to a negative power (MATH-103/104) */
+                return ERR_DOMAIN;
             return (mx_is_neg(y) && !is_odd_integer(x)) ? ERR_DOMAIN : ERR_NONE;
         case CMD_POW:
             return (mx_is_neg(y) && !is_integer(x)) ? ERR_DOMAIN : ERR_NONE;
@@ -467,14 +458,8 @@ static bool reads_y(calc_cmd_t cmd)
            cmd == CMD_PERCENT || cmd == CMD_PERCENT_CHANGE;
 }
 
-/* y^e, with a negative y taken from its magnitude: |y|^e, negated when the
- * result should be negative. precheck() has already made sure a negative y
- * only arrives with a whole-number power (Y^X) or the reciprocal of an odd
- * whole-number index (ˣ√Y), so the sign is:
- *   Y^X:   negative when the exponent x is odd
- *   ˣ√Y:   always negative (an odd root of a negative number)
- * The caller says which by passing the exponent: for ˣ√Y it is 1/x, which
- * isn't a whole number unless x is 1 or -1 (both odd, so negative too). */
+/* precheck() permits integer powers and odd roots of negative bases.
+ * A root's reciprocal exponent can be fractional; its sign stays negative. */
 static real_t signed_power(const real_t *y, const real_t *e)
 {
     if (!mx_is_neg(y))
@@ -1148,13 +1133,8 @@ static calc_cmd_t base_key(const calc_t *c, calc_cmd_t cmd, uint8_t *arg)
 
 static const char *const model_names[FIT_COUNT] = { "LINF", "LOGF", "EXPF", "PWRF" };
 
-/* Runs a statistics command under the error handler and puts its answer on
- * the stack, the way the HP-42S does:
- *   Sigma+ / Sigma-   x from X, y from Y; X becomes n, LASTX the old X, and
- *                     stack lift is disabled (the next number replaces n)
- *   SUM MEAN WMN SDEV PDEV   x answer in X, y answer in Y
- *   forecasts         replace X (LASTX keeps it)
- *   everything else   one answer pushed onto the stack */
+/* Sigma+/- replaces X with n and disables lift. Paired results enter Y then
+ * X; forecasts replace X; other answers enter with the current lift rule. */
 static void do_stat(calc_t *c, calc_cmd_t cmd)
 {
     calc_finish_entry(c);
@@ -1194,9 +1174,8 @@ static void do_stat(calc_t *c, calc_cmd_t cmd)
 
 /* ---------- TVM ---------- */
 
-/* N, I%YR, PV, PMT, FV: like an HP-12C, the key stores X, unless the last
- * key was a TVM key too, in which case it solves for that value. P/YR and
- * C/YR always store. With TVM_RECALL (2ND + key) the value is recalled. */
+/* Consecutive TVM keys solve; otherwise store X. P/YR and C/YR always store.
+ * TVM_RECALL bypasses both paths. */
 static void do_tvm_var(calc_t *c, uint8_t arg, calc_cmd_t prev)
 {
     uint8_t which = arg & ~TVM_RECALL;
