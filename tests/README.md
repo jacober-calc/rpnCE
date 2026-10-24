@@ -1,5 +1,13 @@
 # Tests
 
+## Guided hardware tests
+
+The browser tool, test catalog, grading checks and usage instructions are
+kept together in [hardware/](hardware/README.md). Open
+[hardware/index.html](hardware/index.html) in a browser to begin.
+
+## Desktop suites
+
 Run the desktop suites from the repository root:
 
 ```sh
