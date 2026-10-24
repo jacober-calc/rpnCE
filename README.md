@@ -156,5 +156,7 @@ once. Run it after changes that affect what the screen shows, then run
 
 ## License
 
-MIT. See [LICENSE](LICENSE). The menu tree in `menus/menus.txt` carries
-its own credit notice.
+MIT. See [LICENSE](LICENSE). The menu definitions in `menus/menus.txt`
+are adapted from Brian T. Park's [RPN83P](https://github.com/bxparks/rpn83p),
+also licensed under MIT. The applicable copyright notice is retained in
+the menu source and LICENSE.
