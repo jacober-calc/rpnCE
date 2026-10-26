@@ -302,7 +302,7 @@ def base_case(tag,ident,bits,inputs,want,carry=0,final_carry=None,focus='boundar
     covers=[ident]
     if output=='carry': steps+=[select('GET_CARRY_FLAG')]; covers+=['GET_CARRY_FLAG']
     checks=[]
-    if final_carry is not None and output!='carry': checks=[f'The carry flag is {final_carry}: '+('C is shown in the status bar.' if final_carry else 'C is absent from the status bar.')]
+    if final_carry is not None and output!='carry': checks=[f'The carry flag is {final_carry}: '+('CF is shown in the status bar.' if final_carry else 'CF is absent from the status bar.')]
     q(tag,'BASE',f'{COMMANDS[ident]["label"]}, {bits}-bit word: '+('carry output' if output=='carry' else ', '.join(str(x) for x in inputs)),steps,
       number(want,exact=True),covers,focus,checks,'integer',operation=ident,operands=[str(x) for x in inputs],wordSize=bits,initialCarry=carry,output=output)
 

@@ -40,7 +40,8 @@ range cases accept either the stated numerical reference or the specific
 error listed in that question. Other errors and misleading zero answers
 still fail. Tolerances are stated in the individual questions.
 
-Catalog revision `hardware-0.7.0-5` starts new runs with all cases selected.
+Catalog revision `hardware-0.7.0-6` calls the carry indicator **CF**, including
+in DEC mode. New runs start with all cases selected.
 The focused run and completed 14-case numerical confirmation run have been
 removed, along with the 14 completed individual cases. Their original device reports
 remain unchanged in [results/](results/), and their native regression checks
@@ -54,13 +55,13 @@ underflow errors for powers, exponentials, reciprocal, square, cube and
 percent. The generator rejects numerical references outside the supported
 14-digit range instead of silently treating them as ordinary answers.
 
-Emulator arithmetic checks exposed three remaining failures: `10^(-100)`
-and `2^(-333)` silently return zero, and `6 ft MOD 2 in` returns a remainder
-near 2 inches. These cases are marked as known issues and keep their correct
-expectations: underflow errors for the first two; zero or an explicit
-precision warning for the last. Select **All cases**, then **Known issues**
-to find them. These are emulator findings, awaiting physical-device checks;
-the browser does not mark them passed or create a device report automatically.
+Hardware testing confirmed silent zeros for `10^(-100)` and `2^(-333)`,
+and an incorrect remainder near 2 inches for `6 ft MOD 2 in`. The corrected
+program reports **Err: Underflow** for the powers and **Err: Precision**
+for the ambiguous converted-unit remainder. These regression cases remain
+under **All cases** → **Known issues** pending hardware confirmation of the
+fixes. The browser does not mark them passed or create a device report
+automatically.
 
 [catalog.js](catalog.js) contains the menu snapshot and initial cases.
 [questions.py](questions.py) defines the expanded questions, calculates

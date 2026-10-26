@@ -91,7 +91,7 @@ gives the quotient in Y and the remainder in X. Example in HEX:
     - <img src="../../assets/guide/menu/home-base-bcfs-1.png" alt="HOME > BASE > BCFS > Row 1" width="320">
 
 Shifts and rotates set the carry to the last bit moved out, and the status
-bar shows **C** after the base while the carry flag is set.
+bar shows **CF** after the base while the carry flag is set, including in DEC.
 
 
 ## Example: overflow in an eight-bit word

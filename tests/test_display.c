@@ -213,8 +213,14 @@ static void formatting_work(void)
     c.degrees = !c.degrees;
     c.base.carry = !c.base.carry;
     mock_format_calls = 0;
+    printed_count = 0; printed[0] = '\0';
     draw(&c, &m, &cat, NULL, false);
     check("units and annunciators remain live without reformatting numbers", mock_format_calls == 0);
+    check("DEC shows the set carry flag as CF", strstr(printed, "DEC CF") != NULL);
+    calc_execute(&c, CMD_CLEAR_CARRY, 0);
+    printed_count = 0; printed[0] = '\0';
+    draw(&c, &m, &cat, NULL, false);
+    check("CCF removes the DEC carry indicator", strstr(printed, "DEC CF") == NULL);
     c.editing = true;
     strcpy(c.entry, "123");
     mock_format_calls = 0;

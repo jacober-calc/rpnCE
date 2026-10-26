@@ -562,9 +562,22 @@ static calc_err_t compute(calc_cmd_t cmd, const real_t *y, const real_t *x,
         case CMD_MOD: {
             /* y - x * floor(y / x): result takes the sign of x */
             real_t q = os_RealDiv(y, x);
+            if (uy && ux && uy != ux) {
+                /* Conversion can leave a quotient just below an integer.
+                 * Refuse an ambiguous floor instead of returning a full divisor. */
+                real_t nearest = os_RealRoundInt(&q);
+                if (!mx_equal(&q, &nearest)) {
+                    real_t distance = mx_sub(&q, &nearest);
+                    real_t fraction = os_RealDiv(&distance, &q);
+                    fraction = mx_abs(&fraction);
+                    real_t limit = os_StrToReal("1E-12", NULL);
+                    if (os_RealCompare(&fraction, &limit) <= 0)
+                        os_ThrowError(MX_E_PRECISION);
+                }
+            }
             real_t f = os_RealFloor(&q);
             real_t m = os_RealMul(x, &f);
-            g_result = os_RealSub(y, &m);
+            g_result = mx_sub(y, &m);
             break;
         }
         case CMD_MIN:    g_result = os_RealMin(y, x); break;
@@ -675,10 +688,14 @@ static calc_err_t compute(calc_cmd_t cmd, const real_t *y, const real_t *x,
         default:         g_result = *x; break;
     }
 
-    if ((cmd == CMD_MUL || cmd == CMD_DIV) && mx_is_zero(&g_result) &&
+    if ((cmd == CMD_MUL || cmd == CMD_DIV || cmd == CMD_PERCENT) && mx_is_zero(&g_result) &&
         !mx_is_zero(x) && !mx_is_zero(y)) os_ThrowError(MX_E_UNDERFLOW);
-    if ((cmd == CMD_SQUARE || cmd == CMD_RECIP) && mx_is_zero(&g_result) &&
+    if ((cmd == CMD_SQUARE || cmd == CMD_RECIP || cmd == CMD_CUBE) && mx_is_zero(&g_result) &&
         !mx_is_zero(x)) os_ThrowError(MX_E_UNDERFLOW);
+    if ((cmd == CMD_POW || cmd == CMD_XROOT_Y) && mx_is_zero(&g_result) &&
+        !mx_is_zero(y)) os_ThrowError(MX_E_UNDERFLOW);
+    if ((cmd == CMD_EXP || cmd == CMD_ALOG || cmd == CMD_TWO_POW) &&
+        mx_is_zero(&g_result)) os_ThrowError(MX_E_UNDERFLOW);
     if (cmd != CMD_FIT_BEST) mx_check_range(&g_result);
     if (cmd == CMD_STAT_PLUS || cmd == CMD_STAT_MINUS)
         for (uint8_t i = 0; i < SUM_COUNT; i++) mx_check_range(&g_stats->sum[i]);

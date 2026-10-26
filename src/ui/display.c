@@ -294,7 +294,7 @@ static void clock_text(const calc_t *c, char *out)
 static void draw_status(const calc_t *c, bool second, bool alpha)
 {
     const int y = (STATUS_H - 8) / 2;
-    char clock[20], fmt[8], base[6];
+    char clock[20], fmt[8], base[7];
 
     gfx_SetColor(g_accents ? COL_BAR : COL_INK);
     gfx_FillRectangle(0, 0, SCREEN_W, STATUS_H);
@@ -321,8 +321,8 @@ static void draw_status(const calc_t *c, bool second, bool alpha)
     }
     strcpy(base, (c->base.radix == 16) ? "HEX" : (c->base.radix == 8) ? "OCT" :
                  (c->base.radix == 2) ? "BIN" : "DEC");
-    if (c->base.radix != 10 && c->base.carry)
-        strcat(base, " C");
+    if (c->base.carry)
+        strcat(base, " CF");
     const char *angle = c->degrees ? "DEG" : "RAD";
     const char *shift = second ? "2ND" : alpha ? "A" : NULL;     /* A: ALPHA pending */
 

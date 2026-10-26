@@ -33,7 +33,7 @@ and tiny rates and invalid payment/compounding settings.
 
 ## Native CE checks
 
-`native/` compiles the core with `-Oz`/LTO settings and runs 140
+`native/` compiles the core with `-Oz`/LTO settings and runs 161
 checks in CEmu with TI-OS arithmetic. It covers arithmetic, DATE ranges,
 CTZ/ATZ conversion, units, all four curve-fit models, TVM and real GraphX
 pixels. The fixed clock makes results repeatable. The check count and
@@ -97,3 +97,9 @@ Remaining limits include convergence for arbitrary TVM cash flows, noisy
 curve fits, conversions between every pair of compatible units at numeric
 limits, power interruption and other OS versions. These guards detect
 specific failure classes; they do not guarantee every possible calculation.
+
+Native regressions also cover silent underflow from powers, exponentials,
+roots, cubes and percent, with valid zeros and the lower range endpoint as
+neighbors. Converted-unit MOD rejects a noninteger quotient within 1E-12 relative
+distance of an integer, preserving operands and LASTX.
+Exact unit multiples and ordinary signed remainders remain covered.

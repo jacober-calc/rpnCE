@@ -949,7 +949,7 @@ for (const test of cases) {
   else if (test.expected?.kind === 'error' && test.focus === 'normal') test.focus = 'domain';
 }
 const catalog = {
- revision: 'hardware-0.7.0-5', version: '0.7.0', menuDigest: source.menuDigest,
+ revision: 'hardware-0.7.0-6', version: '0.7.0', menuDigest: source.menuDigest,
  reference: 'Exact integer and Gregorian references; basic mpmath references at 70 decimal digits and expanded references at 180 digits. Unit references reuse the exact definitions in tools/genunits.py and are evaluated separately. Most approximate checks allow 5E-11 relative error and zero absolute error; iterative-rate, near-pole and cancellation cases state their own tolerances. Use SHOW for numeric results, especially scientific notation. Passing means the reported observations satisfy these cases; it is not proof of a complete hardware audit.',
  baseline: [
   'Use a calculator with the current RPNCE program and matching resource appvar. Copy any stack/register values you want to keep: these exercises replace them. TVM cases replace the shared TI-OS Finance values.',

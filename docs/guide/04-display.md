@@ -31,7 +31,7 @@ The dark strip at the top shows the calculator's state.
 | `FIX-` | "as many digits as needed" (all digits, like ALL on an HP) |
 | `DEG` / `RAD` | the angle mode for trigonometry and polar conversions |
 | `DEC`, `HEX`, `OCT`, `BIN` | the number base (see [chapter 11](11-base.md#11-base-hexadecimal-octal-and-binary)) |
-| `C` after the base | the BASE carry flag is set |
+| `CF` after the base | the BASE carry flag is set, including in DEC |
 | `2ND` badge | `2ND` was pressed; the next key gives its blue function |
 | `A` badge | `ALPHA` was pressed; the next key gives its green letter |
 

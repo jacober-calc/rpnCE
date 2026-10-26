@@ -108,6 +108,20 @@ static void numeric_boundaries(void)
         {"maximum value", CMD_ADD, "9.9999999999999E99", "0", "9.9999999999999E99", NULL, 0},
         {"minimum scale", CMD_ADD, "1E-99", "1E-99", "2E-99", NULL, 0},
         {"underflow range", CMD_DIV, "1E-99", "10", NULL, "Err: Underflow", 0},
+        {"decimal power underflow", CMD_ALOG, "0", "-100", NULL, "Err: Underflow", 0},
+        {"binary power underflow", CMD_TWO_POW, "0", "-333", NULL, "Err: Underflow", 0},
+        {"exponential underflow", CMD_EXP, "0", "-230", NULL, "Err: Underflow", 0},
+        {"power underflow", CMD_POW, "1E-50", "2", NULL, "Err: Underflow", 0},
+        {"root underflow", CMD_XROOT_Y, "1E-99", ".5", NULL, "Err: Underflow", 0},
+        {"cube underflow", CMD_CUBE, "0", "1E-34", NULL, "Err: Underflow", 0},
+        {"percent underflow", CMD_PERCENT, "1E-50", "1E-50", NULL, "Err: Underflow", 0},
+        {"decimal power minimum", CMD_ALOG, "0", "-99", "1E-99", NULL, 0},
+        {"binary power zero exponent", CMD_TWO_POW, "0", "0", "1", NULL, 0},
+        {"exponential zero exponent", CMD_EXP, "0", "0", "1", NULL, 0},
+        {"zero base power", CMD_POW, "0", "2", "0", NULL, 0},
+        {"zero base root", CMD_XROOT_Y, "0", "3", "0", NULL, 0},
+        {"zero cube", CMD_CUBE, "0", "0", "0", NULL, 0},
+        {"zero percentage", CMD_PERCENT, "2", "0", "0", NULL, 0},
         {"addition overflow", CMD_ADD, "9E99", "9E99", NULL, "Err: Overflow", 0},
         {"multiplication overflow", CMD_MUL, "1E99", "10", NULL, "Err: Overflow", 0},
         {"division overflow", CMD_DIV, "1E99", "0.1", NULL, "Err: Overflow", 0},
@@ -300,6 +314,20 @@ static void calculator_regressions(void)
     check(ft && in && x_close("74") && c.unit[0] == in);
     pair(6, ft, 2, in); cmd(CMD_DIV, 0);
     check(x_close("36") && !c.unit[0]);
+    pair(6, ft, 2, in);
+    check(ft && in && rejected(CMD_MOD, "Err: Precision"));
+    pair(7, ft, 24, in); cmd(CMD_MOD, 0);
+    check(x_number("1") && c.unit[0] == ft);
+    pair(6, ft, 24, in); cmd(CMD_MOD, 0);
+    check(x_number("0") && c.unit[0] == ft);
+    pair(1, ft, 24, in); cmd(CMD_MOD, 0);
+    check(x_number("1") && c.unit[0] == ft);
+    pair(6, ft, 2, ft); cmd(CMD_MOD, 0);
+    check(x_number("0") && c.unit[0] == ft);
+    pair(-7, ft, 24, in); cmd(CMD_MOD, 0);
+    check(x_number("1") && c.unit[0] == ft);
+    pair(7, ft, -24, in); cmd(CMD_MOD, 0);
+    check(x_number("-1") && c.unit[0] == ft);
     pair(2, kw, 2000, kcal);
     check(kw && rejected(CMD_PERCENT_CHANGE, "Err: Unit Mismatch"));
     pair(6, ft, 2, 0); check(rejected(CMD_ADD, "Err: Data Type"));
