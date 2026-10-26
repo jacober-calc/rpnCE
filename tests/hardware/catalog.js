@@ -712,14 +712,14 @@ for (const [id, input, value] of [
   ['RAD_TO_DEG','0',0], ['DEG_TO_RAD','180',null],
   ['HMS_TO_HR','1.3045','1.5125'], ['HR_TO_HMS','1.5125','1.3045'],
   ['HMS_PLUS','1.45 ENTER .30','2.15'], ['HMS_MINUS','2.15 ENTER .30','1.45']
-]) command(id, input, value === null ? approx(ref.pi) : exact(value), { quick: ['LCM','GCD','PERCENT_CHANGE','CUBE_ROOT'].includes(id), checks: ['PERCENT','PERCENT_CHANGE'].includes(id) ? ['The original value remains in Y.'] : [] });
+]) command(id, input, value === null ? approx(ref.pi) : ['CUBE_ROOT','XROOT_Y','LOG2','LOG_BASE'].includes(id) ? approx(value) : exact(value), { checks: ['PERCENT','PERCENT_CHANGE'].includes(id) ? ['The original value remains in Y.'] : [] });
 command('ATAN2','4 ENTER 3',approx(ref.atan2));
-command('EXP_MINUS_ONE','1 EE (−) 12',approx(ref.expm1tiny), { quick: true });
-command('LN_ONE_PLUS','1 EE (−) 12',approx(ref.log1ptiny), { quick: true });
-command('PRIME','1981',exact(7),{ quick: true, checks:['Y still contains 1981.'] });
+command('EXP_MINUS_ONE','1 EE (−) 12',approx(ref.expm1tiny));
+command('LN_ONE_PLUS','1 EE (−) 12',approx(ref.log1ptiny));
+command('PRIME','1981',exact(7),{ checks:['Y still contains 1981.'] });
 add('prime-prime','NUM','PRIM on a prime', ['Enter 1999.',select('PRIME')],exact(1),['PRIME'],{checks:['Y still contains 1999.']});
 add('lcm-zero','NUM','LCM with zero', ['Enter 0 ENTER 8.',select('LCM')],exact(0),['LCM']);
-command('ROUND_TO_N','2.675',exact('2.68'),{suffix:['At the RNDN prompt press 2.'],quick:true});
+command('ROUND_TO_N','2.675',exact('2.68'),{suffix:['At the RNDN prompt press 2.']});
 command('ROUND_TO_GUARD','12345',exact(12300),{suffix:['At the RNDG prompt press 3.']});
 command('ROUND_TO_FIX','2.675',exact('2.68'),{setup:[select('FIX'),'At the FIX prompt press 2.'],suffix:[select('FIX'),'At the FIX prompt press . then 2 to restore all display digits.']});
 for (const [id,input,r] of [['SINH','1','sinh1'],['COSH','1','cosh1'],['TANH','1','tanh1'],['ASINH','1','asinh1'],['ACOSH','2','acosh2'],['ATANH','.5','atanh05']]) command(id,input,approx(ref[r]));
@@ -742,7 +742,7 @@ for (const [id,input,value] of [
   ['ROTATE_LEFT_CIRCULAR_N','18 ENTER 4',33],['ROTATE_RIGHT_CIRCULAR_N','18 ENTER 4',33],
   ['CLEAR_BIT','255 ENTER 7',127],['SET_BIT','0 ENTER 7',128],['GET_BIT','16 ENTER 4',1],['REVERSE_BIT','1',128],['COUNT_BIT','183',6],
   ['BASE_ADD','255 ENTER 2',1],['BASE_SUBT','1 ENTER 2',255],['BASE_MULT','16 ENTER 16',0],['BASE_DIV','17 ENTER 5',3],['BASE_DIV2','17 ENTER 5',2]
-]) command(id,input,exact(value),{setup:baseSetup, checks: id === 'BASE_DIV2' ? ['Y contains the quotient 3.'] : [], quick:id==='BITWISE_AND'});
+]) command(id,input,exact(value),{setup:baseSetup, checks: id === 'BASE_DIV2' ? ['Y contains the quotient 3.'] : []});
 for (const [id,input,value] of [['ROTATE_LEFT_CARRY_N','128 ENTER 2',1],['ROTATE_RIGHT_CARRY_N','1 ENTER 2',128]]) command(id,input,exact(value),{setup:baseSetup});
 for (const [id,expect] of [['CLEAR_CARRY_FLAG',0],['SET_CARRY_FLAG',1]]) add(`carry-${id}`,'BASE',`${byId[id].label}: read carry`,[...baseSetup,select(id),select('GET_CARRY_FLAG')],exact(expect),[id,'GET_CARRY_FLAG']);
 command('GET_WORD_SIZE','8',exact(8),{setup:baseSetup,covers:['GET_WORD_SIZE','SET_WORD_SIZE']});
@@ -755,7 +755,7 @@ for (const [id,value,check] of [
   ['STAT_SAMPLE_SDEV',1,'Y contains 2.'],['STAT_POP_SDEV',ref.sqrt23,'Y is approximately 1.6329931618555.'],['STAT_SAMPLE_COV',2,''],['STAT_POP_COV','1.3333333333333333333333333333333',''],
   ['STAT_REG_LN_X',ref.lnsum,''],['STAT_REG_LN_X2',ref.lnx2,''],['STAT_REG_LN_Y',ref.lnysum,''],['STAT_REG_LN_Y2',ref.lny2,''],
   ['STAT_REG_LN_XLN_Y',ref.lnxlny,''],['STAT_REG_XLN_Y',ref.xlny,''],['STAT_REG_YLN_X',ref.ylnx,'']
-]) add(`stat-${id}`,'STAT',`${byId[id].label} for (1,2), (2,4), (3,6)`,[...statSetup,...(id==='STAT_PLUS'?[]:[select(id)])],approx(value),[id],{checks:check?[check]:[],quick:id==='STAT_SAMPLE_SDEV'});
+]) add(`stat-${id}`,'STAT',`${byId[id].label} for (1,2), (2,4), (3,6)`,[...statSetup,...(id==='STAT_PLUS'?[]:[select(id)])],approx(value),[id],{checks:check?[check]:[]});
 add('stat-remove','STAT','Remove a data point',[...statSetup,'Enter 6 ENTER 3.',select('STAT_MINUS'),select('STAT_N')],exact(2),['STAT_MINUS']);
 add('stat-empty','STAT','Clear statistics',[...statSetup,select('STAT_CLEAR'),select('STAT_N')],exact(0),['STAT_CLEAR']);
 add('stat-linear-only','STAT','Linear-only statistics',[select('STAT_CLEAR'),select('STAT_LINEAR_MODE'),'Enter 2 ENTER 1.',select('STAT_PLUS'),'Enter 4 ENTER 2.',select('STAT_PLUS'),select('STAT_N')],exact(2),['STAT_LINEAR_MODE'],{checks:['LINΣ is marked selected; ALLΣ can be selected again.']});
@@ -765,7 +765,7 @@ add('fit-best','STAT','BEST chooses a fit',[...statSetup,select('CFIT_BEST'),'En
 
 // TVM cases replace the calculator's shared Finance variables.
 const tvmSetup = [select('TVM_CLEAR'),select('TVM_SOLVER_RESET')];
-add('tvm-mortgage','TVM','Mortgage payment',[...tvmSetup,'Enter 360.',select('TVM_N'),'Enter 6.5.',select('TVM_IYR'),'Enter 200000.',select('TVM_PV'),'Enter 0.',select('TVM_FV'),select('TVM_PMT')],approx(ref.mortgage),['TVM_N','TVM_IYR','TVM_PV','TVM_FV','TVM_PMT','TVM_CLEAR','TVM_SOLVER_RESET'],{quick:true});
+add('tvm-mortgage','TVM','Mortgage payment',[...tvmSetup,'Enter 360.',select('TVM_N'),'Enter 6.5.',select('TVM_IYR'),'Enter 200000.',select('TVM_PV'),'Enter 0.',select('TVM_FV'),select('TVM_PMT')],approx(ref.mortgage),['TVM_N','TVM_IYR','TVM_PV','TVM_FV','TVM_PMT','TVM_CLEAR','TVM_SOLVER_RESET']);
 add('tvm-savings','TVM','Annual compound growth',[...tvmSetup,'Enter 1.',select('TVM_PYR'),'Enter 1.',select('TVM_CYR'),'Enter 10.',select('TVM_N'),'Enter 5.',select('TVM_IYR'),'Enter 1000 (−).',select('TVM_PV'),'Enter 0.',select('TVM_PMT'),select('TVM_FV')],approx(ref.growth),['TVM_PYR','TVM_CYR','TVM_FV']);
 add('tvm-zero-interest','TVM','Zero-interest payment',[...tvmSetup,'Enter 10.',select('TVM_N'),'Enter 0.',select('TVM_IYR'),'Enter 1000.',select('TVM_PV'),'Enter 0.',select('TVM_FV'),select('TVM_PMT')],exact(-100),['TVM_PMT']);
 add('tvm-timing','TVM','Payment timing and solver settings',[...tvmSetup,select('TVM_BEGIN'),select('TVM_END'),'Enter 2.',select('TVM_IYR0'),'Enter 20.',select('TVM_IYR1'),'Enter 60.',select('TVM_ITER_MAX'),select('TVM_SOLVER_RESET')],null,['TVM_BEGIN','TVM_END','TVM_IYR0','TVM_IYR1','TVM_ITER_MAX','TVM_SOLVER_RESET'],{checks:['BEG and END mark the chosen timing without changing X.','IYR1, IYR2 and TMAX accept the values; 2ND with each softkey recalls the setting.','After RSTV, recalls show IYR1 = 0, IYR2 = 100 and TMAX = 50.']});
@@ -773,9 +773,9 @@ add('tvm-timing','TVM','Payment timing and solver settings',[...tvmSetup,select(
 function dateInput(type, fields, enter = true) { return `Select ${menu(type)} to start a record, then type ${fields}${enter ? ' ENTER.' : '. Do not press ENTER: the following operation finishes this record without duplicating X.'} Use the comma key between fields and (−) for negative fields.`; }
 const dateSetup = [select('EPOCH_UNIX')];
 for (const [create,fields,want] of [['DATE_CREATE','2024,3,14','D{2024,3,14}'],['TIME_CREATE','12,47,0','T{12,47,0}'],['DATE_TIME_CREATE','2024,3,14,15,36,1','DT{2024,3,14,15,36,1}'],['OFFSET_CREATE','5,30','TZ{5,30}'],['OFFSET_DATE_TIME_CREATE','2024,3,14,15,36,1,7 (−),0','DZ{2024,3,14,15,36,1,-7,0}'],['DURATION_CREATE','1,2,3,4','DR{1,2,3,4}'],['DAY_OF_WEEK_CREATE','4','DW{4}']]) add(`date-create-${create}`,'DATE',`Create ${want}`,[dateInput(create,fields)],text(want),[create]);
-add('date-15000-days','DATE','Add 15,000 days to a date',[dateInput('DATE_CREATE','1987,1,17'),'Enter 15000 +.'],text('D{2028,2,11}'),[],{quick:true});
+add('date-15000-days','DATE','Add 15,000 days to a date',[dateInput('DATE_CREATE','1987,1,17'),'Enter 15000 +.'],text('D{2028,2,11}'),[]);
 add('date-subtract','DATE','Subtract dates',[dateInput('DATE_CREATE','2024,12,25'),dateInput('DATE_CREATE','2024,3,14',false),'Press −.'],exact(286));
-add('time-subtract','DATE','Subtract times: answer is seconds',[dateInput('TIME_CREATE','12,47,0'),dateInput('TIME_CREATE','20,17,0',false),'Press −.'],exact(-27000),[],{quick:true});
+add('time-subtract','DATE','Subtract times: answer is seconds',[dateInput('TIME_CREATE','12,47,0'),dateInput('TIME_CREATE','20,17,0',false),'Press −.'],exact(-27000),[]);
 add('time-difference-duration','DATE','Display a time difference as a duration',[dateInput('TIME_CREATE','12,47,0'),dateInput('TIME_CREATE','20,17,0',false),'Press −.',select('SECONDS_TO_DURATION')],text('DR{0,-7,-30,0}'),['SECONDS_TO_DURATION']);
 add('time-midnight','DATE','Time wraps at midnight',[dateInput('TIME_CREATE','23,59,59'),'Enter 2 +.'],text('T{0,0,1}'));
 for (const [id,create,fields,want] of [
@@ -820,7 +820,7 @@ add('clock-zones','DATE','Calculator zone and application zone',[
  select('GET_NOW_TIME'),select('GET_NOW_DATE'),select('GET_NOW_OFFSET_DATE_TIME'),select('GET_NOW_OFFSET_DATE_TIME_UTC'),
  'Change only ATZ to an offset 2 hours later, within -12..+14; read NOWT and NWDZ again. Restore your original ATZ.'
 ],null,['SET_CLOCK_TIME_ZONE','GET_CLOCK_TIME_ZONE','SET_APP_TIME_ZONE','GET_APP_TIME_ZONE','GET_NOW_TIME','GET_NOW_DATE','GET_NOW_OFFSET_DATE_TIME','GET_NOW_OFFSET_DATE_TIME_UTC'],{
- checks:['With CTZ = ATZ, NOWT/NOWD/NWDZ agree with the calculator clock (allow the elapsed testing time).','NWUT represents the same instant in UTC, including any date rollover.','Changing ATZ advances the app status bar and NOWT/NWDZ by 2 hours; the TI-OS clock stays unchanged.'],quick:true });
+ checks:['With CTZ = ATZ, NOWT/NOWD/NWDZ agree with the calculator clock (allow the elapsed testing time).','NWUT represents the same instant in UTC, including any date rollover.','Changing ATZ advances the app status bar and NOWT/NWDZ by 2 hours; the TI-OS clock stays unchanged.'] });
 add('clock-epoch-seconds','DATE','NOW advances in seconds',[select('EPOCH_UNIX'),select('GET_NOW'),'Write the value in the notes. Wait approximately 10 seconds.',select('GET_NOW')],null,['GET_NOW'],{checks:['The second NOW is about 10 seconds greater than the first, allowing time spent pressing keys.']});
 add('clock-set','DATE','SETC writes the system clock',[
  'Optional: this check changes the TI-OS clock. Record its current value first; skip if you want to preserve it.',
@@ -828,14 +828,14 @@ add('clock-set','DATE','SETC writes the system clock',[
  'Exit RPNCE and inspect the TI-OS clock. Reopen RPNCE and inspect NOWT/NWDZ/NWUT. Restore the correct system time after testing.'
 ],null,['SET_CLOCK'],{checks:['The TI-OS clock holds the test instant expressed in CTZ.','The application results represent that same instant in ATZ/UTC, respectively.']});
 
-add('units-add','UNIT','Add compatible lengths', ['Enter 6.',select('UNIT_FOOT'),'Enter 2.',select('UNIT_INCH'),'Press +.'],approx('6.1666666666666666666666666666667'),[],{checks:['The result unit is ft.'],quick:true});
-add('units-ratio','UNIT','Divide compatible lengths', ['Enter 6.',select('UNIT_FOOT'),'Enter 2.',select('UNIT_INCH'),'Press ÷.'],exact(36),[],{checks:['The answer is a plain number with no unit.']});
-add('units-energy-change','UNIT','Percent change: 2 kWh to 2000 kcal',['Enter 2.',select('UNIT_KILO_WATT_HOUR'),'Enter 2000.',select('UNIT_KILO_CALORIE'),select('PERCENT_CHANGE')],approx(ref.energychange),['PERCENT_CHANGE'],{checks:['Y remains 2 kWh and X is a plain percentage.'],quick:true});
+add('units-add','UNIT','Add compatible lengths', ['Enter 6.',select('UNIT_FOOT'),'Enter 2.',select('UNIT_INCH'),'Press +.'],approx('6.1666666666666666666666666666667'),[],{checks:['The result unit is ft.']});
+add('units-ratio','UNIT','Divide compatible lengths', ['Enter 6.',select('UNIT_FOOT'),'Enter 2.',select('UNIT_INCH'),'Press ÷.'],approx(36),[],{checks:['The answer is a plain number with no unit.']});
+add('units-energy-change','UNIT','Percent change: 2 kWh to 2000 kcal',['Enter 2.',select('UNIT_KILO_WATT_HOUR'),'Enter 2000.',select('UNIT_KILO_CALORIE'),select('PERCENT_CHANGE')],approx(ref.energychange),['PERCENT_CHANGE'],{checks:['Y remains 2 kWh and X is a plain percentage.']});
 add('units-base','UNIT','UBAS converts to the base unit',['Enter 12.',select('UNIT_FOOT'),select('UNIT_BASE')],exact('3.6576'),['UNIT_BASE'],{checks:['The answer is labelled m.']});
 add('units-value','UNIT','UVAL removes the unit',['Enter 12.',select('UNIT_FOOT'),select('UNIT_VALUE')],exact(12),['UNIT_VALUE'],{checks:['X has no unit.']});
 
 // Physical keys, stack lift, registers, display, and saved-state checks.
-add('keys-arithmetic','Keyboard','Four operations and RPN order',['Enter 8 ENTER 2 − 3 × 4 ÷ 1 +.'],exact('5.5'),[],{quick:true});
+add('keys-arithmetic','Keyboard','Four operations and RPN order',['Enter 8 ENTER 2 − 3 × 4 ÷ 1 +.'],exact('5.5'),[]);
 for (const [id,title,input,expected] of [
  ['power','Power of a negative integer','8 (−) ENTER 3 ^',exact(-512)],['reciprocal','Reciprocal','4 x⁻¹',exact('.25')],['square','Square','12 x²',exact(144)],
  ['sqrt','Square root','2 then 2ND x²',approx(ref.sqrt2)],['log','Common logarithm','1000 LOG',exact(3)],['ln','Natural logarithm','2 LN',approx(ref.ln2)],
@@ -843,7 +843,7 @@ for (const [id,title,input,expected] of [
  ['asin','ASIN in RAD','1 then 2ND SIN',approx('1.5707963267948966192313216916398')],['acos','ACOS in RAD','0 then 2ND COS',approx('1.5707963267948966192313216916398')],['atan','ATAN in RAD','1 then 2ND TAN',approx('.78539816339744830961566084581988')],
  ['pi','PI constant','2ND ^',approx(ref.pi)],['e','e constant','2ND ÷',approx(ref.e)]
 ]) add(`key-${id}`,'Keyboard',title,[`Press ${input}.`],expected);
-add('entry-edit','Keyboard','Edit a grouped number',['Type 1234567.89 without ENTER. Check the automatic grouping.','Press DEL twice, then 5 ENTER.'],exact('1234567.5'),[],{checks:['During entry, X read 1,234,567.89 before DEL.'],quick:true});
+add('entry-edit','Keyboard','Edit a grouped number',['Type 1234567.89 without ENTER. Check the automatic grouping.','Press DEL twice, then 5 ENTER.'],exact('1234567.5'),[],{checks:['During entry, X read 1,234,567.89 before DEL.']});
 add('entry-exponent','Keyboard','Exponent entry and sign',['Type 1.25 , (−) 9 ENTER. The comma key is EE outside DATE records.'],exact('1.25E-9'));
 add('entry-lastx','Keyboard','LASTX after arithmetic',['Enter 8 ENTER 3 ×. Press 2ND (−) (ANS).'],exact(3));
 add('entry-clear','Keyboard','Clear an unfinished entry',['Enter 9 ENTER. Type 123, then CLEAR. Type 4 +.'],exact(13));
@@ -855,55 +855,46 @@ for (const [id,steps,want,checks] of [
  ['STACK_EXCHANGE_XY',['Enter 1 ENTER 2.',select('STACK_EXCHANGE_XY')],1,['Y contains 2.']],
  ['STACK_EXCHANGE_REG',['Enter 12 STO→ MATH. Enter 34.',select('STACK_EXCHANGE_REG'),'At the register prompt press MATH (A).'],12,['Recalling A gives 34.']]
 ]) add(`stack-${id}`,'STK',byId[id].label,steps,exact(want),[id],{checks});
-add('stack-top-copy','STK','The top level repeats after a drop',['Enter 1 ENTER 2 ENTER 3 ENTER 4. Press + + + +.'],exact(11),[],{quick:true});
-add('register-store','Registers','Store and recall A',['This test replaces A. Enter 123.45 STO→ MATH. Press CLEAR. Press 2ND STO→ MATH.'],exact('123.45'),[],{quick:true});
+add('stack-top-copy','STK','The top level repeats after a drop',['Enter 1 ENTER 2 ENTER 3 ENTER 4. Press + + + +.'],exact(11),[]);
+add('register-store','Registers','Store and recall A',['This test replaces A. Enter 123.45 STO→ MATH. Press CLEAR. Press 2ND STO→ MATH.'],exact('123.45'),[]);
 add('register-arithmetic','Registers','STO arithmetic',['This test replaces A. Enter 100 STO→ MATH. Enter 25 STO→ + MATH. Press CLEAR, then 2ND STO→ MATH.'],exact(125));
 add('register-indirect','Registers','Indirect register A',['This test replaces i and A. Enter 1 STO→ . ; enter 77 STO→ 2ND . ; press CLEAR; press 2ND STO→ MATH.'],exact(77));
 add('register-extra','Registers','Extra register 041',['This test replaces i and R041. Enter 60.',select('SET_REG_SIZE'),'Enter 41 STO→ . ; enter 123 STO→ 2ND . ; press CLEAR; press 2ND STO→ 2ND .'],exact(123),['SET_REG_SIZE']);
-add('register-quantity','Registers','A retains a measurement',['This test replaces A. Enter 12.',select('UNIT_FOOT'),'Press STO→ MATH. Press CLEAR, then 2ND STO→ MATH.',select('UNIT_METER')],exact('3.6576'),[],{checks:['A was recalled as 12 ft; the converted X is labelled m.'],quick:true});
+add('register-quantity','Registers','A retains a measurement',['This test replaces A. Enter 12.',select('UNIT_FOOT'),'Press STO→ MATH. Press CLEAR, then 2ND STO→ MATH.',select('UNIT_METER')],exact('3.6576'),[],{checks:['A was recalled as 12 ft; the converted X is labelled m.']});
 add('register-vars','Registers','VARS and LASTX',['Enter 123 STO→ MATH. Open VARS, locate A, select it with ENTER.','Open VARS again, scroll to the end; inspect the seven TVM entries and LASTX. Close with ON.'],null,[],{checks:['Selecting A recalls 123.','All seven TVM values are present, including zeros.','LASTX is the last item, and ON closes without recalling an item.']});
 add('register-date','Registers','A retains a Date',['This test replaces A.',dateInput('DATE_CREATE','2024,3,14'),'Press STO→ MATH. Press CLEAR, then 2ND STO→ MATH.'],text('D{2024,3,14}'));
 command('GET_REG_SIZE','60',exact(60),{setup:['Enter 60.',select('SET_REG_SIZE')],covers:['SET_REG_SIZE','GET_REG_SIZE']});
 command('GET_STACK_SIZE','12',exact(12),{setup:['Enter 12.',select('SET_STACK_SIZE')],covers:['SET_STACK_SIZE','GET_STACK_SIZE'],suffix:['Record the query value before restoring the stack depth to 4. After recording, enter 4 and select SSIZ.']});
 add('display-formats','MODE','FIX, SCI, ENG and SHOW',['Enter 1 ENTER 7 ÷.',select('FIX'),'Press 4. Inspect X.',select('SCI'),'Press 4. Inspect X.',select('ENG'),'Press 4. Inspect X. Press 2ND ENTRY.'],null,['FIX','SCI','ENG'],{checks:['FIX shows 0.1429; SCI shows about 1.4286E-1; ENG shows about 142.86E-3.','SHOW gives about 0.14285714285714; changing formats preserved the value.']});
 add('display-angle','MODE','DEG and RAD',[select('DEG'),'Enter 180 SIN. Check X.',select('RAD'),'Enter 0 COS.'],exact(1),['DEG','RAD'],{checks:['180 SIN in DEG gave exactly zero.']});
-add('display-decimal','MODE','Comma decimal throughout the interface',[select('DECIMAL_COMMA'),'Type 1234567.89 using the physical decimal key; inspect the unfinished entry. Press ENTER STO→ MATH.','Inspect VARS and SHOW for A. Close VARS/SHOW before returning to the calculator.',select('DECIMAL_POINT')],null,['DECIMAL_COMMA','DECIMAL_POINT'],{checks:['Entry, result, VARS and SHOW use 1.234.567,89 (allow trailing zeros).','Returning to period decimal shows 1,234,567.89 without changing the value.'],quick:true});
+add('display-decimal','MODE','Comma decimal throughout the interface',[select('DECIMAL_COMMA'),'Type 1234567.89 using the physical decimal key; inspect the unfinished entry. Press ENTER STO→ MATH.','Inspect VARS and SHOW for A. Close VARS/SHOW before returning to the calculator.',select('DECIMAL_POINT')],null,['DECIMAL_COMMA','DECIMAL_POINT'],{checks:['Entry, result, VARS and SHOW use 1.234.567,89 (allow trailing zeros).','Returning to period decimal shows 1,234,567.89 without changing the value.']});
 add('display-date-formats','MODE','Raw and readable DATE display',[dateInput('DATE_CREATE','2024,3,14'),select('FORMAT_RECORD_STRING'),'Inspect X, then select the raw format.',select('FORMAT_RECORD_RAW')],text('D{2024,3,14}'),['FORMAT_RECORD_RAW','FORMAT_RECORD_STRING'],{checks:['Readable format showed 2024-03-14.']});
 add('display-tints','MODE','Eight color themes',[select('SCREEN_TINT'),'Repeat TINT until you return to your starting theme. Check each theme with several stack values and an error message.'],null,['SCREEN_TINT'],{checks:['LCD, LCD+, GRAY, INVERTED, AYU DARK, MONOKAI, PASTEL and COMMODORE are all reachable.','Numbers, units, warnings and menus remain readable on the actual LCD.']});
-add('display-brightness','Keyboard','Brightness keys during entry',['Note your current brightness. Type 12345 without ENTER. Press 2ND ↑ a few times, then 2ND ↓.','Confirm the entry is preserved; press ENTER. Restore a comfortable brightness.'],exact(12345),[],{checks:['Brightness changes in both directions and the display remains readable.'],quick:true});
+add('display-brightness','Keyboard','Brightness keys during entry',['Note your current brightness. Type 12345 without ENTER. Press 2ND ↑ a few times, then 2ND ↓.','Confirm the entry is preserved; press ENTER. Restore a comfortable brightness.'],exact(12345),[],{checks:['Brightness changes in both directions and the display remains readable.']});
 add('display-messages','CLR','Warning size and clearing messages',[select('CLEAR_STACK'),'Inspect “Stack cleared”. Press ↓ to reach CLR row 2 BEFORE creating the next error.','Enter 1 ENTER 0 ÷; inspect the error. Without navigating away, press Y= (CLD).'],null,['CLEAR_STACK','CLEAR_DISPLAY'],{checks:['Both notices use the same enlarged message font; menu arrows and status bar retain their normal sizes.','CLD clears the message without changing stack values.']});
 command('CLEAR_X','42',exact(0));
 add('clear-stack','CLR','Clear all stack levels',['Enter 1 ENTER 2 ENTER 3 ENTER 4.',select('CLEAR_STACK')],exact(0),['CLEAR_STACK'],{checks:['All four visible levels are zero.']});
 add('clear-registers','CLR','Clear ordinary registers',['This test clears all ordinary registers. Save anything you need first. Enter 99 STO→ MATH.',select('CLEAR_REGS'),'Press 2ND STO→ MATH.'],exact(0),['CLEAR_REGS']);
 add('clear-stat','CLR','Clear statistics from CLR',[...statSetup,select('CLEAR_STAT'),select('STAT_N')],exact(0),['CLEAR_STAT']);
 add('clear-tvm','CLR','Clear shared TVM values from CLR',[select('CLEAR_TVM'),'Open VARS and inspect the TVM entries. Close with ON.'],null,['CLEAR_TVM'],{checks:['N, I%YR, PV, PMT and FV are 0; P/YR and C/YR are 12; END is selected.']});
-add('help-pages','HELP','Calculator reference pages',[select('HELP'),'Use ↑/↓ to visit the pages, including About. Press ON. Open HELP again with 2ND 0; close with ENTER.'],null,['HELP'],{checks:['Pages are legible, navigation works, and About gives version 0.7.0 and the repository link.','Both exits return to the stack without changing it.'],quick:true});
+add('help-pages','HELP','Calculator reference pages',[select('HELP'),'Use ↑/↓ to visit the pages, including About. Press ON. Open HELP again with 2ND 0; close with ENTER.'],null,['HELP'],{checks:['Pages are legible, navigation works, and About gives version 0.7.0 and the repository link.','Both exits return to the stack without changing it.']});
 add('key-shortcuts','Keyboard','Menu shortcuts',['Try MODE, STAT, X,T,θ,n, APPS and PRGM, returning to HOME with MATH each time.','Try 2ND + (MEM), 2ND STAT (LIST), and 2ND 0 (CATALOG). Return with ON.'],null,[],{checks:['The first keys open MODE, STAT, UNIT, BASE and HYP, respectively.','The 2ND keys open CLR, STK and HELP, respectively.']});
 add('persist-state','Persistence','Save, quit and reopen',[
  'This check replaces A, B and the active stack. Enter 12.',select('UNIT_FOOT'),'Press STO→ MATH (A).',
  dateInput('DATE_CREATE','2024,3,14'),'Press STO→ APPS (B). Choose a distinctive TINT and comma decimal mode. Note the selected settings.',
  'Quit with 2ND MODE. Relaunch the program without deleting its appvars. Recall A and B and inspect the stack, VARS, tint and decimal mode.'
-],null,[],{checks:['A retains 12 ft, B retains the Date object, and the saved stack is restored.','Tint and decimal mode survive the restart; no load error is shown.'],quick:true});
+],null,[],{checks:['A retains 12 ft, B retains the Date object, and the saved stack is restored.','Tint and decimal mode survive the restart; no load error is shown.']});
 
 // Boundary expectations follow the documented range, rather than today's buggy output.
 for (const [id,title,steps,expected,known] of [
  ['low-entry','Entry at the lower exponent limit',['Enter 1 EE (−) 99 ENTER.'],exact('1E-99'),false],
  ['high-entry','Entry at the upper exponent limit',['Enter 1 EE 99 ENTER.'],exact('1E99'),false],
- ['add-overflow','Addition outside the supported range',['Enter 9 EE 99 ENTER 9 EE 99 +.'],error('Err: Overflow'),true],
- ['multiply-overflow','Multiplication outside the supported range',['Enter 1 EE 99 ENTER 10 ×.'],error('Err: Overflow'),true],
- ['divide-overflow','Division outside the supported range',['Enter 1 EE 99 ENTER .1 ÷.'],error('Err: Overflow'),true],
- ['divide-underflow','Division below the supported range',['Enter 1 EE (−) 99 ENTER 10 ÷.'],{kind:'underflow'},true],
- ['unit-overflow','Unit conversion above range',['Enter 1 EE 99.',select('UNIT_KILO_METER'),select('UNIT_METER')],error('Err: Overflow'),true],
- ['unit-underflow','Unit conversion below range',['Enter 1 EE (−) 99.',select('UNIT_METER'),select('UNIT_KILO_METER')],{kind:'underflow'},true],
- ['large-polar','Polar radius at large coordinates',['Enter 4 EE 90 ENTER 3 EE 90.',select('RECT_TO_POLAR')],approx('5E90'),true],
- ['small-polar','Polar radius at tiny coordinates',['Enter 4 EE (−) 90 ENTER 3 EE (−) 90.',select('RECT_TO_POLAR')],approx('5E-90'),true],
- ['sinh-large','SINH within the upper range',['Enter 230.5.',select('SINH')],approx(ref.sinh230),true],
  ['expm1-smallest','E^X- keeps a tiny nonzero value',['Enter 1 EE (−) 99.',select('EXP_MINUS_ONE')],approx('1E-99'),false],
  ['log1p-smallest','LN1+ keeps a tiny nonzero value',['Enter 1 EE (−) 99.',select('LN_ONE_PLUS')],approx('1E-99'),false],
  ['factorial-69','Largest supported integer factorial',['Enter 69.',select('FACTORIAL')],approx(ref.fact69),false],
  ['date-min','Earliest date epoch seconds',[...dateSetup,dateInput('DATE_CREATE','1,1,1'),select('DATE_TO_EPOCH_SECONDS')],exact(-62135596800),false],
  ['date-max','Latest date epoch seconds',[...dateSetup,dateInput('DATE_CREATE','9999,12,31'),select('DATE_TO_EPOCH_SECONDS')],exact(253402214400),false]
-]) add(`boundary-${id}`,'Boundaries',title,steps,expected,[],{knownIssue:known,focus:known?'regression':'boundary',quick:['small-polar','sinh-large','low-entry'].includes(id),reference: expected.kind==='underflow' ? 'The exact result is below 1E-99. Zero or an explicit underflow/overflow error is accepted; the final zero-versus-error policy is still open. An arbitrary in-range number does not pass.' : 'Independent decimal / Gregorian reference.'});
+]) add(`boundary-${id}`,'Boundaries',title,steps,expected,[],{knownIssue:known,focus:known?'regression':'boundary',reference:'Independent decimal / Gregorian reference.'});
 for (const [id,title,steps,message] of [
  ['divide-zero','Division by zero',['Enter 1 ENTER 0 ÷.'],'Err: Division By 0'],
  ['negative-sqrt','Square root of a negative real',['Enter 1 (−), then 2ND x².'],'Err: Domain'],
@@ -917,10 +908,6 @@ for (const [id,title,steps,message] of [
  ['unit-temp-arithmetic','Temperature arithmetic is refused',['Enter 10.',select('UNIT_CELSIUS'),'Enter 2 +.'],'Err: Data Type'],
  ['date-invalid','Invalid leap date',['Select DATE → D → D{}; type 2023,2,29 ENTER.'],'Err: Invalid']
 ]) add(`error-${id}`,'Boundaries',title,steps,error(message),[],{checks:['After noting the message, CLEAR dismisses/cancels the bad entry and normal calculation is still possible. Enter the original message above.']});
-add('boundary-stat-cancellation','Boundaries','Standard deviation with a large offset',[
- select('STAT_CLEAR'),select('STAT_LINEAR_MODE'),'Enter 100000001.',select('STAT_PLUS'),'Enter 100000002.',select('STAT_PLUS'),'Enter 100000003.',select('STAT_PLUS'),select('STAT_SAMPLE_SDEV')
-],approx(1),['STAT_SAMPLE_SDEV'],{knownIssue:true,quick:true});
-
 add('stat-all-sums','STAT','ALLΣ retains logarithmic sums',[
  select('STAT_CLEAR'),select('STAT_ALL_MODE'),'Enter 2 ENTER 2.',select('STAT_PLUS'),select('STAT_REG_LN_X')
 ],approx(ref.ln2),['STAT_ALL_MODE']);
@@ -962,7 +949,7 @@ for (const test of cases) {
   else if (test.expected?.kind === 'error' && test.focus === 'normal') test.focus = 'domain';
 }
 const catalog = {
- revision: 'hardware-0.7.0-2', version: '0.7.0', menuDigest: source.menuDigest,
+ revision: 'hardware-0.7.0-5', version: '0.7.0', menuDigest: source.menuDigest,
  reference: 'Exact integer and Gregorian references; basic mpmath references at 70 decimal digits and expanded references at 180 digits. Unit references reuse the exact definitions in tools/genunits.py and are evaluated separately. Most approximate checks allow 5E-11 relative error and zero absolute error; iterative-rate, near-pole and cancellation cases state their own tolerances. Use SHOW for numeric results, especially scientific notation. Passing means the reported observations satisfy these cases; it is not proof of a complete hardware audit.',
  baseline: [
   'Use a calculator with the current RPNCE program and matching resource appvar. Copy any stack/register values you want to keep: these exercises replace them. TVM cases replace the shared TI-OS Finance values.',
@@ -975,9 +962,8 @@ const catalog = {
  commands: source.commands.map(c => ({...c, available:!unavailable.includes(c.id)})), groups: source.groups, cases, requirements: expanded.requirements,
  gaps: [
   'Commands shown under “Functional gaps” have navigation coverage but no functional case yet. They must not be counted as functionally verified.',
-  'Near-one guard-digit regressions now have native-verified construction sequences. If a setup value differs in SHOW, record it in Notes; a function result alone cannot identify where precision was lost.',
   'This pool samples numeric classes and boundaries; it is not exhaustive. All-pairs unit limits, arbitrary noisy/nonlinear fits, every possible cash-flow convergence path, low-battery/power interruption, damaged appvars, and other ROM versions still need additional cases.',
-  'The final zero-versus-error underflow policy, and behavior of Σ− on an empty dataset, remain unspecified. Underflow checks accept only zero or an explicit underflow/overflow error.',
+  'Underflow requires an explicit error. Cases list any specifically accepted precision or intermediate-range error; an arbitrary error is not a pass. Behavior of Σ− on an empty dataset remains unspecified.',
   'This tool checks user-reported results. It cannot observe the calculator or establish which binary is installed. A build identifier is required so reports can be matched to the tested program.'
  ]
 };

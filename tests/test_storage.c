@@ -208,13 +208,31 @@ int main(void)
         rejected_unchanged("bad magic, version or depth is rejected", &loaded);
         memcpy(vars[0].data, saved, saved_size);
     }
-    vars[0].size = fixed_size - 1;
+    const size_t precision_size = 2 + 2 * sizeof(real_t) + 1 + 4;
+    vars[0].size = fixed_size - precision_size - 1;
     rejected_unchanged("truncated fixed state is rejected", &loaded);
-    vars[0].size = saved_size - 1;
+    vars[0].size = saved_size - precision_size - 1;
     rejected_unchanged("truncated extra registers are rejected", &loaded);
     vars[0].size = saved_size;
     check("valid load after failed loads recovers the saved state",
           storage_load(&loaded) && same_saved(&original, &loaded));
+
+    original.stats.first[0] = mk(7);
+    original.stats.first[1] = mk(11);
+    original.stats.constant = 3;
+    storage_save(&original);
+    check("statistics precision witnesses survive save/load",
+          storage_load(&loaded) && loaded.stats.constant == 3 &&
+          same_real(&loaded.stats.first[0], &original.stats.first[0]) &&
+          same_real(&loaded.stats.first[1], &original.stats.first[1]));
+    vars[0].data[vars[0].size - 1] ^= 1;
+    check("damaged precision metadata preserves sums without claiming constancy",
+          storage_load(&loaded) && loaded.stats.constant == 0 && same_saved(&original, &loaded));
+    vars[0].size -= precision_size;
+    check("legacy state retains statistics and marks precision witnesses unknown",
+          storage_load(&loaded) && loaded.stats.constant == 0 && same_saved(&original, &loaded));
+    storage_save(&original);
+    memcpy(saved, vars[0].data, saved_size);
 
     /* Every way RPNCEunt can fail keeps every value, dropping only the
      * register units. */

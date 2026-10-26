@@ -73,6 +73,18 @@ SHOW reveals the stored value, including guard digits hidden by the
 normal display. Those extra digits help preserve accuracy, but repeated
 operations and rounded conversion factors can still introduce rounding.
 
+The supported nonzero range is 1 × 10⁻⁹⁹ through
+9.9999999999999 × 10⁹⁹ in magnitude. Results outside it are rejected with
+"Err: Underflow" or "Err: Overflow"; underflow is not silently replaced by
+zero. A formula can also exceed the range in an intermediate step, even
+when another formula could produce a representable answer.
+
+"Err: Precision" means a detected loss of significant information makes
+the calculation unreliable. This includes unequal stored operands
+subtracting to zero and cancellation in variance calculations. The
+operation is rejected and its operands are preserved. This detection does
+not eliminate ordinary rounding or guarantee every stored guard digit.
+
 A setting such as FIX 2 does not round a value to cents internally. If a
 later calculation must use the rounded amount, select **NUM** → **RNDF**
 after setting FIX 2, or use **RNDN** `2`. See

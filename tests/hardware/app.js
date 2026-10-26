@@ -131,11 +131,11 @@
     renderCase();
   }
   function expectedDescription(x) {
-    if (x.kind === 'number') return `${x.value} · relative tolerance ${x.relative || '0'}, absolute tolerance ${x.absolute || '0'}`;
+    if (x.kind === 'number') return `${x.value} · relative tolerance ${x.relative || '0'}, absolute tolerance ${x.absolute || '0'}${x.errors?.length ? ' · alternatively: ' + x.errors.join(' or ') : ''}`;
     if (x.kind === 'error') return x.values.join(' or ');
     if (x.kind === 'text') return x.value;
     if (x.kind === 'range') return `${x.min} ≤ result < ${x.max}`;
-    return 'Zero, Err: Underflow, or Err: Overflow. The exact answer is below the supported range. This check does not settle the final zero-versus-error policy.';
+    return 'Err: Underflow. The nonzero answer is below the supported range; the operands should be preserved.';
   }
   function renderCase() {
     const card = $('case'); card.replaceChildren();
@@ -247,16 +247,19 @@
     const list = el('div', undefined, 'gap-list'); gaps.forEach(cmd => list.append(el('span', cmd.path.join(' → ')))); body.append(list);
     if (!gaps.length) body.append(el('p', 'Every command has at least one functional case. This does not cover every input, numeric boundary or interaction.'));
   }
-  const options = [['quick', 'Focused run'], ['full', 'All cases'], ...sections.map(s => [`section:${s}`, `${s} only`])];
+  const options = [['full', 'All cases'], ...sections.map(s => [`section:${s}`, `${s} only`])];
   options.forEach(([value, caption]) => { const option = el('option', caption); option.value = value; $('scope').append(option); });
+  function scopeIds(value) {
+    return C.cases.filter(c => value === 'full' || c.section === value.slice(8)).map(c => c.id);
+  }
   function syncScope() {
     const matches = ids => ids.length === run.selected.length && ids.every(id => run.selected.includes(id));
-    const option = options.find(([value]) => matches(C.cases.filter(c => value === 'full' || (value === 'quick' ? c.quick : c.section === value.slice(8))).map(c => c.id)));
+    const option = options.find(([value]) => matches(scopeIds(value)));
     $('scope').value = option?.[0] || 'full';
   }
   $('scope').addEventListener('change', () => {
     const value = $('scope').value;
-    run.selected = C.cases.filter(c => value === 'full' || (value === 'quick' ? c.quick : c.section === value.slice(8))).map(c => c.id);
+    run.selected = scopeIds(value);
     section = 'All'; $('search').value = ''; $('status-filter').value = 'all'; renderList(); persist();
   });
   $('search').addEventListener('input', renderList);

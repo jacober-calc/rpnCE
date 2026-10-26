@@ -27,6 +27,8 @@ typedef struct {
     bool linear_only;       /* LIN-Sigma mode: only the first six sums */
     bool lnx_ok, lny_ok;    /* log sums are valid (all x > 0, all y > 0) */
     uint8_t model;          /* FIT_* used by the CFIT functions */
+    real_t first[2];        /* witnesses for genuinely constant X/Y data */
+    uint8_t constant;       /* bit 0: all X equal first[0]; bit 1: all Y equal */
 } stats_t;
 
 void stats_clear(stats_t *s);                    /* CL-Sigma, keeps modes */

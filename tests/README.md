@@ -33,7 +33,7 @@ and tiny rates and invalid payment/compounding settings.
 
 ## Native CE checks
 
-`native/` compiles the core with `-Oz`/LTO settings and runs 126
+`native/` compiles the core with `-Oz`/LTO settings and runs 140
 checks in CEmu with TI-OS arithmetic. It covers arithmetic, DATE ranges,
 CTZ/ATZ conversion, units, all four curve-fit models, TVM and real GraphX
 pixels. The fixed clock makes results repeatable. The check count and
@@ -57,7 +57,8 @@ changes inside the emulator.
 
 `ce_smoke/` runs the built program through its keyboard loop, stores a
 register, quits, and reopens it to verify actual appvar persistence. Its
-nine checks include typed and recalled values at exponents −99 and +99. After
+eleven checks include typed and recalled values at exponents −99 and +99,
+and zero deviation for constant data before and after reopening. After
 building the program, run it with the same emulator environment:
 
 ```sh
@@ -67,34 +68,32 @@ python3 tests/ce_smoke/run.py
 
 Omit `AUTOTESTER_LAUNCHER` for direct native execution.
 
-## Numeric failures under investigation
+## Numeric limit checks
 
-The original 83 native checks pass. Fourteen of the added boundary checks
-currently fail, so the native suite deliberately exits with failure.
-Calculator code is unchanged by these tests.
+The native suite now checks explicit overflow, underflow and precision
+errors for the 14 cases confirmed on a TI-84 Plus CE running OS 5.8.4.0058.
+The [original build-25 report](hardware/results/rpnce-hardware-c3165aca-19a2-48e9-b053-c58681dee30e.json)
+is preserved. The [build-26 hardware retest](hardware/results/rpnce-hardware-2a9a2054-33d6-4bce-82e9-f1fb8e8df91a.json)
+passes all 14 revised cases, with none skipped: six overflow, three underflow
+and five precision warnings. This confirms the specified error behavior
+for these cases on that device and OS; it is not a complete hardware audit.
+The completed cases are retired from the browser pool; the native regression
+checks and original device reports remain available.
 
-Arithmetic can return stored exponents outside the documented −99..+99
-range: `9E99 + 9E99`, `1E99 × 10`, `1E99 ÷ 0.1`, and `1E-99 ÷ 10`.
-Converting `1E99 km` to metres returns `1E102`; converting `1E-99 m` to
-kilometres returns `1E-102`. Underflow needs an explicit zero/error policy; the tests
-only require a result inside the supported range or an error.
+The policy rejects out-of-range final values, required polar intermediates
+outside the range, subtraction that silently turns unequal stored values
+into zero, and ambiguous cancellation in variance calculations. Large
+SINH may report overflow when its intermediate exponential exceeds the
+range. Precision is not extended to force a numerical answer.
 
-Polar conversion of coordinates `3E90, 4E90` overflows; coordinates
-`3E-90, 4E-90` give a zero radius. Their radii should be `5E90` and
-`5E-90`. `SINH(230.5)` overflows although its result is about
-`6.3657280768316E99`.
+The 14 added native neighbor checks cover genuine zero results, ordinary
+polar conversion and standard deviation, both range endpoints, rejected
+statistics/register updates, and defensive formatting of legacy invalid
+values. Native checks verify operand preservation, not just the message.
+Desktop storage checks verify precision metadata round trips, damaged
+metadata and legacy state without discarding the saved values.
 
-`1.0000000000001 − 1` returns zero. Near-domain checks for
-`ACOSH(1.0000000000001)`, `ATANH(0.99999999999999)`, and
-`LN1+(−0.99999999999999)` also fail their decimal references. These
-cases need investigation of TI-OS comparison and cancellation behavior.
-Sample standard deviation of `100000001, 100000002, 100000003` returns
-zero instead of 1.
-
-The remaining coverage gaps include native I%YR convergence across extreme
-cash flows, uncertainty/cancellation in noisy curve fits, intermediate
-statistics overflow and recovery, native integer/combinatorial functions
-at their upper ranges, and conversions between every pair of compatible
-units at numeric limits. Emulator checks use one ROM; physical
-LCD appearance, battery/power interruption and other OS versions still
-need separate testing.
+Remaining limits include convergence for arbitrary TVM cash flows, noisy
+curve fits, conversions between every pair of compatible units at numeric
+limits, power interruption and other OS versions. These guards detect
+specific failure classes; they do not guarantee every possible calculation.

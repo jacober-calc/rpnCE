@@ -2,6 +2,19 @@
 
 RPNCE 0.7.0 · User Guide
 
+Variance and curve fitting can lose significant digits when the data's
+spread is very small compared with its magnitude. RPNCE reports
+"Err: Precision" when the variance subtraction retains at most one part
+in 10¹⁰ of its first term, unless the entered data is known to be constant.
+An error leaves the stack and accumulated data unchanged. Genuinely
+constant data entered with Σ+ still has zero standard deviation.
+
+Constancy tracking is saved when you quit. Older saved statistics, or
+manually edited sums, have no such proof of constancy and can produce a
+precision error for an ambiguous zero variance. Use CLΣ and re-enter the
+data to establish it again. Removing points cannot always restore proof
+of constancy; ordinary nonzero variance calculations remain available.
+
 [Manual contents](../USER_GUIDE.md) · [Previous: 11. BASE: hexadecimal, octal and binary](11-base.md) · [Next: 13. TVM: time value of money](13-tvm.md)
 
 **In this chapter**

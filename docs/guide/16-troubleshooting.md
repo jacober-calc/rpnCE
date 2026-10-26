@@ -28,6 +28,8 @@ correction with DEL; it is not a completed stack object.
 | Err: Division By 0 | a division by zero: `÷` or `x⁻¹` of 0, **MOD** by 0, **%CH** from 0, a root with index 0 |
 | Err: Domain | an input the function doesn't accept: √ or LN of a negative number, ASIN of 2, (−8)^0.4, a size out of range, and so on |
 | Err: Overflow | a result beyond the calculator's range (about ±9.99 × 10⁹⁹) |
+| Err: Underflow | a nonzero result or required intermediate value is too small for the supported range |
+| Err: Precision | detected loss of significant digits makes the calculation unreliable |
 | Err: Math | another math error reported by the calculator |
 | Err: Stat | not enough data for a statistic, or a curve fit that doesn't apply to the data |
 | Err: Data Type | the wrong kind of value: a DATE object where a number is needed, a number where a DATE object is needed, or an unsupported operation on unit values |

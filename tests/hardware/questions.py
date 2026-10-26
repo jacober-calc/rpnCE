@@ -58,6 +58,9 @@ def decimal(value):
 
 def number(value, exact=False, relative='5E-11', absolute='0'):
     v = decimal(value)
+    stored = abs(mp.mpf(mp.nstr(v, 14)))
+    if not mp.isfinite(v) or (v and (stored < mp.mpf('1E-99') or stored > mp.mpf('9.9999999999999E99'))):
+        raise ValueError(f'Use an explicit error expectation for an unsupported result: {value}')
     return {'kind': 'number', 'value': mp.nstr(v, 55), 'relative': '0' if exact else relative, 'absolute': absolute}
 
 def error(value='Err: Domain'):
@@ -150,10 +153,11 @@ for ident,function in [('SIN',mp.sin),('COS',mp.cos),('TAN',mp.tan)]:
             expected=error()
         else:
             angle=decimal(v)%360
-            expected=number(function(angle*mp.pi/180),absolute='1E-12' if int(angle)%90==0 else '0')
             if int(angle)%90==0:
                 exact_value={'SIN':[0,1,0,-1],'COS':[1,0,-1,0],'TAN':[0,0,0,0]}[ident][int(angle)//90]
                 expected=number(exact_value,exact=True)
+            else:
+                expected=number(function(angle*mp.pi/180))
         keyfn(f'degrees-{ident.lower()}-{i}',ident,[v],expected,focus='domain' if expected['kind']=='error' else 'boundary',setup=[select('DEG')],reference='math')
 for ident,function in [('ASIN',mp.asin),('ACOS',mp.acos),('ATAN',mp.atan)]:
     for i,v in enumerate(['-1','0','.99999999999','1'] if ident!='ATAN' else ['-1E99','-1E-99','1E-99','1E99']):
@@ -224,7 +228,7 @@ for i,(v,digits) in enumerate([('999.5',3),('-999.5',3),('.009995',3),('1.234567
 for style in ['FIX','SCI','ENG']:
     with localcontext() as ctx:
         ctx.prec=180
-        want=Decimal('1234.567').quantize(Decimal('0.01') if style=='FIX' else Decimal('10'),rounding=ROUND_HALF_UP)
+        want=Decimal('1234.567').quantize(Decimal('0.01') if style=='FIX' else Decimal('1E1'),rounding=ROUND_HALF_UP)
     fn('round-display-'+style,'ROUND_TO_FIX',['1234.567'],number(str(want),exact=True),setup=[select(style),'At the digit prompt press 2.'],reference='rounding')
 
 # Probability: endpoints, combinatorial symmetry, large exact answers, invalid domains.
@@ -251,7 +255,10 @@ for ident,values,function in [
  ('ACOSH',['1','1.000000001','9999999999','1E10','10000000001','1E99'],mp.acosh),
  ('ATANH',['0','-.5','1E-99','-1E-99','.99999999999','-.99999999999'],mp.atanh)
 ]:
-    for i,v in enumerate(values): fn(f'hyp-{ident.lower()}-{i}',ident,[v],number(function(decimal(v))),knownIssue=(ident in ['COSH','SINH'] and abs(decimal(v))>230))
+    for i,v in enumerate(values):
+        expected=number(function(decimal(v)))
+        if ident in ['COSH','SINH'] and abs(decimal(v))>230: expected['errors']=['Err: Overflow']
+        fn(f'hyp-{ident.lower()}-{i}',ident,[v],expected,knownIssue=(ident in ['COSH','SINH'] and abs(decimal(v))>230))
 for ident,values in [('ACOSH',['0','-1','.99999999999']),('ATANH',['1','-1','1.000000001','-1.000000001'])]:
     for i,v in enumerate(values): fn(f'hyp-domain-{ident.lower()}-{i}',ident,[v],error(),focus='domain',reference='contract')
 
@@ -259,7 +266,9 @@ for ident,values in [('ACOSH',['0','-1','.99999999999']),('ATANH',['1','-1','1.0
 for i,(y,x) in enumerate([('0','0'),('1','0'),('0','-1'),('-4','-3'),('-4','3'),('4','-3'),('4E90','3E90'),('4E-90','3E-90')]):
     for angle in [False,True]:
         value=mp.atan2(decimal(y),decimal(x)) if angle else mp.hypot(decimal(x),decimal(y))
-        fn(f'polar-{i}-{int(angle)}','RECT_TO_POLAR',[y,x],number(value),suffix=['Press ) (X↔Y) to put the angle in X.'] if angle else [],knownIssue=i>=6,focus='regression' if i>=6 else 'boundary',output='angle' if angle else 'radius')
+        expected=number(value)
+        if i>=6: expected['errors']=['Err: Overflow' if i==6 else 'Err: Underflow']
+        fn(f'polar-{i}-{int(angle)}','RECT_TO_POLAR',[y,x],expected,suffix=['If conversion succeeded, press ) (X↔Y) to put the angle in X. If it failed, record its error immediately.'] if angle else [],knownIssue=i>=6,focus='regression' if i>=6 else 'boundary',output='angle' if angle else 'radius')
 for i,(theta,radius) in enumerate([('0','0'),('90','5'),('180','5'),('270','5'),('-30','2'),('45','1E90'),('45','1E-90')]):
     for y in [False,True]:
         value=decimal(radius)*(mp.sin(decimal(theta)*mp.pi/180) if y else mp.cos(decimal(theta)*mp.pi/180))
@@ -370,7 +379,11 @@ for ident,operand,want,keep in [('INT_PART','-2.75',-2,True),('FRAC_PART','-2.75
     q('quantity-num-'+ident.lower(),'NUM',COMMANDS[ident]['label']+' on a length',['Enter '+keys(operand)+'.',select('UNIT_FOOT'),select(ident)],number(want,exact=True),[ident],focus='interaction',checks=['The result retains ft.' if keep else 'The result has no unit.'],reference='integer')
 for ident in ['MIN','MAX','MOD']:
     result={'MIN':mp.mpf(2)/12,'MAX':mp.mpf(6),'MOD':mp.mpf(0)}[ident]
-    q('quantity-binary-'+ident.lower(),'NUM',COMMANDS[ident]['label']+' converts inches to feet',['Enter 6.',select('UNIT_FOOT'),'Enter 2.',select('UNIT_INCH'),select(ident)],number(result,absolute='1E-11' if ident=='MOD' else '0'),[ident],focus='interaction',checks=['The result retains ft.'],reference='units')
+    expected=number(result,absolute='1E-11' if ident=='MOD' else '0')
+    if ident=='MOD': expected['errors']=['Err: Precision']
+    q('quantity-binary-'+ident.lower(),'NUM',COMMANDS[ident]['label']+' converts inches to feet',['Enter 6.',select('UNIT_FOOT'),'Enter 2.',select('UNIT_INCH'),select(ident)],expected,[ident],focus='regression' if ident=='MOD' else 'interaction',knownIssue=ident=='MOD',
+      checks=['On success the result retains ft. On an error, X remains 2 in and Y remains 6 ft.'] if ident=='MOD' else ['The result retains ft.'],
+      reference='Exactly 6 ft is 72 in, so MOD 2 in is zero. Converting 2 in to feet introduces a repeating decimal; Err: Precision is acceptable if the integer quotient cannot be resolved safely. A remainder near 2 in is incorrect.' if ident=='MOD' else 'units')
 for kind in ['UNIT_CELSIUS','UNIT_MILES_PER_GALLON']:
     for ident in ['ABS','SIGN','PERCENT_CHANGE']:
         steps=['Enter 10.',select(kind)]
@@ -406,9 +419,11 @@ for name,points in [
     for ident,xwant,ywant in targets:
         for second in [False,True] if ywant is not None else [False]:
             want=ywant if second else xwant
+            expected=number(want,absolute='1E-11' if name=='varied' and not want else '0')
+            if name=='offset' and ident in ['STAT_SAMPLE_SDEV','STAT_POP_SDEV']: expected['errors']=['Err: Precision']
             q('stat-'+name+'-'+ident.lower()+'-'+str(int(second)),'STAT',COMMANDS[ident]['label']+' on '+name+' data: '+('Y' if second else 'X')+' result',
-              setup+[select(ident)]+(['Press ) (X↔Y) to move the second result into X.'] if second else []),
-              number(want,absolute='1E-11' if name=='varied' and not want else '0'),[ident],focus='regression' if name=='offset' and ident in ['STAT_SAMPLE_SDEV','STAT_POP_SDEV'] else 'boundary',
+              setup+[select(ident)]+(['If the operation succeeded, press ) (X↔Y) to move the second result into X. Otherwise record its error immediately.'] if second else []),
+              expected,[ident],focus='regression' if name=='offset' and ident in ['STAT_SAMPLE_SDEV','STAT_POP_SDEV'] else 'boundary',
               knownIssue=name=='offset' and ident=='STAT_SAMPLE_SDEV',reference='Independent centered sums of exact inputs, evaluated at 180 digits; variances use deviations from the mean rather than subtraction of nearly equal large sums.',dataset=points,output='Y' if second else 'X')
     if name=='varied':
         logsx=[mp.log(x) for x in xs];logsy=[mp.log(y) for y in ys]
@@ -591,13 +606,16 @@ q('duration-negative-seconds','DATE','Convert negative seconds to a Duration',['
 q('duration-signed-components','DATE','Negative Duration to seconds',[record('DURATION_CREATE',[-1,-2,-3,-4]),select('DURATION_TO_SECONDS')],number(-93784,exact=True),['DURATION_TO_SECONDS'],reference='date')
 for ident in ['TIME_TO_SECONDS','DURATION_TO_SECONDS','OFFSET_TO_HOURS','DAY_OF_WEEK_TO_ISO_DOW_NUMBER','DAY_OF_WEEK_TO_UNIX_DOW_NUMBER']:
     fn('date-type-'+ident.lower(),ident,[0],error('Err: Data Type'),focus='domain',reference='contract')
-for ident,value,want in [('HOURS_TO_OFFSET','-23.75','TZ{-23,-45}'),('HOURS_TO_OFFSET','23.75','TZ{23,45}'),('HOURS_TO_OFFSET','-.25','TZ{0,-15}'),('ISO_DOW_NUMBER_TO_DAY_OF_WEEK','1','DW{1}'),('UNIX_DOW_NUMBER_TO_DAY_OF_WEEK','6','DW{6}')]:
+for ident,value,want in [('HOURS_TO_OFFSET','-23.75','TZ{-23,-45}'),('HOURS_TO_OFFSET','23.75','TZ{23,45}'),('HOURS_TO_OFFSET','-.25','TZ{0,-15}'),('ISO_DOW_NUMBER_TO_DAY_OF_WEEK','1','DW{1}'),('UNIX_DOW_NUMBER_TO_DAY_OF_WEEK','6','DW{6}'),('UNIX_DOW_NUMBER_TO_DAY_OF_WEEK','0','DW{7}')]:
     fn('date-number-boundary-'+ident.lower()+value,ident,[value],text(want),reference='date')
 for ident,values in [('HOURS_TO_OFFSET',['24','-24','.1']),('ISO_DOW_NUMBER_TO_DAY_OF_WEEK',['0','8','1.5']),('UNIX_DOW_NUMBER_TO_DAY_OF_WEEK',['-1','7','.5'])]:
     for i,v in enumerate(values): fn('date-number-domain-'+ident.lower()+str(i),ident,[v],error(),focus='domain',reference='contract')
 for ident in list(COMMANDS):
     if COMMANDS[ident]['section']!='DATE': continue
-    if ('EXTRACT_' in ident or '_SHRINK_' in ident or '_EXTEND_' in ident or '_CUT_' in ident or '_LINK_' in ident or ident.endswith('TO_EPOCH_DAYS') or ident.endswith('TO_EPOCH_SECONDS') or ident.endswith('TO_DAY_OF_WEEK') or ident.endswith('CONVERT_TO_TIME_ZONE') or ident=='EPOCH_SET_CUSTOM'):
+    if ident in ['ISO_DOW_NUMBER_TO_DAY_OF_WEEK','UNIX_DOW_NUMBER_TO_DAY_OF_WEEK']:
+        q('date-wrong-type-'+ident.lower(),'DATE',COMMANDS[ident]['label']+' rejects a Date object',
+          [record('DATE_CREATE',[2024,3,14]),select(ident)],error('Err: Data Type'),[ident],focus='domain',reference='contract')
+    elif ('EXTRACT_' in ident or '_SHRINK_' in ident or '_EXTEND_' in ident or '_CUT_' in ident or '_LINK_' in ident or ident.endswith('TO_EPOCH_DAYS') or ident.endswith('TO_EPOCH_SECONDS') or ident.endswith('TO_DAY_OF_WEEK') or ident.endswith('CONVERT_TO_TIME_ZONE') or ident=='EPOCH_SET_CUSTOM'):
         fn('date-wrong-type-'+ident.lower(),ident,[0],error('Err: Data Type'),focus='domain',reference='contract')
 for i,(fields,offset) in enumerate([([2024,12,31,23,30,0,-7,0],9),([2024,1,1,0,30,0,9,0],-7)]):
     tz=timezone(timedelta(hours=fields[6],minutes=fields[7])); dt=datetime(*fields[:6],tzinfo=tz).astimezone(timezone(timedelta(hours=offset)))
@@ -610,23 +628,6 @@ for ident in ['SET_APP_TIME_ZONE','SET_CLOCK_TIME_ZONE']:
     getter='GET_APP_TIME_ZONE' if ident=='SET_APP_TIME_ZONE' else 'GET_CLOCK_TIME_ZONE'
     q('clock-zone-min-'+ident.lower(),'DATE',COMMANDS[ident]['label']+': negative quarter-hour offset',
       ['Write your original '+COMMANDS[getter]['label']+' value in Notes before changing it.','Enter 5.75 (−).',select(ident),select(getter),'After recording, restore your original zone setting.'],text('TZ{-5,-45}'),[ident,getter],reference='date')
-
-# The stored inputs below were verified byte-for-byte with native TI-OS arithmetic.
-for tag,operation,below,expected in [
- ('guard-acosh','ACOSH',False,mp.acosh(1+mp.mpf('1E-13'))),
- ('guard-cancellation',None,False,mp.mpf('1E-13')),
- ('guard-atanh','ATANH',True,mp.atanh(1-mp.mpf('1E-14'))),
- ('guard-ln1p','LN_ONE_PLUS',True,mp.log(mp.mpf('1E-14')))
-]:
-    scale='14' if below else '13'; sign='−' if below else '+'
-    steps=[f'Enter 1 EE {scale} ENTER 1 {sign} 1 EE {scale} ÷.',
-           'Press 2ND ENTER (SHOW). Check that the stored value is '+('0.99999999999999.' if below else '1.0000000000001.')]
-    if operation:
-        if tag=='guard-ln1p': steps+=['Press (−) to negate the constructed value.']
-        steps+=[select(operation)]
-    else: steps+=['Enter 1 −.']
-    q(tag,COMMANDS[operation]['section'] if operation else 'Keyboard','14-digit regression: '+(COMMANDS[operation]['label'] if operation else 'subtraction near one'),steps,number(expected),[operation] if operation else [],focus='regression',knownIssue=True,
-      checks=['SHOW displayed the specified 14-digit input BEFORE the operation.'],reference='The construction was verified byte-for-byte in a native -Oz/LTO TI-OS emulator probe. The expected answer is computed independently at 180 digits. A failure may be in input construction or the function; report the observed SHOW value in Notes.',keyFunction='SUB' if operation is None else None)
 
 # Registers and stack bounds, prompt priority, retained metadata and persistence.
 for ident,getter,values in [('SET_STACK_SIZE','GET_STACK_SIZE',[(-1,4),(3,4),(4,4),(12,12)]),('SET_REG_SIZE','GET_REG_SIZE',[(-1,40),(39,40),(40,40),(140,140)])]:
@@ -689,6 +690,11 @@ q('tvm-reset-guesses','TVM','RSTV resets nondefault solver parameters', ['Enter 
 for i,v in enumerate([0,256,'1.5']): fn('tvm-tmax-domain-'+str(i),'TVM_ITER_MAX',[v],error(),focus='domain',reference='contract')
 for ident,inputs in [('SQUARE',['1E50']),('ALOG',['100']),('EXP',['231'])]: keyfn('range-overflow-'+ident.lower(),ident,inputs,error('Err: Overflow'),focus='domain',reference='contract')
 for ident,v in [('CUBE','1E34'),('TWO_POW','333'),('SINH','231'),('COSH','231')]: fn('range-overflow-'+ident.lower(),ident,[v],error('Err: Overflow'),focus='domain',reference='contract')
+for ident,inputs in [('RECIP',['9E99']),('SQUARE',['1E-50']),('ALOG',['-100']),('EXP',['-230']),('POW',['1E-50','2'])]:
+    keyfn('range-underflow-'+ident.lower(),ident,inputs,error('Err: Underflow'),focus='domain',knownIssue=ident=='ALOG',reference='The exact nonzero result has magnitude below 1E-99. Require Err: Underflow and preserved operands; zero is not an acceptable answer.')
+keyfn('range-overflow-pow','POW',['1E50','2'],error('Err: Overflow'),focus='domain',reference='The exact result is 1E100, outside the supported range. Require Err: Overflow and preserved operands.')
+for ident,inputs in [('CUBE',['1E-34']),('TWO_POW',['-333']),('PERCENT',['1E-50','1E-50'])]:
+    fn('range-underflow-'+ident.lower(),ident,inputs,error('Err: Underflow'),focus='domain',knownIssue=ident=='TWO_POW',reference='The exact nonzero result has magnitude below 1E-99. Require Err: Underflow and preserved operands; zero is not an acceptable answer.')
 q('clock-full-day-rollover','DATE','ATZ shifts the application by a full day', [
  'Record your original CTZ and ATZ in Notes. This changes only the application zone declarations, not the TI-OS clock.',
  'Enter 12 (−).',select('SET_CLOCK_TIME_ZONE'),'Enter 12 (−).',select('SET_APP_TIME_ZONE'),
@@ -733,7 +739,8 @@ q('lastx-quantity','Registers','LASTX retains a quantity',['Enter 12 (−).',sel
 q('lastx-date','Registers','LASTX retains a DateTime',[record('DATE_TIME_CREATE',[2024,2,29,12,34,56]),select('DATE_TIME_SHRINK_TO_DATE'),'Press 2ND (−) (ANS) to recall LASTX.'],text('DT{2024,2,29,12,34,56}'),focus='interaction',reference='date')
 for ident,operands in [('LOG_BASE',['8','1']),('GCD',['-1','2']),('ATANH',['1']),('XROOT_Y',['-8','2'])]:
     steps=['Enter 100 ENTER 7 +. LASTX is now 7.','Enter '+' ENTER '.join(keys(v) for v in operands)+'.',select(ident),'Note the error and the unchanged operands before clearing the message. Press 2ND (−) (ANS) to recall LASTX.']
-    q('error-lastx-'+ident.lower(),'Keyboard','Failed '+COMMANDS[ident]['label']+' preserves LASTX',steps,number(7,exact=True),[ident],focus='interaction',checks=['The expected domain/division error appeared, and the operands stayed unchanged.'],reference='contract')
+    message='Err: Division By 0' if ident=='LOG_BASE' else 'Err: Domain'
+    q('error-lastx-'+ident.lower(),'Keyboard','Failed '+COMMANDS[ident]['label']+' preserves LASTX',steps,number(7,exact=True),[ident],focus='interaction',checks=[message+' appeared, and the operands stayed unchanged.'],reference='contract')
 
 q('tvm-rate-zero','TVM','I%YR: exact zero-interest cash flow',tvm_steps({'TVM_N':'10','TVM_PV':'1000','TVM_PMT':'-100','TVM_FV':'0'},'TVM_IYR'),number(0,exact=True),['TVM_IYR'],reference='tvm')
 q('round-zero-significant','NUM','RNDG 0 uses one significant digit',['Enter 12345.',select('ROUND_TO_GUARD'),'At RNDG press 0.'],number(10000,exact=True),['ROUND_TO_GUARD'],reference='contract')

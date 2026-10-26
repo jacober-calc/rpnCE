@@ -8,6 +8,8 @@ void stats_clear(stats_t *s)
     for (int i = 0; i < SUM_COUNT; i++)
         s->sum[i] = mx_zero;
     s->lnx_ok = s->lny_ok = !s->linear_only;
+    s->first[0] = s->first[1] = mx_zero;
+    s->constant = 3;
 }
 
 static void add_to(real_t *sum, const real_t *v, int sign)
@@ -17,7 +19,19 @@ static void add_to(real_t *sum, const real_t *v, int sign)
 
 void stats_add(stats_t *s, const real_t *x, const real_t *y, int sign)
 {
+    if (mx_is_zero(&s->sum[SUM_N])) {
+        s->first[0] = *x;
+        s->first[1] = *y;
+        s->constant = 3;
+    } else {
+        if (!mx_equal(x, &s->first[0])) s->constant &= ~1;
+        if (!mx_equal(y, &s->first[1])) s->constant &= ~2;
+    }
     real_t x2 = os_RealMul(x, x), y2 = os_RealMul(y, y), xy = os_RealMul(x, y);
+    mx_check_range(&x2); mx_check_range(&y2); mx_check_range(&xy);
+    if ((!mx_is_zero(x) && mx_is_zero(&x2)) ||
+        (!mx_is_zero(y) && mx_is_zero(&y2)))
+        os_ThrowError(MX_E_UNDERFLOW);
 
     add_to(&s->sum[SUM_N], &mx_one, sign);
     add_to(&s->sum[SUM_X], x, sign);
@@ -96,12 +110,24 @@ void stats_wmean(const stats_t *s, real_t *x, real_t *y)
 }
 
 /* n Sum(ab) - Sum(a) Sum(b), the core of variances and covariances. */
-static real_t spread(const real_t *n, const real_t *sab, const real_t *sa, const real_t *sb)
+static real_t spread(const stats_t *s, const real_t *n, const real_t *sab,
+                     const real_t *sa, const real_t *sb)
 {
+    if ((sa == &s->sum[SUM_X] || sa == &s->sum[SUM_LX]) && (s->constant & 1))
+        return mx_zero;
+    if ((sa == &s->sum[SUM_Y] || sa == &s->sum[SUM_LY]) && (s->constant & 2))
+        return mx_zero;
     real_t t1 = os_RealMul(n, sab);
     real_t t2 = os_RealMul(sa, sb);
+    mx_check_range(&t1); mx_check_range(&t2);
     real_t d = os_RealSub(&t1, &t2);
-    return mx_is_neg(&d) ? mx_zero : d;     /* rounding can't make it negative */
+    if (mx_is_neg(&d)) os_ThrowError(MX_E_PRECISION);
+    if (!mx_is_zero(&t1)) {
+        real_t fraction = os_RealDiv(&d, &t1);
+        real_t limit = os_StrToReal("1E-10", NULL);
+        if (os_RealCompare(&fraction, &limit) <= 0) os_ThrowError(MX_E_PRECISION);
+    }
+    return d;
 }
 
 /* Denominator: n (n - 1) for sample statistics, n^2 for the population. */
@@ -117,8 +143,8 @@ void stats_sdev(const stats_t *s, bool sample, real_t *x, real_t *y)
 {
     real_t d = denom(s, sample);
     const real_t *n = &s->sum[SUM_N];
-    real_t vx = spread(n, &s->sum[SUM_X2], &s->sum[SUM_X], &s->sum[SUM_X]);
-    real_t vy = spread(n, &s->sum[SUM_Y2], &s->sum[SUM_Y], &s->sum[SUM_Y]);
+    real_t vx = spread(s, n, &s->sum[SUM_X2], &s->sum[SUM_X], &s->sum[SUM_X]);
+    real_t vy = spread(s, n, &s->sum[SUM_Y2], &s->sum[SUM_Y], &s->sum[SUM_Y]);
     vx = os_RealDiv(&vx, &d);
     vy = os_RealDiv(&vy, &d);
     *x = os_RealSqrt(&vx);
@@ -177,7 +203,7 @@ static real_t line_slope(const stats_t *s, const fit_sums_t *f)
     real_t t1 = os_RealMul(n, f->suv);
     real_t t2 = os_RealMul(f->su, f->sv);
     real_t num = os_RealSub(&t1, &t2);
-    real_t den = spread(n, f->su2, f->su, f->su);
+    real_t den = spread(s, n, f->su2, f->su, f->su);
     return div_or_stat_error(&num, &den);   /* all x equal: no line */
 }
 
@@ -198,8 +224,8 @@ static bool corr_try(const stats_t *s, uint8_t model, real_t *r)
     real_t t1 = os_RealMul(n, f.suv);
     real_t t2 = os_RealMul(f.su, f.sv);
     real_t num = os_RealSub(&t1, &t2);
-    real_t du = spread(n, f.su2, f.su, f.su);
-    real_t dv = spread(n, f.sv2, f.sv, f.sv);
+    real_t du = spread(s, n, f.su2, f.su, f.su);
+    real_t dv = spread(s, n, f.sv2, f.sv, f.sv);
     real_t prod = os_RealMul(&du, &dv);
     if (mx_is_zero(&prod))
         return false;

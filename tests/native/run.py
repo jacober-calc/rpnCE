@@ -45,15 +45,15 @@ def main():
         sequence = ['action|launch', 'delay|1500', 'key|enter', 'delay|2000']
     # Count + pass flags + zero padding + completion marker. The count
     # verifies the whole suite ran; the flags verify each numerical result.
-    expected = bytes([CHECK_COUNT]) + bytes([1] * CHECK_COUNT) + bytes(126 - CHECK_COUNT) + bytes([0xAA])
-    assert len(expected) == 128
+    expected = bytes([CHECK_COUNT]) + bytes([1] * CHECK_COUNT) + bytes(254 - CHECK_COUNT) + bytes([0xAA])
+    assert len(expected) == 256
     config = {
         'transfer_files': files,
         'target': target,
         'sequence': sequence + ['hash|native'],
         'hashes': {'native': {
             'description': f'{CHECK_COUNT} native calculator checks',
-            'start': '0xD40000', 'size': '128',
+            'start': '0xD40000', 'size': '256',
             'expected_CRCs': [f'{crc32c(expected):08X}'],
             'timeout': 30000,
         }},
@@ -71,7 +71,7 @@ def main():
         (HERE / 'bin/autotest.log').write_text(result.stdout + result.stderr)
         if dump.exists():
             values = dump.read_bytes()
-            if len(values) == 128 and values[0] == CHECK_COUNT and values[127] == 0xAA:
+            if len(values) == 256 and values[0] == CHECK_COUNT and values[255] == 0xAA:
                 failed = [str(i) for i in range(1, CHECK_COUNT + 1) if values[i] != 1]
                 print(f'{len(failed)} of {CHECK_COUNT} native checks failed: ' + ', '.join(failed))
             else:

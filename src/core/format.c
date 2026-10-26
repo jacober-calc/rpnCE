@@ -82,7 +82,11 @@ static char *put_exponent(char *p, int e)
         *p++ = '-';
         e = -e;
     }
-    if (e >= 10)
+    if (e >= 100) {
+        *p++ = (char)('0' + e / 100);
+        e %= 100;
+        *p++ = (char)('0' + e / 10);
+    } else if (e >= 10)
         *p++ = (char)('0' + e / 10);
     *p++ = (char)('0' + e % 10);
     return p;
@@ -266,6 +270,10 @@ void format_real(char *out, const real_t *v, uint8_t style, int8_t digits,
         d[2 * i + 1] = v->mant[i] & 0x0F;
     }
     int exp = (int)(uint8_t)v->exp - 0x80;
+    if (d[0] && (exp < -99 || exp > 99)) {
+        strcpy(out, exp < -99 ? "Err: Underflow" : "Err: Overflow");
+        return;
+    }
     format_digits(out, (v->sign & 0x80) != 0, exp, d, style, digits,
                   max_digits, max_exp_digits, group);
 }

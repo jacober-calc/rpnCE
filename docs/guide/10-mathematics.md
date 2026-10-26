@@ -301,9 +301,11 @@ settings do not scale the inputs to hyperbolic functions.
 | PRIM | Whole X from 2 to 4,294,967,295 |
 | N! | Whole X from 0 to 69 |
 
-Any function can also fail if its result exceeds the supported numeric
-range. Retain the original operands or use LASTX before applying a
-different function; an error is not a prompt to continue a partial formula.
+Any function can also fail if a result or required intermediate value is
+outside the supported numeric range, or a detected precision loss makes
+the answer unreliable. An error preserves the operands and LASTX;
+it is not a prompt to continue a partial formula. See
+[Precision and rounding](05-number-entry.md#precision-and-rounding).
 
 ---
 

@@ -59,6 +59,15 @@ def main():
     sequence += launch + ['key|2nd', 'key|sto', 'key|prgm',
                           expectation('reopen-restores-large-register-C', 0, 1, 99),
                           'key|2nd', 'key|mode', 'delay|1500']
+    sequence += launch + ['key|clear', 'key|clear', 'key|stat', 'key|graph']
+    for _ in range(3):
+        sequence += ['key|' + digit for digit in '100000001'] + ['key|y=']
+    sequence += ['key|down', 'key|down', 'key|y=',
+                 expectation('constant-large-data-has-zero-deviation', 0, 0),
+                 'key|2nd', 'key|mode', 'delay|1500']
+    sequence += launch + ['key|7', 'key|stat', 'key|down', 'key|down', 'key|y=',
+                          expectation('reopen-retains-statistics-constancy', 0, 0),
+                          'key|2nd', 'key|mode', 'delay|1500']
     config = {'transfer_files': files, 'target': target, 'delay_after_key': 100,
               'sequence': sequence, 'hashes': hashes}
     path = output / 'ce-smoke.json'

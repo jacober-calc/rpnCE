@@ -78,12 +78,12 @@ int main(void)
     ok("CUBE is not a unit", unit_for_menu(MID_CUBE) < 0, NULL);
 
     /* HELP pages, from help/help.txt */
-    ok("19 HELP pages", res_help_pages() == 19, NULL);
+    ok("20 HELP pages", res_help_pages() == 20, NULL);
     ok("page 1 explains HELP", strcmp(res_help_line(0, 0),
-       "HELP 01/19 - USING HELP / MENUS") == 0, res_help_line(0, 0));
+       "HELP 01/20 - USING HELP / MENUS") == 0, res_help_line(0, 0));
     const char *topics[] = { "THE RPN STACK", "VARIABLES", "KEY SHORTCUTS",
         "MATH", "NUM", "PROB", "CPLX", "TVM", "BASE", "HYP", "STAT",
-        "CONV", "CLR", "MODE", "STK", "UNIT", "DATE", "ABOUT" };
+        "CONV", "CLR", "MODE", "STK", "UNIT", "DATE", "NUMERIC LIMITS", "ABOUT" };
     bool complete = true, numbered = true, fits = true, shortcuts = false;
     for (uint8_t p = 0; p < res_help_pages(); p++) {
         char prefix[24];

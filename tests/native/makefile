@@ -1,7 +1,7 @@
 NAME = RPNTEST
 DESCRIPTION = "RPNCE native tests"
 COMPRESSED = YES
-ARCHIVED = NO
+ARCHIVED = YES
 CFLAGS = -Wall -Wextra -Oz -I../../src/core -I../../src/ui
 EXTRA_C_SOURCES = $(wildcard ../../src/core/*.c) ../../src/sys/brightness.c \
     ../../src/ui/res.c ../../src/ui/display.c ../../src/ui/dotfont.c \

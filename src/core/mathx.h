@@ -6,6 +6,11 @@
 
 #include <stdbool.h>
 #include <ti/real.h>
+#include <ti/error.h>
+
+/* Private errors caught by calc.c; never handed to the OS error screen. */
+#define MX_E_UNDERFLOW OS_E_APPERR1
+#define MX_E_PRECISION OS_E_APPERR2
 
 void mathx_init(void);
 
@@ -14,6 +19,10 @@ extern real_t mx_zero, mx_one, mx_two, mx_ten, mx_hundred;
 bool mx_is_zero(const real_t *v);
 bool mx_is_neg(const real_t *v);
 real_t mx_abs(const real_t *v);
+void mx_check_range(const real_t *v);
+bool mx_equal(const real_t *a, const real_t *b);
+real_t mx_sub(const real_t *a, const real_t *b);
+real_t mx_add(const real_t *a, const real_t *b);
 
 /* e^x - 1 and ln(1 + x), accurate for tiny x. ln1p needs x > -1. */
 real_t mx_expm1(const real_t *x);

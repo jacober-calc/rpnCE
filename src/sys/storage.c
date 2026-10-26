@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stddef.h>
 #include <fileioc.h>
 
 #include "storage.h"
@@ -8,6 +9,14 @@
 #define APPVAR_NAME   "RPNCEdat"
 #define STATE_MAGIC   0x52   /* 'R' */
 #define STATE_VERSION 5      /* bump when the saved layout changes */
+
+/* Keep the existing state prefix readable by earlier program files. */
+typedef struct {
+    real_t sum[SUM_COUNT];
+    bool linear_only, lnx_ok, lny_ok;
+    uint8_t model;
+} saved_stats_t;
+_Static_assert(offsetof(stats_t, first) == sizeof(saved_stats_t), "statistics prefix changed");
 
 /* TVM values live in TI-OS variables and are not part of this payload. */
 typedef struct {
@@ -25,7 +34,7 @@ typedef struct {
     uint8_t disp_style;
     int8_t disp_digits;
     tvm_settings_t tvm;
-    stats_t stats;
+    saved_stats_t stats;
     base_state_t base;
     real_t extra[REG_EXTRA_MAX];    /* last, so only the used part is saved */
 } saved_state_t;
@@ -43,6 +52,9 @@ static saved_state_t s;
 #define UNITS_MAX     (REG_BASE_COUNT + REG_EXTRA_MAX)
 
 static uint8_t unit_file[4 + 4 + UNITS_MAX + 4];
+/* Optional precision witnesses: 'P',1, first X/Y, constancy bits, checksum. */
+#define PRECISION_SIZE (2 + 2 * sizeof(real_t) + 1 + 4)
+static uint8_t precision_file[PRECISION_SIZE];
 
 static uint32_t fnv1a(uint32_t h, const void *data, size_t n)
 {
@@ -70,6 +82,12 @@ static void put32(uint8_t *p, uint32_t v)
 static uint32_t get32(const uint8_t *p)
 {
     return (uint32_t)p[0] | (uint32_t)p[1] << 8 | (uint32_t)p[2] << 16 | (uint32_t)p[3] << 24;
+}
+
+static uint32_t precision_hash(void)
+{
+    uint32_t h = fnv1a(2166136261UL, &s.stats, sizeof s.stats);
+    return fnv1a(h, precision_file, PRECISION_SIZE - 4);
 }
 
 static void save_units(const calc_t *c)
@@ -158,7 +176,7 @@ void storage_save(calc_t *c)
     s.disp_style = c->disp_style;
     s.disp_digits = c->disp_digits;
     s.tvm = c->tvm;
-    s.stats = c->stats;
+    memcpy(&s.stats, &c->stats, sizeof s.stats);
     s.base = c->base;
     memcpy(s.extra, c->extra, sizeof(real_t) * c->extra_count);
 
@@ -166,6 +184,11 @@ void storage_save(calc_t *c)
     if (!h)
         return;
     ti_Write(&s, SAVED_FIXED_SIZE + sizeof(real_t) * c->extra_count, 1, h);
+    precision_file[0] = 'P'; precision_file[1] = 1;
+    memcpy(precision_file + 2, c->stats.first, sizeof c->stats.first);
+    precision_file[2 + sizeof c->stats.first] = c->stats.constant;
+    put32(precision_file + PRECISION_SIZE - 4, precision_hash());
+    ti_Write(precision_file, 1, PRECISION_SIZE, h);
     ti_SetArchiveStatus(true, h);   /* archived: survives a RAM clear */
     ti_Close(h);
 
@@ -187,13 +210,22 @@ bool storage_load(calc_t *c)
     }
     /* Optional 'U',1 footer: incomplete tags never reject numeric state. */
     bool have_embedded_units = false;
+    bool have_precision = false;
     if (valid) {
         uint8_t header[2];
         size_t count = REG_BASE_COUNT + s.extra_count;
-        have_embedded_units =
-            ti_Read(header, 1, sizeof header, h) == sizeof header &&
-            header[0] == 'U' && header[1] == 1 &&
-            ti_Read(unit_file + 8, 1, count, h) == count;
+        for (uint8_t i = 0; i < 2; i++) {
+            if (ti_Read(header, 1, sizeof header, h) != sizeof header || header[1] != 1)
+                break;
+            if (header[0] == 'U') {
+                have_embedded_units = ti_Read(unit_file + 8, 1, count, h) == count;
+            } else if (header[0] == 'P') {
+                memcpy(precision_file, header, 2);
+                have_precision = ti_Read(precision_file + 2, 1, PRECISION_SIZE - 2, h) == PRECISION_SIZE - 2 &&
+                    get32(precision_file + PRECISION_SIZE - 4) == precision_hash() &&
+                    precision_file[PRECISION_SIZE - 5] <= 3;
+            } else break;
+        }
     }
     ti_Close(h);
     if (!valid)
@@ -219,7 +251,13 @@ bool storage_load(calc_t *c)
     c->tvm = s.tvm;
     if (c->tvm.iter_max == 0)
         tvm_settings_reset(&c->tvm);
-    c->stats = s.stats;
+    memcpy(&c->stats, &s.stats, sizeof s.stats);
+    memset(c->stats.first, 0, sizeof c->stats.first);
+    c->stats.constant = 0;              /* old sums alone cannot prove zero variance */
+    if (have_precision) {
+        memcpy(c->stats.first, precision_file + 2, sizeof c->stats.first);
+        c->stats.constant = precision_file[PRECISION_SIZE - 5];
+    }
     if (c->stats.model >= FIT_COUNT)
         c->stats.model = FIT_LIN;
     c->base = s.base;

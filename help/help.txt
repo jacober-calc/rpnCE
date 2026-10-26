@@ -11,7 +11,7 @@
 # One page per main menu, in HOME order, follows the usage pages. HELP
 # itself is this first page. ABOUT is last (UP from here reaches it).
 
-HELP 01/19 - USING HELP / MENUS
+HELP 01/20 - USING HELP / MENUS
 UP / DOWN: previous / next HELP page.
 Pages wrap; UP here opens ABOUT.
 ENTER, CLEAR, DEL or ON: close HELP.
@@ -20,7 +20,7 @@ In menus, UP / DOWN changes the row.
 ON: back one menu. MATH: HOME.
 Full guide: GitHub repo > docs/USER_GUIDE.md
 ---
-HELP 02/19 - THE RPN STACK
+HELP 02/20 - THE RPN STACK
 X is the bottom; Y, Z, T are above it.
 Type a number; ENTER copies X into Y.
 Next number replaces X after ENTER/CLX.
@@ -29,7 +29,7 @@ Unary math uses X; binary math uses Y,X.
 Y-X and Y/X: the order matters.
 Example: 2 ENTER 3 + 4 * gives 20.
 ---
-HELP 03/19 - VARIABLES
+HELP 03/20 - VARIABLES
 STO + letter: store X (stack kept).
 2ND RCL + letter: recall to X.
 Use the key's green letter, e.g. A.
@@ -38,7 +38,7 @@ STO/RCL then + - * /: reg arithmetic.
 VARS: UP/DOWN select, ENTER recalls.
 Units/dates kept; TVM then LASTX last.
 ---
-HELP 04/19 - KEY SHORTCUTS
+HELP 04/20 - KEY SHORTCUTS
 MATH: HOME    MODE: settings
 STAT: STAT    X,T,theta,n: UNIT
 APPS: BASE    PRGM: HYP
@@ -47,7 +47,7 @@ VARS: variables; 2ND ENTRY: SHOW
 2ND ANS: LASTX; 2ND UP/DOWN: brightness
 2ND MODE / 2ND ON: save and quit
 ---
-HELP 05/19 - MATH
+HELP 05/20 - MATH
 X^3: cube X; cube-root key: cube root.
 X-root-Y: X-th root of Y.
 ATN2: angle of (x=X,y=Y), DEG or RAD.
@@ -56,7 +56,7 @@ LOGB: log of Y in base X.
 E^X-: exp(X)-1; LN1+: ln(1+X).
 Negative Y in X-root-Y needs odd int X.
 ---
-HELP 06/19 - NUM
+HELP 06/20 - NUM
 %: Y*X/100; %CH: (X-Y)/Y*100; keeps Y.
 GCD/LCM: common divisor / multiple.
 PRIM: factor to X, old X to Y; 1=prime.
@@ -65,7 +65,7 @@ FLR/CEIL/NEAR: down/up/nearest integer.
 MOD: Y mod X; MIN/MAX: smaller/larger.
 RNDF: display; RNDN: places; RNDG: digits.
 ---
-HELP 07/19 - PROB
+HELP 07/20 - PROB
 COMB: combinations, Y choose X.
 PERM: permutations, Y taken X at a time.
 N!: factorial of whole X, 0 through 69.
@@ -74,7 +74,7 @@ SEED: use X to restart random sequence.
 Example: 5 ENTER 2 COMB gives 10.
 Example: 5 ENTER 2 PERM gives 20.
 ---
-HELP 08/19 - CPLX
+HELP 08/20 - CPLX
 Complex numbers are not available yet.
 These menu items are placeholders:
 REAL / IMAG: real / imaginary parts.
@@ -83,7 +83,7 @@ CABS / CANG: magnitude / angle.
 They currently say Not available yet.
 Use real numbers in this version.
 ---
-HELP 09/19 - TVM
+HELP 09/20 - TVM
 N: payments; I%YR: annual rate (%).
 PV: present; PMT: payment; FV: future.
 Type then key stores; next key solves.
@@ -92,7 +92,7 @@ P/YR,C/YR: periods; BEG/END: timing.
 CLTV: clear; IYR1/2: rate guesses.
 TMAX: iteration limit; RSTV: defaults.
 ---
-HELP 10/19 - BASE
+HELP 10/20 - BASE
 DEC/HEX/OCT/BIN: number base.
 ALPHA A-F in HEX; WSIZ: 1-44 bits.
 LOGI: AND/OR/XOR/NOT/NEG.
@@ -101,7 +101,7 @@ BITS: clear/set/test/reverse/count bits.
 BFCN: word + - * /; BDIV: quotient/rem.
 BCFS: clear/set/test carry; WSZ?: size.
 ---
-HELP 11/19 - HYP
+HELP 11/20 - HYP
 SINH / COSH / TANH: hyperbolic functions.
 ASNH / ACSH / ATNH: inverse functions.
 ASNH accepts any real X.
@@ -110,7 +110,7 @@ ATNH needs -1 < X < 1.
 Example: 0 SINH gives 0.
 Example: 0 COSH gives 1.
 ---
-HELP 12/19 - STAT
+HELP 12/20 - STAT
 Enter y ENTER x, then Sigma+ adds point.
 Sigma- removes point; CL-Sigma clears.
 ALL/LIN-Sigma: all 13 / six linear sums.
@@ -119,7 +119,7 @@ N: count; Sigma menu: recall each sum.
 SDEV/PDEV: std dev; SCOV/PCOV: covariance.
 CFIT: forecasts, slope, intercept, corr.
 ---
-HELP 13/19 - CONV
+HELP 13/20 - CONV
 ->DEG: radians to degrees; ->RAD: back.
 ->POL: x=X,y=Y to radius=X,angle=Y.
 ->REC: radius=X,angle=Y to x=X,y=Y.
@@ -128,7 +128,7 @@ Polar angles use current DEG/RAD mode.
 HMS+ / HMS-: add / subtract H.MMSS.
 Example: 1.30 ->HR gives 1.5 hours.
 ---
-HELP 14/19 - CLR
+HELP 14/20 - CLR
 CLX: clear X; next entry replaces X.
 CLST: clear every stack level.
 CLRG: clear A-Z, i and extra registers.
@@ -137,7 +137,7 @@ CLTV: clear TVM; P/YR=C/YR=12, END.
 CLD: clear the message line.
 CLEAR twice also clears the stack.
 ---
-HELP 15/19 - MODE
+HELP 15/20 - MODE
 FIX/SCI/ENG: fixed/scientific/engineering.
 Then digit; .digit=10-19; >=12=all.
 RAD/DEG: angle unit. TINT: colors.
@@ -146,7 +146,7 @@ SSIZ/SSZ?: set/get stack depth (4-12).
 {..}/"..": raw/readable DATE values.
 . / ,: decimal mark; grouping swaps.
 ---
-HELP 16/19 - STK
+HELP 16/20 - STK
 DUP: copy X into Y, like ENTER.
 R-up: top to X; roll other levels up.
 R-down: X to top; roll others down.
@@ -155,7 +155,7 @@ X<->Y: swap X and Y; X<>: swap register.
 ( : R-down    ) : X<->Y    2ND } : DROP
 2ND INS: DUP    2ND ANS: recall LASTX
 ---
-HELP 17/19 - UNIT
+HELP 17/20 - UNIT
 Select a unit to attach it to X.
 Choose same category to convert X.
 +/- convert X to Y's unit; keep it.
@@ -164,7 +164,7 @@ Unit / compatible unit: plain ratio.
 UVAL: remove unit; UBAS: base unit.
 TEMP/FUEL: conversion and rounding only.
 ---
-HELP 18/19 - DATE
+HELP 18/20 - DATE
 D/T/DT: date/time/date+time.
 TZ/DZ: time zone / zoned date+time.
 DR: duration; DW: day of week.
@@ -173,7 +173,16 @@ Submenus: convert/extract/join/split.
 EPCH: epoch; CLK: clock/time zones.
 +/-: D,DW use days; T,DT,DZ use seconds.
 ---
-HELP 19/19 - ABOUT
+HELP 19/20 - NUMERIC LIMITS
+Nonzero magnitudes: 1E-99 to <1E100.
+Err: Overflow: value too large.
+Err: Underflow: nonzero value too small.
+Err: Precision: detected digit loss.
+Errors keep operands and LASTX.
+Intermediate limits can also cause errors.
+See the User Guide for details.
+---
+HELP 20/20 - ABOUT
 RPNCE 0.7.0
 An RPN calculator for the TI-84 Plus CE.
 HP-style stack, menus and variables.

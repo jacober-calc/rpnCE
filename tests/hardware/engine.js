@@ -42,7 +42,7 @@
   function mul(a, b) { return { n: a.n * b.n, e: a.e + b.e }; }
   function compare(a, b) { const [x, y] = align(a, b); return x < y ? -1 : x > y ? 1 : 0; }
   function canonical(a) { return `${a.n}E${a.e}`; }
-  function normalize(text) { return text.trim().replace(/[−–]/g, '-').replace(/\s+/g, ' ').toLowerCase(); }
+  function normalize(text) { return text.trim().replace(/[−–]/g, '-').replace(/\s+/g, ' ').replace(/\s*:\s*/g, ': ').toLowerCase(); }
 
   function assess(test, answer = '', observations = {}, locale = 'point') {
     let numeric = true, detail = 'Observations recorded.';
@@ -52,8 +52,8 @@
       try {
         const reportedError = /^(err(?:or)?:|tvm not found$|not available yet$)/.test(normalize(answer));
         if (['number', 'range'].includes(x.kind) && reportedError) {
-          numeric = false;
-          detail = 'A numerical result was expected; the calculator reported an error.';
+          numeric = (x.errors || []).some(v => normalize(v) === normalize(answer));
+          detail = numeric ? 'The specifically permitted limit error was reported.' : 'The reported error is not permitted for this case.';
         } else if (x.kind === 'number') {
           const actual = decimal(answer, locale), target = decimal(x.value);
           const rel = decimal(x.relative || '0'), absolute = decimal(x.absolute || '0');
@@ -73,12 +73,8 @@
           numeric = compare(actual, decimal(x.min)) >= 0 && compare(actual, decimal(x.max)) < 0;
           detail = numeric ? 'Result lies in the expected interval.' : 'Result lies outside the expected interval.';
         } else if (x.kind === 'underflow') {
-          if (normalize(answer).startsWith('err:')) {
-            numeric = ['err: overflow', 'err: underflow'].includes(normalize(answer));
-          } else {
-            numeric = decimal(answer, locale).n === 0n;
-          }
-          detail = 'Underflow: only zero or an explicit underflow/overflow error is accepted. The final zero-versus-error policy remains open.';
+          numeric = normalize(answer) === 'err: underflow';
+          detail = 'Underflow requires Err: Underflow; zero and out-of-range values do not pass.';
         } else throw new Error('Unknown expectation type.');
       } catch (error) { return { status: 'invalid', detail: error.message }; }
     }
@@ -92,7 +88,7 @@
   function makeRun(catalog) {
     return { schema: SCHEMA, catalog: catalog.revision, catalogSignature: signature(catalog), runId: globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`,
       created: new Date().toISOString(), metadata: { tester: '', device: 'TI-84 Plus CE', os: '', version: catalog.version, build: '', notes: '' },
-      selected: catalog.cases.filter(c => c.quick).map(c => c.id), records: {}, drafts: {}, cursor: null };
+      selected: catalog.cases.map(c => c.id), records: {}, drafts: {}, cursor: null };
   }
   function latest(run, id) { const items = run.records[id] || []; return items[items.length - 1]; }
   function result(test, attempt) {

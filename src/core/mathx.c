@@ -1,4 +1,5 @@
 #include <ti/error.h>
+#include <string.h>
 
 #include "mathx.h"
 #include "rounding.h"
@@ -22,6 +23,48 @@ bool mx_is_neg(const real_t *v)  { return os_RealCompare(v, &mx_zero) < 0; }
 real_t mx_abs(const real_t *v)
 {
     return mx_is_neg(v) ? os_RealNeg(v) : *v;
+}
+
+void mx_check_range(const real_t *v)
+{
+#ifdef __ez80__
+    if (!v->mant[0]) return;
+    int e = (uint8_t)v->exp - 128;
+    if (e > 99) os_ThrowError(OS_E_OVERFLOW);
+    if (e < -99) os_ThrowError(MX_E_UNDERFLOW);
+#else
+    if (!isfinite(v->v) || fabs(v->v) >= 1E100) os_ThrowError(OS_E_OVERFLOW);
+    if (v->v != 0 && fabs(v->v) < 1E-99) os_ThrowError(MX_E_UNDERFLOW);
+#endif
+}
+
+/* Compare every stored digit; OS comparisons can treat guard digits as equal. */
+bool mx_equal(const real_t *a, const real_t *b)
+{
+#ifdef __ez80__
+    return (a->sign == b->sign && a->exp == b->exp &&
+            memcmp(a->mant, b->mant, sizeof a->mant) == 0) ||
+           (!a->mant[0] && !b->mant[0]);
+#else
+    return a->v == b->v;
+#endif
+}
+
+real_t mx_sub(const real_t *a, const real_t *b)
+{
+    real_t r = os_RealSub(a, b);
+    if (mx_is_zero(&r) && !mx_equal(a, b)) os_ThrowError(MX_E_PRECISION);
+    return r;
+}
+
+real_t mx_add(const real_t *a, const real_t *b)
+{
+    real_t r = os_RealAdd(a, b);
+    if (mx_is_zero(&r)) {
+        real_t neg_b = os_RealNeg(b);
+        if (!mx_equal(a, &neg_b)) os_ThrowError(MX_E_PRECISION);
+    }
+    return r;
 }
 
 /* For |x| < 1 the series x + x^2/2! + x^3/3! + ... keeps all the digits that
@@ -53,7 +96,7 @@ real_t mx_ln1p(const real_t *x)
 {
     real_t ax = mx_abs(x);
     if (os_RealCompare(&ax, &mx_tenth) >= 0) {
-        real_t u = os_RealAdd(&mx_one, x);
+        real_t u = mx_add(&mx_one, x);
         return os_RealLog(&u);
     }
 
@@ -153,7 +196,7 @@ real_t mx_acosh(const real_t *x)
     real_t big = os_StrToReal("1E10", NULL);
     if (os_RealCompare(x, &big) > 0)
         return ln_twice(x);
-    real_t t = os_RealSub(x, &mx_one);
+    real_t t = mx_sub(x, &mx_one);
     real_t t2 = os_RealMul(&t, &t);
     real_t two_t = os_RealMul(&t, &mx_two);
     real_t s = os_RealAdd(&two_t, &t2);
@@ -166,10 +209,12 @@ real_t mx_acosh(const real_t *x)
 real_t mx_atanh(const real_t *x)
 {
     real_t ax = mx_abs(x);
+    if (os_RealCompare(&ax, &mx_one) == 0 && !mx_equal(&ax, &mx_one))
+        os_ThrowError(MX_E_PRECISION);
     if (os_RealCompare(&ax, &mx_one) >= 0)
         os_ThrowError(OS_E_DOMAIN);
     real_t num = os_RealMul(&ax, &mx_two);
-    real_t den = os_RealSub(&mx_one, &ax);
+    real_t den = mx_sub(&mx_one, &ax);
     real_t q = os_RealDiv(&num, &den);
     real_t r = mx_ln1p(&q);
     r = os_RealDiv(&r, &mx_two);

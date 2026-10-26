@@ -124,6 +124,8 @@ typedef enum {
     ERR_DIV0,
     ERR_DOMAIN,
     ERR_OVERFLOW,
+    ERR_UNDERFLOW,
+    ERR_PRECISION,
     ERR_TVM_NOT_FOUND,
     ERR_STAT,
     ERR_TYPE,           /* an unsupported object or quantity operand */
@@ -137,6 +139,8 @@ static const char *error_text(calc_err_t e)
         case ERR_DIV0:     return "Err: Division By 0";
         case ERR_DOMAIN:   return "Err: Domain";
         case ERR_OVERFLOW: return "Err: Overflow";
+        case ERR_UNDERFLOW: return "Err: Underflow";
+        case ERR_PRECISION: return "Err: Precision";
         case ERR_TVM_NOT_FOUND: return "TVM Not Found";
         case ERR_STAT:     return "Err: Stat";
         case ERR_TYPE:     return "Err: Data Type";
@@ -152,6 +156,8 @@ static calc_err_t map_os_error(int err)
         case OS_E_DOMAIN & OS_E_MASK:
         case OS_E_NONREAL & OS_E_MASK:  return ERR_DOMAIN;
         case OS_E_OVERFLOW & OS_E_MASK: return ERR_OVERFLOW;
+        case MX_E_UNDERFLOW & OS_E_MASK: return ERR_UNDERFLOW;
+        case MX_E_PRECISION & OS_E_MASK: return ERR_PRECISION;
         case OS_E_SIGNCHANGE & OS_E_MASK:
         case OS_E_ITERATIONS & OS_E_MASK: return ERR_TVM_NOT_FOUND;
         case OS_E_STAT & OS_E_MASK:       return ERR_STAT;
@@ -219,6 +225,8 @@ static calc_err_t precheck(calc_cmd_t cmd, const real_t *y, const real_t *x)
             return ERR_NONE;
         case CMD_LN_ONE_PLUS:
             neg_one = os_RealNeg(&mx_one);
+            if (os_RealCompare(x, &neg_one) == 0 && !mx_equal(x, &neg_one))
+                return ERR_PRECISION;
             return os_RealCompare(x, &neg_one) > 0 ? ERR_NONE : ERR_DOMAIN;
         case CMD_FACTORIAL:
             max_fact = os_Int24ToReal(69);
@@ -486,6 +494,8 @@ static calc_err_t compute(calc_cmd_t cmd, const real_t *y, const real_t *x,
     uint8_t tag = 0;
     if (!reads_x(cmd)) ux = 0;
     if (!reads_y(cmd)) uy = 0;
+    if (reads_x(cmd)) mx_check_range(x);
+    if (reads_y(cmd)) mx_check_range(y);
     if (uy || ux) {
         quantity_err_t qe = calc_quantity_prepare(cmd, uy, x, ux, &converted_x, &tag);
         if (qe != QUANTITY_OK) {
@@ -493,6 +503,7 @@ static calc_err_t compute(calc_cmd_t cmd, const real_t *y, const real_t *x,
             return qe == QUANTITY_MISMATCH ? ERR_UNIT : ERR_TYPE;
         }
         x = &converted_x;
+        mx_check_range(x);
     }
     calc_err_t pre = precheck(cmd, y, x);
     if (pre != ERR_NONE) {
@@ -501,8 +512,8 @@ static calc_err_t compute(calc_cmd_t cmd, const real_t *y, const real_t *x,
     }
 
     switch (cmd) {
-        case CMD_ADD:    g_result = os_RealAdd(y, x); break;
-        case CMD_SUB:    g_result = os_RealSub(y, x); break;
+        case CMD_ADD:    g_result = mx_add(y, x); break;
+        case CMD_SUB:    g_result = mx_sub(y, x); break;
         case CMD_MUL:    g_result = os_RealMul(y, x); break;
         case CMD_DIV:    g_result = os_RealDiv(y, x); break;
         case CMD_POW:    g_result = signed_power(y, x); break;
@@ -623,6 +634,11 @@ static calc_err_t compute(calc_cmd_t cmd, const real_t *y, const real_t *x,
         }
         case CMD_TO_POL: {          /* X = x, Y = y  ->  X = r, Y = angle */
             real_t x2 = os_RealMul(x, x), y2 = os_RealMul(y, y);
+            if ((mx_is_zero(&x2) && !mx_is_zero(x)) ||
+                (mx_is_zero(&y2) && !mx_is_zero(y)))
+                os_ThrowError(MX_E_UNDERFLOW);
+            mx_check_range(&x2);
+            mx_check_range(&y2);
             real_t s = os_RealAdd(&x2, &y2);
             g_result = os_RealSqrt(&s);
             g_result2 = atan2_real(y, x);
@@ -659,6 +675,17 @@ static calc_err_t compute(calc_cmd_t cmd, const real_t *y, const real_t *x,
         default:         g_result = *x; break;
     }
 
+    if ((cmd == CMD_MUL || cmd == CMD_DIV) && mx_is_zero(&g_result) &&
+        !mx_is_zero(x) && !mx_is_zero(y)) os_ThrowError(MX_E_UNDERFLOW);
+    if ((cmd == CMD_SQUARE || cmd == CMD_RECIP) && mx_is_zero(&g_result) &&
+        !mx_is_zero(x)) os_ThrowError(MX_E_UNDERFLOW);
+    if (cmd != CMD_FIT_BEST) mx_check_range(&g_result);
+    if (cmd == CMD_STAT_PLUS || cmd == CMD_STAT_MINUS)
+        for (uint8_t i = 0; i < SUM_COUNT; i++) mx_check_range(&g_stats->sum[i]);
+    if (cmd == CMD_TO_POL || cmd == CMD_TO_REC || cmd == CMD_STAT_SUM ||
+        cmd == CMD_STAT_MEAN || cmd == CMD_STAT_WMEAN ||
+        cmd == CMD_STAT_SDEV || cmd == CMD_STAT_PDEV)
+        mx_check_range(&g_result2);
     os_PopErrorHandler();
     if (result_unit) *result_unit = tag;
     return ERR_NONE;
@@ -777,6 +804,8 @@ static real_t *target_register(calc_t *c, uint8_t arg, uint8_t *num_out)
  * so only the linear fit stays usable until the data is cleared. */
 static void register_written(calc_t *c, uint8_t num)
 {
+    if (num >= REG_STAT_FIRST && num <= REG_STAT_LAST)
+        c->stats.constant = 0;       /* manual sums cannot prove constancy */
     if (num >= REG_STAT_FIRST && num < REG_STAT_FIRST + 6)
         c->stats.lnx_ok = c->stats.lny_ok = false;
 }
@@ -1138,13 +1167,17 @@ static const char *const model_names[FIT_COUNT] = { "LINF", "LOGF", "EXPF", "PWR
 static void do_stat(calc_t *c, calc_cmd_t cmd)
 {
     calc_finish_entry(c);
-    g_stats = &c->stats;
+    static stats_t trial;
+    trial = c->stats;
+    g_stats = &trial;
     calc_err_t err = compute(cmd, &c->stack[1], &c->stack[0],
                              c->unit[REG_Y], c->unit[REG_X], NULL);
     if (err != ERR_NONE) {
         c->message = error_text(err);
         return;
     }
+
+    c->stats = trial;
 
     switch (cmd) {
         case CMD_STAT_PLUS:

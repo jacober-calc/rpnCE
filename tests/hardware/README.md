@@ -3,8 +3,8 @@
 Open [index.html](index.html) in a browser. It runs locally without an
 installation, server, or calculator connection. Enter the device, OS and
 build details, apply the starting settings, then follow each case on the
-calculator and record what you see. Start with the focused run, or choose
-all cases or a particular section. These exercises replace stack and
+calculator and record what you see. New runs include all cases; choose a
+particular section to work through a smaller group. These exercises replace stack and
 register values; TVM cases also change the shared TI-OS Finance variables.
 
 **Save report** downloads a JSON file containing the build details, test
@@ -15,12 +15,11 @@ reports you want reviewed in `tests/hardware/results/` or attach them when
 reporting an issue. Reports are never uploaded or committed automatically.
 Review personal notes before sharing them.
 
-The catalog has 2,604 cases. All 421 implemented menu commands and 18
+The catalog has 2,600 cases. All 421 implemented menu commands and 18
 keyboard math functions have functional and edge coverage, with additional
 invalid-input cases where required. The ten reserved complex-number
-commands are checked for their unavailable message. The focused run stays
-at 29 cases; choose all cases or a section for the expanded pool. The
-boundary filter and per-function coverage table help find specific risks.
+commands are checked for their unavailable message. The boundary filter
+and per-function coverage table help find specific risks.
 
 Questions include zeros and signs, rounding ties, extreme magnitudes,
 near-domain and cancellation regressions, all 169 units at different
@@ -35,10 +34,33 @@ independently audit those definitions.
 An unrecorded or skipped case never counts as passed. Use SHOW for
 numerical answers; tiny nonzero references have no absolute tolerance
 that could let zero pass. Unexpected calculator errors can be recorded as
-failures. Overflow requires an overflow error. Underflow accepts only
-zero or an explicit underflow/overflow error; the final policy remains
-open. Tolerances for iterative rates, near-pole inputs and cancellation
-are stated in the individual questions.
+failures. Overflow requires an overflow error; underflow requires
+**Err: Underflow**, with no silent zero. Selected precision and intermediate
+range cases accept either the stated numerical reference or the specific
+error listed in that question. Other errors and misleading zero answers
+still fail. Tolerances are stated in the individual questions.
+
+Catalog revision `hardware-0.7.0-5` starts new runs with all cases selected.
+The focused run and completed 14-case numerical confirmation run have been
+removed, along with the 14 completed individual cases. Their original device reports
+remain unchanged in [results/](results/), and their native regression checks
+remain in place. Start a new run with this catalog; earlier saved data can
+still be downloaded for review, but cannot be resumed against changed cases.
+
+The question audit corrected weekday input types, SCI/ENG display-rounding
+references and exact-match expectations for logarithm/root calculations and
+unit ratios. Nine additional range cases require explicit overflow or
+underflow errors for powers, exponentials, reciprocal, square, cube and
+percent. The generator rejects numerical references outside the supported
+14-digit range instead of silently treating them as ordinary answers.
+
+Emulator arithmetic checks exposed three remaining failures: `10^(-100)`
+and `2^(-333)` silently return zero, and `6 ft MOD 2 in` returns a remainder
+near 2 inches. These cases are marked as known issues and keep their correct
+expectations: underflow errors for the first two; zero or an explicit
+precision warning for the last. Select **All cases**, then **Known issues**
+to find them. These are emulator findings, awaiting physical-device checks;
+the browser does not mark them passed or create a device report automatically.
 
 [catalog.js](catalog.js) contains the menu snapshot and initial cases.
 [questions.py](questions.py) defines the expanded questions, calculates

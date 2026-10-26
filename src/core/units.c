@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include "units.h"
+#include "mathx.h"
 
 static real_t factor_of(uint8_t u)
 {
@@ -39,5 +40,9 @@ real_t unit_convert(const real_t *value, uint8_t from, uint8_t to)
     if (from == to)
         return *value;
     real_t b = to_base(value, from);
-    return from_base(&b, to);
+    real_t r = from_base(&b, to);
+    mx_check_range(&r);
+    if (unit_dim(from) != DIM_TEMP && !mx_is_zero(value) && mx_is_zero(&r))
+        os_ThrowError(MX_E_UNDERFLOW);
+    return r;
 }

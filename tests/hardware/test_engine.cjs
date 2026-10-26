@@ -59,8 +59,9 @@ test('errors, DATE text, random intervals and range policies have distinct gradi
   assert.equal(E.assess(random, '1').status, 'fail');
   const underflow = { expected: { kind: 'underflow' } };
   assert.equal(E.assess(underflow, '1E-100').status, 'fail');
-  assert.equal(E.assess(underflow, '0').status, 'pass');
-  assert.equal(E.assess(underflow, 'Err: Overflow').status, 'pass');
+  assert.equal(E.assess(underflow, '0').status, 'fail');
+  assert.equal(E.assess(underflow, 'Err: Overflow').status, 'fail');
+  assert.equal(E.assess(underflow, 'Err: Underflow').status, 'pass');
   assert.equal(E.assess(underflow, 'Err: Data Type').status, 'fail');
   assert.equal(E.assess(underflow, '1').status, 'fail');
   assert.equal(E.assess(underflow, 'Err: Domain').status, 'fail');
@@ -72,7 +73,7 @@ test('an unexpected calculator error is a recordable failure, not malformed nume
   for (const message of ['Err: Overflow', 'Err: Domain', 'Err: Division By 0', 'TVM Not Found']) {
     assert.equal(E.assess(number('6.3657280768316E99', '5E-11'), message).status, 'fail');
   }
-  const c = C.cases.find(c => c.id === 'boundary-sinh-large');
+  const c = C.cases.find(c => c.id === 'command-lcm');
   const run = E.makeRun(C); run.selected = [c.id]; run.records[c.id] = [attempt('Err: Overflow')];
   assert.equal(E.report(C, run).summary.fail, 1);
   assert.equal(E.report(C, E.validateRun(E.report(C, run), C)).summary.fail, 1);
@@ -115,6 +116,108 @@ test('import discards supplied verdicts and expectations and rejects incompatibl
   assert.throws(() => E.validateRun({ ...report, records: { [c.id]: [attempt('0', { locale: 'guess' })] } }, C), /recorded answer/);
 });
 
+test('completed numerical cases are retired without changing historical reports', () => {
+  const retired = [
+    'expand-guard-cancellation', 'boundary-divide-underflow', 'boundary-add-overflow',
+    'boundary-multiply-overflow', 'boundary-divide-overflow', 'boundary-large-polar',
+    'boundary-small-polar', 'boundary-sinh-large', 'expand-guard-acosh',
+    'expand-guard-atanh', 'expand-guard-ln1p', 'boundary-stat-cancellation',
+    'boundary-unit-overflow', 'boundary-unit-underflow'
+  ];
+  for (const id of retired) assert.ok(!C.cases.some(c => c.id === id), id);
+  assert.ok(!C.suites?.some(s => s.id === 'numerical-confirmation'));
+  for (const [filename, revision] of [
+    ['rpnce-hardware-c3165aca-19a2-48e9-b053-c58681dee30e.json', 'hardware-0.7.0-2'],
+    ['rpnce-hardware-2a9a2054-33d6-4bce-82e9-f1fb8e8df91a.json', 'hardware-0.7.0-3']
+  ]) {
+    const file = path.join(__dirname, 'results', filename);
+    if (!fs.existsSync(file)) continue;
+    const report = JSON.parse(fs.readFileSync(file, 'utf8'));
+    assert.equal(report.catalog, revision);
+    assert.equal(report.definitions.length, 14);
+    assert.throws(() => E.validateRun(report, C), /different test catalog/);
+  }
+});
+
+test('limit cases accept only the stated warning and never a misleading zero', () => {
+  const cases = [
+    ['expand-stat-offset-stat_sample_sdev-0', 'Err: Precision'],
+    ['expand-polar-6-0', 'Err: Overflow'],
+    ['expand-polar-7-0', 'Err: Underflow'],
+    ['expand-hyp-sinh-6', 'Err: Overflow']
+  ];
+  for (const [id, allowed] of cases) {
+    const c = C.cases.find(c => c.id === id);
+    const checks = Object.fromEntries(c.checks.map((_, i) => [i, 'yes']));
+    assert.equal(E.assess(c, c.expected.value, checks).status, 'pass', id);
+    assert.equal(E.assess(c, allowed, checks).status, 'pass', id);
+    assert.equal(E.assess(c, allowed.replace(': ', ':'), checks).status, 'pass', id);
+    assert.equal(E.assess(c, '0', checks).status, 'fail', id);
+    assert.equal(E.assess(c, 'Err: Domain', checks).status, 'fail', id);
+  }
+  const old = E.report(C, E.makeRun(C));
+  old.catalog = 'hardware-0.7.0-2';
+  assert.throws(() => E.validateRun(old, C), /different test catalog/);
+});
+
+test('every error expectation rejects numbers and unrelated errors throughout the catalog', () => {
+  const core = path.join(__dirname, '../../src/core');
+  const messages = new Set(['TVM Not Found']);
+  for (const file of fs.readdirSync(core).filter(f => f.endsWith('.c'))) {
+    for (const match of fs.readFileSync(path.join(core, file), 'utf8').matchAll(/"(Err: [^"\n]+)"/g)) messages.add(match[1]);
+  }
+  for (const c of C.cases) {
+    const x = c.expected;
+    if (!x) continue;
+    const checks = Object.fromEntries(c.checks.map((_, i) => [i, 'yes']));
+    const allowed = x.kind === 'error' ? x.values : x.errors || [];
+    assert.equal(new Set(allowed).size, allowed.length, c.id);
+    for (const message of allowed) {
+      assert.ok(messages.has(message), `${c.id}: unknown error ${message}`);
+      assert.equal(E.assess(c, message, checks).status, 'pass', c.id);
+    }
+    if (x.kind === 'error') {
+      assert.ok(allowed.length, c.id);
+      for (const answer of ['0', '1E99', '1E-99', '1E100', '1E-100', 'NaN', 'Infinity']) {
+        assert.equal(E.assess(c, answer, checks).status, 'fail', `${c.id}: ${answer}`);
+      }
+    }
+    if (['error', 'number', 'range'].includes(x.kind)) {
+      for (const message of messages) if (!allowed.includes(message)) {
+        assert.equal(E.assess(c, message, checks).status, 'fail', `${c.id}: ${message}`);
+      }
+    }
+    if (x.kind === 'number') {
+      assert.equal(E.assess(c, x.value, checks).status, 'pass', c.id);
+      const v = E.decimal(x.value);
+      if (v.n && E.compare(E.decimal(x.absolute || '0'), { n: v.n < 0n ? -v.n : v.n, e: v.e }) < 0) {
+        assert.equal(E.assess(c, '0', checks).status, 'fail', c.id);
+      }
+    }
+  }
+});
+
+test('weekday, display rounding and numerical-limit references retain their audited contracts', () => {
+  const find = id => C.cases.find(c => c.id === id);
+  for (const id of ['iso_dow_number_to_day_of_week', 'unix_dow_number_to_day_of_week']) {
+    const c = find('expand-date-wrong-type-' + id);
+    assert.ok(c.steps.some(s => s.includes('2024, 3, 14')), c.id);
+    assert.deepEqual(c.expected.values, ['Err: Data Type']);
+  }
+  assert.equal(find('expand-date-number-boundary-unix_dow_number_to_day_of_week0').expected.value, 'DW{7}');
+  for (const style of ['SCI', 'ENG']) assert.equal(E.compare(E.decimal(find('expand-round-display-' + style).expected.value), E.decimal('1230')), 0);
+  for (const op of ['recip', 'square', 'alog', 'exp', 'pow', 'cube', 'two_pow', 'percent']) {
+    const c = find('expand-range-underflow-' + op);
+    assert.deepEqual(c.expected.values, ['Err: Underflow'], c.id);
+    assert.ok(c.checks.some(s => s.includes('X still contains') || s.includes('left X')), c.id);
+  }
+  const mod = find('expand-quantity-binary-mod');
+  assert.equal(E.assess(mod, '.1666666666665', { 0: 'yes' }).status, 'fail');
+  assert.equal(E.assess(mod, '0', { 0: 'yes' }).status, 'pass');
+  assert.equal(E.assess(mod, 'Err: Precision', { 0: 'yes' }).status, 'pass');
+  assert.equal(E.assess(mod, 'Err: Domain', { 0: 'yes' }).status, 'fail');
+});
+
 test('catalog has current menu IDs, all units, executable expectations and useful coverage', () => {
   const ids = new Set();
   const walk = file => {
@@ -145,7 +248,7 @@ test('catalog has current menu IDs, all units, executable expectations and usefu
     if (c.expected?.kind === 'number' || c.expected?.kind === 'text') answer = c.expected.value;
     if (c.expected?.kind === 'error') answer = c.expected.values[0];
     if (c.expected?.kind === 'range') answer = c.expected.min;
-    if (c.expected?.kind === 'underflow') answer = '0';
+    if (c.expected?.kind === 'underflow') answer = 'Err: Underflow';
     assert.equal(E.assess(c, answer, observations).status, 'pass', c.id);
     if (c.expected?.kind === 'number' && E.decimal(c.expected.value).n !== 0n && !c.expected.absolute?.match(/[1-9]/)) assert.equal(E.assess(c, '0', observations).status, 'fail', c.id);
   }
@@ -191,7 +294,7 @@ test('expanded question data tracks its source and exact unit definitions', () =
       assert.ok(digits <= 12, `${c.id}: operand must fit the typing limit`);
     }
   }
-  assert.equal(questions.cases.filter(c => c.id.startsWith('expand-guard-')).length, 4);
+  assert.ok(!questions.cases.some(c => c.id.startsWith('expand-guard-')));
   for (const ident of ['unit_fermi','unit_inch','unit_celsius','unit_miles_per_gallon']) {
     assert.ok(questions.cases.some(c => c.id.startsWith('expand-unit-scale-'+ident)), ident);
     assert.ok(questions.cases.some(c => c.id === 'expand-unit-roundtrip-'+ident), ident);

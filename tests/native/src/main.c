@@ -17,11 +17,11 @@
 
 _Static_assert(sizeof(real_t) == 9 && offsetof(calc_t, regs) == 131,
                "update the UI smoke test for the new CE value layout");
-_Static_assert(NATIVE_CHECK_COUNT > 0 && NATIVE_CHECK_COUNT <= 126,
+_Static_assert(NATIVE_CHECK_COUNT > 0 && NATIVE_CHECK_COUNT <= 254,
                "native results must fit before the completion marker");
 
 /* Keep results outside VRAM while the real display renderer is exercised. */
-static uint8_t results[128];
+static uint8_t results[256];
 #define RESULTS results
 static calc_t c;
 static uint8_t checks;
@@ -29,8 +29,8 @@ static int clock_fields[6] = {2026, 10, 19, 0, 0, 0};
 static unsigned clock_writes;
 static void check(bool pass)
 {
-    if (checks < 126) RESULTS[++checks] = pass ? 1 : 0;
-    else checks = 127;                       /* fail a count mismatch safely */
+    if (checks < 254) RESULTS[++checks] = pass ? 1 : 0;
+    else checks = 255;
 }
 static void cmd(calc_cmd_t k, uint8_t arg) { calc_execute(&c, k, arg); }
 static void number(int n)
@@ -104,10 +104,10 @@ static void numeric_boundaries(void)
         uint8_t argument;
     } cases[] = {
         {"decimal sum", CMD_ADD, "0.1", "0.2", "0.3", NULL, 0},
-        {"last stored digit", CMD_SUB, "1.0000000000001", "1", "1E-13", NULL, 0},
+        {"last stored digit", CMD_SUB, "1.0000000000001", "1", NULL, "Err: Precision", 0},
         {"maximum value", CMD_ADD, "9.9999999999999E99", "0", "9.9999999999999E99", NULL, 0},
         {"minimum scale", CMD_ADD, "1E-99", "1E-99", "2E-99", NULL, 0},
-        {"underflow range", CMD_DIV, "1E-99", "10", NULL, NULL, 0},
+        {"underflow range", CMD_DIV, "1E-99", "10", NULL, "Err: Underflow", 0},
         {"addition overflow", CMD_ADD, "9E99", "9E99", NULL, "Err: Overflow", 0},
         {"multiplication overflow", CMD_MUL, "1E99", "10", NULL, "Err: Overflow", 0},
         {"division overflow", CMD_DIV, "1E99", "0.1", NULL, "Err: Overflow", 0},
@@ -130,12 +130,12 @@ static void numeric_boundaries(void)
         {"negative square root", CMD_SQRT, "0", "-1", NULL, "Err: Domain", 0},
         {"large square", CMD_SQUARE, "0", "1E49", "1E98", NULL, 0},
         {"small square", CMD_SQUARE, "0", "1E-49", "1E-98", NULL, 0},
-        {"large polar radius", CMD_TO_POL, "3E90", "4E90", "5E90", NULL, 0},
-        {"small polar radius", CMD_TO_POL, "3E-90", "4E-90", "5E-90", NULL, 0},
-        {"representable large sinh", CMD_SINH, "0", "230.5", "6.3657280768316E99", NULL, 0},
-        {"acosh next to one", CMD_ACOSH, "0", "1.0000000000001", "4.4721359549995E-7", NULL, 0},
-        {"atanh next to one", CMD_ATANH, "0", "0.99999999999999", "16.464669241238", NULL, 0},
-        {"ln1p next to minus one", CMD_LN_ONE_PLUS, "0", "-0.99999999999999", "-32.236191301917", NULL, 0},
+        {"large polar radius", CMD_TO_POL, "3E90", "4E90", NULL, "Err: Overflow", 0},
+        {"small polar radius", CMD_TO_POL, "3E-90", "4E-90", NULL, "Err: Underflow", 0},
+        {"representable large sinh", CMD_SINH, "0", "230.5", NULL, "Err: Overflow", 0},
+        {"acosh next to one", CMD_ACOSH, "0", "1.0000000000001", NULL, "Err: Precision", 0},
+        {"atanh next to one", CMD_ATANH, "0", "0.99999999999999", NULL, "Err: Precision", 0},
+        {"ln1p next to minus one", CMD_LN_ONE_PLUS, "0", "-0.99999999999999", NULL, "Err: Precision", 0},
         {"large asinh", CMD_ASINH, "0", "9E99", "230.84629596431", NULL, 0},
         {"factorial 69", CMD_FACTORIAL, "0", "69", "1.7112245242814E98", NULL, 0},
         {"factorial 70", CMD_FACTORIAL, "0", "70", NULL, "Err: Domain", 0},
@@ -181,8 +181,7 @@ static void numeric_boundaries(void)
         c.stack[0] = c.stack[1] = os_StrToReal(offset_data[i], NULL);
         cmd(CMD_STAT_PLUS, 0);
     }
-    cmd(CMD_STAT_SDEV, 0);
-    check(x_close("1"));
+    check(rejected(CMD_STAT_SDEV, "Err: Precision"));
 
     uint8_t meter = 0, km = 0;
     for (uint8_t i = 0; i < UNIT_COUNT; i++) {
@@ -197,9 +196,11 @@ static void numeric_boundaries(void)
           !memcmp(&before, &c.stack[0], sizeof before) && c.unit[0] == km);
     calc_init(&c);
     c.stack[0] = os_StrToReal("1E-99", NULL); c.unit[0] = meter;
+    before = c.stack[0];
     cmd(CMD_UNIT, km - 1);
     int exponent = (uint8_t)c.stack[0].exp - 128;
-    check(km && meter && (c.message || (exponent >= -99 && exponent <= 99)));
+    check(km && meter && c.message && !strcmp(c.message, "Err: Underflow") &&
+          !memcmp(&before, &c.stack[0], sizeof before) && c.unit[0] == meter);
 }
 
 static void pair(int y, uint8_t uy, int x, uint8_t ux)
@@ -219,6 +220,50 @@ static bool rejected(calc_cmd_t operation, const char *error)
            !memcmp(&x, &c.stack[0], sizeof x) && !memcmp(&y, &c.stack[1], sizeof y) &&
            !memcmp(&lastx, &c.lastx, sizeof lastx) && c.unit[0] == ux &&
            c.unit[1] == uy && c.unit_lastx == ul && c.lift == lift;
+}
+
+static void error_policy_neighbors(void)
+{
+    pair(1, 0, 1, 0); cmd(CMD_SUB, 0); check(x_number("0"));
+    pair(0, 0, 1, 0); cmd(CMD_ACOSH, 0); check(x_number("0"));
+    pair(0, 0, 0, 0); cmd(CMD_LN_ONE_PLUS, 0); check(x_number("0"));
+    pair(0, 0, 0, 0); cmd(CMD_ATANH, 0); check(x_number("0"));
+    pair(0, 0, 0, 0); cmd(CMD_TO_POL, 0); check(x_number("0"));
+    pair(3, 0, 4, 0); cmd(CMD_TO_POL, 0); check(x_number("5"));
+    pair(1, 0, 0, 0); c.stack[0] = os_StrToReal("1E-99", NULL);
+    cmd(CMD_MUL, 0); check(x_number("1E-99"));
+    pair(0, 0, 1, 0); c.stack[1] = os_StrToReal("9.9999999999999E99", NULL);
+    cmd(CMD_DIV, 0); check(x_number("9.9999999999999E99"));
+    calc_init(&c); c.stats.linear_only = true;
+    for (uint8_t i = 0; i < 3; i++) {
+        c.stack[0] = c.stack[1] = os_StrToReal("100000001", NULL);
+        cmd(CMD_STAT_PLUS, 0);
+    }
+    cmd(CMD_STAT_SDEV, 0); check(x_number("0"));
+    calc_init(&c); c.stats.linear_only = true;
+    for (uint8_t i = 2; i <= 4; i++) {
+        c.stack[0] = c.stack[1] = os_Int24ToReal(i); cmd(CMD_STAT_PLUS, 0);
+    }
+    cmd(CMD_STAT_SDEV, 0); check(x_number("1"));
+    stats_t before = c.stats;
+    c.stack[0] = os_StrToReal("1E99", NULL); c.stack[1] = os_Int24ToReal(1);
+    bool refused = rejected(CMD_STAT_PLUS, "Err: Overflow");
+    check(refused && !memcmp(&before, &c.stats, sizeof before));
+    calc_init(&c); c.regs[0] = c.stack[0] = os_StrToReal("9E99", NULL);
+    real_t original = c.regs[0]; cmd(CMD_STO_ADD, REG_A);
+    check(c.message && !strcmp(c.message, "Err: Overflow") &&
+          !memcmp(&original, &c.regs[0], sizeof original));
+    calc_init(&c); c.regs[0] = os_Int24ToReal(10); c.stack[0] = os_StrToReal("1E-99", NULL);
+    original = c.stack[0]; cmd(CMD_RCL_DIV, REG_A);
+    check(c.message && !strcmp(c.message, "Err: Underflow") &&
+          !memcmp(&original, &c.stack[0], sizeof original));
+    char output[FORMAT_MAX]; original = os_Int24ToReal(1);
+    original.exp = (int8_t)(0x80 + 100);
+    format_real(output, &original, DISP_FIX, DISP_FLOAT, 14, 14, false);
+    bool format_ok = !strcmp(output, "Err: Overflow");
+    original.exp = (int8_t)(0x80 - 100);
+    format_real(output, &original, DISP_FIX, DISP_FLOAT, 14, 14, false);
+    check(format_ok && !strcmp(output, "Err: Underflow"));
 }
 
 static void calculator_regressions(void)
@@ -357,7 +402,7 @@ static void message_bounds(int *width, int *height)
 
 int main(void)
 {
-    memset((void *)RESULTS, 0, 128);
+    memset((void *)RESULTS, 0, sizeof results);
     check(res_open());
     calc_init(&c);
     record("1987,01,17"); number(15000); cmd(CMD_ADD, 0);
@@ -512,9 +557,10 @@ int main(void)
     display_close();
     calculator_regressions();
     numeric_boundaries();
+    error_policy_neighbors();
     RESULTS[0] = checks;
     if (checks != NATIVE_CHECK_COUNT) RESULTS[0] = 0;
-    RESULTS[127] = 0xAA;
+    RESULTS[255] = 0xAA;
     memcpy((void *)0xD40000, results, sizeof results);
     while (!os_GetCSC()) { }
     return 0;
