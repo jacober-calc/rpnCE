@@ -871,7 +871,15 @@ add('display-decimal','MODE','Comma decimal throughout the interface',[select('D
 add('display-date-formats','MODE','Raw and readable DATE display',[dateInput('DATE_CREATE','2024,3,14'),select('FORMAT_RECORD_STRING'),'Inspect X, then select the raw format.',select('FORMAT_RECORD_RAW')],text('D{2024,3,14}'),['FORMAT_RECORD_RAW','FORMAT_RECORD_STRING'],{checks:['Readable format showed 2024-03-14.']});
 add('display-tints','MODE','Eight color themes',[select('SCREEN_TINT'),'Repeat TINT until you return to your starting theme. Check each theme with several stack values and an error message.'],null,['SCREEN_TINT'],{checks:['LCD, LCD+, GRAY, INVERTED, AYU DARK, MONOKAI, PASTEL and COMMODORE are all reachable.','Numbers, units, warnings and menus remain readable on the actual LCD.']});
 add('display-brightness','Keyboard','Brightness keys during entry',['Note your current brightness. Type 12345 without ENTER. Press 2ND ↑ a few times, then 2ND ↓.','Confirm the entry is preserved; press ENTER. Restore a comfortable brightness.'],exact(12345),[],{checks:['Brightness changes in both directions and the display remains readable.']});
-add('display-messages','CLR','Warning size and clearing messages',[select('CLEAR_STACK'),'Inspect “Stack cleared”. Press ↓ to reach CLR row 2 BEFORE creating the next error.','Enter 1 ENTER 0 ÷; inspect the error. Without navigating away, press Y= (CLD).'],null,['CLEAR_STACK','CLEAR_DISPLAY'],{checks:['Both notices use the same enlarged message font; menu arrows and status bar retain their normal sizes.','CLD clears the message without changing stack values.']});
+add('display-messages','CLR','Warning size and clearing messages',[select('CLEAR_STACK'),'Inspect “Stack cleared” immediately, then wait two seconds without pressing a key. Press ↓ to reach CLR row 2 BEFORE creating the next error.','Enter 1 ENTER 0 ÷; inspect the error. Without navigating away, press Y= (CLD).'],null,['CLEAR_STACK','CLEAR_DISPLAY'],{checks:['The confirmation and error use the same enlarged message font; menu arrows and status bar retain their normal sizes.','“Stack cleared” disappeared by itself, leaving the stack unchanged.','CLD clears the error without changing stack values.']});
+add('message-clear-show','Keyboard','CLEAR dismisses SHOW and preserves a quantity',[
+ 'Enter 12.',select('UNIT_FOOT'),'Enter 3 ×. Press 2ND ENTER (SHOW). Inspect the full value in the message line.',
+ 'Press CLEAR once. Inspect X, its unit and the message line.'
+],exact(36),[],{focus:'regression',checks:['The message disappeared, X remained 36 ft and Y remained zero.']});
+add('message-clear-error','Keyboard','CLEAR acknowledges an error; ENTER keeps its normal action',[
+ 'Enter 8 ENTER 0 ÷. Inspect the error and both operands. Press CLEAR once; inspect X and Y.',
+ 'Press ÷ again to repeat the error, then press ENTER.'
+],exact(0),[],{focus:'regression',checks:['CLEAR removed the error while keeping X = 0 and Y = 8.','ENTER removed the repeated error and duplicated X normally: X = 0, Y = 0, Z = 8.']});
 command('CLEAR_X','42',exact(0));
 add('clear-stack','CLR','Clear all stack levels',['Enter 1 ENTER 2 ENTER 3 ENTER 4.',select('CLEAR_STACK')],exact(0),['CLEAR_STACK'],{checks:['All four visible levels are zero.']});
 add('clear-registers','CLR','Clear ordinary registers',['This test clears all ordinary registers. Save anything you need first. Enter 99 STO→ MATH.',select('CLEAR_REGS'),'Press 2ND STO→ MATH.'],exact(0),['CLEAR_REGS']);
@@ -949,13 +957,13 @@ for (const test of cases) {
   else if (test.expected?.kind === 'error' && test.focus === 'normal') test.focus = 'domain';
 }
 const catalog = {
- revision: 'hardware-0.7.0-6', version: '0.7.0', menuDigest: source.menuDigest,
+ revision: 'hardware-0.7.0-7', version: '0.7.0', menuDigest: source.menuDigest,
  reference: 'Exact integer and Gregorian references; basic mpmath references at 70 decimal digits and expanded references at 180 digits. Unit references reuse the exact definitions in tools/genunits.py and are evaluated separately. Most approximate checks allow 5E-11 relative error and zero absolute error; iterative-rate, near-pole and cancellation cases state their own tolerances. Use SHOW for numeric results, especially scientific notation. Passing means the reported observations satisfy these cases; it is not proof of a complete hardware audit.',
  baseline: [
   'Use a calculator with the current RPNCE program and matching resource appvar. Copy any stack/register values you want to keep: these exercises replace them. TVM cases replace the shared TI-OS Finance values.',
   'Before EACH case, cancel entry/prompts with ON or CLEAR as needed. Press APPS then Y= for DEC. Press MODE then TRACE for RAD. Press MODE then Y=, then . then 2 for FIX all digits.',
   'Press MODE, ↓ three times, then Y= for raw DATE objects. Press MODE, ↓ three times, then ZOOM for period decimal. Enter 4; press MODE, ↓ twice, TRACE for stack depth 4.',
-  'Press CLEAR twice to clear the stack. Follow the case-specific setup and steps after this baseline. A case that changes settings does not set up the next case.',
+  'If a message is visible, press CLEAR once to dismiss it. Then press CLEAR twice to clear the stack. Follow the case-specific setup and steps after this baseline. A case that changes settings does not set up the next case.',
   'Named menu selections have a physical-key route below the steps. All routes begin with MATH (HOME). EE means the comma key; (−) is the sign key, distinct from subtraction.',
   'For a numeric answer, inspect any unit/Y-register checks FIRST, then press 2ND ENTER (ENTRY / SHOW) to read all stored digits. Enter that value, using E for its exponent, without the unit. For an error, enter its exact message. Raw DATE answers include their type and braces.'
  ],

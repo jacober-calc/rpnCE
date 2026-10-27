@@ -40,7 +40,10 @@ The dark strip at the top shows the calculator's state.
 Under the status bar, the message line shows the result of the last
 command when there's something to say: an error such as "Err: Domain", the
 full value from SHOW, a notice such as "TVM Stored", or, in BASE modes, a
-warning about X. Messages disappear at the next key. A pair of arrows (↓↑)
+warning about X. Errors, warnings and SHOW remain until a key is pressed.
+`CLEAR` dismisses the message without changing the stack. Other keys dismiss
+it and perform their normal action. Routine notices disappear after about
+1.5 seconds. A pair of arrows (↓↑)
 at the right end means the current menu has more rows; see
 [The menus](07-menus.md#7-the-menus).
 

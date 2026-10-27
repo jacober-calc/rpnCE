@@ -25,6 +25,12 @@ void display_scroll_x(int delta);
 void display_reset_scroll(void);
 void display_close(void);
 
+/* Message acknowledgement changes only the message, including an automatic
+ * BASE warning. A dismissed BASE warning stays hidden until its value changes. */
+bool display_has_message(const calc_t *c);
+bool display_message_is_notice(const calc_t *c);
+void display_dismiss_message(calc_t *c);
+
 /* cat: the VARS catalog, shown in place of the stack while open.
  * prompt: STO/RCL prompt to show in the X row, or NULL.
  * prompt_lifts: show the stack lifted under the prompt (plain RCL). */

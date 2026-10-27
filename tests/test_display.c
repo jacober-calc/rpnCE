@@ -348,6 +348,49 @@ static void application_clock(void)
     memcpy(mock_clock, saved, sizeof saved);
 }
 
+static void message_acknowledgement(void)
+{
+    calc_t c;
+    menu_t m;
+    catalog_t cat = {0};
+    calc_init(&c);
+    menu_home(&m);
+    display_open();
+    c.stack[0] = mk(123); c.stack[1] = mk(456);
+    c.lastx = mk(7); c.unit[0] = 1;
+    calc_execute(&c, CMD_SHOW, 0);
+    check("SHOW is a persistent message", display_has_message(&c) && !display_message_is_notice(&c));
+    calc_t expected = c;
+    expected.message = NULL;
+    display_dismiss_message(&c);
+    check("dismissing SHOW preserves all calculator state", !memcmp(&expected, &c, sizeof c));
+    c.message = "Err: Domain";
+    check("errors persist until a key", !display_message_is_notice(&c));
+    expected = c; expected.message = NULL;
+    display_dismiss_message(&c);
+    check("dismissing an error changes only the message", !memcmp(&expected, &c, sizeof c));
+    c.message = "TVM Stored";
+    check("ordinary notices can time out", display_message_is_notice(&c));
+    c.message = "TVM Not Found";
+    check("TVM solver failures remain warnings", !display_message_is_notice(&c));
+    c.message = NULL; c.unit[0] = 0;
+    c.base.radix = 16; c.base.bits = 8; c.stack[0] = mk(256);
+    check("automatic BASE warnings are messages", display_has_message(&c));
+    expected = c;
+    display_dismiss_message(&c);
+    printed_count = 0; printed[0] = '\0';
+    draw(&c, &m, &cat, NULL, false);
+    draw(&c, &m, &cat, NULL, false);
+    check("dismissed BASE warnings stay cleared across redraws",
+          !display_has_message(&c) && !strstr(printed, "Exceeds") && !memcmp(&expected, &c, sizeof c));
+    c.stack[0] = mk(257);
+    check("a changed value can produce a new BASE warning", display_has_message(&c));
+    display_dismiss_message(&c);
+    c.base.bits = 7;
+    check("a changed word size can produce a new BASE warning", display_has_message(&c));
+    display_close();
+}
+
 static void warning_size(void)
 {
     calc_t c;
@@ -403,6 +446,7 @@ int main(void)
     quantity_catalog_and_help();
     application_clock();
     warning_size();
+    message_acknowledgement();
     printf("%d failures\n", fails);
     return fails != 0;
 }

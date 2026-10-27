@@ -16,7 +16,7 @@ RPNCE 0.7.0 · User Guide
 | `,` | EE: start the exponent (`6.02 , 23` is 6.02 × 10²³); `2ND EE` does the same |
 | `(−)` | change the sign: of the number, or of the exponent after EE |
 | `DEL` | while typing: delete the last character; otherwise CLX (clear X) |
-| `CLEAR` | CLX: clear X to 0 (or abandon what's being typed) |
+| `CLEAR` | Dismiss a visible message, preserving the stack; otherwise CLX: clear X to 0 (or abandon what's being typed) |
 | `CLEAR CLEAR` | twice in a row: clear the whole stack ("Stack cleared") |
 | `ENTER` | finish the number and push a copy up the stack |
 

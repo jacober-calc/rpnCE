@@ -134,8 +134,8 @@ CLST: clear every stack level.
 CLRG: clear A-Z, i and extra registers.
 CL-Sigma: clear the statistics data.
 CLTV: clear TVM; P/YR=C/YR=12, END.
-CLD: clear the message line.
-CLEAR twice also clears the stack.
+CLD/CLEAR: dismiss a visible message.
+No message? CLEAR twice clears stack.
 ---
 HELP 15/20 - MODE
 FIX/SCI/ENG: fixed/scientific/engineering.
@@ -180,7 +180,7 @@ Err: Underflow: nonzero value too small.
 Err: Precision: detected digit loss.
 Errors keep operands and LASTX.
 Intermediate limits can also cause errors.
-See the User Guide for details.
+CLEAR dismisses errors without clearing X.
 ---
 HELP 20/20 - ABOUT
 RPNCE 0.7.0

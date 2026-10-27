@@ -15,7 +15,7 @@ reports you want reviewed in `tests/hardware/results/` or attach them when
 reporting an issue. Reports are never uploaded or committed automatically.
 Review personal notes before sharing them.
 
-The catalog has 2,600 cases. All 421 implemented menu commands and 18
+The catalog has 2,602 cases. All 421 implemented menu commands and 18
 keyboard math functions have functional and edge coverage, with additional
 invalid-input cases where required. The ten reserved complex-number
 commands are checked for their unavailable message. The boundary filter
@@ -40,8 +40,11 @@ range cases accept either the stated numerical reference or the specific
 error listed in that question. Other errors and misleading zero answers
 still fail. Tolerances are stated in the individual questions.
 
-Catalog revision `hardware-0.7.0-6` calls the carry indicator **CF**, including
-in DEC mode. New runs start with all cases selected.
+Catalog revision `hardware-0.7.0-7` adds message acknowledgement checks:
+CLEAR dismisses a visible message without changing the stack; other keys
+dismiss it and perform their normal action. Routine notices time out after
+about 1.5 seconds. The carry indicator is **CF**, including in DEC mode.
+New runs start with all cases selected.
 The focused run and completed 14-case numerical confirmation run have been
 removed, along with the 14 completed individual cases. Their original device reports
 remain unchanged in [results/](results/), and their native regression checks

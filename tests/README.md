@@ -57,7 +57,7 @@ changes inside the emulator.
 
 `ce_smoke/` runs the built program through its keyboard loop, stores a
 register, quits, and reopens it to verify actual appvar persistence. Its
-eleven checks include typed and recalled values at exponents −99 and +99,
+nineteen checks include typed and recalled values at exponents −99 and +99,
 and zero deviation for constant data before and after reopening. After
 building the program, run it with the same emulator environment:
 
@@ -67,6 +67,10 @@ python3 tests/ce_smoke/run.py
 ```
 
 Omit `AUTOTESTER_LAUNCHER` for direct native execution.
+
+The keyboard checks also cover CLEAR dismissing SHOW, errors and notices
+without changing operands, ENTER performing its normal action after a
+message, and ordinary CLEAR behavior returning after a notice times out.
 
 ## Numeric limit checks
 

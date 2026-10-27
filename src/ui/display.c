@@ -215,10 +215,16 @@ static void draw_label_tall(const char *s, int x, int y, uint8_t color)
 }
 
 static void reset_value_cache(void);
+static struct {
+    bool active;
+    real_t value;
+    uint8_t radix, bits, unit;
+} dismissed_warning;
 
 void display_open(void)
 {
     reset_value_cache();
+    dismissed_warning.active = false;
     gfx_Begin();
     display_set_tint(0);
     gfx_SetDrawBuffer();            /* draw off-screen, then swap */
@@ -539,7 +545,12 @@ static const char *stack_value_text(const calc_t *c, const real_t *v, int row, f
 static const char *base_warning(const calc_t *c, char *buf)
 {
     base_word_t w;
-    if (c->base.radix == 10 || c->editing || obj_is(&c->stack[0]))
+    if (dismissed_warning.active &&
+        (memcmp(&dismissed_warning.value, &c->stack[0], sizeof(real_t)) ||
+         dismissed_warning.radix != c->base.radix ||
+         dismissed_warning.bits != c->base.bits || dismissed_warning.unit != c->unit[0]))
+        dismissed_warning.active = false;
+    if (dismissed_warning.active || c->base.radix == 10 || c->editing || obj_is(&c->stack[0]))
         return NULL;
     switch (base_fit(&c->base, &c->stack[0], &w)) {
         case BW_TOO_BIG: {                  /* e.g. Exceeds 32-bit word */
@@ -556,6 +567,29 @@ static const char *base_warning(const calc_t *c, char *buf)
         case BW_FRACTION: return "Not a whole number";
         default:          return NULL;
     }
+}
+
+bool display_has_message(const calc_t *c)
+{
+    char warning[24];
+    return c->message || base_warning(c, warning);
+}
+
+bool display_message_is_notice(const calc_t *c)
+{
+    return c->message && c->message != c->show_buf &&
+           strncmp(c->message, "Err:", 4) && strcmp(c->message, "TVM Not Found") &&
+           strcmp(c->message, "Not available yet");
+}
+
+void display_dismiss_message(calc_t *c)
+{
+    c->message = NULL;
+    dismissed_warning.active = true;
+    dismissed_warning.value = c->stack[0];
+    dismissed_warning.radix = c->base.radix;
+    dismissed_warning.bits = c->base.bits;
+    dismissed_warning.unit = c->unit[0];
 }
 
 

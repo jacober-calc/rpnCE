@@ -14,10 +14,13 @@ RPNCE 0.7.0 · User Guide
 - [Recovering without clearing saved work](#recovering-without-clearing-saved-work)
 - [Reporting a reproducible problem](#reporting-a-reproducible-problem)
 
-Messages appear on the message line and clear at the next key. A rejected
-arithmetic operation retains its operands and LASTX, so you can inspect
-the inputs before trying again. An invalid DATE entry remains open for
-correction with DEL; it is not a completed stack object.
+Errors appear on the message line until a key is pressed. `CLEAR` dismisses
+the message without changing the stack or an unfinished entry. Other keys
+dismiss the message and perform their normal action. Routine notices fade
+after about 1.5 seconds. A rejected arithmetic operation retains its operands
+and LASTX, so you can inspect the inputs before trying again. An invalid
+DATE entry remains open for correction with DEL; it is not a completed
+stack object.
 
 <img src="../../assets/guide/screens/trouble-domain.png" alt="Err: Domain after 2 (−) 2ND √, with −2 still in X" width="320"> <img src="../../assets/guide/screens/trouble-invalid.png" alt="Err: Invalid, with the DATE entry still open" width="320">
 

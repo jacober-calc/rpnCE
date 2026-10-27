@@ -26,7 +26,8 @@
 #define IDLE_TIMEOUT (5UL * 60UL * CLOCKS_PER_SEC)
 
 /* How long a finished STO/RCL/FIX prompt stays on screen. */
-#define PROMPT_FLASH_MS 300
+#define PROMPT_FLASH_MS 150
+#define NOTICE_TIMEOUT (3UL * CLOCKS_PER_SEC / 2UL)
 
 static calc_t calc;
 static keys_t keys;
@@ -34,6 +35,8 @@ static menu_t menu;
 static catalog_t catalog;
 static uint8_t help_page;       /* 0: closed, 1..res_help_pages(): reference */
 static uint8_t tint;            /* screen color preset */
+static const char *notice;
+static clock_t notice_started;
 
 /* Runs the item under a softkey, or opens its submenu. As in RPN83P, the
  * menu stays where it is, so a function can be pressed again. */
@@ -92,6 +95,14 @@ static void catalog_key(sk_key_t key)
 
 static void redraw(void)
 {
+    if (display_message_is_notice(&calc)) {
+        if (notice != calc.message) {
+            notice = calc.message;
+            notice_started = clock();
+        }
+    } else {
+        notice = NULL;
+    }
     if (help_page) {
         display_help((uint8_t)(help_page - 1));
         return;
@@ -169,6 +180,11 @@ int main(void)
         if (ev.kind == EV_NONE) {
             sk_key_t key = os_GetCSC();
             if (!key) {
+                if (notice && clock() - notice_started >= NOTICE_TIMEOUT) {
+                    calc.message = NULL;
+                    notice = NULL;
+                    redraw();
+                }
                 /* keep the status bar's clock current */
                 if (rtc_Minutes != shown_minute) {
                     shown_minute = rtc_Minutes;
@@ -213,6 +229,18 @@ int main(void)
                 redraw();
                 continue;
             }
+            if (display_has_message(&calc)) {
+                display_dismiss_message(&calc);
+                notice = NULL;
+                if (key == sk_Clear && keys.prompt == PROMPT_NONE) {
+                    keys.second = keys.alpha = false;
+                    if (calc.last_cmd == CMD_CLEAR)
+                        calc.last_cmd = CMD_NONE;
+                    last_key = clock();
+                    redraw();
+                    continue;
+                }
+            }
             ev = keys_translate(&keys, key);
 
             /* A finished prompt shows its answer for a moment ("STO A")
@@ -230,8 +258,11 @@ int main(void)
         if (ev.kind == EV_QUIT)
             break;
 
-        if (ev.kind != EV_REDRAW)
-            calc.message = NULL;
+        if (ev.kind != EV_REDRAW) {
+            if (display_has_message(&calc))
+                display_dismiss_message(&calc);
+            notice = NULL;
+        }
 
         /* a long X value starts at its right end again once X can change */
         if (ev.kind != EV_SCROLL_LEFT && ev.kind != EV_SCROLL_RIGHT &&
