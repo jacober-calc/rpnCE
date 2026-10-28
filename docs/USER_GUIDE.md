@@ -3,7 +3,7 @@
 **RPN scientific and financial calculator for the TI-84 Plus CE**\
 **Software version 0.7.0 · First edition · 19 October 2026**
 
-![rpnCE calculator display](../assets/rpnCE-promo1.png)
+![rpnCE calculator display](../assets/rpnCE-promo1.gif)
 
 This manual explains how to operate rpnCE, from a first calculation to
 statistics, time value of money, unit conversions, and calendar arithmetic.
