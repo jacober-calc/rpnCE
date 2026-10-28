@@ -40,7 +40,8 @@ range cases accept either the stated numerical reference or the specific
 error listed in that question. Other errors and misleading zero answers
 still fail. Tolerances are stated in the individual questions.
 
-Catalog revision `hardware-0.7.0-7` adds message acknowledgement checks:
+Catalog revision `hardware-0.7.0-8` uses the rpnCE branding and retains
+the message acknowledgement checks:
 CLEAR dismisses a visible message without changing the stack; other keys
 dismiss it and perform their normal action. Routine notices time out after
 about 1.5 seconds. The carry indicator is **CF**, including in DEC mode.

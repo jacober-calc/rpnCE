@@ -16,8 +16,8 @@ def main():
     output = Path(__file__).resolve().parent / 'bin'
     output.mkdir(parents=True, exist_ok=True)
     address = int(re.search(r'^\s*\.bss\._calc\s+0x([0-9a-fA-F]+)',
-                            (ROOT / 'obj/RPNCE.map').read_text(), re.M).group(1), 16)
-    files = [str(ROOT / 'bin' / name) for name in ('RPNCE.8xp', 'RPNCEres.8xv')]
+                            (ROOT / 'obj/rpnCE.map').read_text(), re.M).group(1), 16)
+    files = [str(ROOT / 'bin' / name) for name in ('rpnCE.8xp', 'rpnCEres.8xv')]
     target = {'name': 'RPNCE', 'isASM': True}
     launch = ['action|launch', 'delay|1500']
     if os.environ.get('AUTOTESTER_LAUNCHER'):

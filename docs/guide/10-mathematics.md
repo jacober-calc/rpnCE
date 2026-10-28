@@ -1,6 +1,6 @@
 # 10. Math functions
 
-RPNCE 0.7.0 · User Guide
+rpnCE 0.7.0 · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 9. Display formats and MODE settings](09-settings.md) · [Next: 11. BASE: hexadecimal, octal and binary](11-base.md)
 

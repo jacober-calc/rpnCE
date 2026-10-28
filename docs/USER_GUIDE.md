@@ -1,17 +1,17 @@
-# RPNCE User Guide
+# rpnCE User Guide
 
 **RPN scientific and financial calculator for the TI-84 Plus CE**\
 **Software version 0.7.0 · First edition · 19 October 2026**
 
-![RPNCE calculator display](../assets/rpnce-promo1.png)
+![rpnCE calculator display](../assets/rpnCE-promo1.png)
 
-This manual explains how to operate RPNCE, from a first calculation to
+This manual explains how to operate rpnCE, from a first calculation to
 statistics, time value of money, unit conversions, and calendar arithmetic.
 It describes the functions implemented in version 0.7.0. Complex-number
 functions remain unavailable in this version.
 
-[Project and source](https://github.com/jacober-calc/rpnce) ·
-[Releases](https://github.com/jacober-calc/rpnce/releases) ·
+[Project and source](https://github.com/jacober-calc/rpnCE) ·
+[Releases](https://github.com/jacober-calc/rpnCE/releases) ·
 [Compact key reference](KEYS.md)
 
 ## Using this manual
@@ -30,7 +30,7 @@ find its instructions.
 | Change digits, angles, or screen colors | [9. Settings](guide/09-settings.md) |
 | Find a function or menu item | [Alphabetical function index](guide/19-reference.md#appendix-d-alphabetical-function-index) |
 | Understand an error or recover saved work | [16. Troubleshooting](guide/16-troubleshooting.md) |
-| Check which files RPNCE creates | [17. Saving, memory and files](guide/17-memory.md) |
+| Check which files rpnCE creates | [17. Saving, memory and files](guide/17-memory.md) |
 
 ## Contents
 
@@ -79,7 +79,7 @@ layouts are in the [menu map](guide/19-reference.md#appendix-b-menu-map).
 ## Working through examples
 
 Each worked example states its starting settings. Set those explicitly:
-RPNCE remembers settings and values from earlier sessions. A table row
+rpnCE remembers settings and values from earlier sessions. A table row
 continues from the preceding row unless it says to start a new calculation.
 
 Display examples use FIX 4 when a fixed number of decimal places helps
@@ -93,7 +93,7 @@ those values; save anything you need before following that example.
 
 The chapter-based organization and emphasis on operating procedures are
 informed by Brian T. Park's [RPN83P User Guide](https://github.com/bxparks/rpn83p/blob/develop/USER_GUIDE.md).
-The explanations and examples here describe RPNCE's implementation;
+The explanations and examples here describe rpnCE's implementation;
 keyboard mappings, storage registers, BASE word sizes, and available
 functions differ. See [Limits and compatibility](guide/18-compatibility.md)
 before applying instructions written for another calculator.

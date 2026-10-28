@@ -242,7 +242,7 @@ void display_problem(const char *title, const char *detail)
     gfx_SetTextScale(1, 1);
     gfx_SetTextFGColor(COL_INK);
     int y = 80;
-    const char *lines[4] = { "RPNCE can't start:", title, detail, "Press any key." };
+    const char *lines[4] = { "rpnCE can't start:", title, detail, "Press any key." };
     for (int i = 0; i < 4; i++) {
         int w = (int)gfx_GetStringWidth(lines[i]);
         gfx_PrintStringXY(lines[i], (SCREEN_W - w) / 2, y);

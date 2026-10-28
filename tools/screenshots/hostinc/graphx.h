@@ -1,4 +1,4 @@
-/* Screenshot engine: the subset of graphx that RPNCE uses, drawing into an
+/* Screenshot engine: the subset of graphx that rpnCE uses, drawing into an
  * in-memory framebuffer instead of the LCD (see graphx_raster.c). */
 #ifndef SHOT_GRAPHX_H
 #define SHOT_GRAPHX_H

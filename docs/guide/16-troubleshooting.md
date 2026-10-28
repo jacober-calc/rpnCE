@@ -1,6 +1,6 @@
 # 16. Messages and errors
 
-RPNCE 0.7.0 · User Guide
+rpnCE 0.7.0 · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 15. DATE: dates, times and the clock](15-date.md) · [Next: 17. Saving, memory and files](17-memory.md)
 
@@ -9,7 +9,7 @@ RPNCE 0.7.0 · User Guide
 - [Errors](#errors)
 - [Notices](#notices)
 - [BASE warnings](#base-warnings)
-- [When RPNCE can't start](#when-rpnce-cant-start)
+- [When rpnCE can't start](#when-rpnce-cant-start)
 - [Choosing the next action](#choosing-the-next-action)
 - [Recovering without clearing saved work](#recovering-without-clearing-saved-work)
 - [Reporting a reproducible problem](#reporting-a-reproducible-problem)
@@ -63,12 +63,12 @@ In HEX, OCT and BIN, the message line explains why X is shown in decimal:
 "Exceeds 32-bit word" (with the current word size), "Negative: not a
 word", or "Not a whole number". See [chapter 11](11-base.md#11-base-hexadecimal-octal-and-binary).
 
-## When RPNCE can't start
+## When rpnCE can't start
 
-If its resource appvar is missing or doesn't match the program, RPNCE shows
+If its resource appvar is missing or doesn't match the program, rpnCE shows
 a notice instead of starting: "RPNCEres not found", "RPNCEres is damaged"
-or "RPNCEres is the wrong version". Send `RPNCEres.8xv` from the same
-release as `RPNCE.8xp`.
+or "RPNCEres is the wrong version". Send `rpnCEres-0.7.0.8xv` from the same
+release as `rpnCE-0.7.0.8xp`. Local builds omit the version from the filenames.
 
 <img src="../../assets/guide/screens/trouble-no-res.png" alt="The startup notice when RPNCEres is missing" width="320">
 
@@ -103,13 +103,13 @@ mismatched resource. Before an intentional reset, follow the
 
 ## Reporting a reproducible problem
 
-Include the RPNCE version, calculator model and OS, starting settings,
+Include the rpnCE version, calculator model and OS, starting settings,
 exact keys in order, expected result, and displayed result or error. For
 units, include the full menu path: kW under PWR and kWh under ENER are not
 interchangeable. For TVM, include all seven values and BEG/END; for BASE,
 include word size and carry if relevant.
 
-Report problems through the [project issue tracker](https://github.com/jacober-calc/rpnce/issues).
+Report problems through the [project issue tracker](https://github.com/jacober-calc/rpnCE/issues).
 A short sequence from known settings is more useful than an isolated
 screen value. Avoid resetting a problem state before recording it if it
 contains the only copy of the inputs.

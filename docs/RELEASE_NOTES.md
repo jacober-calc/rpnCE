@@ -1,4 +1,6 @@
-# RPNCE 0.7.0
+# rpnCE 0.7.0
+
+The first official pre-release of rpnCE.
 
 An RPN calculator for the TI-84 Plus CE with TI-OS 14-digit decimal
 arithmetic and a keyboard-oriented interface.
@@ -19,11 +21,11 @@ arithmetic and a keyboard-oriented interface.
 
 ## Installation and saved data
 
-Send `RPNCE.8xp` and `RPNCEres.8xv` from the same package. The CE C libraries
+Send `rpnCE-0.7.0.8xp` and `rpnCEres-0.7.0.8xv` from the same package. The CE C libraries
 are required. See `INSTALL.txt` and the
 [installation chapter](guide/02-installation.md).
 
-RPNCE saves its state in `RPNCEdat`, display/clock settings in `RPNCEcfg`,
+rpnCE saves its state in `RPNCEdat`, display/clock settings in `RPNCEcfg`,
 and register-unit metadata in `RPNCEunt` when needed. Back up these appvars
 together. TVM values are shared with TI-OS.
 

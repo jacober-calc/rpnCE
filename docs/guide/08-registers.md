@@ -1,6 +1,6 @@
 # 8. Registers
 
-RPNCE 0.7.0 · User Guide
+rpnCE 0.7.0 · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 7. The menus](07-menus.md) · [Next: 9. Display formats and MODE settings](09-settings.md)
 

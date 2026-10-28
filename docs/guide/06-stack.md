@@ -1,6 +1,6 @@
 # 6. The RPN stack
 
-RPNCE 0.7.0 · User Guide
+rpnCE 0.7.0 · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 5. Entering numbers](05-number-entry.md) · [Next: 7. The menus](07-menus.md)
 
@@ -44,7 +44,7 @@ holds the pieces until you need them. A longer example, (3 + 4) × (5 + 6):
 
 ## Stack lift
 
-RPNCE follows the standard HP rules about when a new number pushes the
+rpnCE follows the standard HP rules about when a new number pushes the
 stack up ("stack lift"):
 
 - Typing a number after most operations pushes the old X up into Y, so

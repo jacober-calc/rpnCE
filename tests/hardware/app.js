@@ -3,6 +3,7 @@
   'use strict';
   const C = HardwareCatalog, E = HardwareEngine;
   const $ = id => document.getElementById(id);
+  // Keep the storage prefix so existing browser runs can still be recovered.
   const storageKey = `rpnce-hardware:${C.revision}`;
   let run = E.makeRun(C), section = 'All', storageOK = true, acknowledged = false, recovery = null;
   let noticeTimer;
@@ -72,7 +73,7 @@
     $('run-label').textContent = `${run.metadata.build || 'BUILD NOT SET'} · ${run.metadata.version || C.version}`;
   }
   function renderMetadata() {
-    const labels = { tester: 'Tester (optional)', device: 'Calculator model', os: 'TI-OS version', version: 'RPNCE version', build: 'Build / commit', notes: 'Run notes (optional)' };
+    const labels = { tester: 'Tester (optional)', device: 'Calculator model', os: 'TI-OS version', version: 'rpnCE version', build: 'Build / commit', notes: 'Run notes (optional)' };
     $('metadata').replaceChildren();
     for (const [key, title] of Object.entries(labels)) {
       const label = el('label', title);
@@ -273,12 +274,12 @@
   }
   if (recovery !== null) {
     const button = el('button', 'Save previous data'); button.type = 'button'; button.id = 'recover-run';
-    button.addEventListener('click', () => { download(recovery, 'rpnce-hardware-recovered.json'); notify('Previous data saved unchanged. Open it with its matching tool version, or keep it for developer review.'); });
+    button.addEventListener('click', () => { download(recovery, 'rpnCE-hardware-recovered.json'); notify('Previous data saved unchanged. Open it with its matching tool version, or keep it for developer review.'); });
     document.querySelector('.file-actions').append(button);
   }
   $('save').addEventListener('click', () => {
     const report = E.report(C, run);
-    download(JSON.stringify(report, null, 2) + '\n', `rpnce-hardware-${run.runId}.json`);
+    download(JSON.stringify(report, null, 2) + '\n', `rpnCE-hardware-${run.runId}.json`);
     notify('Report saved. It includes unfinished answers and attempt history. Add the file to the repo or share it with the developer for review.');
   });
   $('resume').addEventListener('change', async () => {

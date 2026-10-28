@@ -1,4 +1,4 @@
-"""The user guide's screenshots: keystroke sequences run on RPNCE's real code.
+"""The user guide's screenshots: keystroke sequences run on rpnCE's real code.
 
 Each sequence starts from a fresh calculator: DEC, RAD, FIX- (all digits),
 a four-level stack, the clock at 2026-10-19 09:30, and the TI-OS TVM values

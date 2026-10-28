@@ -1,4 +1,4 @@
-/* A faithful software version of the graphx calls RPNCE makes, following
+/* A faithful software version of the graphx calls rpnCE makes, following
  * graphx.asm (CE toolchain v15.0): two 320x240 8-bit buffers swapped by
  * gfx_SwapDraw, palette colors, and the default font drawn as graphx does
  * (each character's spacing-table width in columns, 8 rows, high bit first,

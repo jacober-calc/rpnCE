@@ -1,8 +1,8 @@
 # 3. First calculations
 
-RPNCE 0.7.0 · User Guide
+rpnCE 0.7.0 · User Guide
 
-[Manual contents](../USER_GUIDE.md) · [Previous: 2. Installing RPNCE](02-installation.md) · [Next: 4. The screen](04-display.md)
+[Manual contents](../USER_GUIDE.md) · [Previous: 2. Installing rpnCE](02-installation.md) · [Next: 4. The screen](04-display.md)
 
 **In this chapter**
 
@@ -108,11 +108,11 @@ does not round or replace the stored number.
 
 Press `2ND CATALOG` to open the on-device reference. `↑` and `↓` turn
 pages; `ENTER`, `CLEAR`, `DEL`, or `ON` returns to the calculation. Press
-`2ND QUIT` to save and exit. Start RPNCE again to confirm that your stack,
+`2ND QUIT` to save and exit. Start rpnCE again to confirm that your stack,
 registers, and display settings have been restored.
 
 <img src="../../assets/guide/screens/first-help.png" alt="HELP, page 1" width="320">
 
 ---
 
-[Manual contents](../USER_GUIDE.md) · [Previous: 2. Installing RPNCE](02-installation.md) · [Next: 4. The screen](04-display.md)
+[Manual contents](../USER_GUIDE.md) · [Previous: 2. Installing rpnCE](02-installation.md) · [Next: 4. The screen](04-display.md)

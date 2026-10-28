@@ -436,7 +436,7 @@ static void warning_size(void)
 
 int main(void)
 {
-    FILE *f = fopen("data/RPNCEres.bin", "rb");
+    FILE *f = fopen("data/rpnCEres.bin", "rb");
     if (!f) return 1;
     mock_res_size = fread(mock_res, 1, sizeof mock_res, f);
     fclose(f);

@@ -1,9 +1,9 @@
 # 12. STAT: statistics and curve fitting
 
-RPNCE 0.7.0 · User Guide
+rpnCE 0.7.0 · User Guide
 
 Variance and curve fitting can lose significant digits when the data's
-spread is very small compared with its magnitude. RPNCE reports
+spread is very small compared with its magnitude. rpnCE reports
 "Err: Precision" when the variance subtraction retains at most one part
 in 10¹⁰ of its first term, unless the entered data is known to be constant.
 An error leaves the stack and accumulated data unchanged. Genuinely
@@ -124,7 +124,7 @@ from the fitted equation `y = 1.05 + 1.99x`.
 
 To correct the last observation, re-enter `11.1 ENTER 5` and press **Σ−**.
 The count becomes 4. Enter the corrected y and x and use **Σ+** again.
-Subtracting a point requires its original values: RPNCE keeps accumulated
+Subtracting a point requires its original values: rpnCE keeps accumulated
 sums rather than a browsable list of observations.
 
 ## Choosing a statistic

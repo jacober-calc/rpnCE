@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Builds the user guide's screenshots by running RPNCE's real code on a PC.
+"""Builds the user guide's screenshots by running rpnCE's real code on a PC.
 
     python3 tools/screenshots/run.py            (from the project root)
 

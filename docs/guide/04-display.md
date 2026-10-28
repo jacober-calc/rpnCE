@@ -1,6 +1,6 @@
 # 4. The screen
 
-RPNCE 0.7.0 · User Guide
+rpnCE 0.7.0 · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 3. First calculations](03-first-calculations.md) · [Next: 5. Entering numbers](05-number-entry.md)
 

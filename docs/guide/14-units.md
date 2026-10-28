@@ -1,6 +1,6 @@
 # 14. UNIT: unit conversions
 
-RPNCE 0.7.0 · User Guide
+rpnCE 0.7.0 · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 13. TVM: time value of money](13-tvm.md) · [Next: 15. DATE: dates, times and the clock](15-date.md)
 
@@ -118,7 +118,7 @@ volumes; US, imperial and troy masses. Every unit is listed in
 [Appendix C](19-reference.md#appendix-c-units).
 
 Every conversion factor is computed from the unit's exact definition (1 ft
-is exactly 0.3048 m, 1 US gallon is 231 in³). Where definitions differ, RPNCE
+is exactly 0.3048 m, 1 US gallon is 231 in³). Where definitions differ, rpnCE
 uses: the US survey foot for survey units, the thermochemical calorie
 (4.184 J), the International Table Btu, football fields including the end
 zones, and a cable of 120 fathoms.

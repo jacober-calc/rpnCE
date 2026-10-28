@@ -1,5 +1,5 @@
 /*
- * RPNCE: an RPN calculator for the TI-84 Plus CE.
+ * rpnCE: an RPN calculator for the TI-84 Plus CE.
  */
 
 #include <stdbool.h>
@@ -128,7 +128,7 @@ int main(void)
     if (!res_open()) {
         display_open();
         display_problem(res_problem(),
-                        "Send RPNCEres.8xv with RPNCE " RPNCE_VERSION ".");
+                        "Send rpnCEres.8xv with rpnCE " RPNCE_VERSION ".");
         while (!os_GetCSC())
             ;
         display_close();

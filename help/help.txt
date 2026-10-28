@@ -1,4 +1,4 @@
-# RPNCE on-device reference (HELP, or 2ND CATALOG).
+# rpnCE on-device reference (HELP, or 2ND CATALOG).
 #
 # Built into the RPNCEres appvar by tools/genres.py: after editing, run
 #   python3 tools/genres.py
@@ -183,10 +183,10 @@ Intermediate limits can also cause errors.
 CLEAR dismisses errors without clearing X.
 ---
 HELP 20/20 - ABOUT
-RPNCE 0.7.0
+rpnCE 0.7.0
 An RPN calculator for the TI-84 Plus CE.
 HP-style stack, menus and variables.
 Units, statistics, TVM, BASE and DATE.
 Inspired by RPN83P. MIT License.
 Source, releases and full user guide:
-https://github.com/jacober-calc/rpnce
+https://github.com/jacober-calc/rpnCE

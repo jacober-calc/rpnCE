@@ -1,4 +1,4 @@
-/* Screenshot engine driver: runs RPNCE's real main loop (src/main.c, built
+/* Screenshot engine driver: runs rpnCE's real main loop (src/main.c, built
  * with main renamed to rpnce_main), display and core on a PC, with keys
  * from a script and frames written as PPM images.
  *
@@ -13,8 +13,8 @@
  * The driver stops at the end of the script.
  *
  * Numbers use the PC stand-ins in tests/mock (doubles), rounded to the
- * calculator's 14 significant digits and formatted by RPNCE's real
- * format_digits, so the display shows RPNCE's actual formatting. */
+ * calculator's 14 significant digits and formatted by rpnCE's real
+ * format_digits, so the display shows rpnCE's actual formatting. */
 #include <math.h>
 #include <setjmp.h>
 #include <stdio.h>
@@ -84,7 +84,7 @@ uint8_t storage_load_settings(calc_t *c) { (void)c; return 0; }
 /* A PC screenshot has no physical backlight. */
 void sys_brightness_adjust(bool brighter) { (void)brighter; }
 
-/* the RPNCEres appvar, from data/RPNCEres.bin */
+/* the RPNCEres appvar, from data/rpnCEres.bin */
 uint8_t mock_res[65536];
 size_t mock_res_size;
 
@@ -163,8 +163,8 @@ int main(int argc, char **argv)
 {
     if (argc != 3) { fprintf(stderr, "usage: driver SCRIPT OUTDIR\n"); return 2; }
     outdir = argv[2];
-    FILE *f = fopen("data/RPNCEres.bin", "rb");
-    if (!f) { perror("data/RPNCEres.bin"); return 1; }
+    FILE *f = fopen("data/rpnCEres.bin", "rb");
+    if (!f) { perror("data/rpnCEres.bin"); return 1; }
     mock_res_size = fread(mock_res, 1, sizeof mock_res, f);
     fclose(f);
     if (getenv("SHOT_NO_RES"))

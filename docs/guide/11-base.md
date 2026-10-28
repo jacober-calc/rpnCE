@@ -1,6 +1,6 @@
 # 11. BASE: hexadecimal, octal and binary
 
-RPNCE 0.7.0 · User Guide
+rpnCE 0.7.0 · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 10. Math functions](10-mathematics.md) · [Next: 12. STAT: statistics and curve fitting](12-statistics.md)
 

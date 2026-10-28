@@ -664,7 +664,7 @@ const source = {
     {"id":"UNIT_LITERS_PER_HUNDRED_KILO_METERS","base":"UNIT_LITERS_PER_HUNDRED_KILO_METERS","dimension":"FUEL","value":"1.0"},
     {"id":"UNIT_MILES_PER_GALLON","base":"UNIT_LITERS_PER_HUNDRED_KILO_METERS","dimension":"FUEL","value":"235.2145833333333333333333333333333333333333333333333333"}
   ],
-  "menuDigest": "e89ce127dc7925ccb5643a7bda0eb604f96277d1f9e3744d44260691be3b6a58",
+  "menuDigest": "cdc2e427dc975de7bc8e021714fa1806aaed81ba54a24520ba56749b1cd7a75a",
   "references": {"sinh230":"6.36572807683162355302753470060147645626906263536057793e+99","sinh1":"1.17520119364380145688238185059560081515571798133409587","cosh1":"1.543080634815243778477905620757061682601529112365863705","tanh1":"0.7615941559557648881194582826047935904127685972579365516","asinh1":"0.8813735870195430252326093249797923090281603282616354108","acosh2":"1.31695789692481670862504634730796844402698197146751648","atanh05":"0.5493061443340548456976226184612628523237452789113747259","atan2":"0.9272952180016122324285124629224288040570741085722405276","sqrt2":"1.414213562373095048801688724209698078569671875376948073","sqrt23":"0.8164965809277260327324280249019637973219824935522233761","ln2":"0.6931471805599453094172321214581765680755001343602552541","log10two":"0.3010299956639811952137388947244930267681898814621085413","e":"2.718281828459045235360287471352662497757247093699959575","pi":"3.141592653589793238462643383279502884197169399375105821","expm1tiny":"0.000000000001000000000000500000000000166666666666708333333333341667","log1ptiny":"0.0000000000009999999999995000000000003333333333330833333333335333333","mortgage":"-1264.13604698592746409166335247731953187583760823415496","growth":"1628.89462677744140625","lnsum":"1.791759469228055000812477358380702272722990692183004706","lnx2":"1.687401974730783402510881650176030885349016298223767572","lnysum":"3.871201010907890929064173722755231976949491095263770468","lny2":"5.612667065159408498704639715482363515286384302901221262","lnxlny":"2.929354999067793813607106893339199742721870873170676036","xlny":"8.841014310483891549523592682432989658546472748350290388","ylnx":"9.364262454248439386040399907367860500186943884377517727","energychange":"16.22222222222222222222222222222222222222222222222222222","fact69":"1.711224524281413113724683388812728390922705448935203694e+98","weightedX":"2.333333333333333333333333333333333333333333333333333333"}
 };
 const cases = [];
@@ -825,7 +825,7 @@ add('clock-epoch-seconds','DATE','NOW advances in seconds',[select('EPOCH_UNIX')
 add('clock-set','DATE','SETC writes the system clock',[
  'Optional: this check changes the TI-OS clock. Record its current value first; skip if you want to preserve it.',
  'Keep CTZ at your real local UTC offset. Create a ZonedDateTime for an agreed test instant with an explicit offset.',select('SET_CLOCK'),
- 'Exit RPNCE and inspect the TI-OS clock. Reopen RPNCE and inspect NOWT/NWDZ/NWUT. Restore the correct system time after testing.'
+ 'Exit rpnCE and inspect the TI-OS clock. Reopen rpnCE and inspect NOWT/NWDZ/NWUT. Restore the correct system time after testing.'
 ],null,['SET_CLOCK'],{checks:['The TI-OS clock holds the test instant expressed in CTZ.','The application results represent that same instant in ATZ/UTC, respectively.']});
 
 add('units-add','UNIT','Add compatible lengths', ['Enter 6.',select('UNIT_FOOT'),'Enter 2.',select('UNIT_INCH'),'Press +.'],approx('6.1666666666666666666666666666667'),[],{checks:['The result unit is ft.']});
@@ -957,10 +957,10 @@ for (const test of cases) {
   else if (test.expected?.kind === 'error' && test.focus === 'normal') test.focus = 'domain';
 }
 const catalog = {
- revision: 'hardware-0.7.0-7', version: '0.7.0', menuDigest: source.menuDigest,
+ revision: 'hardware-0.7.0-8', version: '0.7.0', menuDigest: source.menuDigest,
  reference: 'Exact integer and Gregorian references; basic mpmath references at 70 decimal digits and expanded references at 180 digits. Unit references reuse the exact definitions in tools/genunits.py and are evaluated separately. Most approximate checks allow 5E-11 relative error and zero absolute error; iterative-rate, near-pole and cancellation cases state their own tolerances. Use SHOW for numeric results, especially scientific notation. Passing means the reported observations satisfy these cases; it is not proof of a complete hardware audit.',
  baseline: [
-  'Use a calculator with the current RPNCE program and matching resource appvar. Copy any stack/register values you want to keep: these exercises replace them. TVM cases replace the shared TI-OS Finance values.',
+  'Use a calculator with the current rpnCE program and matching resource appvar. Copy any stack/register values you want to keep: these exercises replace them. TVM cases replace the shared TI-OS Finance values.',
   'Before EACH case, cancel entry/prompts with ON or CLEAR as needed. Press APPS then Y= for DEC. Press MODE then TRACE for RAD. Press MODE then Y=, then . then 2 for FIX all digits.',
   'Press MODE, ↓ three times, then Y= for raw DATE objects. Press MODE, ↓ three times, then ZOOM for period decimal. Enter 4; press MODE, ↓ twice, TRACE for stack depth 4.',
   'If a message is visible, press CLEAR once to dismiss it. Then press CLEAR twice to clear the stack. Follow the case-specific setup and steps after this baseline. A case that changes settings does not set up the next case.',

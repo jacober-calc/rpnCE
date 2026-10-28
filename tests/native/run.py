@@ -27,7 +27,7 @@ def main():
     if len(sys.argv) > 2:
         sys.exit('Usage: python3 tests/native/run.py [launcher.8xp]')
     subprocess.run(['make', '-B', '-C', str(HERE)], check=True)
-    files = [str(HERE / 'bin' / name) for name in ('RPNTEST.8xp', 'RPNCEres.8xv')]
+    files = [str(HERE / 'bin' / name) for name in ('RPNTEST.8xp', 'rpnCEres.8xv')]
     target = {'name': 'RPNTEST', 'isASM': True}
     sequence = ['action|launch', 'delay|2000']
     if len(sys.argv) == 2:

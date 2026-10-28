@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Builds RPNCE's resources from menus/menus.txt, help/help.txt and the unit
+"""Builds rpnCE's resources from menus/menus.txt, help/help.txt and the unit
 definitions.
 
     python3 tools/genres.py
 
 Writes:
-  data/RPNCEres.bin      the RPNCEres appvar's contents (the makefile turns it
-                         into bin/RPNCEres.8xv): menu tree, unit tables, HELP
+  data/rpnCEres.bin      the RPNCEres appvar's contents (the makefile turns it
+                         into bin/rpnCEres.8xv): menu tree, unit tables, HELP
                          pages, text
   src/ui/menu_data.h     menu IDs, counts, and the record layouts
   src/ui/res_info.h      the resource format and version stamp
@@ -26,7 +26,7 @@ import genmenu   # noqa: E402  (menu file parser and symbol codes)
 import genunits  # noqa: E402  (exact unit definitions)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT_BIN = os.path.join(ROOT, 'data', 'RPNCEres.bin')
+OUT_BIN = os.path.join(ROOT, 'data', 'rpnCEres.bin')
 OUT_MENU_H = os.path.join(ROOT, 'src', 'ui', 'menu_data.h')
 OUT_INFO_H = os.path.join(ROOT, 'src', 'ui', 'res_info.h')
 OUT_COUNT_H = os.path.join(ROOT, 'src', 'core', 'units_count.h')

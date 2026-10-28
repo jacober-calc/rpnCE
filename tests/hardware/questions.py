@@ -48,7 +48,7 @@ REFERENCES = {
     'units': 'Exact factors and offsets from tools/genunits.py, evaluated separately at 180 digits. This shares unit definitions with the program; it checks conversions, not an independent audit of the definitions.',
     'date': 'Python Gregorian date/datetime and exact integer second arithmetic. Epochs and fixed offsets are stated in the procedure.',
     'tvm': 'Independent annuity equations evaluated at 180 digits. Positive values are receipts; negative values are payments. The reference is not computed by the calculator solver.',
-    'contract': 'Current RPNCE 0.7.0 user guide and documented domains. Expected errors are checked separately from numerical results.'
+    'contract': 'Current rpnCE 0.7.0 user guide and documented domains. Expected errors are checked separately from numerical results.'
 }
 
 def decimal(value):
@@ -676,7 +676,7 @@ q('persist-twelve-stack','Persistence','Save a 12-level stack',[
 ],checks=['The stack depth remains 12.','Before rolling X is 12; twelve rolls show 11,10,9,8,7,6,5,4,3,2,1,12 in that order.'],focus='interaction',reference='integer')
 q('idle-save','Persistence','Idle timeout saves and exits',[
  'This takes at least five minutes. Enter 123 STO→ MATH. Leave the calculator without pressing keys for slightly more than five minutes.',
- 'Reopen RPNCE and recall A using 2ND STO→ MATH.'
+ 'Reopen rpnCE and recall A using 2ND STO→ MATH.'
 ],number(123,exact=True),focus='interaction',checks=['The application saved and exited after the idle interval.'],reference='contract')
 
 for ident in ['DEC','HEX','OCT','BIN']:

@@ -1,6 +1,6 @@
 # 15. DATE: dates, times and the clock
 
-RPNCE 0.7.0 · User Guide
+rpnCE 0.7.0 · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 14. UNIT: unit conversions](14-units.md) · [Next: 16. Messages and errors](16-troubleshooting.md)
 
@@ -216,7 +216,7 @@ gives 1,710,455,761 with the UNIX epoch, and 3,919,444,561 with NTP.
 
 ## The clock and time zones
 
-The CE has a real-time clock (the same one TI-OS sets in MODE). RPNCE uses
+The CE has a real-time clock (the same one TI-OS sets in MODE). rpnCE uses
 two time zones:
 
 - the **clock time zone** (**CTZ**): the zone the CE's clock is set to;
@@ -230,12 +230,12 @@ two time zones:
 2. Open **DATE** → **CLK** and set **CTZ** to the UTC offset represented
    by that clock. Enter signed hours in X, then select **CTZ**. For a
    UTC−07:00 clock, use `7 (−)` **CTZ**.
-3. Set **ATZ** to the offset you want inside RPNCE. Use `7 (−)` **ATZ**
+3. Set **ATZ** to the offset you want inside rpnCE. Use `7 (−)` **ATZ**
    for the same local time, or choose another offset to work elsewhere.
 
 Both settings initially default to UTC. They accept hours in multiples of
 0.25 (for example, `5.5` means UTC+05:30), or a TimeZone object. **CTZ?**
-and **ATZ?** recall the saved settings; both persist when you quit RPNCE.
+and **ATZ?** recall the saved settings; both persist when you quit rpnCE.
 Changing either setting leaves the hardware clock unchanged.
 
 For example, suppose the TI clock reads **2026-12-31 23:30** and represents
@@ -309,14 +309,14 @@ The menu used for the reverse conversion determines the resulting kind:
 **D**, **DT**, or **DZ**. In DZ, **ES→** produces UTC; **ES→@** produces
 the application time zone.
 
-Time zones are fixed offsets, not named regions. RPNCE does not infer
+Time zones are fixed offsets, not named regions. rpnCE does not infer
 daylight-saving rules: update ATZ or CTZ when the intended offset changes.
 A Duration counts elapsed seconds or days; it does not represent a calendar
 month with a variable number of days.
 
 ## Clock operations that change settings
 
-ATZ changes how application clock results and the status bar are presented. CTZ tells RPNCE
+ATZ changes how application clock results and the status bar are presented. CTZ tells rpnCE
 what offset the hardware clock's existing reading represents. Neither
 setting adjusts the hardware clock by itself. SETC writes a new hardware
 clock reading; use it deliberately, because that clock is also used by

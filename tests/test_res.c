@@ -1,5 +1,5 @@
 /* Tests the RPNCEres appvar: the real src/ui/res.c reading the real
- * data/RPNCEres.bin, checked against the menu file and the unit table.
+ * data/rpnCEres.bin, checked against the menu file and the unit table.
  *   cc -Itests/mock_fileioc -Itests/mock -Isrc/ui -Isrc/core -o test_res \
  *      tests/test_res.c src/ui/res.c && ./test_res
  * (run from the project root, after python3 tools/genres.py)
@@ -37,7 +37,7 @@ int main(void)
     bool none = !res_open();
     ok("missing RPNCEres is reported", none && strcmp(res_problem(), "RPNCEres not found") == 0, res_problem());
 
-    FILE *f = fopen("data/RPNCEres.bin", "rb");
+    FILE *f = fopen("data/rpnCEres.bin", "rb");
     mock_res_size = fread(mock_res, 1, sizeof mock_res, f);
     fclose(f);
     bool opened = res_open();
@@ -120,7 +120,7 @@ int main(void)
         uint8_t p = res_help_pages() - 1;
         for (uint8_t l = 0; l < res_help_lines(p); l++) {
             if (strcmp(res_help_line(p, l), RPNCE_NAME " " RPNCE_VERSION) == 0) version = true;
-            if (strcmp(res_help_line(p, l), "https://github.com/jacober-calc/rpnce") == 0) repo = true;
+            if (strcmp(res_help_line(p, l), "https://github.com/jacober-calc/rpnCE") == 0) repo = true;
         }
         version && repo; }), NULL);
     ok("past the last line or page is empty, not garbage",

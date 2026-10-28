@@ -1,6 +1,6 @@
 # 13. TVM: time value of money
 
-RPNCE 0.7.0 · User Guide
+rpnCE 0.7.0 · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 12. STAT: statistics and curve fitting](12-statistics.md) · [Next: 14. UNIT: unit conversions](14-units.md)
 
@@ -44,8 +44,8 @@ for negative entry.
 
 The seven values are TI-OS finance variables, shared with TI's TVM Solver.
 Changing them in either program changes the other program's starting
-values. They all appear in RPNCE's VARS catalog, even when zero. RPNCE's
-BEG/END choice and its solver settings are saved separately by RPNCE.
+values. They all appear in rpnCE's VARS catalog, even when zero. rpnCE's
+BEG/END choice and its solver settings are saved separately by rpnCE.
 
 ## Storing and solving
 
@@ -53,7 +53,7 @@ BEG/END choice and its solver settings are saved separately by RPNCE.
 2. Type a value, then select its TVM variable to store it. Repeat for all
    known variables, including zeros such as FV = 0.
 3. Immediately after the last TVM variable key, press the unknown variable
-   key without entering a number. RPNCE solves for that variable.
+   key without entering a number. rpnCE solves for that variable.
 4. Read the result in X. The solved TVM variable also holds that result.
 
 `TVM Stored` confirms a store; `TVM Calculated` confirms a solution.
@@ -99,7 +99,7 @@ has more digits than the four displayed decimal places.
 
 Keeping the other loan values, enter `6` **I%YR**, then press **PMT**
 without typing another number. The payment is approximately −1,199.1011.
-RPNCE replaces the rate and recomputes the unknown; there is no need to
+rpnCE replaces the rate and recomputes the unknown; there is no need to
 re-enter N, PV, and FV.
 
 <img src="../../assets/guide/screens/tvm-loan-6.png" alt="PMT at 6%" width="320">

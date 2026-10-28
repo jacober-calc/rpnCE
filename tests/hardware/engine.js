@@ -1,5 +1,6 @@
 (function (root) {
   'use strict';
+  // Keep the report identifier stable so previously exported reports remain readable.
   const SCHEMA = 'rpnce-hardware-run/1';
   const MAX_FILE_BYTES = 8 * 1024 * 1024;
   function signature(catalog) {
@@ -137,7 +138,7 @@
     return copy;
   }
   function validateRun(input, catalog) {
-    if (!input || input.schema !== SCHEMA) throw new Error('This is not an RPNCE hardware report.');
+    if (!input || input.schema !== SCHEMA) throw new Error('This is not an rpnCE hardware report.');
     if (input.catalog !== catalog.revision || input.catalogSignature !== signature(catalog)) throw new Error('This report uses a different test catalog. Keep it for review; resume it with its matching tool version.');
     const ids = new Set(catalog.cases.map(c => c.id));
     if (!Array.isArray(input.selected) || input.selected.length > ids.size || input.selected.some(id => !ids.has(id)) || new Set(input.selected).size !== input.selected.length) throw new Error('Invalid test selection.');

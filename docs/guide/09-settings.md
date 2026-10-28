@@ -1,6 +1,6 @@
 # 9. Display formats and MODE settings
 
-RPNCE 0.7.0 · User Guide
+rpnCE 0.7.0 · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 8. Registers](08-registers.md) · [Next: 10. Math functions](10-mathematics.md)
 

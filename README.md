@@ -1,5 +1,5 @@
-# RPNCE
-![RPNCE Screenshot](assets/rpnce-promo1.png)
+# rpnCE
+![rpnCE Screenshot](assets/rpnCE-promo1.png)
 
 An RPN calculator for the TI-84 Plus CE, written in C. It turns the CE into
 an HP-style RPN calculator: a 4-level stack (up to 12), numbered registers
@@ -36,10 +36,10 @@ with operating procedures, worked keystroke examples, and a
 
 ## Installing
 
-1. Download `RPNCE-<version>.zip` from the
-   [releases](https://github.com/jacober-calc/rpnce/releases) and unzip it.
-   You need `RPNCE.8xp` (the program)
-   and `RPNCEres.8xv` (its menus and unit tables). Also get the
+1. Download `rpnCE-0.7.0.zip` from the
+   [releases](https://github.com/jacober-calc/rpnCE/releases) and unzip it.
+   You need `rpnCE-0.7.0.8xp` (the program)
+   and `rpnCEres-0.7.0.8xv` (its menus and unit tables). Also get the
    [CE C libraries](https://github.com/CE-Programming/libraries/releases)
    (`clibs.8xg`) if you don't already have them.
 2. Send all three to the calculator with TI Connect CE. They can all stay
@@ -52,10 +52,10 @@ with operating procedures, worked keystroke examples, and a
    [installation chapter](docs/guide/02-installation.md).
 
 The program and `RPNCEres` must come from the same release; if the appvar
-is missing or doesn't match, RPNCE says so at startup. RPNCE saves its own
+is missing or doesn't match, rpnCE says so at startup. rpnCE saves its own
 data in up to three more appvars: `RPNCEdat` (calculator state), `RPNCEcfg`
 (display and DATE settings) and `RPNCEunt` (units on registers, only when
-some register has one). Deleting them resets RPNCE; upgrading keeps them.
+some register has one). Deleting them resets rpnCE; upgrading keeps them.
 
 ## Quick start
 
@@ -72,11 +72,15 @@ some register has one). Deleting them resets RPNCE; upgrading keeps them.
 
 1. Install the [CE C/C++ toolchain](https://github.com/CE-Programming/toolchain/releases)
    (developed against v15.0).
-2. Run `make` in this folder. It writes `bin/RPNCE.8xp` (stored compressed
+2. Run `make` in this folder. It writes `bin/rpnCE.8xp` (stored compressed
    and archived; it unpacks itself into RAM when started) and
-   `bin/RPNCEres.8xv` (archived). Intermediate files stay in `obj/`.
+   `bin/rpnCEres.8xv` (archived). Intermediate files stay in `obj/`.
 
 The version is set in `src/core/version.h`.
+
+The release files in [cem/](cem/) use versioned filenames. TI-OS still lists
+the program as `RPNCE`; its resource and saved-data appvar names are unchanged
+so existing calculator data remains available.
 
 To try it without a calculator, load both files and `clibs.8xg` into the
 [CEmu](https://ce-programming.github.io/CEmu/) emulator.
@@ -85,7 +89,7 @@ To try it without a calculator, load both files and `clibs.8xg` into the
 
 The menu tree, unit tables and HELP pages (about 17 KB) live in `RPNCEres`
 and are read straight from archive, so they use no RAM. The 0.7.0 build has
-an 82,935-byte program image and 3,860 bytes of static variables, excluding
+an 86,329-byte program image and 4,065 bytes of uninitialized static storage, excluding
 runtime stack and library allocations.
 
 ## Tests
@@ -104,11 +108,11 @@ calculator core, quantities, entry sequences, display redraws, and brightness co
 stand-ins for the calculator's number routines.
 
 The [native tests](tests/README.md#native-ce-checks) additionally compile
-the real core with the CE toolchain and run 126 checks in CEmu using TI-OS
+the real core with the CE toolchain and run 161 checks in CEmu using TI-OS
 number routines. They cover CE execution, CTZ/ATZ conversions, unit round trips and all
-four curve-fit models and numeric boundaries. Nine further checks exercise
+four curve-fit models and numeric boundaries. Nineteen further checks exercise
 the program's keyboard loop and saving/reopening in CEmu. Known numerical
-failures and coverage limits are described in [tests/README.md](tests/README.md#numeric-failures-under-investigation).
+checks and coverage limits are described in [tests/README.md](tests/README.md#numeric-limit-checks).
 
 ## Layout
 
@@ -123,7 +127,7 @@ src/ui/      display, dot-matrix font, keypad, menus, VARS catalog,
 src/sys/     saving and loading state, the hardware clock
 menus/       menus.txt: the whole menu tree as editable text
 help/        help.txt: the HELP pages as editable text
-data/        RPNCEres.bin: the RPNCEres appvar's contents (generated)
+data/        rpnCEres.bin: the RPNCEres appvar's contents (generated)
 tools/       guide_appendix.py: regenerates the manual's menu map, unit list
              and function index; genres.py: builds RPNCEres and the matching headers from
              menus.txt (via genmenu.py) and the unit definitions
@@ -138,7 +142,7 @@ docs/        USER_GUIDE.md: manual contents; guide/: chapters and reference
 
 Change `menus/menus.txt`, `help/help.txt` (or the unit definitions in
 `tools/genunits.py`), then run `python3 tools/genres.py` and rebuild. It regenerates
-`data/RPNCEres.bin` and the headers that go with it, with a new version
+`data/rpnCEres.bin` and the headers that go with it, with a new version
 stamp, so a program and appvar built from different sources can't be mixed
 up. The generated files are committed, so building doesn't need Python.
 After changing the menus or units, also run `python3 tools/guide_appendix.py`
@@ -147,7 +151,7 @@ to refresh the menu map, unit list, and function index in
 in the corresponding chapter when behavior changes; generated tables do
 not replace those explanations. Both generators need the `mpmath` package.
 
-The user guide's screenshots are made by running RPNCE's real code on a PC:
+The user guide's screenshots are made by running rpnCE's real code on a PC:
 `python3 tools/screenshots/run.py` rebuilds every image in `assets/guide/`
 from the keystroke scripts in `tools/screenshots/shots.py`. It needs a C
 compiler and Pillow, and downloads the CE system font from the CE toolchain

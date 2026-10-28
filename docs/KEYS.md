@@ -1,6 +1,6 @@
 # Key layout
 
-RPNCE follows RPN83P's design: the keyboard handles numbers, the stack, and
+rpnCE follows RPN83P's design: the keyboard handles numbers, the stack, and
 the math functions printed on the keys; everything else lives in the menu
 tree, which is always shown along the bottom of the screen. MATH goes to the
 top of the tree (HOME) and MODE goes straight to the MODE menu.
@@ -332,5 +332,5 @@ registers are saved separately in `RPNCEunt`, with a checksum and a
 fingerprint of the register values they belong to: if it's missing,
 damaged, or belongs to different values, the registers load without units
 and every value is kept. After 5
-minutes without a key press, RPNCE saves and exits so the calculator can
+minutes without a key press, rpnCE saves and exits so the calculator can
 power down.

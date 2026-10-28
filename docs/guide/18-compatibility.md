@@ -1,6 +1,6 @@
 # 18. Limits and differences
 
-RPNCE 0.7.0 · User Guide
+rpnCE 0.7.0 · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 17. Saving, memory and files](17-memory.md) · [Next: Reference tables](19-reference.md)
 
@@ -28,7 +28,7 @@ RPNCE 0.7.0 · User Guide
 
 ## Compared with HP calculators
 
-RPNCE follows the HP-32SII and DM32 for the stack, LASTX, stack lift,
+rpnCE follows the HP-32SII and DM32 for the stack, LASTX, stack lift,
 registers and display formats. Some differences:
 
 - **Roots and powers of negative numbers** follow the HP rule: a negative
@@ -36,12 +36,12 @@ registers and display formats. Some differences:
   for X√Y.
 - **ALL** is FIX with "as many digits as needed" (`FIX-`), set with
   **FIX** `. 2` through `. 9`.
-- **No equations or programs:** RPNCE is a calculator, not a programmable
+- **No equations or programs:** rpnCE is a calculator, not a programmable
   one.
 
 ## Compared with RPN83P
 
-RPNCE's menu tree, DATE objects, units and BASE operations follow RPN83P.
+rpnCE's menu tree, DATE objects, units and BASE operations follow RPN83P.
 Some differences:
 
 - **Registers** are lettered and numbered as on the HP-32SII (A to Z, i,
@@ -69,7 +69,7 @@ The following visible menu items are reserved for a later implementation:
 A menu label is not evidence that the corresponding function is available.
 For example, a negative square root remains a real-domain error rather
 than producing a complex result. Do not follow RPN83P complex-entry
-examples on this version of RPNCE.
+examples on this version of rpnCE.
 
 ## Supported quantity operations
 

@@ -1,4 +1,4 @@
-# RPNCE menu tree, opened with MATH (HOME). MODE jumps to the MODE menu.
+# rpnCE menu tree, opened with MATH (HOME). MODE jumps to the MODE menu.
 #
 # The menu tree is derived from the menu definitions of RPN83P,
 # Copyright (c) 2023 Brian T. Park, used under the MIT License.

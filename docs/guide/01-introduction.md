@@ -1,21 +1,21 @@
 # 1. Introduction
 
-RPNCE 0.7.0 · User Guide
+rpnCE 0.7.0 · User Guide
 
-[Manual contents](../USER_GUIDE.md) · [Next: 2. Installing RPNCE](02-installation.md)
+[Manual contents](../USER_GUIDE.md) · [Next: 2. Installing rpnCE](02-installation.md)
 
 **In this chapter**
 
 - [What this version provides](#what-this-version-provides)
 
-RPNCE turns the TI-84 Plus CE into an RPN (Reverse Polish Notation)
+rpnCE turns the TI-84 Plus CE into an RPN (Reverse Polish Notation)
 calculator in the tradition of Hewlett-Packard's scientific and financial
 calculators. Instead of typing an expression and pressing `=`, you put
 numbers on a **stack** and then apply operations to them: to add 2 and 3,
 press `2 ENTER 3 +`. There are no parentheses to balance, every intermediate
 result is visible, and long calculations become a sequence of simple steps.
 
-RPNCE is keyboard-first, like the HP-32SII: the keys do what their labels
+rpnCE is keyboard-first, like the HP-32SII: the keys do what their labels
 say, including their `2ND` functions. Everything else lives in a menu tree
 shown along the bottom of the screen, a design borrowed from RPN83P and the
 HP-42S.
@@ -50,7 +50,7 @@ items, and the complex settings in **MODE**, show "Not available yet".
 
 ## What this version provides
 
-RPNCE is an interactive calculator. It evaluates an operation as soon as
+rpnCE is an interactive calculator. It evaluates an operation as soon as
 you press its key and keeps intermediate values on the stack. It does not
 store a history of expressions or record keystroke programs.
 
@@ -60,11 +60,11 @@ and **DATE** provide specialized workflows. **STK**, **CLR**, and **MODE**
 manage the working environment. **HELP** supplies a short on-device
 reference; this manual supplies the fuller procedures and examples.
 
-RPNCE's lettered registers are private to the program. Storing a value in
-RPNCE's A does not change TI-OS variable A or matrix [A]. The seven TVM
+rpnCE's lettered registers are private to the program. Storing a value in
+rpnCE's A does not change TI-OS variable A or matrix [A]. The seven TVM
 values are deliberately shared with TI's Finance solver. See
 [Saving, memory and files](17-memory.md) for that distinction.
 
 ---
 
-[Manual contents](../USER_GUIDE.md) · [Next: 2. Installing RPNCE](02-installation.md)
+[Manual contents](../USER_GUIDE.md) · [Next: 2. Installing rpnCE](02-installation.md)
