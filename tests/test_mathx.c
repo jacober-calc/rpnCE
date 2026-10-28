@@ -1,27 +1,15 @@
-/* Tests for hyperbolic functions and H.MMSS conversions, on a PC:
- *   gcc -Itests/mock -Isrc/core -o test_mathx tests/test_mathx.c \
- *       src/core/mathx.c -lm && ./test_mathx
- */
+/* Hyperbolic functions and H.MMSS conversions against host libm. */
 #include <stdio.h>
 #include <ti/real.h>
 #include <ti/error.h>
 #include "mathx.h"
 #include "rounding.h"
 
-real_t mock_fin[7];
-jmp_buf mock_jmp;
-real_t os_RealDiv(const real_t *a, const real_t *b)
-{ if (b->v == 0) os_ThrowError(OS_E_DIVBY0); return mk(a->v / b->v); }
-real_t os_RealLog(const real_t *a)
-{ if (a->v <= 0) os_ThrowError(OS_E_DOMAIN); return mk(log(a->v)); }
-real_t round_decimals(const real_t *v, int n)   /* decimal rounding stand-in */
-{ double p = pow(10, n); return mk(round(v->v * p) / p); }
-
 static int fails = 0;
 static void rel(const char *name, double got, double want, double tol)
 {
     double e = want == 0 ? fabs(got) : fabs((got - want) / want);
-    int ok = e <= tol;
+    int ok = isfinite(got) && e <= tol;
     if (!ok) fails++;
     printf("%s %-30s %.15g (want %.15g)\n", ok ? "ok  " : "FAIL", name, got, want);
 }
@@ -45,6 +33,22 @@ int main(void)
     }
     rel("acosh(1 + 1e-10)", F(mx_acosh, 1 + 1e-10), acosh(1 + 1e-10), 1e-6);
     rel("asinh(1e30)", F(mx_asinh, 1e30), asinh(1e30), 1e-13);
+    const double tiny[] = {1e-99, -1e-99, 1e-50, -1e-20, 1e-14};
+    for (unsigned i = 0; i < sizeof tiny / sizeof *tiny; i++) {
+        double x = tiny[i];
+        rel("expm1 tiny", F(mx_expm1, x), expm1(x), 1e-13);
+        rel("ln1p tiny", F(mx_ln1p, x), log1p(x), 1e-13);
+        rel("asinh tiny", F(mx_asinh, x), asinh(x), 1e-13);
+        rel("atanh tiny", F(mx_atanh, x), atanh(x), 1e-13);
+    }
+    const double transitions[] = {-1.00000001, -0.99999999, -0.10000001,
+                                  -0.09999999, 0.09999999, 0.10000001,
+                                  0.99999999, 1.00000001};
+    for (unsigned i = 0; i < sizeof transitions / sizeof *transitions; i++) {
+        double x = transitions[i];
+        rel("expm1 branch boundary", F(mx_expm1, x), expm1(x), 1e-13);
+        if (x > -1) rel("ln1p branch boundary", F(mx_ln1p, x), log1p(x), 1e-13);
+    }
 
     rel("1.3045 HMS -> hours", F(mx_hms_to_hours, 1.3045), 1.5125, 1e-13);
     rel("-2.15 HMS -> hours", F(mx_hms_to_hours, -2.15), -2.25, 1e-13);

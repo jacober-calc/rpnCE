@@ -26,6 +26,38 @@ static void num(const char *s, bool *neg, int *exp, uint8_t d[14])
 
 static int fails = 0;
 static int g_cap = 0;   /* exponent-digit cap for the next tests (0 = none) */
+static void entry_text(void)
+{
+    static const struct { const char *entry, *point, *comma; } cases[] = {
+        { "", "", "" },
+        { "123", "123", "123" },
+        { "1234", "1,234", "1.234" },
+        { "1234567.8900", "1,234,567.8900", "1.234.567,8900" },
+        { "-1234567.89E-12", "-1,234,567.89E-12", "-1.234.567,89E-12" },
+        { ".", ".", "," },
+        { "-.5", "-.5", "-,5" },
+        { "0.00001", "0.00001", "0,00001" },
+        { "1234.", "1,234.", "1.234," },
+        { "1234E-", "1,234E-", "1.234E-" },
+        { "1234.56789E12", "1,234.56789E12", "1.234,56789E12" },
+        { "12345678901234", "12,345,678,901,234", "12.345.678.901.234" },
+    };
+    for (unsigned i = 0; i < sizeof cases / sizeof cases[0]; i++)
+        for (int comma = 0; comma <= 1; comma++) {
+            char out[80];
+            format_entry(out, cases[i].entry, comma != 0);
+            const char *want = comma ? cases[i].comma : cases[i].point;
+            if (strcmp(out, want)) {
+                printf("FAIL entry %s -> %s (want %s)\n", cases[i].entry, out, want);
+                fails++;
+            }
+        }
+    char text[] = "-1,234,567.8900E-12";
+    format_separators(text, true);
+    if (strcmp(text, "-1.234.567,8900E-12")) fails++;
+    format_separators(text, true);
+    if (strcmp(text, "-1,234,567.8900E-12")) fails++;
+}
 static void tg(const char *in, int style, int digits, int max, bool group, const char *want);
 static void t(const char *in, int style, int digits, int max, const char *want)
 {
@@ -45,6 +77,7 @@ static void tg(const char *in, int style, int digits, int max, bool group, const
 
 int main(void)
 {
+    entry_text();
     int M = DISPLAY_DIGITS;
     /* FIX */
     t("123456.1234", DISP_FIX, 4, M, "123456.1234");
@@ -126,6 +159,28 @@ int main(void)
     t("9.99999999999E20", DISP_FIX, -1, M, "1.E21");
     t("123456789012.5", DISP_FIX, 2, M, "123456789013.");
     g_cap = 0;
+    unsigned bad_bounds = 0;
+    for (int exp = -99; exp <= 99; exp++)
+    for (int style = DISP_FIX; style <= DISP_ENG; style++)
+    for (int digits = 0; digits <= DISP_MAX_DIGITS; digits++)
+    for (int sign = 0; sign < 2; sign++)
+    for (int group = 0; group < 2; group++) {
+        uint8_t d[14]; memset(d, 9, sizeof d);
+        struct { unsigned char before; char text[FORMAT_MAX]; unsigned char after; } out;
+        memset(&out, 0x5A, sizeof out);
+        format_digits(out.text, sign != 0, exp, d, (uint8_t)style, (int8_t)digits,
+                      DISPLAY_DIGITS, DISPLAY_EXP_DIGITS, group != 0);
+        if (out.before != 0x5A || out.after != 0x5A ||
+            !memchr(out.text, '\0', sizeof out.text)) bad_bounds++;
+        else {
+            char original[FORMAT_MAX]; strcpy(original, out.text);
+            format_separators(out.text, true); format_separators(out.text, true);
+            if (strcmp(original, out.text)) bad_bounds++;
+        }
+    }
+    printf("%s signed formatting across exponents -99..99, every style/digit setting\n",
+           bad_bounds ? "FAIL" : "ok  ");
+    fails += bad_bounds != 0;
     printf("%d failures\n", fails);
     return fails != 0;
 }

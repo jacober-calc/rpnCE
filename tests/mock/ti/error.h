@@ -10,6 +10,8 @@
 #define OS_E_MASK 0x7F
 #define OS_E_OVERFLOW (1+OS_E_EDIT)
 #define OS_E_NONREAL (7+OS_E_EDIT)
+#define OS_E_APPERR1 (43+OS_E_EDIT)
+#define OS_E_APPERR2 (44+OS_E_EDIT)
 #define os_PushErrorHandler() setjmp(mock_jmp)
 #define os_PopErrorHandler() ((void)0)
 extern jmp_buf mock_jmp;

@@ -19,6 +19,14 @@
 
 #define FORMAT_MAX 28       /* longest formatted number, with terminator */
 
+/* Swap decimal/grouping marks on formatted numeric text, leaving the
+ * canonical parser representation and DATE records alone. */
+void format_separators(char *text, bool decimal_comma);
+
+/* Display-only grouping for a canonical decimal entry (no rounding or
+ * cursor). out needs strlen(entry) + strlen(entry)/3 + 1 bytes. */
+void format_entry(char *out, const char *entry, bool decimal_comma);
+
 /*
  * Formats a number given as 14 decimal digits (d[0] is the leading digit;
  * value = d0.d1d2...d13 x 10^exp) following HP-32SII display rules:

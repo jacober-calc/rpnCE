@@ -15,6 +15,7 @@ typedef enum {
     EV_MENU,        /* go to menu arg (MENU_GROUP_*): MATH = HOME, MODE */
     EV_BACK,        /* ON */
     EV_QUIT,        /* 2ND QUIT or 2ND OFF */
+    EV_HELP,        /* quick reference: HELP or 2ND CATALOG */
     EV_VARS,        /* VARS: the register catalog */
     EV_SCROLL_LEFT, /* left / right arrows: scroll a long X value */
     EV_SCROLL_RIGHT,
@@ -50,6 +51,10 @@ typedef struct {
 
 /* Turns a scan code into an event. */
 event_t keys_translate(keys_t *k, sk_key_t key);
+
+/* Global shortcut, checked before HELP, VARS and register prompt handling.
+ * Consumes only 2ND + up/down; leaves number entry and prompts untouched. */
+bool keys_brightness_key(keys_t *k, sk_key_t key, bool *brighter);
 
 /* Opens a prompt (used by menu items such as FIX). */
 void keys_open_prompt(keys_t *k, prompt_kind_t kind);

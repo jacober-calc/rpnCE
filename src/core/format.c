@@ -1,6 +1,32 @@
 #include <string.h>
 #include "format.h"
 
+void format_separators(char *text, bool decimal_comma)
+{
+    if (decimal_comma)
+        for (; *text; text++) {
+            if (*text == '.') *text = ',';
+            else if (*text == ',') *text = '.';
+        }
+}
+
+void format_entry(char *out, const char *entry, bool decimal_comma)
+{
+    char *start = out;
+    if (*entry == '-')
+        *out++ = *entry++;
+    const char *end = entry;
+    while (*end >= '0' && *end <= '9')
+        end++;
+    while (entry < end) {
+        *out++ = *entry++;
+        if (entry < end && (end - entry) % 3 == 0)
+            *out++ = ',';
+    }
+    strcpy(out, entry);       /* fraction and exponent are never grouped */
+    format_separators(start, decimal_comma);
+}
+
 /* Set for the duration of one format_digits call. */
 static bool g_group;
 static int g_exp_max;    /* most significant digits with an exponent */
@@ -56,7 +82,11 @@ static char *put_exponent(char *p, int e)
         *p++ = '-';
         e = -e;
     }
-    if (e >= 10)
+    if (e >= 100) {
+        *p++ = (char)('0' + e / 100);
+        e %= 100;
+        *p++ = (char)('0' + e / 10);
+    } else if (e >= 10)
         *p++ = (char)('0' + e / 10);
     *p++ = (char)('0' + e % 10);
     return p;
@@ -240,6 +270,10 @@ void format_real(char *out, const real_t *v, uint8_t style, int8_t digits,
         d[2 * i + 1] = v->mant[i] & 0x0F;
     }
     int exp = (int)(uint8_t)v->exp - 0x80;
+    if (d[0] && (exp < -99 || exp > 99)) {
+        strcpy(out, exp < -99 ? "Err: Underflow" : "Err: Overflow");
+        return;
+    }
     format_digits(out, (v->sign & 0x80) != 0, exp, d, style, digits,
                   max_digits, max_exp_digits, group);
 }

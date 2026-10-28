@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>rpnCE · Hardware tests</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="questions.js"></script>
+  <script defer src="catalog.js"></script>
+  <script defer src="engine.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="../../README.md">rpnCE <span>Hardware tests</span></a>
+    <div class="file-actions">
+      <button id="save" type="button">Save report</button>
+      <label class="button" for="resume">Open saved run</label>
+      <input id="resume" class="file-input" type="file" accept=".json,application/json">
+      <button id="new-run" class="quiet" type="button">New run</button>
+    </div>
+  </header>
+  <div class="workspace">
+    <aside class="sidebar" aria-label="Test selection">
+      <p class="eyebrow">ON YOUR CALCULATOR</p>
+      <h1>A careful check,<br>one case at a time.</h1>
+      <p class="intro">Follow the steps on your device, record what happens, then save a report for review.</p>
+      <label for="scope">This run</label>
+      <select id="scope"></select>
+      <label for="search">Find a test</label>
+      <input id="search" type="search" placeholder="LCM, dates, unit…">
+      <label for="status-filter">Show</label>
+      <select id="status-filter">
+        <option value="all">All results</option>
+        <option value="pending">Not recorded</option>
+        <option value="fail">Failed</option>
+        <option value="pass">Passed</option>
+        <option value="skipped">Skipped</option>
+        <option value="known">Known issues</option>
+        <option value="edge">Boundary / invalid inputs</option>
+      </select>
+      <nav id="sections" aria-label="Test sections"></nav>
+      <p id="storage-state" class="storage-note"></p>
+    </aside>
+    <main>
+      <section class="run-overview" aria-label="Run progress">
+        <div><p class="eyebrow" id="run-label">HARDWARE RUN</p><h2 id="progress-title">Ready to begin</h2></div>
+        <div id="counts" class="counts"></div>
+        <progress id="progress" max="1" value="0" aria-label="Recorded tests"></progress>
+      </section>
+      <details class="panel setup" id="setup" open>
+        <summary>Device &amp; build <span id="identity-status">Set these before recording</span></summary>
+        <div class="setup-body">
+          <p>This tool uses your observations; it has no connection to the calculator. Exercises replace stack values and some registers. TVM tests change the TI-OS Finance values. Save anything you need first.</p>
+          <div id="metadata" class="metadata-grid"></div>
+          <label class="acknowledgment"><input id="ack" type="checkbox"> I have the stated build on the device, and I have saved any values I need.</label>
+          <p class="small">Build: use a commit hash or a unique label for the files you transferred. Device details lock after the first recorded result; use a new run for another build.</p>
+        </div>
+      </details>
+      <details class="panel baseline">
+        <summary>Starting settings &amp; key notation <span>Apply before every case</span></summary>
+        <ol id="baseline"></ol>
+      </details>
+      <div class="test-layout">
+        <section class="case-browser panel" aria-label="Test cases">
+          <div class="list-heading"><strong id="list-title">Cases</strong><span id="list-count"></span></div>
+          <div id="test-list"></div>
+        </section>
+        <section id="case" class="panel case-detail" aria-label="Selected test"></section>
+      </div>
+      <details class="panel coverage">
+        <summary>Coverage &amp; reference limits <span id="coverage-count"></span></summary>
+        <div id="coverage-body"></div>
+      </details>
+      <footer>rpnCE <span id="version"></span> · Offline manual hardware testing · No results leave this browser unless you save a report.</footer>
+    </main>
+  </div>
+  <div id="notice" role="status" aria-live="polite"></div>
+  <noscript>This tool requires JavaScript. Enable it and reopen this local file.</noscript>
+</body>
+</html>

@@ -1,4 +1,4 @@
-/* PC stand-in for fileioc: "opens" RPNCEres from data/RPNCEres.bin. */
+/* PC stand-in for fileioc: "opens" RPNCEres from data/rpnCEres.bin. */
 #ifndef MOCK_FILEIOC_H
 #define MOCK_FILEIOC_H
 #include <stdint.h>

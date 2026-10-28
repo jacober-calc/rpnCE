@@ -8,15 +8,6 @@
 #include "res.h"
 #include "../core/units.h"
 #include "../core/dateobj.h"
-#include "../core/datefn.h"      /* sys_clock_read */
-
-/*
- * Screen layout (320 x 240), RPN83P style:
- *   status bar    dark, with the clock and the annunciators: the state
- *   message line  warnings, errors, SHOW, notices; menu row arrows
- *   stack         T: Z: Y: X: in a dot-matrix LCD font
- *   menu row      always showing: five dark boxes with inverted labels
- */
 
 /* ---------- colors ---------- */
 
@@ -27,25 +18,87 @@ enum {
     COL_DOTS,           /* the stack's digits and units */
 };
 
-/* Color presets, as RGB for ink, panel, faint, dots. The real CE screen
- * washes out light, subtle colors, so LCD+ pushes the green further. */
-typedef struct { const char *name; uint8_t rgb[4][3]; } tint_t;
-
-static const tint_t tints[TINT_COUNT] = {
-    { "LCD",  { { 34, 46, 49 },   { 156, 170, 155 }, { 56, 68, 68 },  { 26, 32, 32 } } },
-    { "LCD+", { { 16, 30, 20 },   { 146, 178, 122 }, { 44, 66, 44 },  { 10, 20, 12 } } },
-    { "GRAY", { { 22, 21, 21 },   { 219, 211, 203 }, { 92, 88, 84 },  { 20, 18, 18 } } },
-    { "DARK", { { 150, 186, 140 },{ 14, 18, 16 },    { 84, 104, 88 }, { 198, 232, 188 } } },
+/* Accent slots separate status/menu colors from stack values. */
+enum {
+    COL_BAR = COL_DOTS + 1,
+    COL_BAR_TEXT,
+    COL_MENU_FIRST,
+    COL_ROW_FIRST = COL_MENU_FIRST + 5,
+    COL_MENU_TEXT = COL_ROW_FIRST + 4,
+    ACCENT_COUNT = COL_MENU_TEXT - COL_BAR + 1,
 };
+typedef struct { uint8_t rgb[ACCENT_COUNT][3]; } accents_t;
+typedef struct {
+    const char *name;
+    uint8_t rgb[4][3];       /* ink, panel, faint, dots */
+    const accents_t *accents;
+} tint_t;
+
+/* Palette references: ayu-theme/vscode-ayu (Ayu Dark), and classic Monokai.
+ * Small labels are brighter than editor comments for the CE's LCD. */
+static const accents_t ayu_accents = { {
+    { 13, 16, 23 }, { 191, 189, 182 },                  /* status */
+    { 27, 31, 41 }, { 27, 31, 41 }, { 27, 31, 41 },     /* menu fills */
+    { 27, 31, 41 }, { 27, 31, 41 },
+    { 191, 189, 182 }, { 191, 189, 182 },               /* T, Z, Y, X */
+    { 115, 184, 255 }, { 230, 180, 80 },
+    { 230, 180, 80 },                                 /* menu text */
+} };
+static const accents_t monokai_accents = { {
+    { 30, 31, 28 }, { 248, 248, 242 },
+    { 62, 61, 50 }, { 62, 61, 50 }, { 62, 61, 50 },
+    { 62, 61, 50 }, { 62, 61, 50 },
+    { 174, 129, 255 }, { 102, 217, 239 },
+    { 166, 226, 46 }, { 255, 82, 141 }, /* brighter pink for small unit labels */
+    { 248, 248, 242 },
+} };
+static const accents_t pastel_accents = { {
+    { 38, 58, 89 }, { 244, 247, 252 },
+    { 215, 199, 249 }, { 183, 217, 255 }, { 167, 230, 210 },
+    { 255, 215, 163 }, { 249, 191, 213 },
+    { 112, 69, 174 }, { 35, 98, 180 },
+    { 14, 115, 108 }, { 183, 62, 96 },
+    { 38, 58, 89 },
+} };
+
+/* Phosphor greens on near-black, with restrained green menu panels. */
+static const accents_t commodore_accents = { {
+    { 10, 34, 17 }, { 128, 233, 148 },
+    { 16, 43, 25 }, { 16, 43, 25 }, { 16, 43, 25 },
+    { 16, 43, 25 }, { 16, 43, 25 },
+    { 84, 200, 116 }, { 90, 218, 123 },
+    { 108, 236, 141 }, { 145, 255, 165 },
+    { 121, 231, 149 },
+} };
+
+/* Preset indices are saved settings; append rather than reorder. */
+static const tint_t tints[TINT_COUNT] = {
+    { "LCD",  { { 34, 46, 49 },   { 156, 170, 155 }, { 56, 68, 68 },  { 26, 32, 32 } }, NULL },
+    { "LCD+", { { 16, 30, 20 },   { 146, 178, 122 }, { 44, 66, 44 },  { 10, 20, 12 } }, NULL },
+    { "GRAY", { { 22, 21, 21 },   { 219, 211, 203 }, { 92, 88, 84 },  { 20, 18, 18 } }, NULL },
+    { "INVERTED", { { 150, 186, 140 }, { 14, 18, 16 }, { 84, 104, 88 }, { 198, 232, 188 } }, NULL },
+    { "AYU DARK", { { 230, 180, 80 }, { 16, 20, 28 }, { 139, 150, 169 }, { 191, 189, 182 } }, &ayu_accents },
+    { "MONOKAI", { { 166, 226, 46 }, { 39, 40, 34 }, { 163, 161, 144 }, { 248, 248, 242 } }, &monokai_accents },
+    { "PASTEL", { { 38, 58, 89 }, { 244, 247, 252 }, { 83, 103, 132 }, { 38, 58, 89 } }, &pastel_accents },
+    { "COMMODORE", { { 84, 222, 116 }, { 4, 10, 7 }, { 85, 168, 107 }, { 116, 232, 144 } }, &commodore_accents },
+};
+static const accents_t *g_accents;
+
+static void set_rgb(uint8_t slot, const uint8_t *rgb)
+{
+    gfx_palette[slot] = gfx_RGBTo1555(rgb[0], rgb[1], rgb[2]);
+}
 
 void display_set_tint(uint8_t tint)
 {
     if (tint >= TINT_COUNT)
         tint = 0;
-    for (int i = 0; i < 4; i++) {
-        const uint8_t *c = tints[tint].rgb[i];
-        gfx_palette[COL_INK + i] = gfx_RGBTo1555(c[0], c[1], c[2]);
-    }
+    for (int i = 0; i < 4; i++)
+        set_rgb((uint8_t)(COL_INK + i), tints[tint].rgb[i]);
+    g_accents = tints[tint].accents;
+    if (g_accents)
+        for (int i = 0; i < ACCENT_COUNT; i++)
+            set_rgb((uint8_t)(COL_BAR + i), g_accents->rgb[i]);
 }
 
 const char *display_tint_name(uint8_t tint)
@@ -94,7 +147,6 @@ static bool is_glyph(char ch)
     return (uint8_t)ch >= 1 && (uint8_t)ch <= MSYM_COUNT;
 }
 
-/* Width in pixels of a label at a text scale. */
 static int label_width_scaled(const char *s, uint8_t scale)
 {
     int w = 0;
@@ -109,7 +161,6 @@ static int label_width(const char *s)
     return label_width_scaled(s, 1);
 }
 
-/* Draws a label, mixing font characters and symbols, at a text scale. */
 static void draw_label_scaled(const char *s, int x, int y, uint8_t color, uint8_t scale)
 {
     gfx_SetTextFGColor(color);
@@ -163,8 +214,17 @@ static void draw_label_tall(const char *s, int x, int y, uint8_t color)
     gfx_SetTextScale(1, 1);
 }
 
+static void reset_value_cache(void);
+static struct {
+    bool active;
+    real_t value;
+    uint8_t radix, bits, unit;
+} dismissed_warning;
+
 void display_open(void)
 {
+    reset_value_cache();
+    dismissed_warning.active = false;
     gfx_Begin();
     display_set_tint(0);
     gfx_SetDrawBuffer();            /* draw off-screen, then swap */
@@ -182,12 +242,25 @@ void display_problem(const char *title, const char *detail)
     gfx_SetTextScale(1, 1);
     gfx_SetTextFGColor(COL_INK);
     int y = 80;
-    const char *lines[4] = { "RPNCE can't start:", title, detail, "Press any key." };
+    const char *lines[4] = { "rpnCE can't start:", title, detail, "Press any key." };
     for (int i = 0; i < 4; i++) {
         int w = (int)gfx_GetStringWidth(lines[i]);
         gfx_PrintStringXY(lines[i], (SCREEN_W - w) / 2, y);
         y += (i == 0 || i == 2) ? 24 : 16;
     }
+    gfx_SwapDraw();
+}
+
+/* A HELP page (also 2ND CATALOG), from the RPNCEres appvar. */
+void display_help(uint8_t page)
+{
+    if (page >= res_help_pages())
+        page = 0;
+    gfx_FillScreen(COL_PANEL);
+    gfx_SetTextScale(1, 1);
+    for (uint8_t i = 0; i < res_help_lines(page); i++)
+        draw_label(res_help_line(page, i), LABEL_X, 12 + i * 24, COL_INK);
+    draw_label("UP / DOWN: page    ENTER / CLEAR / ON: back", LABEL_X, 222, COL_INK);
     gfx_SwapDraw();
 }
 
@@ -198,20 +271,17 @@ void display_close(void)
 
 /* ---------- status line ---------- */
 
-/* Left: annunciators, RPN83P style ("up/down" when the menu has more rows,
- * the display format such as FIX4 or FIX- for as many digits as needed,
- * then RAD or DEG, then 2ND when pending). Right: messages. */
 static const char *base_warning(const calc_t *c, char *buf);
 
 /* "2026-10-18 14:05" (ISO 8601, as DATE's ".." mode writes dates) from the
- * hardware clock, or "" if it isn't set. */
-static void clock_text(char *out)
+ * hardware clock converted to ATZ, or "" if the reading is invalid. */
+static void clock_text(const calc_t *c, char *out)
 {
-    int y, mo, d, h, mi, sec;
+    dt_obj_t now;
     out[0] = '\0';
-    if (!sys_clock_read(&y, &mo, &d, &h, &mi, &sec) || mo < 1 || mo > 12)
+    if (!calc_clock_now(c, false, &now))
         return;
-    const int f[5] = { y, mo, d, h, mi };
+    const int f[5] = { now.year, now.month, now.day, now.hour, now.minute };
     const int digits[5] = { 4, 2, 2, 2, 2 };
     const char after[5] = { '-', '-', ' ', ':', '\0' };
     char *p = out;
@@ -225,23 +295,19 @@ static void clock_text(char *out)
     }
 }
 
-/* The status bar, dark with the text cut out: the calculator's state. The
- * clock on the left; on the right the display format, angle mode, base
- * (with C when the carry flag is set), and 2ND or ALPHA when pending.
- * Messages go on the line below. */
 #define STATUS_GAP 6
 
 static void draw_status(const calc_t *c, bool second, bool alpha)
 {
     const int y = (STATUS_H - 8) / 2;
-    char clock[20], fmt[8], base[6];
+    char clock[20], fmt[8], base[7];
 
-    gfx_SetColor(COL_INK);
+    gfx_SetColor(g_accents ? COL_BAR : COL_INK);
     gfx_FillRectangle(0, 0, SCREEN_W, STATUS_H);
     gfx_SetTextScale(1, 1);
-    gfx_SetTextFGColor(COL_PANEL);
+    gfx_SetTextFGColor(g_accents ? COL_BAR_TEXT : COL_PANEL);
 
-    clock_text(clock);
+    clock_text(c, clock);
     if (clock[0])
         gfx_PrintStringXY(clock, 4, y);
 
@@ -261,8 +327,8 @@ static void draw_status(const calc_t *c, bool second, bool alpha)
     }
     strcpy(base, (c->base.radix == 16) ? "HEX" : (c->base.radix == 8) ? "OCT" :
                  (c->base.radix == 2) ? "BIN" : "DEC");
-    if (c->base.radix != 10 && c->base.carry)
-        strcat(base, " C");
+    if (c->base.carry)
+        strcat(base, " CF");
     const char *angle = c->degrees ? "DEG" : "RAD";
     const char *shift = second ? "2ND" : alpha ? "A" : NULL;     /* A: ALPHA pending */
 
@@ -279,25 +345,25 @@ static void draw_status(const calc_t *c, bool second, bool alpha)
     gfx_PrintStringXY(base, x, y);
     x += (int)gfx_GetStringWidth(base) + STATUS_GAP;
     if (shift) {                            /* a light badge on the dark bar */
-        gfx_SetColor(COL_PANEL);
+        gfx_SetColor(g_accents ? COL_BAR_TEXT : COL_PANEL);
         gfx_FillRectangle(x, y - 2, (int)gfx_GetStringWidth(shift) + 4, 12);
-        gfx_SetTextFGColor(COL_INK);
+        gfx_SetTextFGColor(g_accents ? COL_BAR : COL_INK);
         gfx_PrintStringXY(shift, x + 2, y);
-        gfx_SetTextFGColor(COL_PANEL);
+        gfx_SetTextFGColor(g_accents ? COL_BAR_TEXT : COL_PANEL);
     }
 }
 
-/* The message line: a message from the last command, or else a warning
- * about X in HEX, OCT or BIN, left-justified in the system font at double
- * height. At the
- * right end, up/down arrows when the current menu has more rows. */
 static void draw_message_line(const calc_t *c, const menu_t *m)
 {
     const int y = MSG_Y + (MSG_H - 8 * MSG_SCALE_Y) / 2;
     char warn[24];
     const char *msg = c->message ? c->message : base_warning(c, warn);
-    if (msg)
+    if (msg) {
+        /* GraphX clipped text ignores scaling. Restore clipping after the message. */
+        gfx_SetTextConfig(gfx_text_noclip);
         draw_label_tall(msg, LABEL_X, y, COL_INK);
+        gfx_SetTextConfig(gfx_text_clip);
+    }
     if (menu_group(m->group)->rows > 1) {
         char arrows[3] = { MSYM_DOWN, MSYM_UP, '\0' };
         draw_label_tall(arrows, VALUE_RIGHT - label_width(arrows), y, COL_INK);
@@ -324,10 +390,10 @@ void display_reset_scroll(void)
 #define ARROW_W 8       /* room for a scroll arrow at each end */
 
 /* Small filled triangle pointing left or right, vertically centered. */
-static void draw_arrow(int x, int top, bool left)
+static void draw_arrow(int x, int top, bool left, uint8_t ink)
 {
     int cy = top + DOT_HEIGHT / 2;
-    gfx_SetColor(COL_DOTS);
+    gfx_SetColor(ink);
     for (int i = 0; i < 4; i++) {
         int col = left ? x + i : x + 3 - i;
         gfx_FillRectangle(col, cy - i, 1, 2 * i + 1);
@@ -350,20 +416,20 @@ static int substring_width(const char *s, int from, int to)
  * the row stays on one line: the part that fits is shown, with arrows at
  * the ends where more digits are hidden. scroll (X row only, else NULL)
  * says how many characters are hidden at the right. */
-static void draw_value(const char *s, int row_y, const char *label, int *scroll)
+static void draw_value(const char *s, int row_y, const char *label, int *scroll, uint8_t ink)
 {
     int right = VALUE_RIGHT;
     int top = row_y + (ROW_H - DOT_HEIGHT) / 2;
 
     if (label) {
         int lw = label_width(label);
-        draw_label(label, VALUE_RIGHT - lw, top + DOT_HEIGHT - 8, COL_DOTS);
+        draw_label(label, VALUE_RIGHT - lw, top + DOT_HEIGHT - 8, ink);
         right = VALUE_RIGHT - lw - 5;
     }
 
     int w = dot_width(s);
     if (w <= right - VALUE_LEFT) {
-        dot_draw(s, right - w, top, COL_DOTS, 0);
+        dot_draw(s, right - w, top, ink, 0);
         return;
     }
 
@@ -390,11 +456,11 @@ static void draw_value(const char *s, int row_y, const char *label, int *scroll)
     int n = end - start;
     memcpy(tmp, s + start, (size_t)n);
     tmp[n] = '\0';
-    dot_draw(tmp, area_right - dot_width(tmp), top, COL_DOTS, 0);
+    dot_draw(tmp, area_right - dot_width(tmp), top, ink, 0);
     if (start > 0)
-        draw_arrow(VALUE_LEFT, top, true);
+        draw_arrow(VALUE_LEFT, top, true, ink);
     if (sc > 0)
-        draw_arrow(right - 4, top, false);
+        draw_arrow(right - 4, top, false, ink);
 }
 
 /* Formats a stack value for the display: in HEX, OCT or BIN when that mode
@@ -415,14 +481,76 @@ static fv_kind_t format_value(char *buf, const calc_t *c, const real_t *v)
     }
     format_real(buf, v, c->disp_style, c->disp_digits,
                 DISPLAY_DIGITS, DISPLAY_EXP_DIGITS, true);
+    format_separators(buf, c->decimal_comma);
     return c->base.radix != 10 ? FV_DECIMAL_IN_BASE : FV_NORMAL;
+}
+
+/* Cache keys cover value bytes and every format setting. DATE values must
+ * bypass real-number math; labels and messages use live state. */
+#define VALUE_BUFFER_SIZE 48
+_Static_assert(VALUE_BUFFER_SIZE >= FORMAT_MAX && VALUE_BUFFER_SIZE >= DT_FORMAT_MAX &&
+               VALUE_BUFFER_SIZE >= BASE_MAX_BITS + 1 && VALUE_BUFFER_SIZE >= ENTRY_MAX + 2,
+               "stack text buffer is too small");
+
+static struct {
+    real_t value;
+    char text[VALUE_BUFFER_SIZE];
+    fv_kind_t kind;
+    bool valid;
+} value_cache[4];
+
+static struct {
+    uint8_t style, radix, bits;
+    int8_t digits;
+    bool date_as_string, decimal_comma, valid;
+} value_cache_format;
+
+static void reset_value_cache(void)
+{
+    value_cache_format.valid = false;
+    for (int i = 0; i < 4; i++)
+        value_cache[i].valid = false;
+}
+
+static void prepare_value_cache(const calc_t *c)
+{
+    if (value_cache_format.valid && value_cache_format.style == c->disp_style &&
+        value_cache_format.digits == c->disp_digits && value_cache_format.radix == c->base.radix &&
+        value_cache_format.bits == c->base.bits && value_cache_format.date_as_string == c->date_as_string &&
+        value_cache_format.decimal_comma == c->decimal_comma)
+        return;
+
+    reset_value_cache();
+    value_cache_format.style = c->disp_style;
+    value_cache_format.digits = c->disp_digits;
+    value_cache_format.radix = c->base.radix;
+    value_cache_format.bits = c->base.bits;
+    value_cache_format.date_as_string = c->date_as_string;
+    value_cache_format.decimal_comma = c->decimal_comma;
+    value_cache_format.valid = true;
+}
+
+static const char *stack_value_text(const calc_t *c, const real_t *v, int row, fv_kind_t *kind)
+{
+    if (!value_cache[row].valid || memcmp(&value_cache[row].value, v, sizeof *v) != 0) {
+        value_cache[row].kind = format_value(value_cache[row].text, c, v);
+        memcpy(&value_cache[row].value, v, sizeof *v);
+        value_cache[row].valid = true;
+    }
+    *kind = value_cache[row].kind;
+    return value_cache[row].text;
 }
 
 /* In HEX, OCT or BIN: why X can't be shown in the base, or NULL. */
 static const char *base_warning(const calc_t *c, char *buf)
 {
     base_word_t w;
-    if (c->base.radix == 10 || c->editing || obj_is(&c->stack[0]))
+    if (dismissed_warning.active &&
+        (memcmp(&dismissed_warning.value, &c->stack[0], sizeof(real_t)) ||
+         dismissed_warning.radix != c->base.radix ||
+         dismissed_warning.bits != c->base.bits || dismissed_warning.unit != c->unit[0]))
+        dismissed_warning.active = false;
+    if (dismissed_warning.active || c->base.radix == 10 || c->editing || obj_is(&c->stack[0]))
         return NULL;
     switch (base_fit(&c->base, &c->stack[0], &w)) {
         case BW_TOO_BIG: {                  /* e.g. Exceeds 32-bit word */
@@ -441,6 +569,29 @@ static const char *base_warning(const calc_t *c, char *buf)
     }
 }
 
+bool display_has_message(const calc_t *c)
+{
+    char warning[24];
+    return c->message || base_warning(c, warning);
+}
+
+bool display_message_is_notice(const calc_t *c)
+{
+    return c->message && c->message != c->show_buf &&
+           strncmp(c->message, "Err:", 4) && strcmp(c->message, "TVM Not Found") &&
+           strcmp(c->message, "Not available yet");
+}
+
+void display_dismiss_message(calc_t *c)
+{
+    c->message = NULL;
+    dismissed_warning.active = true;
+    dismissed_warning.value = c->stack[0];
+    dismissed_warning.radix = c->base.radix;
+    dismissed_warning.bits = c->base.bits;
+    dismissed_warning.unit = c->unit[0];
+}
+
 
 /* T, Z, Y, X with their labels. With a STO/RCL prompt open, the prompt takes
  * the X row; for a plain RCL the other rows show the stack as it will be
@@ -451,21 +602,29 @@ static void draw_stack(const calc_t *c, const char *prompt, bool lifted)
     static const uint8_t regs[4] = { REG_T, REG_Z, REG_Y, REG_X };
     const real_t *values[4] = { &c->stack[3], &c->stack[2], &c->stack[1], &c->stack[0] };
     const real_t *shown_lifted[4] = { &c->stack[2], &c->stack[1], &c->stack[0], &c->stack[0] };
-    char buf[FORMAT_MAX > ENTRY_MAX + 2 ? FORMAT_MAX : ENTRY_MAX + 2];
+    char buf[ENTRY_MAX + ENTRY_MAX / 3 + 2];  /* grouping, cursor, terminator */
+
+    prepare_value_cache(c);
 
     for (int i = 0; i < 4; i++) {
         int y = STACK_TOP + i * ROW_H;
         bool is_x = (i == 3);
+        uint8_t ink = g_accents ? (uint8_t)(COL_ROW_FIRST + i) : COL_DOTS;
 
         /* small label, centered on the row, so the numbers stand out */
         dot_draw_small(labels[i], LABEL_X, y + (ROW_H - DOT_SMALL_HEIGHT) / 2, COL_FAINT);
 
         if (is_x && prompt) {
-            draw_value(prompt, y, NULL, NULL);
+            strcpy(buf, prompt);
+            format_separators(buf, c->decimal_comma);
+            draw_value(buf, y, NULL, NULL, ink);
         } else if (is_x && c->editing) {
-            strcpy(buf, c->entry);
+            if (c->base.radix == 10 && !dt_text_is_object(c->entry))
+                format_entry(buf, c->entry, c->decimal_comma);
+            else
+                strcpy(buf, c->entry);
             strcat(buf, "_");
-            draw_value(buf, y, NULL, NULL);     /* typing: the end is shown */
+            draw_value(buf, y, NULL, NULL, ink);     /* typing: the end is shown */
         } else {
             bool shift = prompt && lifted;
             const real_t *v = shift ? shown_lifted[i] : values[i];
@@ -474,9 +633,11 @@ static void draw_stack(const calc_t *c, const char *prompt, bool lifted)
              * size stays decimal, tagged "dec" so it's never mistaken for a
              * base number. */
             const char *label = tag ? unit_label((uint8_t)(tag - 1)) : NULL;
-            if (format_value(buf, c, v) == FV_DECIMAL_IN_BASE)
+            fv_kind_t kind;
+            const char *text = stack_value_text(c, v, i, &kind);
+            if (kind == FV_DECIMAL_IN_BASE)
                 label = "dec";
-            draw_value(buf, y, label, is_x ? &g_x_scroll : NULL);
+            draw_value(text, y, label, is_x ? &g_x_scroll : NULL, ink);
         }
     }
 }
@@ -510,8 +671,18 @@ static void draw_catalog(const calc_t *c, const catalog_t *cat)
         dot_draw(name, LABEL_X, top, ink, 0);
         int name_end = LABEL_X + dot_width(name) + 6;
 
-        (void)format_value(buf, c, catalog_value((calc_t *)c, item));
-        dot_draw(buf, VALUE_RIGHT - dot_width(buf), top, ink, name_end);
+        uint8_t kind = format_value(buf, c, catalog_value((calc_t *)c, item));
+        uint8_t tag = catalog_unit((calc_t *)c, item);
+        const char *label = tag ? unit_label((uint8_t)(tag - 1)) : NULL;
+        if (kind == FV_DECIMAL_IN_BASE)
+            label = "dec";
+        int right = VALUE_RIGHT;
+        if (label) {
+            int width = label_width(label);
+            draw_label(label, right - width, top + DOT_HEIGHT - 8, ink);
+            right -= width + 5;
+        }
+        dot_draw(buf, right - dot_width(buf), top, ink, name_end);
     }
 }
 
@@ -530,7 +701,7 @@ static void draw_menu_row(const calc_t *c, const menu_t *m)
             continue;
 
         int x = gap + i * (w + gap);
-        gfx_SetColor(COL_INK);
+        gfx_SetColor(g_accents ? (uint8_t)(COL_MENU_FIRST + i) : COL_INK);
         gfx_FillRectangle(x, MENU_Y, w, MENU_H);
 
         const char *label = res_text(n->label);
@@ -538,10 +709,10 @@ static void draw_menu_row(const calc_t *c, const menu_t *m)
             label = res_text(n->alt_label);
 
         int lw = label_width(label);
-        draw_label(label, x + (w - lw) / 2, MENU_Y + (MENU_H - 8) / 2 + 1, COL_PANEL);
+        draw_label(label, x + (w - lw) / 2, MENU_Y + (MENU_H - 8) / 2 + 1, g_accents ? COL_MENU_TEXT : COL_PANEL);
 
         if (n->kind == MENU_GROUP) {
-            gfx_SetColor(COL_PANEL);
+            gfx_SetColor(g_accents ? COL_MENU_TEXT : COL_PANEL);
             gfx_HorizLine(x + w / 2 - 8, MENU_Y + 2, 16);
         }
     }

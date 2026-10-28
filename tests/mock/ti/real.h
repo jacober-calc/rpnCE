@@ -38,7 +38,6 @@ static inline real_t os_RealAtanRad(const real_t *a) { return mk(atan(a->v)); }
 static inline real_t os_RealDegToRad(const real_t *a) { return mk(a->v * M_PI / 180); }
 static inline real_t os_RealRadToDeg(const real_t *a) { return mk(a->v * 180 / M_PI); }
 real_t os_RealGcd(const real_t *a, const real_t *b);
-real_t os_RealLcm(const real_t *a, const real_t *b);
 extern real_t mock_fin[7];
 #define os_Fin_N   mock_fin[0]
 #define os_Fin_I   mock_fin[1]

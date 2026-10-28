@@ -3,6 +3,7 @@
  */
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <ti/real.h>
 #include "base.h"
 
@@ -28,6 +29,41 @@ static void bad(const char *name, base_op_t op, base_word_t y, base_word_t x)
     bool ok = base_apply(&B, op, y, x, &r, NULL);
     if (ok) fails++;
     printf("%s %s is refused\n", ok ? "FAIL" : "ok  ", name);
+}
+
+/* Parsing the produced text independently checks every supported width,
+ * digit alphabet, leading zeros and bounds, including deterministic fuzz. */
+static void format_matrix(void)
+{
+    static const uint8_t radices[] = {2, 8, 16, 10};
+    uint64_t seed = UINT64_C(0x9E3779B97F4A7C15);
+    unsigned tested = 0, bad_count = 0;
+    for (unsigned r = 0; r < sizeof radices; r++)
+    for (unsigned bits = 1; bits <= BASE_MAX_BITS; bits++) {
+        B.bits = (uint8_t)bits;
+        B.radix = radices[r];
+        const uint64_t mask = (UINT64_C(1) << bits) - 1;
+        for (unsigned sample = 0; sample < 132; sample++) {
+            seed ^= seed << 13; seed ^= seed >> 7; seed ^= seed << 17;
+            uint64_t value = sample == 0 ? 0 : sample == 1 ? mask :
+                             sample == 2 ? mask >> 1 : sample == 3 ? mask / 3 : seed & mask;
+            struct { char before; char text[48]; char after; } buffer;
+            memset(&buffer, 0x5A, sizeof buffer);
+            base_format(buffer.text, &B, value);
+            char *end;
+            unsigned long long parsed = strtoull(buffer.text, &end, B.radix);
+            bool good = buffer.before == 0x5A && buffer.after == 0x5A &&
+                        buffer.text[0] && !*end && parsed == value &&
+                        (value == 0 ? !strcmp(buffer.text, "0") : buffer.text[0] != '0');
+            for (char *p = buffer.text; *p; p++)
+                good = good && ((*p >= '0' && *p <= '9') || (*p >= 'A' && *p <= 'F'));
+            if (!good) bad_count++;
+            tested++;
+        }
+    }
+    printf("%s BASE formatting matrix: %u cases, %u failures\n",
+           bad_count ? "FAIL" : "ok  ", tested, bad_count);
+    fails += bad_count != 0;
 }
 
 int main(void)
@@ -118,6 +154,7 @@ int main(void)
     t("NOT in a 12-bit word", BOP_NOT, 0, 0, 0xFFF, -1);
     t("RR in a 12-bit word", BOP_RR, 0, 1, 0x800, 1);
 
+    format_matrix();
     printf("%d failures\n", fails);
     return fails != 0;
 }

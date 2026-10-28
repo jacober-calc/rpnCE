@@ -1,38 +1,70 @@
-RPNCE @VERSION@ - an RPN calculator for the TI-84 Plus CE
+rpnCE 0.7.0 - an RPN calculator for the TI-84 Plus CE
 ==========================================================
+
+An HP-style RPN calculator with scientific functions, statistics, TVM,
+units, BASE arithmetic, and dates and times. Complex numbers are not
+supported in this release.
 
 Files
 -----
-  RPNCE.8xp      the program
-  RPNCEres.8xv   its menus and unit tables (required)
+  rpnCE-0.7.0.8xp      the program
+  rpnCEres-0.7.0.8xv   its menus, unit tables and HELP pages (required)
+  readme.txt          installation, documentation and support
+  LICENSE             redistribution terms
 
-RPNCE also needs the CE C libraries (clibs.8xg), which many CE programs
+rpnCE also needs the CE C libraries (clibs.8xg), which many CE programs
 use. If you don't have them, download clibs.8xg from
 https://github.com/CE-Programming/libraries/releases
 
 Installing
 ----------
-1. Send RPNCE.8xp, RPNCEres.8xv and clibs.8xg to the calculator with
-   TI Connect CE. All three can stay in archive memory.
-2. On the home screen run Asm(prgmRPNCE), or just prgmRPNCE on newer
-   OS versions. Calculators on OS 5.5 or newer need the arTIfiCE jailbreak
-   to run C programs.
+1. Send rpnCE-0.7.0.8xp, rpnCEres-0.7.0.8xv and clibs.8xg with TI Connect
+   CE. All three can stay in archive memory.
+2. Launch using the native-program method supported by your OS or
+   launcher. On OS versions that support it, use Asm(prgmRPNCE).
+   Newer OS versions need native-program support enabled first; follow
+   the current arTIfiCE instructions for your exact model and OS:
+   https://yvantt.github.io/arTIfiCE/
 
-RPNCE.8xp and RPNCEres.8xv must come from the same release. If RPNCEres
-is missing or from a different version, RPNCE says so when it starts.
+rpnCE-0.7.0.8xp and rpnCEres-0.7.0.8xv must come from the same release. If RPNCEres
+is missing or from a different version, rpnCE says so when it starts.
 
 Your data
 ---------
-RPNCE saves the stack, registers, statistics and settings when you quit
-(2ND QUIT) in two appvars it creates: RPNCEdat and RPNCEcfg. Deleting them
-resets RPNCE. They are kept when you upgrade.
+rpnCE saves the stack, registers, statistics and settings when you quit
+(2ND QUIT) in appvars it creates: RPNCEdat, RPNCEcfg, and RPNCEunt when a
+register holds a unit. They are kept when you upgrade. Back them up as a
+set before deleting or replacing saved state. Deleting them resets rpnCE's
+private state; it does not clear shared TI-OS TVM values or reset the clock.
 
 Getting started
 ---------------
+RPN calculations use ENTER to separate numbers, followed by an operation.
+The current number is X; the previous number is Y.
+
   2 ENTER 3 +           5
   MATH                  the menu tree (ON goes back)
   MODE                  display format, angle mode, and more
+  2ND 0                 on-device HELP
   2ND QUIT              save and exit
 
-The full key and menu reference is docs/KEYS.md in the project:
-https://github.com/jacober-calc/rpnce
+User documentation
+------------------
+The illustrated User Guide explains the stack, registers, menus and
+functions, with worked examples:
+https://github.com/jacober-calc/rpnCE/blob/main/docs/USER_GUIDE.md
+
+Key and menu reference:
+https://github.com/jacober-calc/rpnCE/blob/main/docs/KEYS.md
+
+Bug reports and issues
+----------------------
+Check existing issues, or report a problem at:
+https://github.com/jacober-calc/rpnCE/issues
+
+Include the rpnCE version (shown in HELP / ABOUT), calculator model,
+TI-OS version, exact keys and inputs, expected result and actual result.
+Mention relevant settings such as angle mode, units or time zones.
+
+Project and source code:
+https://github.com/jacober-calc/rpnCE

@@ -1,4 +1,4 @@
-# RPNCE menu tree, opened with MATH (HOME). MODE jumps to the MODE menu.
+# rpnCE menu tree, opened with MATH (HOME). MODE jumps to the MODE menu.
 #
 # The menu tree is derived from the menu definitions of RPN83P,
 # Copyright (c) 2023 Brian T. Park, used under the MIT License.
@@ -66,7 +66,25 @@ group HOME HOME
         item CONJ COMPLEX_CONJ
         item CABS COMPLEX_ABS
         item CANG COMPLEX_ANGLE
-    item HELP HELP
+    group TVM TVM
+      row
+        item N TVM_N
+        item I%YR TVM_IYR
+        item PV TVM_PV
+        item PMT TVM_PMT
+        item FV TVM_FV
+      row
+        alt P/YR P/Y{block} TVM_PYR
+        alt C/YR C/Y{block} TVM_CYR
+        alt BEG BEG{block} TVM_BEGIN
+        alt END END{block} TVM_END
+        item CLTV TVM_CLEAR
+      row
+        alt IYR1 IY1{block} TVM_IYR0
+        alt IYR2 IY2{block} TVM_IYR1
+        alt TMAX TMX{block} TVM_ITER_MAX
+        blank
+        item RSTV TVM_SOLVER_RESET
   row
     group BASE BASE
       row
@@ -192,25 +210,7 @@ group HOME HOME
         item {to}HMS HR_TO_HMS
         item HMS+ HMS_PLUS
         item HMS- HMS_MINUS
-    group TVM TVM
-      row
-        item N TVM_N
-        item I%YR TVM_IYR
-        item PV TVM_PV
-        item PMT TVM_PMT
-        item FV TVM_FV
-      row
-        alt P/YR P/Y{block} TVM_PYR
-        alt C/YR C/Y{block} TVM_CYR
-        alt BEG BEG{block} TVM_BEGIN
-        alt END END{block} TVM_END
-        item CLTV TVM_CLEAR
-      row
-        alt IYR1 IY1{block} TVM_IYR0
-        alt IYR2 IY2{block} TVM_IYR1
-        alt TMAX TMX{block} TVM_ITER_MAX
-        blank
-        item RSTV TVM_SOLVER_RESET
+    item HELP HELP
   row
     group CLR CLEAR
       row
@@ -243,6 +243,8 @@ group HOME HOME
       row
         alt {..} {..}{block} FORMAT_RECORD_RAW
         alt ".." ".."{block} FORMAT_RECORD_STRING
+        alt . .{block} DECIMAL_POINT
+        alt , ,{block} DECIMAL_COMMA
     group STK STACK
       row
         item DUP STACK_DUP

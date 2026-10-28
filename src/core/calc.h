@@ -117,6 +117,7 @@ typedef enum {
     CMD_CLEAR_REGS,     /* CLRG */
     CMD_SET_REG_SIZE, CMD_GET_REG_SIZE,      /* RSIZ (total, 40-140, from X), RSZ? */
     CMD_SET_STACK_SIZE, CMD_GET_STACK_SIZE,  /* SSIZ (from X), SSZ? */
+    CMD_DECIMAL_POINT, CMD_DECIMAL_COMMA,
 } calc_cmd_t;
 
 typedef struct {
@@ -129,13 +130,18 @@ typedef struct {
     real_t regs[REG_BASE_COUNT];        /* A-Z and i (registers 001-027) */
     real_t extra[REG_EXTRA_MAX];        /* registers 041 and up */
     uint8_t extra_count;
+    /* A quantity is its full-precision value plus its unit, just as on the
+     * stack. Statistics registers remain plain numbers. */
+    uint8_t reg_unit[REG_BASE_COUNT];
+    uint8_t extra_unit[REG_EXTRA_MAX];
 
     tvm_settings_t tvm;
     stats_t stats;
     base_state_t base;
 
-    /* DATE settings */
+    /* Display and DATE settings */
     bool date_as_string;        /* ".." mode: show objects as RFC 3339 strings */
+    bool decimal_comma;         /* numeric display: 1.234,56 instead of 1,234.56 */
     uint8_t epoch;              /* EPOCH_* */
     dt_obj_t custom_epoch;      /* a Date */
     int8_t app_tz;              /* application time zone, quarter hours */
@@ -152,7 +158,7 @@ typedef struct {
     calc_cmd_t last_cmd;        /* previous command, for CLEAR CLEAR */
 
     const char *message;        /* error or info text, or NULL */
-    char show_buf[28];          /* backing store for CMD_SHOW (FORMAT_MAX) */
+    char show_buf[DT_FORMAT_MAX]; /* SHOW also needs room for raw DATE records */
 } calc_t;
 
 void calc_init(calc_t *c);
@@ -163,8 +169,14 @@ void calc_seed_random(uint32_t seed);
 
 /* The register with this number (1..140), or NULL if it doesn't exist. */
 real_t *calc_register(calc_t *c, uint8_t num);
+/* Unit metadata for an ordinary register; NULL for statistics or no register. */
+uint8_t *calc_register_unit(calc_t *c, uint8_t num);
 
 /* Ends number entry, if any, so the state can be saved. */
 void calc_finish_entry(calc_t *c);
+
+/* Read the hardware clock using CTZ, converted to ATZ or UTC. Does not
+ * change calculator state or write the hardware clock. */
+bool calc_clock_now(const calc_t *c, bool utc, dt_obj_t *out);
 
 #endif

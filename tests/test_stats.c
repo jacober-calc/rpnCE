@@ -1,27 +1,15 @@
-/* Tests for statistics and curve fitting, on a PC:
- *   gcc -Itests/mock -Isrc/core -o test_stats tests/test_stats.c \
- *       src/core/stats.c src/core/mathx.c -lm && ./test_stats
- */
+/* Statistics and curve-fitting examples. */
 #include <stdio.h>
 #include <ti/real.h>
 #include <ti/error.h>
 #include "stats.h"
 #include "mathx.h"
 
-real_t mock_fin[7];
-jmp_buf mock_jmp;
-real_t round_decimals(const real_t *v, int n)   /* decimal rounding stand-in */
-{ double p = pow(10, n); return mk(round(v->v * p) / p); }
-real_t os_RealDiv(const real_t *a, const real_t *b)
-{ if (b->v == 0) os_ThrowError(OS_E_DIVBY0); return mk(a->v / b->v); }
-real_t os_RealLog(const real_t *a)
-{ if (a->v <= 0) os_ThrowError(OS_E_DOMAIN); return mk(log(a->v)); }
-
 static int fails = 0;
 static void near(const char *name, double got, double want)
 {
-    double tol = 1e-10 * (fabs(want) > 1 ? fabs(want) : 1);
-    int ok = fabs(got - want) <= tol;
+    double error = want == 0 ? fabs(got) : fabs((got - want) / want);
+    int ok = isfinite(got) && error <= 1e-10;
     if (!ok) fails++;
     printf("%s %-28s %.12g (want %.12g)\n", ok ? "ok  " : "FAIL", name, got, want);
 }
@@ -75,8 +63,9 @@ int main(void)
     printf("%s BEST picks EXP over %s\n",
            stats_best(&S) == FIT_EXP ? "ok  " : "FAIL", "the others");
     if (S.model != FIT_EXP) fails++;
-    printf("%s x = 0 rules out LOG and PWR\n",
-           !stats_model_ok(&S, FIT_LOG) && !stats_model_ok(&S, FIT_PWR) ? "ok  " : "FAIL");
+    bool models_ok = !stats_model_ok(&S, FIT_LOG) && !stats_model_ok(&S, FIT_PWR);
+    printf("%s x = 0 rules out LOG and PWR\n", models_ok ? "ok  " : "FAIL");
+    if (!models_ok) fails++;
 
     /* power data y = 2 x^1.5 */
     double px[] = { 1, 2, 4, 8 }, py[4];

@@ -119,6 +119,21 @@ int main(void)
     dt_from_epoch_seconds(1710455761LL, 0, OBJ_DATE, 0, &r);
     fmt_is("ES> as a Date (UTC)", &r, true, "2024-03-14");
 
+    /* Reported CE arithmetic failure and wide seconds after the day helper
+     * was narrowed: late dates must not overflow a 32-bit intermediate. */
+    {
+        dt_val_t born = OBJ("{1987,01,17"), today = OBJ("{2026,10,19"), days = NUM(15000);
+        res_obj("1987-01-17 + 15000 days", dt_add(&born, &days, &res), &res, "D{2028,2,11}");
+        res_num("birth date - today = -14520 days", dt_sub(&born, &today, &res), &res, -14520, 1);
+        res_num("today - birth date = 14520 days", dt_sub(&today, &born, &res), &res, 14520, 1);
+        o = P("{9999,12,31");
+        dt_to_epoch_seconds(&o, 0, &n);
+        ok("9999-12-31 keeps wide epoch seconds", n == 253402214400LL, NULL);
+        o = P("{1,1,1");
+        dt_to_epoch_seconds(&o, 0, &n);
+        ok("0001-01-01 keeps negative epoch seconds", n == -62135596800LL, NULL);
+    }
+
     /* RPN83P's arithmetic examples */
     dt_val_t d = OBJ("{2024,3,14"), num;
     num = NUM(20);  res_obj("2024-03-14 + 20 days", dt_add(&d, &num, &res), &res, "D{2024,4,3}");
@@ -132,6 +147,9 @@ int main(void)
 
     dt_val_t t = OBJ("T{17,0,0}"), t2 = OBJ("T{15,36,1}");
     res_num("17:00:00 - 15:36:01 = 5039 s", dt_sub(&t, &t2, &res), &res, 5039, 1);
+    dt_val_t early = OBJ("T{12,47,0}"), late = OBJ("T{20,17,0}");
+    res_num("12:47 - 20:17 = -27000 seconds", dt_sub(&early, &late, &res), &res, -27000, 1);
+    res_num("20:17 - 12:47 = 27000 seconds", dt_sub(&late, &early, &res), &res, 27000, 1);
     num = NUM(-100000); res_obj("Time wraps around midnight", dt_add(&t2, &num, &res), &res, "T{11,49,21}");
 
     dt_val_t dta = OBJ("{2024,12,25,0,0,0"), dtb = OBJ("{2024,3,14,15,36,1");

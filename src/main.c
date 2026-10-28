@@ -1,5 +1,5 @@
 /*
- * RPNCE: an RPN calculator for the TI-84 Plus CE.
+ * rpnCE: an RPN calculator for the TI-84 Plus CE.
  */
 
 #include <stdbool.h>
@@ -12,6 +12,7 @@
 
 #include "core/calc.h"
 #include "sys/storage.h"
+#include "sys/brightness.h"
 #include "ui/actions.h"
 #include "ui/catalog.h"
 #include "ui/res.h"
@@ -25,13 +26,17 @@
 #define IDLE_TIMEOUT (5UL * 60UL * CLOCKS_PER_SEC)
 
 /* How long a finished STO/RCL/FIX prompt stays on screen. */
-#define PROMPT_FLASH_MS 300
+#define PROMPT_FLASH_MS 150
+#define NOTICE_TIMEOUT (3UL * CLOCKS_PER_SEC / 2UL)
 
 static calc_t calc;
 static keys_t keys;
 static menu_t menu;
 static catalog_t catalog;
+static uint8_t help_page;       /* 0: closed, 1..res_help_pages(): reference */
 static uint8_t tint;            /* screen color preset */
+static const char *notice;
+static clock_t notice_started;
 
 /* Runs the item under a softkey, or opens its submenu. As in RPN83P, the
  * menu stays where it is, so a function can be pressed again. */
@@ -42,6 +47,7 @@ static void press_softkey(uint8_t slot, bool shifted)
         return;
 
     switch (n->id) {
+        case MID_HELP: help_page = 1; keys.second = keys.alpha = false; return;
         case MID_CLEAR_DISPLAY: return;
         case MID_FIX: keys_open_prompt(&keys, PROMPT_FIX); return;
         case MID_SCI: keys_open_prompt(&keys, PROMPT_SCI); return;
@@ -75,10 +81,7 @@ static void catalog_key(sk_key_t key)
             uint8_t item = catalog.items[catalog.sel];
             catalog.open = false;
             calc.message = NULL;
-            if (item == CAT_LASTX)
-                calc_execute(&calc, CMD_LASTX, 0);
-            else
-                calc_execute(&calc, CMD_RCL, item);
+            catalog_recall(&calc, item);
             break;
         }
         case sk_Clear: case sk_Vars: case sk_Del:
@@ -92,6 +95,18 @@ static void catalog_key(sk_key_t key)
 
 static void redraw(void)
 {
+    if (display_message_is_notice(&calc)) {
+        if (notice != calc.message) {
+            notice = calc.message;
+            notice_started = clock();
+        }
+    } else {
+        notice = NULL;
+    }
+    if (help_page) {
+        display_help((uint8_t)(help_page - 1));
+        return;
+    }
     /* A STO/RCL prompt ends number entry, so the typed value shows on the
      * stack (and in Y while an RCL prompt previews the lift). */
     if (keys_prompt_text(&keys) && calc.editing)
@@ -113,7 +128,7 @@ int main(void)
     if (!res_open()) {
         display_open();
         display_problem(res_problem(),
-                        "Send RPNCEres.8xv with RPNCE " RPNCE_VERSION ".");
+                        "Send rpnCEres.8xv with rpnCE " RPNCE_VERSION ".");
         while (!os_GetCSC())
             ;
         display_close();
@@ -140,7 +155,14 @@ int main(void)
         bool on_down = kb_On;
         if (on_down && !on_was_down) {
             os_ResetFlag(ON, INTERRUPT);
-            if (catalog.open) {
+            if (help_page) {
+                if (keys.second) {
+                    ev.kind = EV_QUIT;
+                } else {
+                    help_page = 0;
+                    ev.kind = EV_REDRAW;
+                }
+            } else if (catalog.open) {
                 catalog.open = false;
                 calc.message = NULL;
                 ev.kind = EV_REDRAW;
@@ -158,6 +180,11 @@ int main(void)
         if (ev.kind == EV_NONE) {
             sk_key_t key = os_GetCSC();
             if (!key) {
+                if (notice && clock() - notice_started >= NOTICE_TIMEOUT) {
+                    calc.message = NULL;
+                    notice = NULL;
+                    redraw();
+                }
                 /* keep the status bar's clock current */
                 if (rtc_Minutes != shown_minute) {
                     shown_minute = rtc_Minutes;
@@ -167,11 +194,52 @@ int main(void)
                     break;
                 continue;
             }
-            if (catalog.open) {
+            bool brighter;
+            if (keys_brightness_key(&keys, key, &brighter)) {
                 last_key = clock();
-                catalog_key(key);
+                sys_brightness_adjust(brighter);
                 redraw();
                 continue;
+            }
+            if (help_page) {
+                last_key = clock();
+                if (key == sk_2nd) {
+                    keys.second = !keys.second;
+                } else {
+                    if (keys.second && key == sk_Mode) break;
+                    keys.second = false;
+                    if (key == sk_Up)
+                        help_page = help_page == 1 ? res_help_pages() : help_page - 1;
+                    else if (key == sk_Down)
+                        help_page = help_page == res_help_pages() ? 1 : help_page + 1;
+                    else if (key == sk_Enter || key == sk_Clear || key == sk_Del || key == sk_Math)
+                        help_page = 0;
+                }
+                redraw();
+                continue;
+            }
+            if (catalog.open) {
+                last_key = clock();
+                if (key == sk_2nd)
+                    keys.second = !keys.second;
+                else {
+                    keys.second = false;
+                    catalog_key(key);
+                }
+                redraw();
+                continue;
+            }
+            if (display_has_message(&calc)) {
+                display_dismiss_message(&calc);
+                notice = NULL;
+                if (key == sk_Clear && keys.prompt == PROMPT_NONE) {
+                    keys.second = keys.alpha = false;
+                    if (calc.last_cmd == CMD_CLEAR)
+                        calc.last_cmd = CMD_NONE;
+                    last_key = clock();
+                    redraw();
+                    continue;
+                }
             }
             ev = keys_translate(&keys, key);
 
@@ -190,8 +258,11 @@ int main(void)
         if (ev.kind == EV_QUIT)
             break;
 
-        if (ev.kind != EV_REDRAW)
-            calc.message = NULL;
+        if (ev.kind != EV_REDRAW) {
+            if (display_has_message(&calc))
+                display_dismiss_message(&calc);
+            notice = NULL;
+        }
 
         /* a long X value starts at its right end again once X can change */
         if (ev.kind != EV_SCROLL_LEFT && ev.kind != EV_SCROLL_RIGHT &&
@@ -206,6 +277,7 @@ int main(void)
             case EV_ROW_UP:   menu_row_up(&menu); break;
             case EV_ROW_DOWN: menu_row_down(&menu); break;
             case EV_MENU:     menu_jump(&menu, ev.arg); break;
+            case EV_HELP:     help_page = 1; keys.alpha = false; break;
             case EV_VARS:
                 calc_finish_entry(&calc);
                 if (catalog_open(&catalog, &calc))

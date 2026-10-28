@@ -1,6 +1,6 @@
 # Key layout
 
-RPNCE follows RPN83P's design: the keyboard handles numbers, the stack, and
+rpnCE follows RPN83P's design: the keyboard handles numbers, the stack, and
 the math functions printed on the keys; everything else lives in the menu
 tree, which is always shown along the bottom of the screen. MATH goes to the
 top of the tree (HOME) and MODE goes straight to the MODE menu.
@@ -67,14 +67,19 @@ a number that isn't an existing register gives "Err: Index". Storing into
 n, Sx, Sy, Sx2, Sy2 or Sxy directly leaves only the linear fit usable until
 the stat data is cleared.
 
-`VARS` lists every register holding a nonzero value (and LASTX) as
+`VARS` lists every numbered register holding a nonzero value or a unit as
 `A=12.5`, `i=41`, `n=5`, `R041=123` across the four stack lines. Up and
 down move through the list; ENTER copies the selected value to X; ON,
-CLEAR or VARS closes it.
+CLEAR or VARS closes it. After the numbered registers, it lists all seven
+TVM values: N, I%YR, PV, PMT, FV, P/YR and C/YR, then LASTX as the final
+entry. LASTX is always shown, including when it is zero. TVM entries include zero
+values (for example, FV=0) and read the calculator's shared TVM variables.
+ENTER recalls a TVM entry to X with the normal stack-lift rules. Store or
+solve TVM values using the TVM menu below.
 
 ## TVM (time value of money)
 
-MATH, then TVM (row 2 of HOME). Works like an HP-12C: type a value and
+MATH, then TVM (row 1 of HOME). Works like an HP-12C: type a value and
 press N, I%YR, PV, PMT, or FV to store it; press one of them right after
 another TVM key (without typing a number) to solve for it. 2ND + the key
 recalls the stored value. Money received is positive, money paid out is
@@ -97,9 +102,28 @@ so they are shared with TI's TVM Solver (APPS > Finance).
 MATH, then UNIT (row 3 of HOME). Type a value and press a unit to attach
 it (`12 ft`); press another unit of the same kind to convert (`m` gives
 3.6576 m). The unit shows after the value on the stack and moves with it.
-Math on a value removes its unit. UFCN has UVAL (remove the unit, keep the
-value) and UBAS (convert to the base unit: m, m², m³, kg, K, N, Pa, J, W,
-s, m/s, or L/100km).
+Ordinary registers (A-Z, i and the extra registers) preserve both the value
+and its unit through STO, RCL, X<> and quitting. VARS shows the stored unit,
+including quantities whose value is zero. Statistics and TVM accept plain
+numbers; a quantity cannot act as an indirect register index.
+
+`+` and `-` convert X to Y's unit and keep that unit on the result. MIN,
+MAX and MOD do the same. Multiplication by a scalar and division of a
+quantity by a scalar preserve its unit; division of two compatible
+quantities gives a plain ratio. Products of two quantities and scalar /
+quantity are unsupported. ABS and rounding retain units; SIGN gives a
+plain number. Temperature and fuel economy support conversion and rounding,
+but their arithmetic is refused because offsets or reciprocals make
+ordinary quantity arithmetic ambiguous. Unsupported operations give
+"Err: Data Type"; incompatible dimensions give "Err: Unit Mismatch".
+
+`%` takes a plain percentage in X and a quantity in Y, keeps Y and puts the
+quantity result in X. `%CH` converts X to Y's unit, keeps Y and returns the
+plain percentage `(X - Y) / Y * 100`. For example, `2 kWh`, `2000 kcal`,
+`%CH` gives approximately `16.222222222222%`, using the units under ENER.
+
+UFCN has UVAL (remove the unit, keep the value) and UBAS (convert to the
+base unit: m, m², m³, kg, K, N, Pa, J, W, s, m/s, or L/100km).
 
 Kinds: length, area, volume, temperature, mass, force, pressure, energy,
 power, time, speed, and fuel economy (mpg and L/100km convert both ways).
@@ -123,7 +147,9 @@ and right arrows scroll X through the rest.
 ## NUM, HYP and CONV
 
 - NUM: PRIM gives the smallest prime factor of a whole number from 2 to
-  4,294,967,295, or 1 if it's prime. RNDF rounds X to what the display
+  4,294,967,295, or 1 if it's prime. It pushes that result, leaving the
+  original number in Y; PRIM then ÷ removes a factor. For example, 1981
+  PRIM gives X = 7 and Y = 1981. RNDF rounds X to what the display
   shows; RNDN _ and RNDG _ round to that many decimals or significant
   digits (a digit, or . then a digit for 10-19). Rounding is exact decimal
   rounding: 2.675 RNDN 2 gives 2.68.
@@ -230,6 +256,15 @@ TIOS 1997, Y2K 2000, or a custom date set with EPC). CLK reads the CE's
 clock (NOW as epoch seconds, NOWD, NOWT, NWDZ in the application time zone,
 NWUT in UTC), sets the application and clock time zones (ATZ, CTZ, each
 from a TimeZone or hours) and sets the clock (SETC, from a ZonedDateTime).
+Keep the TI clock at local time and set CTZ to its UTC offset. ATZ controls
+application clock results and the status bar; changing either zone leaves
+the TI clock unchanged.
+
+MODE row 4 also selects **.** or **,** as the numeric decimal mark,
+swapping the grouping mark throughout entry, results, VARS and SHOW.
+The physical decimal key keeps its meaning, and DATE record commas stay
+field separators. `2ND UP/DOWN` changes the shared TI-OS brightness without
+interrupting entry or prompts.
 
 MODE row 4 chooses how objects are shown: `{..}` as typed (the default) or
 `".."` as RFC 3339 strings. Long values scroll with the arrow keys. SHOW
@@ -239,8 +274,8 @@ screen tint in `RPNCEcfg`.
 ## The screen
 
 - **Status bar:** a dark strip with the calculator's state: the date and
-  time from the CE's clock on the left (`2026-10-18 14:05`, in the clock's
-  own time zone), and on the right the display format (FIX4, SCI3, FIX- for
+  time from the CE's clock on the left (`2026-10-18 14:05`, converted to
+  the application time zone, ATZ), and on the right the display format (FIX4, SCI3, FIX- for
   as many digits as needed), DEG or RAD, the base (DEC, HEX, OCT or BIN,
   with C when the carry flag is set), and a 2ND or A (ALPHA) badge when one
   is pending.
@@ -258,17 +293,44 @@ screen tint in `RPNCEcfg`.
 | `Y= WINDOW ZOOM TRACE GRAPH` | the five menu keys; the menu stays put after a pick |
 | up / down arrows | previous / next row of the current menu (when the message line shows arrows at its right end) |
 | `MATH` | HOME, the top of the menu tree |
-| `MODE` | MODE menu: FIX, SCI, ENG (a digit 0-9, or . then a digit for 10-19, as on the HP-32SII: FIX . 1 is FIX 11; 12 or more means as many digits as needed, shown as FIX-), RAD, DEG. Row 3: RSIZ (X = total registers, 40-140; less than 40 means 40) and RSZ?, TINT (cycle the screen colors: LCD, LCD+ for real screens, GRAY, DARK; saved in the appvar `RPNCEcfg`), SSIZ (X = stack depth, 4-12; less than 4 means 4) and SSZ? |
+| `MODE` | MODE menu: FIX, SCI, ENG (a digit 0-9, or . then a digit for 10-19, as on the HP-32SII: FIX . 1 is FIX 11; 12 or more means as many digits as needed, shown as FIX-), RAD, DEG. Row 3: RSIZ (X = total registers, 40-140; less than 40 means 40) and RSZ?, TINT (cycle the screen colors: LCD, LCD+ for real screens, GRAY, INVERTED, AYU DARK, MONOKAI, PASTEL, COMMODORE; saved in the appvar `RPNCEcfg`), SSIZ (X = stack depth, 4-12; less than 4 means 4) and SSZ? |
+| `STAT` | STAT menu |
+| `X,T,theta,n` | UNIT menu |
+| `APPS` | BASE menu |
+| `PRGM` | HYP menu |
+| `2ND MEM` (`2ND +`) | CLR menu |
+| `2ND CATALOG` (`2ND 0`) | HELP reference pages |
+| `2ND LIST` (`2ND STAT`) | STK menu |
 | `VARS` | the register catalog (see Registers) |
 | `ON` | EXIT: back one menu level |
 | left / right arrows | scroll a value too long for the X line |
 | `2ND MODE` (QUIT) | save and exit |
 | `2ND ON` (OFF) | save and exit |
 
+TINT cycles through eight presets. INVERTED is the former DARK, with the
+same colors and saved selection. AYU DARK uses a deep blue-gray background
+with amber and blue accents. MONOKAI uses charcoal with purple, cyan, green
+and pink stack values. PASTEL uses a light background, distinct row colors and
+pastel menu keys. COMMODORE uses phosphor greens on near-black, with brighter
+X digits and dark green menu panels. The selection is saved on exit. See
+[Screen colors](guide/04-display.md#screen-colors) for the presets.
+
+HOME has TVM in the fifth position on its first row and HELP in the fifth
+position on its second row. HELP opens the reference pages: UP / DOWN
+change pages; ENTER, CLEAR, DEL or ON returns to the calculator. The pages
+are written in `help/help.txt` and stored in the RPNCEres appvar. 2ND LINK
+and 2ND ANGLE are deliberately unassigned: complex-number entry will use
+them. ALPHA
+letters and STO/RCL variable selection take priority over menu shortcuts.
+
 Numbers show up to 12 digits with thousands commas, or up to 10 next to an
 exponent; SHOW (2ND ENTRY) shows all 14.
 
 The stack, LASTX, variables, angle mode, and display format are saved on exit
-(in the archived appvar `RPNCEdat`) and restored on the next run. After 5
-minutes without a key press, RPNCE saves and exits so the calculator can
+(in the archived appvar `RPNCEdat`) and restored on the next run. Units on
+registers are saved separately in `RPNCEunt`, with a checksum and a
+fingerprint of the register values they belong to: if it's missing,
+damaged, or belongs to different values, the registers load without units
+and every value is kept. After 5
+minutes without a key press, rpnCE saves and exits so the calculator can
 power down.

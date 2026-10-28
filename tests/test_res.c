@@ -1,5 +1,5 @@
 /* Tests the RPNCEres appvar: the real src/ui/res.c reading the real
- * data/RPNCEres.bin, checked against the menu file and the unit table.
+ * data/rpnCEres.bin, checked against the menu file and the unit table.
  *   cc -Itests/mock_fileioc -Itests/mock -Isrc/ui -Isrc/core -o test_res \
  *      tests/test_res.c src/ui/res.c && ./test_res
  * (run from the project root, after python3 tools/genres.py)
@@ -10,6 +10,7 @@
 #include "res.h"
 #include "res_info.h"
 #include "units.h"
+#include "version.h"
 
 uint8_t mock_res[65536];
 size_t mock_res_size;
@@ -36,7 +37,7 @@ int main(void)
     bool none = !res_open();
     ok("missing RPNCEres is reported", none && strcmp(res_problem(), "RPNCEres not found") == 0, res_problem());
 
-    FILE *f = fopen("data/RPNCEres.bin", "rb");
+    FILE *f = fopen("data/rpnCEres.bin", "rb");
     mock_res_size = fread(mock_res, 1, sizeof mock_res, f);
     fclose(f);
     bool opened = res_open();
@@ -75,6 +76,55 @@ int main(void)
     ok("mpg is a reciprocal unit", u >= 0 && unit_reciprocal((uint8_t)u), NULL);
     ok("the base unit of length is m", strcmp(unit_label(unit_base_of(DIM_LENGTH)), "m") == 0, unit_label(unit_base_of(DIM_LENGTH)));
     ok("CUBE is not a unit", unit_for_menu(MID_CUBE) < 0, NULL);
+
+    /* HELP pages, from help/help.txt */
+    ok("20 HELP pages", res_help_pages() == 20, NULL);
+    ok("page 1 explains HELP", strcmp(res_help_line(0, 0),
+       "HELP 01/20 - USING HELP / MENUS") == 0, res_help_line(0, 0));
+    const char *topics[] = { "THE RPN STACK", "VARIABLES", "KEY SHORTCUTS",
+        "MATH", "NUM", "PROB", "CPLX", "TVM", "BASE", "HYP", "STAT",
+        "CONV", "CLR", "MODE", "STK", "UNIT", "DATE", "NUMERIC LIMITS", "ABOUT" };
+    bool complete = true, numbered = true, fits = true, shortcuts = false;
+    for (uint8_t p = 0; p < res_help_pages(); p++) {
+        char prefix[24];
+        snprintf(prefix, sizeof prefix, "HELP %02u/%u - ", p + 1, res_help_pages());
+        if (strncmp(res_help_line(p, 0), prefix, strlen(prefix))) numbered = false;
+        if (res_help_lines(p) < 1 || res_help_lines(p) > 8) fits = false;
+        for (uint8_t l = 0; l < res_help_lines(p); l++) {
+            const char *s = res_help_line(p, l);
+            if (strlen(s) > 44) fits = false;
+            for (; *s; s++)
+                if ((unsigned char)*s < 32 || (unsigned char)*s > 126) fits = false;
+        }
+        if (strstr(res_help_line(p, 0), "KEY SHORTCUTS")) {
+            shortcuts = true;
+            for (uint8_t l = 0; l < res_help_lines(p); l++)
+                if (strstr(res_help_line(p, l), "LINK") || strstr(res_help_line(p, l), "ANGLE"))
+                    shortcuts = false;
+        }
+    }
+    for (size_t t = 0; t < sizeof topics / sizeof topics[0]; t++) {
+        bool found = false;
+        for (uint8_t p = 0; p < res_help_pages(); p++) {
+            const char *topic = strstr(res_help_line(p, 0), " - ");
+            if (topic && strcmp(topic + 3, topics[t]) == 0) found = true;
+        }
+        if (!found) complete = false;
+    }
+    ok("every main menu and usage topic has a HELP page", complete, NULL);
+    ok("HELP titles show their page number and total", numbered, NULL);
+    ok("shortcuts omit reserved LINK and ANGLE keys", shortcuts, NULL);
+    ok("every page fits (8 lines, 44 ASCII chars)", fits, NULL);
+    ok("ABOUT has the current version and repository", ({
+        bool version = false, repo = false;
+        uint8_t p = res_help_pages() - 1;
+        for (uint8_t l = 0; l < res_help_lines(p); l++) {
+            if (strcmp(res_help_line(p, l), RPNCE_NAME " " RPNCE_VERSION) == 0) version = true;
+            if (strcmp(res_help_line(p, l), "https://github.com/jacober-calc/rpnCE") == 0) repo = true;
+        }
+        version && repo; }), NULL);
+    ok("past the last line or page is empty, not garbage",
+       res_help_line(0, 99)[0] == '\0' && res_help_lines(99) == 0, NULL);
 
     /* a changed file is caught */
     mock_res[RES_SIZE - 1] ^= 1;
