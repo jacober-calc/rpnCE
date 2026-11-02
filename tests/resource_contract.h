@@ -3,8 +3,15 @@
 
 #include "res.h"
 #include "units.h"
+#include "actions.h"
 
 #define RESOURCE_CONTRACT_EXPECTED UINT32_C(0x569D1880)
+
+static int resource_contract_unit(menu_id_t id)
+{
+    uint8_t arg;
+    return action_for(id, false, &arg) == CMD_UNIT ? arg : -1;
+}
 
 /* Hash decoded contents and navigation, independent of offsets, packing or
  * compiler integer widths. The expected value predates resource packing. */
@@ -41,7 +48,7 @@ static uint32_t resource_contract(void)
         resource_contract_number(menu_parent_row_of(i));
     }
     for (uint16_t i = 0; i < MID_COUNT; i++)
-        resource_contract_number((uint16_t)unit_for_menu((menu_id_t)i));
+        resource_contract_number((uint16_t)resource_contract_unit((menu_id_t)i));
     for (uint8_t i = 0; i < UNIT_COUNT; i++) {
         resource_contract_text(unit_label(i));
         resource_contract_text(unit_factor(i));

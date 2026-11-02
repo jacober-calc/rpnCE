@@ -30,9 +30,6 @@ uint8_t menu_parent_row_of(uint8_t group);
 /* Text of a label offset (from menu_node_t / menu_group_t). */
 const char *res_text(uint16_t offset);
 
-/* The unit (index) for a UNIT menu item, or -1. */
-int unit_for_menu(menu_id_t id);
-
 /* HELP pages (from help/help.txt): how many there are, how many lines a
  * page has (its title first), and the text of each line. */
 uint8_t res_help_pages(void);

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "actions.h"
 #include "res.h"
+#include "action_contract.h"
 
 uint8_t mock_res[65536];
 size_t mock_res_size;
@@ -32,6 +33,7 @@ int main(void)
         }
     }
     int fails = fingerprint != UINT64_C(0x7552b9b30528ed15);
+    if (action_contract() != ACTION_CONTRACT_EXPECTED) fails++;
     printf("%s %u menu IDs, plain and shifted: %016" PRIx64 "\n",
            fails ? "FAIL" : "ok  ", (unsigned)MID_COUNT, fingerprint);
     for (int comma = 0; comma <= 1; comma++) {
@@ -63,6 +65,14 @@ int main(void)
         if (action_is_active(&c,MID_COMPLEX_MODE_RECT) != (mode == COMPLEX_RECT) ||
             action_is_active(&c,MID_COMPLEX_MODE_RAD) != (mode == COMPLEX_RAD) ||
             action_is_active(&c,MID_COMPLEX_MODE_DEG) != (mode == COMPLEX_DEG)) fails++;
+    }
+    /* Bounds are checked before looking up any generated entry. */
+    const menu_id_t invalid[] = { (menu_id_t)-1, MID_COUNT, (menu_id_t)UINT16_MAX };
+    calc_t c = {0};
+    for (unsigned i = 0; i < sizeof invalid / sizeof invalid[0]; i++) {
+        uint8_t arg = 255;
+        if (action_for(invalid[i], true, &arg) != CMD_NONE || arg ||
+            action_is_active(&c, invalid[i])) fails++;
     }
     printf("%d failures\n", fails);
     return fails != 0;

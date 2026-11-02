@@ -321,3 +321,90 @@ multi-result dispatch. In particular, determine whether command/argument
 mapping can be generated from one authoritative description without adding
 another resident table. The existing commands, numeric guards, saved formats
 and screenshot/navigation contracts remain the regression boundaries.
+
+
+## Generated menu actions
+
+1 November 2026 · Baseline commit `935dbb5` on `refactor`
+
+### Structural changes
+
+- Calculator command/argument bindings now live beside their menu item in
+  `menus/menus.txt`. Define a binding once per ID; other occurrences reuse
+  that ID. Omitted bindings retain the existing UI-only/unavailable behavior.
+  The parser accepts optional CMD/ARG fields and checks their syntax and
+  decimal byte range. Generation rejects duplicate bindings and manual
+  bindings for unit IDs.
+- The generator adds unit bindings from the same unit order used to write
+  numerical metadata. One generated table and one lookup now handle both
+  ordinary calculator functions and units. Shifted TVM recall is applied
+  after lookup, as before. Command/argument enum names remain symbolic C;
+  no second parser or copy of the core enum values is introduced.
+- `menu_actions.h` encodes delta menu IDs, commands and arguments. Consecutive
+  numeric arguments can share a run. The 422 bindings use 277 records and
+  855 data bytes, compared with the former 854-byte ordinary-action array
+  plus a separate 488-byte unit map. Both execution and mode selection use
+  the same lookup. The handwritten initializer and unit lookup are removed.
+- Resource format 4 removes the unit map and its two-byte section offset.
+  The resource header is now 32 bytes, with a compile-time layout assertion.
+  Earlier resource formats are rejected; saved state/settings formats and
+  all menu/command/unit IDs are unchanged. Invalid menu IDs are rejected
+  before accessing action data, returning CMD_NONE with argument zero.
+
+### Measured results
+
+Same CE toolchain v15.0 and optimized/compressed settings:
+
+| Output | Before | After | Change |
+| --- | ---: | ---: | ---: |
+| Calculator, bin/rpnCE.8xp | 53,862 bytes | 54,094 bytes | +232 bytes |
+| Resource appvar, bin/rpnCEres.8xv | 18,187 bytes | 17,697 bytes | -490 bytes |
+| Combined calculator + resources | 72,049 bytes | 71,791 bytes | -258 bytes (0.36%) |
+| Linked program image, obj/rpnCE.obj | 113,360 bytes | 113,512 bytes | +152 bytes |
+| Zero-initialized static RAM (.bss) | 7,051 bytes | 7,051 bytes | unchanged |
+
+A dense unified array passed desktop tests but saved only 143 bytes overall.
+The retained run encoding saves 258. An additional experiment omitted zero
+argument bytes: it reduced the linked image by 80 bytes but increased the
+compressed calculator by 22 bytes, so it was discarded. The final storage
+measurement includes the common decoder's cost. Lookup now scans compact
+records; execution timing has not been benchmarked.
+
+Since the `dev` baseline `63dd939`, combined program/resource storage falls
+from 75,567 to 71,791 bytes: a saving of 3,776 bytes (5.00%).
+
+### Verification
+
+- All three resource-generator entry points produce identical resource
+  bytes, action data, other headers and host unit data.
+- Both host and native suites check all 488 menu IDs plain and shifted
+  against a complete mapping fingerprint captured from the baseline. The
+  existing decoded resource fingerprint is unchanged, including unit-key
+  behavior. All 580 menu slots retain their navigation checks.
+- One-off generator checks reject malformed/oversized arguments, duplicate
+  definitions and invalid command syntax, while accepting bare shared-ID
+  references. The actual C lookup also passes a synthetic large ID gap and
+  ascending arguments 0 through 255, including a split at the run-count limit.
+- All 18 desktop suites pass, also with AddressSanitizer and
+  UndefinedBehaviorSanitizer. All 196 native CE checks and 22 packaged-program
+  keyboard/persistence checks pass in CEmu. All 17 hardware-tool checks and
+  2,102 expanded question/reference checks pass.
+- Menu rows/routes and command IDs match the baseline. The hardware catalog's
+  source fingerprint was refreshed for the added annotations; test procedures
+  and numerical references are unchanged. Guide appendices and every guide
+  screenshot regenerate byte-for-byte unchanged.
+- Matching development binaries are rebuilt in bin/. No files in cem/ are
+  changed, and the release version remains unchanged.
+
+### Next candidates
+
+The menu/action source duplication and separate unit-key path are now
+resolved. Next examine remaining multi-result stack commit conventions:
+ordinary two-result math, statistics and DATE split operations have different
+LASTX/lift requirements, so model those effects explicitly before trying to
+share more code. Preserve the established operand/error contracts.
+
+For further resource savings, measure HELP-only text encoding separately.
+Its short lines may allow a bounded decoding buffer, but pointer lifetimes,
+RAM and page-display cost need an explicit contract before changing the
+current direct archive access. Existing whole-string/suffix pooling remains.

@@ -1,7 +1,7 @@
 /* Tests the RPNCEres appvar: the real src/ui/res.c reading the real
  * data/rpnCEres.bin, checked against the menu file and the unit table.
  *   cc -Itests/mock_fileioc -Itests/mock -Isrc/ui -Isrc/core -o test_res \
- *      tests/test_res.c src/ui/res.c && ./test_res
+ *      tests/test_res.c src/ui/res.c src/ui/actions.c src/core/calc_mode.c && ./test_res
  * (run from the project root, after python3 tools/genres.py)
  */
 #include <stdio.h>
@@ -70,7 +70,7 @@ int main(void)
     int units = 0, good = 1;
     for (uint16_t i = 0; i < MENU_NODE_COUNT; i++) {
         const menu_node_t *m = menu_node(i);
-        int u = unit_for_menu((menu_id_t)m->id);
+        int u = resource_contract_unit((menu_id_t)m->id);
         if (u < 0) continue;
         units++;
         if (strcmp(unit_label((uint8_t)u), res_text(m->label)) != 0) good = 0;
@@ -78,14 +78,14 @@ int main(void)
     char msg[40]; sprintf(msg, "%d unit items", units);
     ok("every UNIT item's label matches its unit", good && units >= UNIT_COUNT, msg);
 
-    int u = unit_for_menu(MID_UNIT_FOOT);
+    int u = resource_contract_unit(MID_UNIT_FOOT);
     ok("ft is 0.3048 m", u >= 0 && strcmp(unit_factor((uint8_t)u), "3.0480000000000E-1") == 0, u >= 0 ? unit_factor((uint8_t)u) : "");
-    u = unit_for_menu(MID_UNIT_FAHRENHEIT);
+    u = resource_contract_unit(MID_UNIT_FAHRENHEIT);
     ok("F has an offset (459.67)", u >= 0 && unit_offset((uint8_t)u) && strcmp(unit_offset((uint8_t)u), "4.5967000000000E2") == 0, NULL);
-    u = unit_for_menu(MID_UNIT_MILES_PER_GALLON);
+    u = resource_contract_unit(MID_UNIT_MILES_PER_GALLON);
     ok("mpg is a reciprocal unit", u >= 0 && unit_reciprocal((uint8_t)u), NULL);
     ok("the base unit of length is m", strcmp(unit_label(unit_base_of(DIM_LENGTH)), "m") == 0, unit_label(unit_base_of(DIM_LENGTH)));
-    ok("CUBE is not a unit", unit_for_menu(MID_CUBE) < 0, NULL);
+    ok("CUBE is not a unit", resource_contract_unit(MID_CUBE) < 0, NULL);
 
     /* HELP pages, from help/help.txt */
     ok("26 HELP pages", res_help_pages() == 26, NULL);

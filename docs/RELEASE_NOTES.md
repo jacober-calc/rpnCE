@@ -16,8 +16,11 @@
   Reduced the development calculator file by another 620 bytes; display,
   numeric warnings and saved-file layouts retain their existing behavior.
 - Packed resource records and shared text suffixes at build time, reducing
-  program-plus-resource storage by another 987 bytes. Resource format 3
+  program-plus-resource storage by another 987 bytes. Resource format 4
   requires its matching program; saved state/settings formats are unchanged.
+- Generated calculator actions from menu definitions and unit order, using
+  one lookup for ordinary functions and units. Removed the separate resource
+  unit map, saving another 258 bytes across program and resources.
 - Added a dedicated complex-number guide chapter with entry, arithmetic,
   CPLX, all six result/display states, formatting, LINK and storage examples.
   Updated chapter navigation, mode and number-type references and the

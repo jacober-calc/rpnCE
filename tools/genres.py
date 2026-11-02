@@ -9,12 +9,13 @@ Writes:
                          into bin/rpnCEres.8xv): menu tree, unit tables, HELP
                          pages, text
   src/ui/menu_data.h     menu IDs, counts, and the record layouts
+  src/ui/menu_actions.h  command/argument bindings, including unit indexes
   src/ui/res_info.h      the resource format and version stamp
   src/core/units_count.h unit and dimension counts
   tests/units_data.c     a C copy of the unit table, for the PC tests only
 
-The program reads the appvar straight from archive, so none of these tables
-use RAM. Needs the mpmath package (for the parsec).
+The resource appvar is read straight from archive. The generated action
+table belongs to the program image. Needs mpmath (for the parsec).
 """
 import os
 import re
@@ -28,11 +29,12 @@ import genunits  # noqa: E402  (exact unit definitions)
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT_BIN = os.path.join(ROOT, 'data', 'rpnCEres.bin')
 OUT_MENU_H = os.path.join(ROOT, 'src', 'ui', 'menu_data.h')
+OUT_ACTION_H = os.path.join(ROOT, 'src', 'ui', 'menu_actions.h')
 OUT_INFO_H = os.path.join(ROOT, 'src', 'ui', 'res_info.h')
 OUT_COUNT_H = os.path.join(ROOT, 'src', 'core', 'units_count.h')
 OUT_UNITS_C = os.path.join(ROOT, 'tests', 'units_data.c')
 
-RES_FORMAT = 3      # packed records; menu kind is derived from record fields
+RES_FORMAT = 4      # unit actions share the generated command table
 HELP_FILE = os.path.join(ROOT, 'help', 'help.txt')
 HELP_MAX_LINES = 8      # a page's lines, title included
 HELP_MAX_CHARS = 44     # fits the screen in the system font
@@ -43,19 +45,19 @@ NONE16 = 0xFFFF
 #   header   "RPNR" u16 format, u16 node_count, u8 group_count, u8 unit_count,
 #            u16 id_count, u32 hash (FNV-1a of everything after the header)
 #   offsets  u16 x 9: nodes, groups, parents, parent_rows, units, unit_base,
-#            unit_map, help, text (from the start of the appvar)
+#            help, text (from the start of the appvar)
 #   nodes    7 bytes each: u16 label, u16 alt_label, u16 id, u8 group
 #            group=0xFF for non-submenus; id=0 for blank; alt_label for MENU_ALT
 #   groups   5 bytes each: u16 label, u16 first node, u8 rows
 #   parents  u8 per group (0xFF for a top-level menu), then parent rows
 #   units    7 bytes each: u16 label, u8 dim_flags (low 7: dim, high: reciprocal), u16 factor,
 #            u16 offset (0xFFFF for none)
-#   unit_base u8 per dimension; unit_map u8 per menu ID (0xFF: not a unit)
+#   unit_base u8 per dimension
 #   help     u8 page count; then per page u8 line count and u16 per line
 #   text     NUL-terminated strings; the u16 fields above are offsets here
 # ---------------------------------------------------------------------------
 HEADER_FMT = '<4sHHBBHI'
-OFFSETS_FMT = '<9H'
+OFFSETS_FMT = '<8H'
 
 
 def label_bytes(text):
@@ -120,7 +122,7 @@ def build_menus():
     for g in groups:
         first = len(nodes)
         for row in g.rows:
-            for n in row + [('blank', '', None, None)] * (5 - len(row)):
+            for n in row + [genmenu.Item('blank', '', None, None)] * (5 - len(row)):
                 if isinstance(n, genmenu.Group):
                     nodes.append(('MENU_GROUP', n.label, None, n.ident, gindex[id(n)]))
                 else:
@@ -172,6 +174,49 @@ def build_units():
     return units, dims, base
 
 
+def build_actions(groups, units):
+    """One binding per ID, independent of how many menus reference it."""
+    bindings = {}
+    for g in groups:
+        for row in g.rows:
+            for n in row:
+                if isinstance(n, genmenu.Item) and n.command:
+                    if n.ident in bindings:
+                        sys.exit(f'menus.txt: duplicate command binding for {n.ident}')
+                    bindings[n.ident] = (n.command, n.arg)
+    for index, (ident, *_) in enumerate(units):
+        if ident in bindings:
+            sys.exit(f'menus.txt: {ident} gets its action from the unit definitions')
+        bindings[ident] = ('CMD_UNIT', str(index))
+    return bindings
+
+
+def action_records(ids, bindings):
+    """Delta IDs, command, argument; ascending argument runs add a count byte.
+
+    Enum names stay symbolic and are resolved by the C compiler. Only plain
+    numeric arguments can form runs, so no C enum parser is needed here.
+    """
+    entries = [(i, *bindings[ident]) for i, ident in enumerate(ids) if ident in bindings]
+    previous, i = 0, 0
+    while i < len(entries):
+        first, cmd, arg = entries[i]
+        count = 1
+        if arg.isdecimal():
+            while count < 255 and i + count < len(entries):
+                nxt, ncmd, narg = entries[i + count]
+                if nxt != first + count or ncmd != cmd or not narg.isdecimal() or int(narg) != int(arg) + count:
+                    break
+                count += 1
+        # Zero-length runs skip unusually large gaps without limiting menu IDs.
+        while first - previous > 127:
+            yield (255, 'CMD_NONE', '0', 0)
+            previous += 127
+        delta = first - previous
+        yield (delta | (128 if count > 1 else 0), cmd, arg, *([count] if count > 1 else []))
+        previous, i = first, i + count
+
+
 def build_help():
     """HELP pages from help/help.txt: a list of pages, each a list of lines."""
     pages, page = [], []
@@ -211,6 +256,7 @@ def main():
     roots, groups, ids, nodes, group_rows, parent, prow = build_menus()
     help_pages = build_help()
     units, dims, base = build_units()
+    bindings = build_actions(groups, units)
     if len(dims) > 128:
         sys.exit('units: packed dimension index exceeds 7 bits')
     id_num = {ident: i for i, ident in enumerate(ids)}
@@ -227,15 +273,13 @@ def main():
     node_bytes = text.pack('<HHHB', node_records)
     group_bytes = text.pack('<HHB', group_records)
     unit_bytes = text.pack('<HBHH', unit_records)
-    unit_index = {u[0]: k for k, u in enumerate(units)}
-    unit_map = bytes(unit_index.get(ident, 0xFF) for ident in ids)
     help_bytes = bytearray([len(help_pages)])
     for page in help_records:
         help_bytes.append(len(page))
         help_bytes += text.pack('<H', [(line,) for line in page])
 
     sections = [node_bytes, group_bytes, bytes(parent), bytes(prow), unit_bytes,
-                bytes(base), unit_map, bytes(help_bytes), bytes(text.data)]
+                bytes(base), bytes(help_bytes), bytes(text.data)]
     start = struct.calcsize(HEADER_FMT) + struct.calcsize(OFFSETS_FMT)
     offsets, pos = [], start
     for sec in sections:
@@ -287,6 +331,18 @@ def main():
             f.write(f'#define MENU_GROUP_{g.ident} {i}\n')
         f.write(f'\n#define MENU_GROUP_COUNT {len(groups)}\n')
         f.write(f'#define MENU_NODE_COUNT {len(nodes)}\n\n#endif\n')
+
+    # ---- src/ui/menu_actions.h ----
+    with open(OUT_ACTION_H, 'w') as f:
+        f.write('/* Generated by tools/genres.py from menus and units. Do not edit. */\n')
+        f.write('#ifndef RPNCE_UI_MENU_ACTIONS_H\n#define RPNCE_UI_MENU_ACTIONS_H\n\n')
+        f.write('/* Each record: delta ID (bit 7: argument run), command, argument;\n'
+                ' * runs add a count byte and increment the argument by ID offset. */\n')
+        f.write('#define ACTION_RUN 0x80\n#define ACTION_DELTA 0x7F\n')
+        f.write('static const uint8_t actions[] = {\n')
+        for record in action_records(ids, bindings):
+            f.write('    ' + ', '.join(str(v) for v in record) + ',\n')
+        f.write('};\n\n#endif\n')
 
     # ---- src/ui/res_info.h ----
     with open(OUT_INFO_H, 'w') as f:

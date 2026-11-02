@@ -65,7 +65,7 @@ clear and resize operations share one typed zero-fill helper; a bytewise
 zero is not substituted for a TI decimal zero. Display-cache invalidation
 compares one byte key containing every formatting setting.
 
-Resource format 3 stores seven-byte menu nodes, five-byte menu groups and
+Resource format 4 stores seven-byte menu nodes, five-byte menu groups and
 seven-byte unit records. A menu's kind is derived from its submenu target,
 blank ID and alternate-label fields rather than stored separately. Unit
 dimensions occupy seven bits, with the reciprocal flag in the eighth;
@@ -78,6 +78,15 @@ reads ordinary NUL-terminated strings directly from archive. No resource
 decompression buffer is needed. Matching program/resource builds are
 required; the loader rejects earlier resource formats. Saved calculator
 state and settings retain their existing formats.
+
+Menu definitions also own calculator command/argument bindings. An ID's
+binding is defined once and reused wherever that ID appears. Unit bindings
+are generated from the same unit order as the resource table. The generated
+`menu_actions.h` replaces the handwritten action array and the separate
+resource unit map. One bounded lookup handles every calculator action;
+consecutive numeric argument runs compact its data. Symbolic command and
+argument enums are resolved by the C compiler. UI prompts and menu navigation
+remain in their respective handlers.
 
 ## Numeric modes and presentation
 

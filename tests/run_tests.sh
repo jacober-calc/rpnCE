@@ -37,7 +37,7 @@ run tvm      $M tests/test_tvm_units.c tests/mock_calc_runtime.c src/core/tvm.c 
              src/core/units.c tests/units_data.c
 run datetime -Isrc/core tests/test_datetime.c src/core/datetime.c
 run res      -Itests/mock_fileioc -Itests/mock -Isrc/ui -Isrc/core tests/test_res.c \
-             src/ui/res.c
+             src/ui/res.c src/ui/actions.c src/core/calc_mode.c
 run actions  -Itests/mock_fileioc $M -Isrc/ui tests/test_actions.c \
              src/ui/actions.c src/ui/res.c src/core/calc_mode.c
 run keys     -Itests/mock_fileioc $M -Isrc/ui tests/test_keys.c src/ui/keys.c \

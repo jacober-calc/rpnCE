@@ -15,6 +15,7 @@
 #include "units.h"
 #include "../checks.h"
 #include "../../resource_contract.h"
+#include "../../action_contract.h"
 #include "../../../src/sys/brightness.h"
 
 _Static_assert(sizeof(real_t) == 9 && sizeof(value_t) == 20 && offsetof(calc_t, regs) == 262,
@@ -531,6 +532,7 @@ int main(void)
     memset((void *)RESULTS, 0, sizeof results);
     check(res_open());
     check(resource_contract() == RESOURCE_CONTRACT_EXPECTED);
+    check(action_contract() == ACTION_CONTRACT_EXPECTED);
     calc_init(&c);
     record("1987,01,17"); number(15000); cmd(CMD_ADD, 0);
     check(x_object("D{2028,2,11}"));
