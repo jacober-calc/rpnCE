@@ -141,10 +141,6 @@ static calc_err_t map_os_error(int err)
     }
 }
 
-/* Result of the last protected call. Static so it survives the error jump. */
-static real_t g_result;
-static real_t g_result2;        /* second answer (Y) for two-value stats */
-
 static bool is_positive(const real_t *v) { return os_RealCompare(v, &mx_zero) > 0; }
 
 static bool is_integer(const real_t *v)
@@ -246,21 +242,10 @@ static real_t reduce_degrees(const real_t *x)
     return os_RealSub(x, &m);
 }
 
-static bool g_degrees;
-
-/* Inputs for unit conversions and TVM solving run inside compute_real(). */
-static uint8_t g_unit_to;
-static uint8_t g_tvm_which;
-static const tvm_settings_t *g_tvm_settings;
-static stats_t *g_stats;
-static int g_round_digits;          /* RNDN / RNDG */
-static uint8_t g_disp_style;        /* RNDF */
-static int8_t g_disp_digits;
-
-static real_t trig(calc_cmd_t cmd, const real_t *x)
+static real_t trig(calc_cmd_t cmd, const real_t *x, bool degrees)
 {
     real_t a = *x;
-    if (g_degrees) {
+    if (degrees) {
         real_t d = reduce_degrees(x);
         int q = quarter_turn(&d);
         if (q >= 0) {
@@ -278,7 +263,7 @@ static real_t trig(calc_cmd_t cmd, const real_t *x)
     return os_RealTanRad(&a);
 }
 
-static real_t inverse_trig(calc_cmd_t cmd, const real_t *x)
+static real_t inverse_trig(calc_cmd_t cmd, const real_t *x, bool degrees)
 {
     real_t r;
     if (cmd == CMD_ASIN)
@@ -287,7 +272,7 @@ static real_t inverse_trig(calc_cmd_t cmd, const real_t *x)
         r = os_RealAcosRad(x);
     else
         r = os_RealAtanRad(x);
-    return g_degrees ? os_RealRadToDeg(&r) : r;
+    return degrees ? os_RealRadToDeg(&r) : r;
 }
 
 static real_t factorial(const real_t *x)
@@ -340,7 +325,7 @@ static real_t combinations(const real_t *n, const real_t *r)
  * pi), correct in every quadrant. Computed from the smaller of |x|/|y| and
  * |y|/|x| so it never overflows, with exact answers on the axes and at 45
  * degrees. ATN2 of (0, 0) is 0. */
-static real_t atan2_real(const real_t *y, const real_t *x)
+static real_t atan2_real(const real_t *y, const real_t *x, bool degrees)
 {
     real_t ax = mx_abs(x), ay = mx_abs(y);
     int cmp = os_RealCompare(&ay, &ax);
@@ -349,9 +334,9 @@ static real_t atan2_real(const real_t *y, const real_t *x)
     if (mx_is_zero(&ay)) {
         a = mx_zero;
     } else if (mx_is_zero(&ax)) {
-        a = g_degrees ? os_Int24ToReal(90) : r_half_pi;
+        a = degrees ? os_Int24ToReal(90) : r_half_pi;
     } else if (cmp == 0) {
-        a = g_degrees ? os_Int24ToReal(45) : r_quarter_pi;
+        a = degrees ? os_Int24ToReal(45) : r_quarter_pi;
     } else {
         if (cmp < 0) {
             real_t q = os_RealDiv(&ay, &ax);
@@ -361,12 +346,12 @@ static real_t atan2_real(const real_t *y, const real_t *x)
             real_t t = os_RealAtanRad(&q);
             a = os_RealSub(&r_half_pi, &t);
         }
-        if (g_degrees)
+        if (degrees)
             a = os_RealRadToDeg(&a);
     }
 
     if (mx_is_neg(x)) {                        /* left half: 180 - a */
-        real_t half_turn = g_degrees ? os_Int24ToReal(180) : r_pi;
+        real_t half_turn = degrees ? os_Int24ToReal(180) : r_pi;
         a = os_RealSub(&half_turn, &a);
     }
     if (mx_is_neg(y))                          /* below the x axis */
@@ -397,13 +382,13 @@ static real_t smallest_prime_factor(const real_t *x)
 }
 
 /* RNDF: round to what the display shows. */
-static real_t round_to_display(const real_t *x)
+static real_t round_to_display(const real_t *x, const value_context_t *ctx)
 {
-    if (g_disp_digits == DISP_FLOAT)
+    if (ctx->disp_digits == DISP_FLOAT)
         return *x;
-    if (g_disp_style == DISP_FIX)
-        return round_decimals(x, g_disp_digits);
-    return round_significant(x, g_disp_digits + 1);
+    if (ctx->disp_style == DISP_FIX)
+        return round_decimals(x, ctx->disp_digits);
+    return round_significant(x, ctx->disp_digits + 1);
 }
 
 static real_t cube_root(const real_t *x)
@@ -415,27 +400,6 @@ static real_t cube_root(const real_t *x)
         return os_RealNeg(&r);
     }
     return os_RealPow(x, &third);
-}
-
-/* Which operands an operation reads, so a DATE object never reaches the
- * real-number routines. */
-static bool reads_x(calc_cmd_t cmd)
-{
-    switch (cmd) {
-        case CMD_PI: case CMD_E: case CMD_TVM_VAR: case CMD_STAT_SUM: case CMD_STAT_MEAN: case CMD_STAT_WMEAN:
-        case CMD_STAT_SDEV: case CMD_STAT_PDEV: case CMD_STAT_SCOV: case CMD_STAT_PCOV:
-        case CMD_FIT_SLOPE: case CMD_FIT_INTERCEPT: case CMD_FIT_CORR: case CMD_FIT_BEST:
-            return false;
-        default:
-            return true;
-    }
-}
-
-static bool reads_y(calc_cmd_t cmd)
-{
-    return (cmd != CMD_COMPLEX_LINK && value_binary(cmd)) || cmd == CMD_TO_POL || cmd == CMD_TO_REC ||
-           cmd == CMD_STAT_PLUS || cmd == CMD_STAT_MINUS ||
-           cmd == CMD_PERCENT || cmd == CMD_PERCENT_CHANGE;
 }
 
 /* precheck() permits integer powers and odd roots of negative bases.
@@ -450,10 +414,50 @@ static real_t signed_power(const real_t *y, const real_t *e)
     return negative ? os_RealNeg(&r) : r;
 }
 
+/* Direct unary operations share one call site. The outer kernel still owns
+ * quantity conversion, prechecks and result/error guards for every command. */
+typedef real_t (*unary_fn_t)(const real_t *);
+static unary_fn_t unary_for(calc_cmd_t cmd)
+{
+    static const struct { uint8_t cmd; unary_fn_t fn; } unary[] = {
+        { CMD_CHS, os_RealNeg },
+        { CMD_SQRT, os_RealSqrt },
+        { CMD_RECIP, os_RealInv },
+        { CMD_LN, os_RealLog },
+        { CMD_EXP, os_RealExp },
+        { CMD_CUBE_ROOT, cube_root },
+        { CMD_EXP_MINUS_ONE, mx_expm1 },
+        { CMD_LN_ONE_PLUS, mx_ln1p },
+        { CMD_INT_PART, os_RealInt },
+        { CMD_FRAC_PART, os_RealFrac },
+        { CMD_FLOOR, os_RealFloor },
+        { CMD_NEAR, os_RealRoundInt },
+        { CMD_ABS, mx_abs },
+        { CMD_FACTORIAL, factorial },
+        { CMD_PRIME, smallest_prime_factor },
+        { CMD_SINH, mx_sinh },
+        { CMD_COSH, mx_cosh },
+        { CMD_TANH, mx_tanh },
+        { CMD_ASINH, mx_asinh },
+        { CMD_ACOSH, mx_acosh },
+        { CMD_ATANH, mx_atanh },
+        { CMD_TO_HOURS, mx_hms_to_hours },
+        { CMD_TO_HMS, mx_hours_to_hms },
+        { CMD_TO_DEG, os_RealRadToDeg },
+        { CMD_TO_RAD, os_RealDegToRad },
+    };
+    for (unsigned i = 0; i < sizeof unary / sizeof unary[0]; i++)
+        if (unary[i].cmd == cmd) return unary[i].fn;
+    return NULL;
+}
+
 /* value_eval() validates the operands and masks units on unread operands
- * before entering this real-number kernel under its OS error handler. */
-static calc_err_t compute_real(calc_cmd_t cmd, const real_t *y, const real_t *x,
-                          uint8_t uy, uint8_t ux, uint8_t *result_unit)
+ * before entering this real-number kernel under its OS error handler.
+ * Preserve both kernel call boundaries: CE LTO grows the dispatcher when
+ * it expands these switches into value_eval(). */
+static __attribute__((noinline)) calc_err_t compute_real(const value_context_t *ctx, calc_cmd_t cmd,
+                          const real_t *y, const real_t *x, uint8_t uy, uint8_t ux,
+                          uint8_t flags, value_result_t *out)
 {
     real_t converted_x;
     uint8_t tag = 0;
@@ -470,54 +474,51 @@ static calc_err_t compute_real(calc_cmd_t cmd, const real_t *y, const real_t *x,
         return pre;
     }
 
-    switch (cmd) {
-        case CMD_PI: g_result = r_pi; break;
-        case CMD_E: g_result = os_RealExp(&mx_one); break;
-        case CMD_CHS:    g_result = os_RealNeg(x); tag = ux; break;
-        case CMD_ADD:    g_result = mx_add(y, x); break;
-        case CMD_SUB:    g_result = mx_sub(y, x); break;
-        case CMD_MUL:    g_result = os_RealMul(y, x); break;
-        case CMD_DIV:    g_result = os_RealDiv(y, x); break;
-        case CMD_POW:    g_result = signed_power(y, x); break;
-        case CMD_SQUARE: g_result = os_RealMul(x, x); break;
-        case CMD_SQRT:   g_result = os_RealSqrt(x); break;
-        case CMD_RECIP:  g_result = os_RealInv(x); break;
-        case CMD_LN:     g_result = os_RealLog(x); break;
+    unary_fn_t unary = unary_for(cmd);
+    if (unary) out->x.real = unary(x);
+    else switch (cmd) {
+        case CMD_PI: out->x.real = r_pi; break;
+        case CMD_E: out->x.real = os_RealExp(&mx_one); break;
+        case CMD_ADD:    out->x.real = mx_add(y, x); break;
+        case CMD_SUB:    out->x.real = mx_sub(y, x); break;
+        case CMD_MUL:    out->x.real = os_RealMul(y, x); break;
+        case CMD_DIV:    out->x.real = os_RealDiv(y, x); break;
+        case CMD_POW:    out->x.real = signed_power(y, x); break;
+        case CMD_SQUARE: out->x.real = os_RealMul(x, x); break;
         case CMD_LOG: {
             real_t ln = os_RealLog(x);
-            g_result = os_RealDiv(&ln, &r_ln10);
+            out->x.real = os_RealDiv(&ln, &r_ln10);
             break;
         }
-        case CMD_EXP:    g_result = os_RealExp(x); break;
-        case CMD_ALOG:   g_result = os_RealPow(&mx_ten, x); break;
+        case CMD_ALOG:   out->x.real = os_RealPow(&mx_ten, x); break;
         case CMD_SIN:
         case CMD_COS:
-        case CMD_TAN:    g_result = trig(cmd, x); break;
+        case CMD_TAN:    out->x.real = trig(cmd, x, ctx->degrees); break;
         case CMD_ASIN:
         case CMD_ACOS:
-        case CMD_ATAN:   g_result = inverse_trig(cmd, x); break;
+        case CMD_ATAN:   out->x.real = inverse_trig(cmd, x, ctx->degrees); break;
 
         case CMD_XROOT_Y: {
             real_t inv = os_RealInv(x);
-            g_result = signed_power(y, &inv);
+            out->x.real = signed_power(y, &inv);
             break;
         }
         case CMD_LOG_BASE: {
             real_t ly = os_RealLog(y);
             real_t lx = os_RealLog(x);
-            g_result = os_RealDiv(&ly, &lx);
+            out->x.real = os_RealDiv(&ly, &lx);
             break;
         }
-        case CMD_GCD:    g_result = os_RealGcd(y, x); break;
+        case CMD_GCD:    out->x.real = os_RealGcd(y, x); break;
         case CMD_LCM: {
             /* Avoid the OS LCM entry point; divide first to keep the
              * intermediate product small, and define lcm(0,n) as zero. */
             if (mx_is_zero(y) || mx_is_zero(x)) {
-                g_result = mx_zero;
+                out->x.real = mx_zero;
             } else {
                 real_t gcd = os_RealGcd(y, x);
                 real_t q = os_RealDiv(y, &gcd);
-                g_result = os_RealMul(&q, x);
+                out->x.real = os_RealMul(&q, x);
             }
             break;
         }
@@ -539,79 +540,61 @@ static calc_err_t compute_real(calc_cmd_t cmd, const real_t *y, const real_t *x,
             }
             real_t f = os_RealFloor(&q);
             real_t m = os_RealMul(x, &f);
-            g_result = mx_sub(y, &m);
+            out->x.real = mx_sub(y, &m);
             break;
         }
-        case CMD_MIN:    g_result = os_RealMin(y, x); break;
-        case CMD_MAX:    g_result = os_RealMax(y, x); break;
-        case CMD_COMB:   g_result = combinations(y, x); break;
-        case CMD_PERM:   g_result = permutations(y, x); break;
+        case CMD_MIN:    out->x.real = os_RealMin(y, x); break;
+        case CMD_MAX:    out->x.real = os_RealMax(y, x); break;
+        case CMD_COMB:   out->x.real = combinations(y, x); break;
+        case CMD_PERM:   out->x.real = permutations(y, x); break;
         case CMD_PERCENT: {
             real_t m = os_RealMul(y, x);
-            g_result = os_RealDiv(&m, &mx_hundred);
+            out->x.real = os_RealDiv(&m, &mx_hundred);
             break;
         }
         case CMD_PERCENT_CHANGE: {
             real_t d = os_RealSub(x, y);
             real_t m = os_RealMul(&d, &mx_hundred);
-            g_result = os_RealDiv(&m, y);
+            out->x.real = os_RealDiv(&m, y);
             break;
         }
         case CMD_CUBE: {
             real_t sq = os_RealMul(x, x);
-            g_result = os_RealMul(&sq, x);
+            out->x.real = os_RealMul(&sq, x);
             break;
         }
-        case CMD_CUBE_ROOT: g_result = cube_root(x); break;
-        case CMD_ATAN2:     g_result = atan2_real(y, x); break;
-        case CMD_EXP_MINUS_ONE: g_result = mx_expm1(x); break;
-        case CMD_LN_ONE_PLUS:   g_result = mx_ln1p(x); break;
-        case CMD_TWO_POW:   g_result = os_RealPow(&mx_two, x); break;
+        case CMD_ATAN2:     out->x.real = atan2_real(y, x, ctx->degrees); break;
+        case CMD_TWO_POW:   out->x.real = os_RealPow(&mx_two, x); break;
         case CMD_LOG2: {
             real_t ln = os_RealLog(x);
-            g_result = os_RealDiv(&ln, &r_ln2);
+            out->x.real = os_RealDiv(&ln, &r_ln2);
             break;
         }
-        case CMD_INT_PART:  g_result = os_RealInt(x); break;
-        case CMD_FRAC_PART: g_result = os_RealFrac(x); break;
-        case CMD_FLOOR:     g_result = os_RealFloor(x); break;
         case CMD_CEIL: {
             real_t n = os_RealNeg(x);
             real_t f = os_RealFloor(&n);
-            g_result = os_RealNeg(&f);
+            out->x.real = os_RealNeg(&f);
             break;
         }
-        case CMD_NEAR:      g_result = os_RealRoundInt(x); break;
-        case CMD_ABS:       g_result = mx_is_neg(x) ? os_RealNeg(x) : *x; break;
         case CMD_SIGN:
-            g_result = os_Int24ToReal(mx_is_zero(x) ? 0 : (mx_is_neg(x) ? -1 : 1));
+            out->x.real = os_Int24ToReal(mx_is_zero(x) ? 0 : (mx_is_neg(x) ? -1 : 1));
             break;
-        case CMD_FACTORIAL: g_result = factorial(x); break;
         case CMD_UNIT:
-            if (g_unit_to >= UNIT_COUNT) { return ERR_TYPE; }
-            if (ux && unit_dim((uint8_t)(ux - 1)) != unit_dim(g_unit_to)) {
+            if (ctx->arg >= UNIT_COUNT) { return ERR_TYPE; }
+            if (ux && unit_dim((uint8_t)(ux - 1)) != unit_dim(ctx->arg)) {
                 return ERR_UNIT;
             }
-            g_result = ux ? unit_convert(x, (uint8_t)(ux - 1), g_unit_to) : *x;
-            tag = (uint8_t)(g_unit_to + 1);
+            out->x.real = ux ? unit_convert(x, (uint8_t)(ux - 1), ctx->arg) : *x;
+            tag = (uint8_t)(ctx->arg + 1);
             break;
-        case CMD_PRIME:     g_result = smallest_prime_factor(x); break;
-        case CMD_ROUND_FIX: g_result = round_to_display(x); break;
-        case CMD_ROUND_N:   g_result = round_decimals(x, g_round_digits); break;
-        case CMD_ROUND_G:   g_result = round_significant(x, g_round_digits); break;
-        case CMD_SINH:      g_result = mx_sinh(x); break;
-        case CMD_COSH:      g_result = mx_cosh(x); break;
-        case CMD_TANH:      g_result = mx_tanh(x); break;
-        case CMD_ASINH:     g_result = mx_asinh(x); break;
-        case CMD_ACOSH:     g_result = mx_acosh(x); break;
-        case CMD_ATANH:     g_result = mx_atanh(x); break;
-        case CMD_TO_HOURS:  g_result = mx_hms_to_hours(x); break;
-        case CMD_TO_HMS:    g_result = mx_hours_to_hms(x); break;
+        case CMD_ROUND_FIX: out->x.real = round_to_display(x, ctx); break;
+        case CMD_ROUND_N:   out->x.real = round_decimals(x, ctx->arg); break;
+        case CMD_ROUND_G:   out->x.real = round_significant(x, ctx->arg ? ctx->arg : 1); break;
         case CMD_HMS_ADD:
         case CMD_HMS_SUB: {
             real_t hy = mx_hms_to_hours(y), hx = mx_hms_to_hours(x);
             real_t h = (cmd == CMD_HMS_ADD) ? os_RealAdd(&hy, &hx) : os_RealSub(&hy, &hx);
-            g_result = mx_hours_to_hms(&h);
+            out->x.real = mx_hours_to_hms(&h);
             break;
         }
         case CMD_TO_POL: {          /* X = x, Y = y  ->  X = r, Y = angle */
@@ -622,73 +605,54 @@ static calc_err_t compute_real(calc_cmd_t cmd, const real_t *y, const real_t *x,
             mx_check_range(&x2);
             mx_check_range(&y2);
             real_t s = os_RealAdd(&x2, &y2);
-            g_result = os_RealSqrt(&s);
-            g_result2 = atan2_real(y, x);
+            out->x.real = os_RealSqrt(&s);
+            out->y.real = atan2_real(y, x, ctx->degrees);
             break;
         }
         case CMD_TO_REC: {          /* X = r, Y = angle  ->  X = x, Y = y */
-            real_t cs = trig(CMD_COS, y), sn = trig(CMD_SIN, y);
-            g_result = os_RealMul(x, &cs);
-            g_result2 = os_RealMul(x, &sn);
+            real_t cs = trig(CMD_COS, y, ctx->degrees), sn = trig(CMD_SIN, y, ctx->degrees);
+            out->x.real = os_RealMul(x, &cs);
+            out->y.real = os_RealMul(x, &sn);
             break;
         }
         /* statistics: x is X, y is Y */
         case CMD_STAT_PLUS:
         case CMD_STAT_MINUS:
-            stats_add(g_stats, x, y, cmd == CMD_STAT_PLUS ? 1 : -1);
-            g_result = g_stats->sum[SUM_N];
+            stats_add(ctx->stats, x, y, cmd == CMD_STAT_PLUS ? 1 : -1);
+            out->x.real = ctx->stats->sum[SUM_N];
             break;
-        case CMD_STAT_SUM:   stats_sums(g_stats, &g_result, &g_result2); break;
-        case CMD_STAT_MEAN:  stats_mean(g_stats, &g_result, &g_result2); break;
-        case CMD_STAT_WMEAN: stats_wmean(g_stats, &g_result, &g_result2); break;
-        case CMD_STAT_SDEV:  stats_sdev(g_stats, true, &g_result, &g_result2); break;
-        case CMD_STAT_PDEV:  stats_sdev(g_stats, false, &g_result, &g_result2); break;
-        case CMD_STAT_SCOV:  g_result = stats_cov(g_stats, true); break;
-        case CMD_STAT_PCOV:  g_result = stats_cov(g_stats, false); break;
-        case CMD_FIT_X:      g_result = stats_forecast_x(g_stats, x); break;
-        case CMD_FIT_Y:      g_result = stats_forecast_y(g_stats, x); break;
-        case CMD_FIT_SLOPE:  g_result = stats_slope(g_stats); break;
-        case CMD_FIT_INTERCEPT: g_result = stats_intercept(g_stats); break;
-        case CMD_FIT_CORR:   g_result = stats_corr(g_stats); break;
-        case CMD_FIT_BEST:   stats_best(g_stats); break;
-        case CMD_TVM_VAR:   g_result = tvm_solve(g_tvm_which, g_tvm_settings); break;
-        case CMD_TO_DEG:    g_result = os_RealRadToDeg(x); break;
-        case CMD_TO_RAD:    g_result = os_RealDegToRad(x); break;
+        case CMD_STAT_SUM:   stats_sums(ctx->stats, &out->x.real, &out->y.real); break;
+        case CMD_STAT_MEAN:  stats_mean(ctx->stats, &out->x.real, &out->y.real); break;
+        case CMD_STAT_WMEAN: stats_wmean(ctx->stats, &out->x.real, &out->y.real); break;
+        case CMD_STAT_SDEV:  stats_sdev(ctx->stats, true, &out->x.real, &out->y.real); break;
+        case CMD_STAT_PDEV:  stats_sdev(ctx->stats, false, &out->x.real, &out->y.real); break;
+        case CMD_STAT_SCOV:  out->x.real = stats_cov(ctx->stats, true); break;
+        case CMD_STAT_PCOV:  out->x.real = stats_cov(ctx->stats, false); break;
+        case CMD_FIT_X:      out->x.real = stats_forecast_x(ctx->stats, x); break;
+        case CMD_FIT_Y:      out->x.real = stats_forecast_y(ctx->stats, x); break;
+        case CMD_FIT_SLOPE:  out->x.real = stats_slope(ctx->stats); break;
+        case CMD_FIT_INTERCEPT: out->x.real = stats_intercept(ctx->stats); break;
+        case CMD_FIT_CORR:   out->x.real = stats_corr(ctx->stats); break;
+        case CMD_FIT_BEST:   stats_best(ctx->stats); break;
+        case CMD_TVM_VAR:   out->x.real = tvm_solve(ctx->arg, ctx->tvm); break;
         default: return ERR_TYPE;
     }
 
-    if ((cmd == CMD_MUL || cmd == CMD_DIV || cmd == CMD_PERCENT) && mx_is_zero(&g_result) &&
+    if ((cmd == CMD_MUL || cmd == CMD_DIV || cmd == CMD_PERCENT) && mx_is_zero(&out->x.real) &&
         !mx_is_zero(x) && !mx_is_zero(y)) os_ThrowError(MX_E_UNDERFLOW);
-    if ((cmd == CMD_SQUARE || cmd == CMD_RECIP || cmd == CMD_CUBE) && mx_is_zero(&g_result) &&
+    if ((cmd == CMD_SQUARE || cmd == CMD_RECIP || cmd == CMD_CUBE) && mx_is_zero(&out->x.real) &&
         !mx_is_zero(x)) os_ThrowError(MX_E_UNDERFLOW);
-    if ((cmd == CMD_POW || cmd == CMD_XROOT_Y) && mx_is_zero(&g_result) &&
+    if ((cmd == CMD_POW || cmd == CMD_XROOT_Y) && mx_is_zero(&out->x.real) &&
         !mx_is_zero(y)) os_ThrowError(MX_E_UNDERFLOW);
     if ((cmd == CMD_EXP || cmd == CMD_ALOG || cmd == CMD_TWO_POW) &&
-        mx_is_zero(&g_result)) os_ThrowError(MX_E_UNDERFLOW);
-    if (cmd != CMD_FIT_BEST) mx_check_range(&g_result);
+        mx_is_zero(&out->x.real)) os_ThrowError(MX_E_UNDERFLOW);
+    if (cmd != CMD_FIT_BEST) mx_check_range(&out->x.real);
     if (cmd == CMD_STAT_PLUS || cmd == CMD_STAT_MINUS)
-        for (uint8_t i = 0; i < SUM_COUNT; i++) mx_check_range(&g_stats->sum[i]);
-    if (cmd == CMD_TO_POL || cmd == CMD_TO_REC || cmd == CMD_STAT_SUM ||
-        cmd == CMD_STAT_MEAN || cmd == CMD_STAT_WMEAN ||
-        cmd == CMD_STAT_SDEV || cmd == CMD_STAT_PDEV)
-        mx_check_range(&g_result2);
-    *result_unit = tag;
+        for (uint8_t i = 0; i < SUM_COUNT; i++) mx_check_range(&ctx->stats->sum[i]);
+    if (flags & COMMAND_PAIR) mx_check_range(&out->y.real);
+    out->x.unit = tag;
     return ERR_NONE;
 }
-
-bool value_binary(calc_cmd_t cmd)
-{
-    switch (cmd) {
-        case CMD_ADD: case CMD_SUB: case CMD_MUL: case CMD_DIV: case CMD_POW:
-        case CMD_XROOT_Y: case CMD_LOG_BASE: case CMD_GCD: case CMD_LCM:
-        case CMD_MOD: case CMD_MIN: case CMD_MAX: case CMD_COMB: case CMD_PERM:
-        case CMD_ATAN2: case CMD_HMS_ADD: case CMD_HMS_SUB: case CMD_COMPLEX_LINK:
-            return true;
-        default:
-            return false;
-    }
-}
-
 
 /* Complex kernels use the same decimal real arithmetic as the rest of the
  * calculator. These helpers never move stack values or mutate registers. */
@@ -770,9 +734,7 @@ static value_t complex_ln(const value_t *z)
     real_t correction = mx_ln1p(&q2);
     correction = os_RealDiv(&correction, &mx_two);
     real_t loghi = os_RealLog(&hi);
-    bool saved = g_degrees; g_degrees = false;
-    real_t angle = atan2_real(&z->imag, &z->real);
-    g_degrees = saved;
+    real_t angle = atan2_real(&z->imag, &z->real, false);
     if (mx_is_zero(&angle) && !mx_is_zero(&z->imag)) os_ThrowError(MX_E_UNDERFLOW);
     return value_complex(mx_add(&loghi, &correction), angle);
 }
@@ -828,7 +790,7 @@ static value_t complex_sqrt(const value_t *z)
     return value_complex(re, im);
 }
 
-static calc_err_t compute_complex(calc_cmd_t cmd, const value_t *y, const value_t *x,
+static __attribute__((noinline)) calc_err_t compute_complex(calc_cmd_t cmd, const value_t *y, const value_t *x,
                                    value_t *out)
 {
     value_t a = complex_promote(y), b = complex_promote(x);
@@ -901,20 +863,18 @@ const char *value_eval(const value_context_t *ctx, calc_cmd_t cmd,
         if (!value_is_date(x) && !(ctx->arg == DF_CVTZ && value_is_date(y)))
             return "Err: Data Type";
     }
-    bool rx = reads_x(cmd);
-    bool ry = (cmd == CMD_BASE_OP ? base_is_binary((base_op_t)ctx->arg) : reads_y(cmd)) || (cmd == CMD_COMPLEX_LINK && x->type != VALUE_COMPLEX);
+    uint8_t flags = command_flags(cmd);
+    bool rx = !(flags & COMMAND_NO_X);
+    bool ry = (flags & (COMMAND_DROP | COMMAND_READ_Y)) != 0;
+    if (cmd == CMD_BASE_OP) ry = base_is_binary((base_op_t)ctx->arg);
+    if (cmd == CMD_COMPLEX_LINK && x->type == VALUE_COMPLEX) ry = false;
     if ((rx && !value_valid(x)) || (ry && !value_valid(y)))
         return "Err: Data Type";
-    g_degrees = ctx->degrees;
-    g_round_digits = cmd == CMD_ROUND_G && !ctx->arg ? 1 : ctx->arg;
-    g_disp_style = ctx->disp_style; g_disp_digits = ctx->disp_digits;
-    g_unit_to = ctx->arg; g_tvm_which = ctx->arg;
-    g_tvm_settings = ctx->tvm; g_stats = ctx->stats;
     os_ResetFlag(ON, INTERRUPT);
     int error = os_PushErrorHandler();
     if (error) return error_text(map_os_error(error));
     memset(out, 0, sizeof *out);
-    out->drop = value_binary(cmd);
+    out->drop = (flags & COMMAND_DROP) != 0;
     if ((rx && value_is_date(x)) || (ry && value_is_date(y))) {
         dt_err_t e = value_date_eval(cmd, y, x, out);
         os_PopErrorHandler();
@@ -946,16 +906,15 @@ const char *value_eval(const value_context_t *ctx, calc_cmd_t cmd,
             real_t first = x->real, second = x->imag;
             if (ctx->complex_mode != COMPLEX_RECT) {
                 first = magnitude(&x->real, &x->imag);
-                g_degrees = ctx->complex_mode == COMPLEX_DEG;
-                second = atan2_real(&x->imag, &x->real);
+                second = atan2_real(&x->imag, &x->real, ctx->complex_mode == COMPLEX_DEG);
             }
             out->y = value_real(first); out->x = value_real(second); out->pair = out->split = true;
             out->drop = false;
         } else if (value_is_plain(x) && value_is_plain(y)) {
             out->x = value_complex(y->real, x->real);
             if (ctx->complex_mode != COMPLEX_RECT) {
-                g_degrees = ctx->complex_mode == COMPLEX_DEG;
-                real_t cs = trig(CMD_COS, &x->real), sn = trig(CMD_SIN, &x->real);
+                bool degrees = ctx->complex_mode == COMPLEX_DEG;
+                real_t cs = trig(CMD_COS, &x->real, degrees), sn = trig(CMD_SIN, &x->real, degrees);
                 out->x = value_complex(os_RealMul(&y->real, &cs), os_RealMul(&y->real, &sn));
             }
         } else { os_PopErrorHandler(); return "Err: Data Type"; }
@@ -971,7 +930,7 @@ const char *value_eval(const value_context_t *ctx, calc_cmd_t cmd,
                 break;
             case CMD_COMPLEX_ABS: out->x = value_real(magnitude(&z.real, &z.imag)); break;
             case CMD_COMPLEX_ANGLE:
-                out->x = value_real(value_is_real(x) ? mx_zero : atan2_real(&z.imag, &z.real)); break;
+                out->x = value_real(value_is_real(x) ? mx_zero : atan2_real(&z.imag, &z.real, ctx->degrees)); break;
             default: break;
         }
     } else if ((rx && x->type == VALUE_COMPLEX) || (ry && y->type == VALUE_COMPLEX) ||
@@ -983,14 +942,10 @@ const char *value_eval(const value_context_t *ctx, calc_cmd_t cmd,
         if (value_is_real(x) && (!ry || value_is_real(y)) && mx_is_zero(&out->x.imag))
             out->x = value_real(out->x.real);
     } else {
-        uint8_t tag;
-        calc_err_t e = compute_real(cmd, &y->real, &x->real, ry ? y->unit : 0, rx ? x->unit : 0, &tag);
+        calc_err_t e = compute_real(ctx, cmd, &y->real, &x->real,
+                                    ry ? y->unit : 0, rx ? x->unit : 0, flags, out);
         if (e != ERR_NONE) { os_PopErrorHandler(); return error_text(e); }
-        out->x = value_real(g_result); out->x.unit = tag;
-        out->y = value_real(g_result2);
-        out->pair = cmd == CMD_TO_POL || cmd == CMD_TO_REC || cmd == CMD_STAT_SUM ||
-                    cmd == CMD_STAT_MEAN || cmd == CMD_STAT_WMEAN ||
-                    cmd == CMD_STAT_SDEV || cmd == CMD_STAT_PDEV;
+        out->pair = (flags & COMMAND_PAIR) != 0;
     }
     if (!value_is_date(&out->x)) {
         mx_check_range(&out->x.real);

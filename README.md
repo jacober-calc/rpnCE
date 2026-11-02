@@ -97,7 +97,7 @@ To try it without a calculator, load both files and `clibs.8xg` into the
 
 ### Memory
 
-The menu tree, unit tables and 26 HELP pages (about 19 KB) live in `RPNCEres`
+The menu tree, unit tables and 26 HELP pages (about 18 KB) live in `RPNCEres`
 and are read straight from archive, so they use no RAM. The current build
 uses larger complete-value slots for stack and register
 storage. See the linker map for program and static-storage sizes; runtime
@@ -120,9 +120,9 @@ sequences, display redraws, and brightness controls), using
 stand-ins for the calculator's number routines.
 
 The [native tests](tests/README.md#native-ce-checks) additionally compile
-the real core with the CE toolchain and run 183 checks in CEmu using TI-OS
+the real core with the CE toolchain and run 196 checks in CEmu using TI-OS
 number routines. They cover CE execution, CTZ/ATZ conversions, unit round trips and all
-four curve-fit models and numeric boundaries. Nineteen further checks exercise
+four curve-fit models and numeric boundaries. Twenty-two further checks exercise
 the program's keyboard loop and saving/reopening in CEmu. Known numerical
 checks and coverage limits are described in [tests/README.md](tests/README.md#numeric-limit-checks).
 
@@ -137,7 +137,7 @@ src/core/    calculator logic: stack, registers, math, formatting, rounding,
 src/ui/      display, dot-matrix font, keypad, menus, VARS catalog,
              res.c (reads the RPNCEres appvar)
 src/sys/     saving and loading state, the hardware clock
-menus/       menus.txt: the whole menu tree as editable text
+menus/       menus.txt: menu tree and calculator command/argument bindings
 help/        help.txt: the HELP pages as editable text
 data/        rpnCEres.bin: the RPNCEres appvar's contents (generated)
 tools/       guide_appendix.py: regenerates the manual's menu map, unit list
@@ -154,9 +154,12 @@ docs/        USER_GUIDE.md: manual contents; guide/: chapters and reference
 
 Change `menus/menus.txt`, `help/help.txt` (or the unit definitions in
 `tools/genunits.py`), then run `python3 tools/genres.py` and rebuild. It regenerates
-`data/rpnCEres.bin` and the headers that go with it, with a new version
-stamp, so a program and appvar built from different sources can't be mixed
-up. The generated files are committed, so building doesn't need Python.
+`data/rpnCEres.bin`, the layout headers and `src/ui/menu_actions.h`.
+The program checks the appvar's resource-content stamp. Generated files
+are committed, so building doesn't need Python.
+Add optional `CMD_*` and argument fields to an item or alt line to define
+its calculator action. Define each ID's binding once; other menu entries
+reuse that ID. Unit indexes are generated automatically from unit order.
 After changing the menus or units, also run `python3 tools/guide_appendix.py`
 to refresh the menu map, unit list, and function index in
 `docs/guide/20-reference.md`. Update the operating instructions and examples

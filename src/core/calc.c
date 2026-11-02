@@ -5,6 +5,7 @@
 #include "calc_internal.h"
 #include "calc_entry.h"
 #include "calc_date.h"
+#include "calc_mode.h"
 #include "value_math.h"
 #include "format.h"
 #include "value_format.h"
@@ -16,11 +17,12 @@
 /* All stack movement copies a complete value, including its unit. */
 static void lift_levels(calc_t *c)
 {
-    for (int k = c->depth - 1; k > 0; k--) c->stack[k] = c->stack[k - 1];
+    memmove(c->stack + 1, c->stack, (c->depth - 1) * sizeof c->stack[0]);
 }
 static void drop_levels(calc_t *c, int from)
 {
-    for (int k = from; k < c->depth - 1; k++) c->stack[k] = c->stack[k + 1];
+    memmove(c->stack + from, c->stack + from + 1,
+            (c->depth - from - 1) * sizeof c->stack[0]);
 }
 static void save_lastx(calc_t *c) { c->lastx = c->stack[0]; }
 void calc_stack_set_result(calc_t *c, const value_t *v, bool drop)
@@ -45,9 +47,19 @@ void calc_stack_enter(calc_t *c, const value_t *v)
     else c->stack[0] = copy;
     c->lift = true;
 }
+static __attribute__((noinline)) void clear_values(value_t *values, uint8_t count)
+{
+    value_t zero = value_real(mx_zero);
+    for (uint8_t i = 0; i < count; i++) values[i] = zero;
+}
 static void clear_stack(calc_t *c)
 {
-    for (int i = 0; i < STACK_MAX; i++) c->stack[i] = value_real(mx_zero);
+    clear_values(c->stack, STACK_MAX);
+}
+static void clear_registers(calc_t *c)
+{
+    clear_values(c->regs, REG_BASE_COUNT);
+    clear_values(c->extra, REG_EXTRA_MAX);
 }
 static value_context_t context(calc_t *c, uint8_t arg)
 {
@@ -235,8 +247,7 @@ static void set_reg_size(calc_t *c)
     if (total < 0)
         return;
     int n = total - REG_STAT_LAST;
-    for (int i = n; i < REG_EXTRA_MAX; i++)
-        c->extra[i] = value_real(mx_zero);
+    clear_values(c->extra + n, (uint8_t)(REG_EXTRA_MAX - n));
     c->extra_count = (uint8_t)n;
     c->message = "Register Size Set";
 }
@@ -248,9 +259,7 @@ static void set_stack_size(calc_t *c)
     int n = size_from_x(c, STACK_MIN, STACK_MAX);
     if (n < 0)
         return;
-    for (int k = n; k < STACK_MAX; k++) {
-        c->stack[k] = value_real(mx_zero);
-    }
+    clear_values(c->stack + n, (uint8_t)(STACK_MAX - n));
     c->depth = (uint8_t)n;
     c->message = "Stack Size Set";
 }
@@ -353,19 +362,17 @@ static void do_stat(calc_t *c, calc_cmd_t cmd)
 
     c->stats = trial;
 
+    if (result.pair) {
+        calc_stack_enter(c, &result.y);
+        calc_stack_push(c, &result.x);
+        return;
+    }
     switch (cmd) {
         case CMD_STAT_PLUS:
         case CMD_STAT_MINUS:
             calc_stack_set_x(c, &result.x);
             c->lift = false;
             break;
-        case CMD_STAT_SUM: case CMD_STAT_MEAN: case CMD_STAT_WMEAN:
-        case CMD_STAT_SDEV: case CMD_STAT_PDEV: {
-            value_t y = result.y, x = result.x;
-            calc_stack_enter(c, &y);
-            calc_stack_push(c, &x);
-            break;
-        }
         case CMD_FIT_X:
         case CMD_FIT_Y:
             calc_stack_set_x(c, &result.x);
@@ -465,10 +472,7 @@ void calc_init(calc_t *c)
     c->depth = STACK_MIN;
     clear_stack(c);
     c->lastx = value_real(mx_zero);
-    for (int i = 0; i < REG_BASE_COUNT; i++)
-        c->regs[i] = value_real(mx_zero);
-    for (int i = 0; i < REG_EXTRA_MAX; i++)
-        c->extra[i] = value_real(mx_zero);
+    clear_registers(c);
     c->extra_count = 0;
     c->lift = true;
     c->degrees = true;
@@ -501,10 +505,7 @@ void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg)
 
     /* Finish and validate every entry through one parser before any consumer
      * sees it. A failed entry remains open for repair with DEL or CLEAR. */
-    bool editing_key = cmd == CMD_DIGIT || cmd == CMD_DOT || cmd == CMD_EE ||
-        cmd == CMD_CHS || cmd == CMD_BACKSPACE || cmd == CMD_CLEAR ||
-        cmd == CMD_RECORD_OPEN || cmd == CMD_ALPHA_LETTER || cmd == CMD_RECORD_TAG ||
-        cmd == CMD_COMPLEX_RECT_ENTRY || cmd == CMD_COMPLEX_POLAR_ENTRY ||
+    bool editing_key = (command_flags(cmd) & COMMAND_ENTRY) ||
         (cmd == CMD_RECORD_CLOSE && calc_entry_in_record(c));
     if (c->editing && !editing_key) {
         calc_finish_entry(c);
@@ -512,14 +513,15 @@ void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg)
     }
     cmd = base_key(c, cmd, &arg);
     c->last_cmd = cmd;
+    if (calc_mode_set(c, cmd, arg)) return;
+    if (command_flags(cmd) & COMMAND_STAT) {
+        do_stat(c, cmd);
+        return;
+    }
 
     switch (cmd) {
         case CMD_COMPLEX_RECT_ENTRY: calc_entry_complex(c, 'i'); break;
         case CMD_COMPLEX_POLAR_ENTRY: calc_entry_complex(c, 'd'); break;
-        case CMD_RESULT_REAL: case CMD_RESULT_COMPLEX:
-            c->complex_results = cmd == CMD_RESULT_COMPLEX; break;
-        case CMD_COMPLEX_RECT: case CMD_COMPLEX_RAD: case CMD_COMPLEX_DEG:
-            c->complex_mode = (uint8_t)(cmd - CMD_COMPLEX_RECT); break;
         case CMD_DIGIT:     calc_entry_digit(c, arg); break;
         case CMD_DOT:       calc_entry_dot(c); break;
         case CMD_EE:        calc_entry_ee(c); break;
@@ -562,10 +564,7 @@ void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg)
             break;
 
         case CMD_CLEAR_REGS:                    /* CLRG */
-            for (int i = 0; i < REG_BASE_COUNT; i++)
-                c->regs[i] = value_real(mx_zero);
-            for (int i = 0; i < REG_EXTRA_MAX; i++)
-                c->extra[i] = value_real(mx_zero);
+            clear_registers(c);
             c->message = "Registers Cleared";
             break;
 
@@ -669,14 +668,6 @@ void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg)
             do_tvm_setting(c, cmd, arg);
             break;
 
-        case CMD_STAT_PLUS: case CMD_STAT_MINUS: case CMD_STAT_SUM:
-        case CMD_STAT_MEAN: case CMD_STAT_WMEAN: case CMD_STAT_SDEV:
-        case CMD_STAT_PDEV: case CMD_STAT_SCOV: case CMD_STAT_PCOV:
-        case CMD_FIT_X: case CMD_FIT_Y: case CMD_FIT_SLOPE:
-        case CMD_FIT_INTERCEPT: case CMD_FIT_CORR: case CMD_FIT_BEST:
-            do_stat(c, cmd);
-            break;
-
         case CMD_STAT_N:
             tmp = value_real(c->stats.sum[SUM_N]);
             calc_stack_enter(c, &tmp);
@@ -739,14 +730,6 @@ void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg)
             calc_stack_enter(c, &tmp);
             break;
 
-        case CMD_CLEAR_CARRY:
-            c->base.carry = false;
-            break;
-
-        case CMD_SET_CARRY:
-            c->base.carry = true;
-            break;
-
         case CMD_GET_CARRY:
             tmp = value_real(c->base.carry ? mx_one : mx_zero);
             calc_stack_enter(c, &tmp);
@@ -775,14 +758,6 @@ void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg)
 
         case CMD_DATE_FN:
             calc_date_execute(c, (date_fn_t)arg);
-            break;
-
-        case CMD_TVM_BEGIN:
-            c->tvm.begin = true;
-            break;
-
-        case CMD_TVM_END:
-            c->tvm.begin = false;
             break;
 
         case CMD_TVM_CLEAR:                     /* CLTV */
@@ -820,19 +795,6 @@ void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg)
         case CMD_DISP_ALL:
             c->disp_style = DISP_FIX;
             c->disp_digits = DISP_FLOAT;
-            break;
-
-        case CMD_MODE_RAD:
-            c->degrees = false;
-            break;
-
-        case CMD_DECIMAL_POINT:
-        case CMD_DECIMAL_COMMA:
-            c->decimal_comma = cmd == CMD_DECIMAL_COMMA;
-            break;
-
-        case CMD_MODE_DEG:
-            c->degrees = true;
             break;
 
         case CMD_MODE_ANGLE_TOGGLE:

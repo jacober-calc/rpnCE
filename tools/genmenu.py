@@ -6,6 +6,7 @@ The command-line entry point delegates to tools/genres.py.
 import os
 import re
 import sys
+from collections import namedtuple
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'menus', 'menus.txt')
@@ -20,6 +21,8 @@ MENU_ATTRIBUTION = (
 SYMBOLS = ['sq', 'cube', 'cuberoot', 'root', 'sigma', 'to', 'block', 'mu',
            'deg', 'up', 'down', 'left', 'times', 'supx']
 SYM_CODE = {name: i + 1 for i, name in enumerate(SYMBOLS)}
+
+Item = namedtuple('Item', 'kind label alt ident command arg', defaults=(None, '0'))
 
 
 class Group:
@@ -72,14 +75,22 @@ def parse():
 
         if kind == 'group' and len(parts) == 3:
             node = Group(parts[1], parts[2])
-        elif kind == 'item' and len(parts) == 3:
-            node = ('item', parts[1], None, parts[2])
-        elif kind == 'alt' and len(parts) == 4:
-            node = ('alt', parts[1], parts[2], parts[3])
+        elif kind == 'item' and 3 <= len(parts) <= 5:
+            node = Item('item', parts[1], None, parts[2], *parts[3:])
+        elif kind == 'alt' and 4 <= len(parts) <= 6:
+            node = Item('alt', parts[1], parts[2], parts[3], *parts[4:])
         elif kind == 'blank' and len(parts) == 1:
-            node = ('blank', '', None, None)
+            node = Item('blank', '', None, None)
         else:
             fail(lineno, f'cannot parse: {line.strip()}')
+
+        if isinstance(node, Item) and node.command:
+            if not re.fullmatch(r'CMD_[A-Z0-9_]+', node.command):
+                fail(lineno, 'expected a CMD_* command after the menu ID')
+            if not re.fullmatch(r'[A-Z][A-Z0-9_]*|0|[1-9][0-9]*', node.arg):
+                fail(lineno, 'expected an enum name or decimal byte argument')
+            if node.arg.isdecimal() and int(node.arg) > 255:
+                fail(lineno, 'command argument exceeds one byte')
 
         if parent is None:
             if indent != 0 or not isinstance(node, Group):

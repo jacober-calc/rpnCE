@@ -11,8 +11,11 @@
 #include "value.h"
 #include "res.h"
 #include "display.h"
+#include "actions.h"
 #include "units.h"
 #include "../checks.h"
+#include "../../resource_contract.h"
+#include "../../action_contract.h"
 #include "../../../src/sys/brightness.h"
 
 _Static_assert(sizeof(real_t) == 9 && sizeof(value_t) == 20 && offsetof(calc_t, regs) == 262,
@@ -471,10 +474,65 @@ static void message_bounds(int *width, int *height)
     *height = bottom < top ? 0 : bottom - top + 1;
 }
 
+static void refactor_regressions(void)
+{
+    static const char *epochs[] = {
+        "D{1970,1,1}", "D{1900,1,1}", "D{1980,1,6}",
+        "D{1997,1,1}", "D{2000,1,1}", "D{2050,1,1}"
+    };
+    for (uint8_t i = 0; i < sizeof epochs / sizeof epochs[0]; i++) {
+        calc_init(&c);
+        dt_obj_t o = {0};
+        dt_parse(epochs[i], &o);
+        c.stack[0] = value_date(&o);
+        cmd(CMD_DATE_FN, (uint8_t)(DF_EPOCH_UNIX + i));
+        cmd(CMD_DATE_FN, DF_TO_ES);
+        check(x_number("0"));
+    }
+    calc_init(&c);
+    dt_obj_t duration = { .type = OBJ_DR, .year = -9999, .hour = -23, .minute = -59, .second = -59 };
+    c.stack[0] = value_date(&duration);
+    cmd(CMD_DATE_FN, DF_DAY);
+    check(x_number("-9999"));
+    dt_obj_t zone = { .type = OBJ_TZ, .tz_hour = -23, .tz_minute = -45 };
+    c.stack[0] = value_date(&zone);
+    cmd(CMD_DATE_FN, DF_TZ_MINUTE);
+    check(x_number("-45"));
+
+    /* Static snapshots keep the CE's small C stack available to callees. */
+    static value_t original[STACK_MAX];
+    c.depth = STACK_MAX;
+    for (uint8_t i = 0; i < STACK_MAX; i++) {
+        real_t n = os_Int24ToReal(i);
+        c.stack[i] = i % 2 ? value_complex(n, n) : value_date(&duration);
+    }
+    memcpy(original, c.stack, sizeof original);
+    cmd(CMD_ROLL_UP, 0);
+    cmd(CMD_ROLL_DOWN, 0);
+    check(!memcmp(original, c.stack, sizeof original));
+    cmd(CMD_DROP, 0);
+    check(!memcmp(c.stack, original+1, (STACK_MAX-1)*sizeof(value_t)) &&
+          !memcmp(c.stack+STACK_MAX-1, original+STACK_MAX-1, sizeof(value_t)));
+
+    c.lift = false;
+    cmd(CMD_MODE_RAD, 255);
+    cmd(CMD_RESULT_COMPLEX, 0);
+    cmd(CMD_COMPLEX_DEG, 0);
+    cmd(CMD_TVM_BEGIN, 0);
+    cmd(CMD_DATE_FN, DF_FORMAT_STRING);
+    check(!c.degrees && c.complex_results && c.complex_mode == COMPLEX_DEG &&
+          c.tvm.begin && c.date_as_string && !c.lift &&
+          action_is_active(&c, MID_RAD) && action_is_active(&c, MID_NUM_RESULT_MODE_COMPLEX) &&
+          action_is_active(&c, MID_COMPLEX_MODE_DEG) && action_is_active(&c, MID_TVM_BEGIN) &&
+          action_is_active(&c, MID_FORMAT_RECORD_STRING) && !action_is_active(&c, MID_DEG));
+}
+
 int main(void)
 {
     memset((void *)RESULTS, 0, sizeof results);
     check(res_open());
+    check(resource_contract() == RESOURCE_CONTRACT_EXPECTED);
+    check(action_contract() == ACTION_CONTRACT_EXPECTED);
     calc_init(&c);
     record("1987,01,17"); number(15000); cmd(CMD_ADD, 0);
     check(x_object("D{2028,2,11}"));
@@ -631,6 +689,7 @@ int main(void)
     calculator_regressions();
     numeric_boundaries();
     error_policy_neighbors();
+    refactor_regressions();
     RESULTS[0] = checks;
     if (checks != NATIVE_CHECK_COUNT) RESULTS[0] = 0;
     RESULTS[255] = 0xAA;

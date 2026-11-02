@@ -50,7 +50,7 @@ dt_val_t value_date_operand(const value_t *v, bool quarters)
     return d;
 }
 
-static value_t value_from_date_result(const dt_result_t *r)
+value_t value_date_result(const dt_result_t *r)
 {
     if (r->is_obj)
         return value_date(&r->obj);
@@ -105,7 +105,7 @@ static dt_err_t value_date_binary(calc_cmd_t op, const value_t *y, const value_t
     else
         e = DT_ERR_TYPE;
     if (e == DT_OK)
-        *out = value_from_date_result(&r);
+        *out = value_date_result(&r);
     return e;
 }
 
@@ -114,7 +114,7 @@ static dt_err_t value_date_binary(calc_cmd_t op, const value_t *y, const value_t
  * with numbers and quantities. Menu aliases call these same commands. */
 dt_err_t value_date_eval(calc_cmd_t cmd, const value_t *y, const value_t *x, value_result_t *out)
 {
-    if (x->unit || (value_binary(cmd) && y->unit)) return DT_ERR_TYPE;
+    if (x->unit || ((command_flags(cmd) & COMMAND_DROP) && y->unit)) return DT_ERR_TYPE;
     if (cmd == CMD_ADD || cmd == CMD_SUB || cmd == CMD_MUL)
         return value_date_binary(cmd, y, x, &out->x);
     if (!value_is_date(x)) return DT_ERR_TYPE;

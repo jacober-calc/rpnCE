@@ -40,7 +40,7 @@ DRIVER = os.path.join(CACHE, 'driver')
 
 SOURCES = ['src/ui/display.c', 'src/ui/dotfont.c', 'src/ui/keys.c', 'src/ui/menu.c',
            'src/ui/actions.c', 'src/ui/catalog.c', 'src/ui/res.c',
-           'src/core/calc.c', 'src/core/calc_entry.c', 'src/core/calc_date.c',
+           'src/core/commands.c', 'src/core/calc.c', 'src/core/calc_entry.c', 'src/core/calc_date.c', 'src/core/calc_mode.c',
            'src/core/value.c', 'src/core/value_parse.c', 'src/core/value_math.c', 'src/core/value_date.c', 'src/core/value_format.c', 'src/core/base.c', 'src/core/datetime.c',
            'src/core/mathx.c', 'src/core/stats.c', 'src/core/tvm.c', 'src/core/units.c',
            'src/core/format.c']

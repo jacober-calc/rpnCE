@@ -186,6 +186,24 @@ static void old_fixture(bool footer, bool sidecar)
         vars[2].size = 12 + count;
     }
 }
+
+static void old_precision_fixture(void)
+{
+    old_state_t old;
+    memcpy(&old, vars[0].data, offsetof(old_state_t, extra));
+    unsigned char *p = vars[0].data + vars[0].size;
+    const real_t first[2] = { mk(7), mk(11) };
+    const size_t size = 2 + sizeof first + 1 + 4;
+    p[0] = 'P'; p[1] = 1;
+    memcpy(p + 2, first, sizeof first); p[2 + sizeof first] = 3;
+    uint32_t h = 2166136261UL;
+    const unsigned char *s = (const unsigned char *)&old.stats;
+    for (size_t i = 0; i < sizeof old.stats; i++) { h ^= s[i]; h *= 16777619UL; }
+    for (size_t i = 0; i < size - 4; i++) { h ^= p[i]; h *= 16777619UL; }
+    for (int i = 0; i < 4; i++) p[size - 4 + i] = h >> (8 * i);
+    vars[0].size += size;
+}
+
 int main(void)
 {
     calc_t original, loaded;
@@ -241,6 +259,7 @@ int main(void)
     check("absent witnesses retain saved objects", storage_load(&loaded) && !loaded.stats.constant && same_saved(&original, &loaded));
     for (int sidecar = 0; sidecar <= 1; sidecar++) {
         old_fixture(true, sidecar);
+        old_precision_fixture();
         memset(&loaded, 0, sizeof loaded);
         check("version 5 imports real values, DATEs, units and LASTX", storage_load(&loaded) &&
             loaded.stack[0].real.v == 0 && loaded.stack[0].unit == 1 &&
@@ -248,6 +267,8 @@ int main(void)
             loaded.lastx.real.v == -42 && loaded.lastx.unit == 2 &&
             loaded.regs[0].unit == (sidecar ? 4 : 3) &&
             value_is_date(&loaded.extra[1]) && !loaded.complex_results && loaded.complex_mode == COMPLEX_RECT);
+        check("version 5 precision footer survives workspace reuse", loaded.stats.constant == 3 &&
+              loaded.stats.first[0].v == 7 && loaded.stats.first[1].v == 11);
         original = loaded;
         storage_save(&loaded);
         check("imported state writes only version 6 and reopens", vars[0].data[1] == 6 &&

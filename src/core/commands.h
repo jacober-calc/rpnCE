@@ -1,6 +1,8 @@
 #ifndef RPNCE_CORE_COMMANDS_H
 #define RPNCE_CORE_COMMANDS_H
 
+#include <stdint.h>
+
 typedef enum {
     CMD_NONE,
     /* number entry */
@@ -86,6 +88,20 @@ typedef enum {
     CMD_RESULT_REAL, CMD_RESULT_COMPLEX,
     CMD_COMPLEX_RECT, CMD_COMPLEX_RAD, CMD_COMPLEX_DEG,
     CMD_DATE_VALUE,     /* arg = structural date_fn_t; DATE operands required */
+    CMD_COUNT,
 } calc_cmd_t;
+
+enum {
+    COMMAND_NO_X = 1 << 0,
+    COMMAND_READ_Y = 1 << 1,
+    COMMAND_DROP = 1 << 2,
+    COMMAND_PAIR = 1 << 3,
+    COMMAND_STAT = 1 << 4,
+    COMMAND_ENTRY = 1 << 5,
+};
+
+/* Shared operand, stack-effect and execution traits. Zero retains the
+ * default X operand; unknown commands still reach normal type checking. */
+uint8_t command_flags(calc_cmd_t cmd);
 
 #endif

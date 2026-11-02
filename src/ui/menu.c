@@ -63,10 +63,11 @@ const menu_node_t *menu_press(menu_t *m, uint8_t slot)
 {
     const menu_node_t *n = menu_slot(m, slot);
 
-    if (n->kind == MENU_BLANK)
+    menu_kind_t kind = menu_node_kind(n);
+    if (kind == MENU_BLANK)
         return NULL;
 
-    if (n->kind == MENU_GROUP) {
+    if (kind == MENU_GROUP) {
         if (m->depth < MENU_MAX_DEPTH) {
             m->back[m->depth].group = m->group;
             m->back[m->depth].row = m->row;

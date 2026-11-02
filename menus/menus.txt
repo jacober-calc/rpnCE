@@ -6,10 +6,13 @@
 # Format (2-space indentation):
 #   group LABEL ID        a menu; its children are rows
 #   row                   one screen row of up to 5 entries
-#   item LABEL ID         a function (the same ID can appear in several menus)
-#   alt LABEL ALTLABEL ID a mode item; ALTLABEL shows when the mode is on
+#   item LABEL ID [CMD [ARG]]         a function
+#   alt LABEL ALTLABEL ID [CMD [ARG]] a mode item; ALTLABEL shows when on
 #   blank                 an empty slot
 #   include FILE          read another menu file here (top level only)
+# Each command binding is defined once, on its first ID occurrence; other
+# menus reuse the ID. ARG defaults to 0. Unit bindings come from unit order.
+# Items without CMD use UI handlers or remain unavailable.
 # Labels have no spaces. Symbols are written as {name}:
 #   {sq} {cube} {cuberoot} {root} {sigma} {to} {block} {mu} {deg}
 #   {up} {down} {left} {times} {supx}
@@ -19,206 +22,206 @@ group HOME HOME
   row
     group MATH MATH
       row
-        item X^3 CUBE
-        item {cuberoot}{root}X CUBE_ROOT
-        item X{root}Y XROOT_Y
-        item ATN2 ATAN2
+        item X^3 CUBE CMD_CUBE
+        item {cuberoot}{root}X CUBE_ROOT CMD_CUBE_ROOT
+        item X{root}Y XROOT_Y CMD_XROOT_Y
+        item ATN2 ATAN2 CMD_ATAN2
       row
-        item 2^X TWO_POW
-        item LOG2 LOG2
-        item LOGB LOG_BASE
-        item E^X- EXP_MINUS_ONE
-        item LN1+ LN_ONE_PLUS
+        item 2^X TWO_POW CMD_TWO_POW
+        item LOG2 LOG2 CMD_LOG2
+        item LOGB LOG_BASE CMD_LOG_BASE
+        item E^X- EXP_MINUS_ONE CMD_EXP_MINUS_ONE
+        item LN1+ LN_ONE_PLUS CMD_LN_ONE_PLUS
     group NUM NUM
       row
-        item % PERCENT
-        item %CH PERCENT_CHANGE
-        item GCD GCD
-        item LCM LCM
-        item PRIM PRIME
+        item % PERCENT CMD_PERCENT
+        item %CH PERCENT_CHANGE CMD_PERCENT_CHANGE
+        item GCD GCD CMD_GCD
+        item LCM LCM CMD_LCM
+        item PRIM PRIME CMD_PRIME
       row
-        item IP INT_PART
-        item FP FRAC_PART
-        item FLR FLOOR
-        item CEIL CEIL
-        item NEAR NEAR
+        item IP INT_PART CMD_INT_PART
+        item FP FRAC_PART CMD_FRAC_PART
+        item FLR FLOOR CMD_FLOOR
+        item CEIL CEIL CMD_CEIL
+        item NEAR NEAR CMD_NEAR
       row
-        item ABS ABS
-        item SIGN SIGN
-        item MOD MOD
-        item MIN MIN
-        item MAX MAX
+        item ABS ABS CMD_ABS
+        item SIGN SIGN CMD_SIGN
+        item MOD MOD CMD_MOD
+        item MIN MIN CMD_MIN
+        item MAX MAX CMD_MAX
       row
-        item RNDF ROUND_TO_FIX
+        item RNDF ROUND_TO_FIX CMD_ROUND_FIX
         item RNDN ROUND_TO_N
         item RNDG ROUND_TO_GUARD
     group PROB PROB
       row
-        item COMB COMB
-        item PERM PERM
-        item N! FACTORIAL
-        item RAND RANDOM
-        item SEED RANDOM_SEED
+        item COMB COMB CMD_COMB
+        item PERM PERM CMD_PERM
+        item N! FACTORIAL CMD_FACTORIAL
+        item RAND RANDOM CMD_RAND
+        item SEED RANDOM_SEED CMD_SEED
     group CPLX COMPLEX
       row
-        item REAL COMPLEX_REAL
-        item IMAG COMPLEX_IMAG
-        item CONJ COMPLEX_CONJ
-        item CABS COMPLEX_ABS
-        item CANG COMPLEX_ANGLE
+        item REAL COMPLEX_REAL CMD_COMPLEX_REAL
+        item IMAG COMPLEX_IMAG CMD_COMPLEX_IMAG
+        item CONJ COMPLEX_CONJ CMD_COMPLEX_CONJ
+        item CABS COMPLEX_ABS CMD_COMPLEX_ABS
+        item CANG COMPLEX_ANGLE CMD_COMPLEX_ANGLE
     group TVM TVM
       row
-        item N TVM_N
-        item I%YR TVM_IYR
-        item PV TVM_PV
-        item PMT TVM_PMT
-        item FV TVM_FV
+        item N TVM_N CMD_TVM_VAR TVM_N
+        item I%YR TVM_IYR CMD_TVM_VAR TVM_IYR
+        item PV TVM_PV CMD_TVM_VAR TVM_PV
+        item PMT TVM_PMT CMD_TVM_VAR TVM_PMT
+        item FV TVM_FV CMD_TVM_VAR TVM_FV
       row
-        alt P/YR P/Y{block} TVM_PYR
-        alt C/YR C/Y{block} TVM_CYR
-        alt BEG BEG{block} TVM_BEGIN
-        alt END END{block} TVM_END
-        item CLTV TVM_CLEAR
+        alt P/YR P/Y{block} TVM_PYR CMD_TVM_VAR TVM_PYR
+        alt C/YR C/Y{block} TVM_CYR CMD_TVM_VAR TVM_CYR
+        alt BEG BEG{block} TVM_BEGIN CMD_TVM_BEGIN
+        alt END END{block} TVM_END CMD_TVM_END
+        item CLTV TVM_CLEAR CMD_TVM_CLEAR
       row
-        alt IYR1 IY1{block} TVM_IYR0
-        alt IYR2 IY2{block} TVM_IYR1
-        alt TMAX TMX{block} TVM_ITER_MAX
+        alt IYR1 IY1{block} TVM_IYR0 CMD_TVM_IYR1
+        alt IYR2 IY2{block} TVM_IYR1 CMD_TVM_IYR2
+        alt TMAX TMX{block} TVM_ITER_MAX CMD_TVM_ITER_MAX
         blank
-        item RSTV TVM_SOLVER_RESET
+        item RSTV TVM_SOLVER_RESET CMD_TVM_RESET
   row
     group BASE BASE
       row
-        alt DEC DEC{block} DEC
-        alt HEX HEX{block} HEX
-        alt OCT OCT{block} OCT
-        alt BIN BIN{block} BIN
+        alt DEC DEC{block} DEC CMD_BASE_RADIX 10
+        alt HEX HEX{block} HEX CMD_BASE_RADIX 16
+        alt OCT OCT{block} OCT CMD_BASE_RADIX 8
+        alt BIN BIN{block} BIN CMD_BASE_RADIX 2
       row
         group LOGI BASE_LOGIC
           row
-            item AND BITWISE_AND
-            item OR BITWISE_OR
-            item XOR BITWISE_XOR
-            item NOT BITWISE_NOT
-            item NEG BITWISE_NEG
+            item AND BITWISE_AND CMD_BASE_OP BOP_AND
+            item OR BITWISE_OR CMD_BASE_OP BOP_OR
+            item XOR BITWISE_XOR CMD_BASE_OP BOP_XOR
+            item NOT BITWISE_NOT CMD_BASE_OP BOP_NOT
+            item NEG BITWISE_NEG CMD_BASE_OP BOP_NEG
         group ROTS BASE_ROTATE
           row
-            item SL SHIFT_LEFT_LOGICAL
-            item SR SHIFT_RIGHT_LOGICAL
-            item ASR SHIFT_RIGHT_ARITHMETIC
-            item SLn SHIFT_LEFT_LOGICAL_N
-            item SRn SHIFT_RIGHT_LOGICAL_N
+            item SL SHIFT_LEFT_LOGICAL CMD_BASE_OP BOP_SL
+            item SR SHIFT_RIGHT_LOGICAL CMD_BASE_OP BOP_SR
+            item ASR SHIFT_RIGHT_ARITHMETIC CMD_BASE_OP BOP_ASR
+            item SLn SHIFT_LEFT_LOGICAL_N CMD_BASE_OP BOP_SLN
+            item SRn SHIFT_RIGHT_LOGICAL_N CMD_BASE_OP BOP_SRN
           row
-            item RL ROTATE_LEFT_CIRCULAR
-            item RR ROTATE_RIGHT_CIRCULAR
-            item RLC ROTATE_LEFT_CARRY
-            item RRC ROTATE_RIGHT_CARRY
+            item RL ROTATE_LEFT_CIRCULAR CMD_BASE_OP BOP_RL
+            item RR ROTATE_RIGHT_CIRCULAR CMD_BASE_OP BOP_RR
+            item RLC ROTATE_LEFT_CARRY CMD_BASE_OP BOP_RLC
+            item RRC ROTATE_RIGHT_CARRY CMD_BASE_OP BOP_RRC
           row
-            item RLn ROTATE_LEFT_CIRCULAR_N
-            item RRn ROTATE_RIGHT_CIRCULAR_N
-            item RLCn ROTATE_LEFT_CARRY_N
-            item RRCn ROTATE_RIGHT_CARRY_N
+            item RLn ROTATE_LEFT_CIRCULAR_N CMD_BASE_OP BOP_RLN
+            item RRn ROTATE_RIGHT_CIRCULAR_N CMD_BASE_OP BOP_RRN
+            item RLCn ROTATE_LEFT_CARRY_N CMD_BASE_OP BOP_RLCN
+            item RRCn ROTATE_RIGHT_CARRY_N CMD_BASE_OP BOP_RRCN
         group BITS BASE_BITS
           row
-            item CB CLEAR_BIT
-            item SB SET_BIT
-            item B? GET_BIT
-            item REVB REVERSE_BIT
-            item CNTB COUNT_BIT
+            item CB CLEAR_BIT CMD_BASE_OP BOP_CB
+            item SB SET_BIT CMD_BASE_OP BOP_SB
+            item B? GET_BIT CMD_BASE_OP BOP_GETB
+            item REVB REVERSE_BIT CMD_BASE_OP BOP_REVB
+            item CNTB COUNT_BIT CMD_BASE_OP BOP_CNTB
         group BFCN BASE_FUNCTIONS
           row
-            item BAS+ BASE_ADD
-            item BAS- BASE_SUBT
-            item BAS{times} BASE_MULT
-            item BAS/ BASE_DIV
-            item BDIV BASE_DIV2
+            item BAS+ BASE_ADD CMD_BASE_OP BOP_ADD
+            item BAS- BASE_SUBT CMD_BASE_OP BOP_SUB
+            item BAS{times} BASE_MULT CMD_BASE_OP BOP_MUL
+            item BAS/ BASE_DIV CMD_BASE_OP BOP_DIV
+            item BDIV BASE_DIV2 CMD_BASE_OP BOP_DIV2
         group BCFS BASE_CONFIGS
           row
-            item CCF CLEAR_CARRY_FLAG
-            item SCF SET_CARRY_FLAG
-            item CF? GET_CARRY_FLAG
-            item WSIZ SET_WORD_SIZE
-            item WSZ? GET_WORD_SIZE
+            item CCF CLEAR_CARRY_FLAG CMD_CLEAR_CARRY
+            item SCF SET_CARRY_FLAG CMD_SET_CARRY
+            item CF? GET_CARRY_FLAG CMD_GET_CARRY
+            item WSIZ SET_WORD_SIZE CMD_SET_WORD_SIZE
+            item WSZ? GET_WORD_SIZE CMD_GET_WORD_SIZE
     group HYP HYPERBOLIC
       row
         blank
-        item SINH SINH
-        item COSH COSH
-        item TANH TANH
+        item SINH SINH CMD_SINH
+        item COSH COSH CMD_COSH
+        item TANH TANH CMD_TANH
         blank
       row
         blank
-        item ASNH ASINH
-        item ACSH ACOSH
-        item ATNH ATANH
+        item ASNH ASINH CMD_ASINH
+        item ACSH ACOSH CMD_ACOSH
+        item ATNH ATANH CMD_ATANH
         blank
     group STAT STAT
       row
-        item {sigma}+ STAT_PLUS
-        item {sigma}- STAT_MINUS
-        alt ALL{sigma} ALL{block} STAT_ALL_MODE
-        alt LIN{sigma} LIN{block} STAT_LINEAR_MODE
-        item CL{sigma} STAT_CLEAR
+        item {sigma}+ STAT_PLUS CMD_STAT_PLUS
+        item {sigma}- STAT_MINUS CMD_STAT_MINUS
+        alt ALL{sigma} ALL{block} STAT_ALL_MODE CMD_STAT_ALL_MODE
+        alt LIN{sigma} LIN{block} STAT_LINEAR_MODE CMD_STAT_LIN_MODE
+        item CL{sigma} STAT_CLEAR CMD_STAT_CLEAR
       row
-        item SUM STAT_SUM
-        item MEAN STAT_MEAN
-        item WMN STAT_WEIGHTED_MEAN
-        item N STAT_N
+        item SUM STAT_SUM CMD_STAT_SUM
+        item MEAN STAT_MEAN CMD_STAT_MEAN
+        item WMN STAT_WEIGHTED_MEAN CMD_STAT_WMEAN
+        item N STAT_N CMD_STAT_N
         group {sigma} STAT_REGS
           row
-            item {sigma}X STAT_REG_X
-            item {sigma}X2 STAT_REG_X2
-            item {sigma}Y STAT_REG_Y
-            item {sigma}Y2 STAT_REG_Y2
-            item {sigma}XY STAT_REG_XY
+            item {sigma}X STAT_REG_X CMD_STAT_REG SUM_X
+            item {sigma}X2 STAT_REG_X2 CMD_STAT_REG SUM_X2
+            item {sigma}Y STAT_REG_Y CMD_STAT_REG SUM_Y
+            item {sigma}Y2 STAT_REG_Y2 CMD_STAT_REG SUM_Y2
+            item {sigma}XY STAT_REG_XY CMD_STAT_REG SUM_XY
           row
-            item {sigma}N STAT_REG_N
-            item {sigma}LX STAT_REG_LN_X
-            item {sigma}LX2 STAT_REG_LN_X2
-            item {sigma}LY STAT_REG_LN_Y
-            item {sigma}LY2 STAT_REG_LN_Y2
+            item {sigma}N STAT_REG_N CMD_STAT_REG SUM_N
+            item {sigma}LX STAT_REG_LN_X CMD_STAT_REG SUM_LX
+            item {sigma}LX2 STAT_REG_LN_X2 CMD_STAT_REG SUM_LX2
+            item {sigma}LY STAT_REG_LN_Y CMD_STAT_REG SUM_LY
+            item {sigma}LY2 STAT_REG_LN_Y2 CMD_STAT_REG SUM_LY2
           row
-            item {sigma}LXL STAT_REG_LN_XLN_Y
-            item {sigma}XLY STAT_REG_XLN_Y
-            item {sigma}YLX STAT_REG_YLN_X
+            item {sigma}LXL STAT_REG_LN_XLN_Y CMD_STAT_REG SUM_LXLY
+            item {sigma}XLY STAT_REG_XLN_Y CMD_STAT_REG SUM_XLY
+            item {sigma}YLX STAT_REG_YLN_X CMD_STAT_REG SUM_YLX
       row
-        item SDEV STAT_SAMPLE_SDEV
-        item SCOV STAT_SAMPLE_COV
-        item PDEV STAT_POP_SDEV
-        item PCOV STAT_POP_COV
+        item SDEV STAT_SAMPLE_SDEV CMD_STAT_SDEV
+        item SCOV STAT_SAMPLE_COV CMD_STAT_SCOV
+        item PDEV STAT_POP_SDEV CMD_STAT_PDEV
+        item PCOV STAT_POP_COV CMD_STAT_PCOV
         group CFIT CFIT
           row
-            item Y{to}X CFIT_FORECAST_X
-            item X{to}Y CFIT_FORECAST_Y
-            item SLOP CFIT_SLOPE
-            item YINT CFIT_INTERCEPT
-            item CORR CFIT_CORRELATION
+            item Y{to}X CFIT_FORECAST_X CMD_FIT_X
+            item X{to}Y CFIT_FORECAST_Y CMD_FIT_Y
+            item SLOP CFIT_SLOPE CMD_FIT_SLOPE
+            item YINT CFIT_INTERCEPT CMD_FIT_INTERCEPT
+            item CORR CFIT_CORRELATION CMD_FIT_CORR
           row
-            alt LINF LIN{block} CFIT_LINEAR
-            alt LOGF LOG{block} CFIT_LOG
-            alt EXPF EXP{block} CFIT_EXP
-            alt PWRF PWR{block} CFIT_POWER
-            item BEST CFIT_BEST
+            alt LINF LIN{block} CFIT_LINEAR CMD_FIT_MODEL FIT_LIN
+            alt LOGF LOG{block} CFIT_LOG CMD_FIT_MODEL FIT_LOG
+            alt EXPF EXP{block} CFIT_EXP CMD_FIT_MODEL FIT_EXP
+            alt PWRF PWR{block} CFIT_POWER CMD_FIT_MODEL FIT_PWR
+            item BEST CFIT_BEST CMD_FIT_BEST
     group CONV CONV
       row
-        item {to}DEG RAD_TO_DEG
-        item {to}RAD DEG_TO_RAD
+        item {to}DEG RAD_TO_DEG CMD_TO_DEG
+        item {to}RAD DEG_TO_RAD CMD_TO_RAD
         blank
-        item {to}REC POLAR_TO_RECT
-        item {to}POL RECT_TO_POLAR
+        item {to}REC POLAR_TO_RECT CMD_TO_REC
+        item {to}POL RECT_TO_POLAR CMD_TO_POL
       row
-        item {to}HR HMS_TO_HR
-        item {to}HMS HR_TO_HMS
-        item HMS+ HMS_PLUS
-        item HMS- HMS_MINUS
+        item {to}HR HMS_TO_HR CMD_TO_HOURS
+        item {to}HMS HR_TO_HMS CMD_TO_HMS
+        item HMS+ HMS_PLUS CMD_HMS_ADD
+        item HMS- HMS_MINUS CMD_HMS_SUB
     item HELP HELP
   row
     group CLR CLEAR
       row
-        item CLX CLEAR_X
-        item CLST CLEAR_STACK
-        item CLRG CLEAR_REGS
-        item CL{sigma} CLEAR_STAT
-        item CLTV CLEAR_TVM
+        item CLX CLEAR_X CMD_CLEAR
+        item CLST CLEAR_STACK CMD_CLEAR_STACK
+        item CLRG CLEAR_REGS CMD_CLEAR_REGS
+        item CL{sigma} CLEAR_STAT CMD_STAT_CLEAR
+        item CLTV CLEAR_TVM CMD_TVM_CLEAR
       row
         item CLD CLEAR_DISPLAY
     group MODE MODE
@@ -226,40 +229,40 @@ group HOME HOME
         alt FIX FIX{block} FIX
         alt SCI SCI{block} SCI
         alt ENG ENG{block} ENG
-        alt RAD RAD{block} RAD
-        alt DEG DEG{block} DEG
+        alt RAD RAD{block} RAD CMD_MODE_RAD
+        alt DEG DEG{block} DEG CMD_MODE_DEG
       row
-        alt RRES RRE{block} NUM_RESULT_MODE_REAL
-        alt CRES CRE{block} NUM_RESULT_MODE_COMPLEX
-        alt RECT REC{block} COMPLEX_MODE_RECT
-        alt PRAD PRA{block} COMPLEX_MODE_RAD
-        alt PDEG PDE{block} COMPLEX_MODE_DEG
+        alt RRES RRE{block} NUM_RESULT_MODE_REAL CMD_RESULT_REAL
+        alt CRES CRE{block} NUM_RESULT_MODE_COMPLEX CMD_RESULT_COMPLEX
+        alt RECT REC{block} COMPLEX_MODE_RECT CMD_COMPLEX_RECT
+        alt PRAD PRA{block} COMPLEX_MODE_RAD CMD_COMPLEX_RAD
+        alt PDEG PDE{block} COMPLEX_MODE_DEG CMD_COMPLEX_DEG
       row
-        item RSIZ SET_REG_SIZE
-        item RSZ? GET_REG_SIZE
+        item RSIZ SET_REG_SIZE CMD_SET_REG_SIZE
+        item RSZ? GET_REG_SIZE CMD_GET_REG_SIZE
         item TINT SCREEN_TINT
-        item SSIZ SET_STACK_SIZE
-        item SSZ? GET_STACK_SIZE
+        item SSIZ SET_STACK_SIZE CMD_SET_STACK_SIZE
+        item SSZ? GET_STACK_SIZE CMD_GET_STACK_SIZE
       row
-        alt {..} {..}{block} FORMAT_RECORD_RAW
-        alt ".." ".."{block} FORMAT_RECORD_STRING
-        alt . .{block} DECIMAL_POINT
-        alt , ,{block} DECIMAL_COMMA
+        alt {..} {..}{block} FORMAT_RECORD_RAW CMD_DATE_FN DF_FORMAT_RAW
+        alt ".." ".."{block} FORMAT_RECORD_STRING CMD_DATE_FN DF_FORMAT_STRING
+        alt . .{block} DECIMAL_POINT CMD_DECIMAL_POINT
+        alt , ,{block} DECIMAL_COMMA CMD_DECIMAL_COMMA
     group STK STACK
       row
-        item DUP STACK_DUP
-        item R{up} STACK_ROLL_UP
-        item R{down} STACK_ROLL_DOWN
-        item DROP STACK_DROP
-        item X{left}{to}Y STACK_EXCHANGE_XY
+        item DUP STACK_DUP CMD_ENTER
+        item R{up} STACK_ROLL_UP CMD_ROLL_UP
+        item R{down} STACK_ROLL_DOWN CMD_ROLL_DOWN
+        item DROP STACK_DROP CMD_DROP
+        item X{left}{to}Y STACK_EXCHANGE_XY CMD_SWAP
       row
         item X<> STACK_EXCHANGE_REG
     group UNIT UNIT
       row
         group UFCN UNIT_FUNCTIONS
           row
-            item UVAL UNIT_VALUE
-            item UBAS UNIT_BASE
+            item UVAL UNIT_VALUE CMD_UNIT_VALUE
+            item UBAS UNIT_BASE CMD_UNIT_BASE
         group LENG UNIT_LENGTH
           row
             item ferm UNIT_FERMI
@@ -505,124 +508,124 @@ group HOME HOME
       row
         group D DATE_FOLDER_DATE
           row
-            item D{} DATE_CREATE
-            item {to}ED DATE_TO_EPOCH_DAYS
-            item ED{to} EPOCH_DAYS_TO_DATE
-            item {to}ES DATE_TO_EPOCH_SECONDS
-            item ES{to} EPOCH_SECONDS_TO_DATE
+            item D{} DATE_CREATE CMD_RECORD_TAG OBJ_DATE
+            item {to}ED DATE_TO_EPOCH_DAYS CMD_DATE_FN DF_TO_ED
+            item ED{to} EPOCH_DAYS_TO_DATE CMD_DATE_FN DF_ED_TO_D
+            item {to}ES DATE_TO_EPOCH_SECONDS CMD_DATE_FN DF_TO_ES
+            item ES{to} EPOCH_SECONDS_TO_DATE CMD_DATE_FN DF_ES_TO_D
           row
-            item LEAP IS_DATE_LEAP
-            item DOW DATE_TO_DAY_OF_WEEK
-            item CVTZ DATE_CONVERT_TO_TIME_ZONE
+            item LEAP IS_DATE_LEAP CMD_DATE_FN DF_LEAP
+            item DOW DATE_TO_DAY_OF_WEEK CMD_DATE_FN DF_DOW
+            item CVTZ DATE_CONVERT_TO_TIME_ZONE CMD_DATE_FN DF_CVTZ
           row
-            item .YR DATE_EXTRACT_YEAR
-            item .MON DATE_EXTRACT_MONTH
-            item .DAY DATE_EXTRACT_DAY
+            item .YR DATE_EXTRACT_YEAR CMD_DATE_FN DF_YEAR
+            item .MON DATE_EXTRACT_MONTH CMD_DATE_FN DF_MONTH
+            item .DAY DATE_EXTRACT_DAY CMD_DATE_FN DF_DAY
           row
-            item DSHK DATE_SHRINK_TO_NOTHING
-            item DEXD DATE_EXTEND_TO_DATE_TIME
-            item DCUT DATE_CUT_TO_NOTHING
-            item DLNK DATE_LINK_TO_DATE_TIME
+            item DSHK DATE_SHRINK_TO_NOTHING CMD_DATE_FN DF_SHRINK
+            item DEXD DATE_EXTEND_TO_DATE_TIME CMD_DATE_FN DF_EXTEND
+            item DCUT DATE_CUT_TO_NOTHING CMD_DATE_FN DF_CUT
+            item DLNK DATE_LINK_TO_DATE_TIME CMD_DATE_FN DF_LINK
         group T DATE_FOLDER_TIME
           row
-            item T{} TIME_CREATE
-            item {to}S TIME_TO_SECONDS
-            item S{to} SECONDS_TO_TIME
+            item T{} TIME_CREATE CMD_RECORD_TAG OBJ_TIME
+            item {to}S TIME_TO_SECONDS CMD_DATE_FN DF_TIME_TO_S
+            item S{to} SECONDS_TO_TIME CMD_DATE_FN DF_S_TO_TIME
           row
-            item .HR TIME_EXTRACT_HOUR
-            item .MIN TIME_EXTRACT_MINUTE
-            item .SEC TIME_EXTRACT_SECOND
+            item .HR TIME_EXTRACT_HOUR CMD_DATE_FN DF_HOUR
+            item .MIN TIME_EXTRACT_MINUTE CMD_DATE_FN DF_MINUTE
+            item .SEC TIME_EXTRACT_SECOND CMD_DATE_FN DF_SECOND
         group DT DATE_FOLDER_DATE_TIME
           row
-            item DT{} DATE_TIME_CREATE
-            item {to}ED DATE_TIME_TO_EPOCH_DAYS
-            item ED{to} EPOCH_DAYS_TO_DATE_TIME
-            item {to}ES DATE_TIME_TO_EPOCH_SECONDS
-            item ES{to} EPOCH_SECONDS_TO_DATE_TIME
+            item DT{} DATE_TIME_CREATE CMD_RECORD_TAG OBJ_DATETIME
+            item {to}ED DATE_TIME_TO_EPOCH_DAYS CMD_DATE_FN DF_TO_ED
+            item ED{to} EPOCH_DAYS_TO_DATE_TIME CMD_DATE_FN DF_ED_TO_DT
+            item {to}ES DATE_TIME_TO_EPOCH_SECONDS CMD_DATE_FN DF_TO_ES
+            item ES{to} EPOCH_SECONDS_TO_DATE_TIME CMD_DATE_FN DF_ES_TO_DT
           row
-            item LEAP IS_DATE_TIME_LEAP
-            item DOW DATE_TIME_TO_DAY_OF_WEEK
-            item CVTZ DATE_TIME_CONVERT_TO_TIME_ZONE
-            item .D{} DATE_TIME_EXTRACT_DATE
-            item .T{} DATE_TIME_EXTRACT_TIME
+            item LEAP IS_DATE_TIME_LEAP CMD_DATE_FN DF_LEAP
+            item DOW DATE_TIME_TO_DAY_OF_WEEK CMD_DATE_FN DF_DOW
+            item CVTZ DATE_TIME_CONVERT_TO_TIME_ZONE CMD_DATE_FN DF_CVTZ
+            item .D{} DATE_TIME_EXTRACT_DATE CMD_DATE_FN DF_GET_DATE
+            item .T{} DATE_TIME_EXTRACT_TIME CMD_DATE_FN DF_GET_TIME
           row
-            item DSHK DATE_TIME_SHRINK_TO_DATE
-            item DEXD DATE_TIME_EXTEND_TO_OFFSET_DATE_TIME
-            item DCUT DATE_TIME_CUT_TO_DATE
-            item DLNK DATE_TIME_LINK_TO_OFFSET_DATE_TIME
+            item DSHK DATE_TIME_SHRINK_TO_DATE CMD_DATE_FN DF_SHRINK
+            item DEXD DATE_TIME_EXTEND_TO_OFFSET_DATE_TIME CMD_DATE_FN DF_EXTEND
+            item DCUT DATE_TIME_CUT_TO_DATE CMD_DATE_FN DF_CUT
+            item DLNK DATE_TIME_LINK_TO_OFFSET_DATE_TIME CMD_DATE_FN DF_LINK
         group TZ DATE_FOLDER_OFFSET
           row
-            item TZ{} OFFSET_CREATE
-            item {to}HR OFFSET_TO_HOURS
-            item HR{to} HOURS_TO_OFFSET
-            item .HR OFFSET_EXTRACT_HOUR
-            item .MIN OFFSET_EXTRACT_MINUTE
+            item TZ{} OFFSET_CREATE CMD_RECORD_TAG OBJ_TZ
+            item {to}HR OFFSET_TO_HOURS CMD_DATE_FN DF_TZ_TO_HR
+            item HR{to} HOURS_TO_OFFSET CMD_DATE_FN DF_HR_TO_TZ
+            item .HR OFFSET_EXTRACT_HOUR CMD_DATE_FN DF_TZ_HOUR
+            item .MIN OFFSET_EXTRACT_MINUTE CMD_DATE_FN DF_TZ_MINUTE
         group DZ DATE_FOLDER_OFFSET_DATE_TIME
           row
-            item DZ{} OFFSET_DATE_TIME_CREATE
-            item {to}ED OFFSET_DATE_TIME_TO_EPOCH_DAYS
-            item ED{to} EPOCH_DAYS_TO_OFFSET_DATE_TIME
-            item {to}ES OFFSET_DATE_TIME_TO_EPOCH_SECONDS
-            item ES{to} EPOCH_SECONDS_TO_OFFSET_DATE_TIME_UTC
+            item DZ{} OFFSET_DATE_TIME_CREATE CMD_RECORD_TAG OBJ_DZ
+            item {to}ED OFFSET_DATE_TIME_TO_EPOCH_DAYS CMD_DATE_FN DF_TO_ED
+            item ED{to} EPOCH_DAYS_TO_OFFSET_DATE_TIME CMD_DATE_FN DF_ED_TO_DZ
+            item {to}ES OFFSET_DATE_TIME_TO_EPOCH_SECONDS CMD_DATE_FN DF_TO_ES
+            item ES{to} EPOCH_SECONDS_TO_OFFSET_DATE_TIME_UTC CMD_DATE_FN DF_ES_TO_DZ
           row
-            item ES{to}@ EPOCH_SECONDS_TO_OFFSET_DATE_TIME_APP
-            item LEAP IS_OFFSET_DATE_TIME_LEAP
-            item DOW OFFSET_DATE_TIME_TO_DAY_OF_WEEK
-            item CVTZ OFFSET_DATE_TIME_CONVERT_TO_TIME_ZONE
+            item ES{to}@ EPOCH_SECONDS_TO_OFFSET_DATE_TIME_APP CMD_DATE_FN DF_ES_TO_DZ_APP
+            item LEAP IS_OFFSET_DATE_TIME_LEAP CMD_DATE_FN DF_LEAP
+            item DOW OFFSET_DATE_TIME_TO_DAY_OF_WEEK CMD_DATE_FN DF_DOW
+            item CVTZ OFFSET_DATE_TIME_CONVERT_TO_TIME_ZONE CMD_DATE_FN DF_CVTZ
           row
-            item .D{} OFFSET_DATE_TIME_EXTRACT_DATE
-            item .T{} OFFSET_DATE_TIME_EXTRACT_TIME
-            item .DT{ OFFSET_DATE_TIME_EXTRACT_DATE_TIME
-            item .TZ{ OFFSET_DATE_TIME_EXTRACT_OFFSET
+            item .D{} OFFSET_DATE_TIME_EXTRACT_DATE CMD_DATE_FN DF_GET_DATE
+            item .T{} OFFSET_DATE_TIME_EXTRACT_TIME CMD_DATE_FN DF_GET_TIME
+            item .DT{ OFFSET_DATE_TIME_EXTRACT_DATE_TIME CMD_DATE_FN DF_GET_DT
+            item .TZ{ OFFSET_DATE_TIME_EXTRACT_OFFSET CMD_DATE_FN DF_GET_TZ
           row
-            item DSHK OFFSET_DATE_TIME_SHRINK_TO_DATE_TIME
-            item DEXD OFFSET_DATE_TIME_EXTEND_TO_NOTHING
-            item DCUT OFFSET_DATE_TIME_CUT_TO_DATE_TIME
-            item DLNK OFFSET_DATE_TIME_LINK_TO_NOTHING
+            item DSHK OFFSET_DATE_TIME_SHRINK_TO_DATE_TIME CMD_DATE_FN DF_SHRINK
+            item DEXD OFFSET_DATE_TIME_EXTEND_TO_NOTHING CMD_DATE_FN DF_EXTEND
+            item DCUT OFFSET_DATE_TIME_CUT_TO_DATE_TIME CMD_DATE_FN DF_CUT
+            item DLNK OFFSET_DATE_TIME_LINK_TO_NOTHING CMD_DATE_FN DF_LINK
       row
         group DR DATE_FOLDER_DURATION
           row
-            item DR{} DURATION_CREATE
-            item DAY{to} DAYS_TO_DURATION
-            item HR{to} HOURS_TO_DURATION
-            item MIN{to} MINUTES_TO_DURATION
-            item SEC{to} SECONDS_TO_DURATION
+            item DR{} DURATION_CREATE CMD_RECORD_TAG OBJ_DR
+            item DAY{to} DAYS_TO_DURATION CMD_DATE_FN DF_DAYS_TO_DR
+            item HR{to} HOURS_TO_DURATION CMD_DATE_FN DF_HOURS_TO_DR
+            item MIN{to} MINUTES_TO_DURATION CMD_DATE_FN DF_MINUTES_TO_DR
+            item SEC{to} SECONDS_TO_DURATION CMD_DATE_FN DF_SECONDS_TO_DR
           row
-            item {to}S DURATION_TO_SECONDS
-            item .DAY DURATION_EXTRACT_DAY
-            item .HR DURATION_EXTRACT_HOUR
-            item .MIN DURATION_EXTRACT_MINUTE
-            item .SEC DURATION_EXTRACT_SECOND
+            item {to}S DURATION_TO_SECONDS CMD_DATE_FN DF_DR_TO_S
+            item .DAY DURATION_EXTRACT_DAY CMD_DATE_FN DF_DAY
+            item .HR DURATION_EXTRACT_HOUR CMD_DATE_FN DF_HOUR
+            item .MIN DURATION_EXTRACT_MINUTE CMD_DATE_FN DF_MINUTE
+            item .SEC DURATION_EXTRACT_SECOND CMD_DATE_FN DF_SECOND
         group DW DATE_FOLDER_DAY_OF_WEEK
           row
-            item DW{} DAY_OF_WEEK_CREATE
-            item {to}ISO DAY_OF_WEEK_TO_ISO_DOW_NUMBER
-            item ISO{to} ISO_DOW_NUMBER_TO_DAY_OF_WEEK
-            item {to}UNX DAY_OF_WEEK_TO_UNIX_DOW_NUMBER
-            item UNX{to} UNIX_DOW_NUMBER_TO_DAY_OF_WEEK
+            item DW{} DAY_OF_WEEK_CREATE CMD_RECORD_TAG OBJ_DW
+            item {to}ISO DAY_OF_WEEK_TO_ISO_DOW_NUMBER CMD_DATE_FN DF_DW_TO_ISO
+            item ISO{to} ISO_DOW_NUMBER_TO_DAY_OF_WEEK CMD_DATE_FN DF_ISO_TO_DW
+            item {to}UNX DAY_OF_WEEK_TO_UNIX_DOW_NUMBER CMD_DATE_FN DF_DW_TO_UNIX
+            item UNX{to} UNIX_DOW_NUMBER_TO_DAY_OF_WEEK CMD_DATE_FN DF_UNIX_TO_DW
         group EPCH EPOCH
           row
-            alt UNIX UNI{block} EPOCH_UNIX
-            alt NTP NTP{block} EPOCH_NTP
-            alt GPS GPS{block} EPOCH_GPS
-            alt TIOS TI{block} EPOCH_TIOS
-            alt Y2K Y2K{block} EPOCH_Y2K
+            alt UNIX UNI{block} EPOCH_UNIX CMD_DATE_FN DF_EPOCH_UNIX
+            alt NTP NTP{block} EPOCH_NTP CMD_DATE_FN DF_EPOCH_NTP
+            alt GPS GPS{block} EPOCH_GPS CMD_DATE_FN DF_EPOCH_GPS
+            alt TIOS TI{block} EPOCH_TIOS CMD_DATE_FN DF_EPOCH_TIOS
+            alt Y2K Y2K{block} EPOCH_Y2K CMD_DATE_FN DF_EPOCH_Y2K
           row
-            alt CEPC CEP{block} EPOCH_CUSTOM
+            alt CEPC CEP{block} EPOCH_CUSTOM CMD_DATE_FN DF_EPOCH_CUSTOM
             blank
             blank
-            item EPC EPOCH_SET_CUSTOM
-            item EPC? EPOCH_GET_CUSTOM
+            item EPC EPOCH_SET_CUSTOM CMD_DATE_FN DF_EPOCH_SET_CUSTOM
+            item EPC? EPOCH_GET_CUSTOM CMD_DATE_FN DF_EPOCH_GET_CUSTOM
         group CLK CLK
           row
-            item NOW GET_NOW
-            item NOWD GET_NOW_DATE
-            item NOWT GET_NOW_TIME
-            item NWDZ GET_NOW_OFFSET_DATE_TIME
-            item NWUT GET_NOW_OFFSET_DATE_TIME_UTC
+            item NOW GET_NOW CMD_DATE_FN DF_NOW
+            item NOWD GET_NOW_DATE CMD_DATE_FN DF_NOW_DATE
+            item NOWT GET_NOW_TIME CMD_DATE_FN DF_NOW_TIME
+            item NWDZ GET_NOW_OFFSET_DATE_TIME CMD_DATE_FN DF_NOW_DZ
+            item NWUT GET_NOW_OFFSET_DATE_TIME_UTC CMD_DATE_FN DF_NOW_DZ_UTC
           row
-            item ATZ SET_APP_TIME_ZONE
-            item ATZ? GET_APP_TIME_ZONE
-            item CTZ SET_CLOCK_TIME_ZONE
-            item CTZ? GET_CLOCK_TIME_ZONE
-            item SETC SET_CLOCK
+            item ATZ SET_APP_TIME_ZONE CMD_DATE_FN DF_SET_APP_TZ
+            item ATZ? GET_APP_TIME_ZONE CMD_DATE_FN DF_GET_APP_TZ
+            item CTZ SET_CLOCK_TIME_ZONE CMD_DATE_FN DF_SET_CLOCK_TZ
+            item CTZ? GET_CLOCK_TIME_ZONE CMD_DATE_FN DF_GET_CLOCK_TZ
+            item SETC SET_CLOCK CMD_DATE_FN DF_SET_CLOCK

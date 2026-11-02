@@ -5,7 +5,8 @@
 #include "../core/calc.h"
 #include "menu_data.h"
 
-/* Calculator command for a menu item, or CMD_NONE if not implemented yet.
+/* Generated calculator binding for a menu item, or CMD_NONE for a UI-only,
+ * unavailable or invalid ID. Unit keys use the same lookup as other actions.
  * *arg gets the command's argument (a unit or TVM variable); shifted is
  * true when the item was pressed after 2ND (recall, for TVM values). */
 calc_cmd_t action_for(menu_id_t id, bool shifted, uint8_t *arg);

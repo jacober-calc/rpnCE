@@ -8,6 +8,19 @@
   DEG, RRES, RECT and DEC are implicit defaults; FIX with all digits shows ALL.
   Crowded status bars show the time without the date.
 - Fresh calculators start in DEG; saved angle settings are restored.
+- Refactored shared command traits, numerical call state and storage
+  workspace lifetimes to reduce code size and static RAM. Persistence
+  formats and calculator operations retain their existing contracts.
+- Consolidated DATE conversion results, neutral mode assignments and menu
+  selections, direct unary math dispatch, value clearing and stack shifts.
+  Reduced the development calculator file by another 620 bytes; display,
+  numeric warnings and saved-file layouts retain their existing behavior.
+- Packed resource records and shared text suffixes at build time, reducing
+  program-plus-resource storage by another 987 bytes. Resource format 4
+  requires its matching program; saved state/settings formats are unchanged.
+- Generated calculator actions from menu definitions and unit order, using
+  one lookup for ordinary functions and units. Removed the separate resource
+  unit map, saving another 258 bytes across program and resources.
 - Added a dedicated complex-number guide chapter with entry, arithmetic,
   CPLX, all six result/display states, formatting, LINK and storage examples.
   Updated chapter navigation, mode and number-type references and the

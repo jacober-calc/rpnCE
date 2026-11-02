@@ -7,12 +7,18 @@ statistics and TI-OS finance working data continue to use `real_t`.
 
 `value_eval()` owns arithmetic dispatch and error protection. Stack math,
 STO/RCL arithmetic, structural DATE aliases and BASE operations use it.
+`commands.c` supplies the shared operand, stack-effect, entry and statistics
+traits; value-dependent LINK and BASE counts are resolved by the evaluator.
 DATE and quantity rules are specialized mathematical rules within that
 interface, not alternative stack/register implementations. Mixed numeric
 operations promote real operands to complex. Real-only consumers use the
 shared value predicates or `value_get_real()` boundary.
 Numeric operands are range-checked before dispatch. The real kernel checks
 converted quantities again because unit conversion can change their range.
+Angles, rounding, units and working-data pointers come from the call's
+`value_context_t`. Real kernels write directly into the caller's `value_result_t`;
+per-evaluation settings and results are not stored in globals. This keeps
+model selection independent of the outcome of a previous arithmetic call.
 
 `value_parse()` is the canonical parser for completed user entry, including
 DATE records, BASE words and rectangular/polar complex pairs. Editing only
@@ -36,8 +42,60 @@ for version 5, including its nine-byte DATE markers and optional unit
 sidecar/footer. These representations exist only at that historical file
 boundary. No current writer emits them. Importing and saving removes the
 retired unit sidecar; old binaries reject the new version.
+Private disk layouts and precision/checksum helpers live in
+`storage_internal.h` and `storage_format.c`. Current and version-5 paths
+share one staged workspace because they run sequentially. Neither decoder
+needs a second full state buffer, and a failed read leaves live state alone.
+
+The size-optimized CE build keeps shared constructors and separate real
+and complex kernel call boundaries. Expanding these functions into callers
+under LTO increases the linked code; the boundaries do not change the
+value representation or mathematical algorithms.
+
+Straightforward unary real operations share a function table and one call
+site inside the real kernel. Quantity conversion, input prechecks and
+result/range guards still surround every operation. DATE menu conversions
+stage the same `dt_result_t` used by calendar arithmetic, then construct a
+complete value through `value_date_result()`. Clock/settings handling stays
+in the stack adapter. Component extraction uses one field/type table;
+fixed epoch offsets are stored as day counts.
+
+Stack shifts use overlapping `memmove()` of complete values. Initialization,
+clear and resize operations share one typed zero-fill helper; a bytewise
+zero is not substituted for a TI decimal zero. Display-cache invalidation
+compares one byte key containing every formatting setting.
+
+Resource format 4 stores seven-byte menu nodes, five-byte menu groups and
+seven-byte unit records. A menu's kind is derived from its submenu target,
+blank ID and alternate-label fields rather than stored separately. Unit
+dimensions occupy seven bits, with the reciprocal flag in the eighth;
+the generator rejects dimension indexes that exceed that capacity. Packed
+record sizes are asserted for both desktop and CE builds.
+
+The resource generator pools all strings together, storing longer strings
+first and sharing shorter suffixes where possible. Runtime access still
+reads ordinary NUL-terminated strings directly from archive. No resource
+decompression buffer is needed. Matching program/resource builds are
+required; the loader rejects earlier resource formats. Saved calculator
+state and settings retain their existing formats.
+
+Menu definitions also own calculator command/argument bindings. An ID's
+binding is defined once and reused wherever that ID appears. Unit bindings
+are generated from the same unit order as the resource table. The generated
+`menu_actions.h` replaces the handwritten action array and the separate
+resource unit map. One bounded lookup handles every calculator action;
+consecutive numeric argument runs compact its data. Symbolic command and
+argument enums are resolved by the C compiler. UI prompts and menu navigation
+remain in their respective handlers.
 
 ## Numeric modes and presentation
+
+`calc_mode.c` defines neutral byte-valued settings once. Command execution
+and menu selection checks share that table, including angle, complex,
+decimal-mark, TVM timing, epoch and DATE presentation choices. Carry
+set/clear uses the same assignment path without gaining a menu highlight.
+Entry is completed and validated before any setting is changed. Modes
+with additional validation or effects retain their corresponding handlers.
 
 `calc_t.degrees` starts true (DEG) on fresh state; saved state restores the
 user's choice. `complex_results` starts false (RRES), and `complex_mode`

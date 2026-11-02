@@ -510,36 +510,31 @@ static struct {
     bool valid;
 } value_cache[4];
 
-static struct {
-    uint8_t style, radix, bits, complex_mode;
-    int8_t digits;
-    bool date_as_string, decimal_comma, valid;
-} value_cache_format;
+static uint8_t value_cache_format[7];
+static bool value_cache_valid;
 
 static void reset_value_cache(void)
 {
-    value_cache_format.valid = false;
+    value_cache_valid = false;
     for (int i = 0; i < 4; i++)
         value_cache[i].valid = false;
 }
 
 static void prepare_value_cache(const calc_t *c)
 {
-    if (value_cache_format.valid && value_cache_format.style == c->disp_style &&
-        value_cache_format.digits == c->disp_digits && value_cache_format.radix == c->base.radix &&
-        value_cache_format.bits == c->base.bits && value_cache_format.date_as_string == c->date_as_string &&
-        value_cache_format.decimal_comma == c->decimal_comma && value_cache_format.complex_mode == c->complex_mode)
+    /* A byte key has no padding and includes every value-format setting.
+     * Units remain outside the numeric-text cache, as before. */
+    const uint8_t format[] = {
+        c->disp_style, (uint8_t)c->disp_digits, c->base.radix, c->base.bits,
+        c->date_as_string, c->decimal_comma, c->complex_mode
+    };
+    _Static_assert(sizeof format == sizeof value_cache_format, "format cache key sizes must match");
+    if (value_cache_valid && !memcmp(value_cache_format, format, sizeof format))
         return;
 
     reset_value_cache();
-    value_cache_format.style = c->disp_style;
-    value_cache_format.digits = c->disp_digits;
-    value_cache_format.radix = c->base.radix;
-    value_cache_format.bits = c->base.bits;
-    value_cache_format.date_as_string = c->date_as_string;
-    value_cache_format.decimal_comma = c->decimal_comma;
-    value_cache_format.complex_mode = c->complex_mode;
-    value_cache_format.valid = true;
+    memcpy(value_cache_format, format, sizeof format);
+    value_cache_valid = true;
 }
 
 static const char *stack_value_text(const calc_t *c, const value_t *v, int row, fv_kind_t *kind)
@@ -706,7 +701,8 @@ static void draw_menu_row(const calc_t *c, const menu_t *m)
 
     for (uint8_t i = 0; i < 5; i++) {
         const menu_node_t *n = menu_slot(m, i);
-        if (n->kind == MENU_BLANK)
+        menu_kind_t kind = menu_node_kind(n);
+        if (kind == MENU_BLANK)
             continue;
 
         int x = gap + i * (w + gap);
@@ -714,13 +710,13 @@ static void draw_menu_row(const calc_t *c, const menu_t *m)
         gfx_FillRectangle(x, MENU_Y, w, MENU_H);
 
         const char *label = res_text(n->label);
-        if (n->kind == MENU_ALT && action_is_active(c, (menu_id_t)n->id))
+        if (kind == MENU_ALT && action_is_active(c, (menu_id_t)n->id))
             label = res_text(n->alt_label);
 
         int lw = label_width(label);
         draw_label(label, x + (w - lw) / 2, MENU_Y + (MENU_H - 8) / 2 + 1, g_accents ? COL_MENU_TEXT : COL_PANEL);
 
-        if (n->kind == MENU_GROUP) {
+        if (kind == MENU_GROUP) {
             gfx_SetColor(g_accents ? COL_MENU_TEXT : COL_PANEL);
             gfx_HorizLine(x + w / 2 - 8, MENU_Y + 2, 16);
         }
