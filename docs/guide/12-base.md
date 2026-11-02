@@ -1,8 +1,8 @@
-# 11. BASE: hexadecimal, octal and binary
+# 12. BASE: hexadecimal, octal and binary
 
-rpnCE 0.7.0 · User Guide
+rpnCE development build · User Guide
 
-[Manual contents](../USER_GUIDE.md) · [Previous: 10. Math functions](10-mathematics.md) · [Next: 12. STAT: statistics and curve fitting](12-statistics.md)
+[Manual contents](../USER_GUIDE.md) · [Previous: 11. Complex numbers](11-complex-numbers.md) · [Next: 13. STAT: statistics and curve fitting](13-statistics.md)
 
 **In this chapter**
 
@@ -22,10 +22,14 @@ rpnCE 0.7.0 · User Guide
     - <img src="../../assets/guide/menu/home-base-2.png" alt="HOME > BASE > Row 2" width="320">
 
 **BASE** row 1 sets how whole numbers are shown and typed: **DEC**
-(ordinary numbers), **HEX**, **OCT** or **BIN**. The status bar shows the
-base. In HEX, OCT and BIN every stack value that's a whole number within the
+(ordinary numbers), **HEX**, **OCT** or **BIN**. The status bar shows HEX,
+OCT or BIN; DEC is implicit. In HEX, OCT and BIN every real stack value that's a whole number within the
 word size is shown in that base; the values themselves don't change, so
 switching back to DEC shows them as before.
+
+Complex and DATE values keep their types when you select a base. Explicit
+BASE word operations require plain real operands and reject these values
+with `Err: Data Type`. Return to DEC to enter complex numbers.
 
 <img src="../../assets/guide/screens/base-hex.png" alt="HEX mode, with a value too big for the word size" width="320">
 
@@ -162,4 +166,4 @@ it does not reset the saved word size or carry.
 
 ---
 
-[Manual contents](../USER_GUIDE.md) · [Previous: 10. Math functions](10-mathematics.md) · [Next: 12. STAT: statistics and curve fitting](12-statistics.md)
+[Manual contents](../USER_GUIDE.md) · [Previous: 11. Complex numbers](11-complex-numbers.md) · [Next: 13. STAT: statistics and curve fitting](13-statistics.md)

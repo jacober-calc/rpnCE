@@ -1,6 +1,6 @@
 # 2. Installing rpnCE
 
-rpnCE 0.7.0 · User Guide
+rpnCE development build · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 1. Introduction](01-introduction.md) · [Next: 3. First calculations](03-first-calculations.md)
 
@@ -67,7 +67,7 @@ to replace them.
 
 1. Exit rpnCE normally with `2ND QUIT` so current work is saved.
 2. Keep the saved appvars in place. For a backup, copy them to your
-   computer as described in [chapter 17](17-memory.md#backing-up-your-work).
+   computer as described in [chapter 18](18-memory.md#backing-up-your-work).
 3. Transfer the new program and resource appvar together, replacing the
    two older files.
 4. Start rpnCE and check your saved values.
@@ -75,7 +75,7 @@ to replace them.
 Both files must be from the same build. A help-text change can change the
 resource stamp even when the software version number is unchanged. If
 rpnCE reports a missing or mismatched resource, transfer both files again
-from one release or build. See [Startup problems](16-troubleshooting.md#when-rpnce-cant-start).
+from one release or build. See [Startup problems](17-troubleshooting.md#when-rpnce-cant-start).
 
 ## Save and exit
 

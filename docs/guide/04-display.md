@@ -1,6 +1,6 @@
 # 4. The screen
 
-rpnCE 0.7.0 · User Guide
+rpnCE development build · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 3. First calculations](03-first-calculations.md) · [Next: 5. Entering numbers](05-number-entry.md)
 
@@ -22,18 +22,27 @@ identifies them; each is described in this chapter.
 
 The dark strip at the top shows the calculator's state.
 
-<img src="../../assets/guide/screens/display-status.png" alt="The status bar: FIX4 DEG DEC; RAD with the 2ND badge; SCI3 HEX with carry and the A badge" width="320">
+<img src="../../assets/guide/screens/display-status.png" alt="The compact status bar: FIX4 with implicit DEG; RAD CRES PRAD with the 2ND badge; CRES PDEG with HEX, carry and the A badge" width="320">
 
 | Item | Meaning |
 | --- | --- |
 | `2026-10-18 14:05` | the date and time in the application time zone (ATZ), using CTZ to interpret the CE's clock; it updates each minute |
+| `HH:MM` | time only when the full timestamp would overlap the mode indicators |
 | `FIX4`, `SCI3`, `ENG2` | the display format and its number of digits (see [chapter 9](09-settings.md#9-display-formats-and-mode-settings)) |
-| `FIX-` | "as many digits as needed" (all digits, like ALL on an HP) |
-| `DEG` / `RAD` | the angle mode for trigonometry and polar conversions |
-| `DEC`, `HEX`, `OCT`, `BIN` | the number base (see [chapter 11](11-base.md#11-base-hexadecimal-octal-and-binary)) |
-| `CF` after the base | the BASE carry flag is set, including in DEC |
+| `ALL` | FIX with "as many digits as needed" (all digits, like ALL on an HP) |
+| `SCI-` / `ENG-` | scientific or engineering format with all display digits |
+| `RAD` | radians for trigonometry and polar conversions; no angle indicator means DEG |
+| `HEX`, `OCT`, `BIN` | a nondecimal number base; no base indicator means DEC (see [chapter 12](12-base.md#12-base-hexadecimal-octal-and-binary)) |
+| `CRES` | real inputs may produce complex results; absent means RRES |
+| `PRAD` / `PDEG` | polar-radian or polar-degree display and LINK mode; absent means RECT; independent of DEG/RAD |
+| `CF` | the BASE carry flag is set, including when DEC is implicit |
 | `2ND` badge | `2ND` was pressed; the next key gives its blue function |
 | `A` badge | `ALPHA` was pressed; the next key gives its green letter |
+
+Format is always shown. DEG, RRES, RECT and DEC are implicit
+defaults to keep the bar compact; the MODE menu still marks every active
+selection. A fresh calculator starts in DEG, DEC, RRES and RECT, so its
+only numeric status label is **ALL**.
 
 ## Message line
 
@@ -59,8 +68,8 @@ The middle of the screen shows the four stack registers, `T` at the top and
 font. `X` is where numbers are typed and where results appear.
 
 - A value can have a small label after it: a unit such as `ft` or `kg`
-  (chapter 14), or `dec` in BASE modes for a value that can't be shown in
-  that base (chapter 11).
+  (chapter 15), or `dec` in BASE modes for a value that can't be shown in
+  that base (chapter 12).
 - A value too long for its line (a 32-bit binary number, or a long date)
   stays on one line: you see its right end, with a small ◂ where digits are
   hidden. Press ◂ and ▸ (the left and right arrow keys) to scroll through X.

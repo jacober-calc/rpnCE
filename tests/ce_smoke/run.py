@@ -37,22 +37,29 @@ def main():
                         'expected_CRCs': [f'{crc32c(value):08X}']}
         return 'hash|' + name
 
+    def complex_expectation(name, real_digit, imag_digit, negative_real=False):
+        real = bytes([0x80 if negative_real else 0, 0x80, real_digit << 4]) + bytes(6)
+        imag = bytes([0, 0x80, imag_digit << 4]) + bytes(6)
+        value = real + imag + bytes([1, 0])  # complex discriminator, no unit
+        hashes[name] = {'description': name, 'start': hex(address), 'size': 20,
+                        'expected_CRCs': [f'{crc32c(value):08X}']}
+        return 'hash|' + name
+
     sequence = launch + [expectation('fresh-X-is-zero', 0, 0),
                          'key|2', 'key|enter', 'key|3', 'key|+',
                          expectation('keyboard-addition-X-is-five', 0, 5),
                          'key|2nd', 'key|enter', 'delay|2000', 'key|clear',
                          expectation('CLEAR-dismisses-SHOW-without-clearing-X', 0, 5),
                          'key|2nd', 'key|enter', 'key|enter',
-                         expectation('ENTER-after-SHOW-still-duplicates-X', 9, 5),
+                         expectation('ENTER-after-SHOW-still-duplicates-X', 20, 5),
                          'key|sto', 'key|math', 'delay|500',
-                         # A follows twelve reals, their unit tags, depth,
-                         # LASTX and LASTX's unit in the CE's packed calc_t.
-                         expectation('store-A-is-five', 131, 5),
+                         # A follows twelve 20-byte values, depth, and LASTX.
+                         expectation('store-A-is-five', 262, 5),
                          'key|2nd', 'key|mode', 'delay|1500']
     sequence += launch + ['key|1', 'key|+',
                           expectation('reopen-restores-X-before-addition', 0, 6),
-                          expectation('reopen-restores-register-A', 131, 5),
-                          'key|clear', 'key|1', 'key|,', 'key|neg', 'key|9', 'key|9', 'key|enter',
+                          expectation('reopen-restores-register-A', 262, 5),
+                          'key|clear', 'key|1', 'key|,', 'key|(-)', 'key|9', 'key|9', 'key|enter',
                           expectation('keyboard-minimum-exponent', 0, 1, -99),
                           'key|sto', 'key|apps', 'key|2nd', 'key|mode', 'delay|1500']
     sequence += launch + ['key|2nd', 'key|sto', 'key|apps',
@@ -71,18 +78,26 @@ def main():
                  'key|2nd', 'key|mode', 'delay|1500']
     sequence += launch + ['key|7', 'key|stat', 'key|down', 'key|down', 'key|y=',
                           expectation('reopen-retains-statistics-constancy', 0, 0),
-                          'key|clear', 'key|clear', 'key|8', 'key|enter', 'key|1', 'key|neg',
+                          'key|clear', 'key|clear', 'key|8', 'key|enter', 'key|1', 'key|(-)',
                           'key|ln', 'delay|2000', 'key|clear',
                           expectation('CLEAR-dismisses-error-without-changing-X', 0, 1, negative=True),
-                          expectation('CLEAR-dismisses-error-without-changing-Y', 9, 8),
+                          expectation('CLEAR-dismisses-error-without-changing-Y', 20, 8),
                           'key|ln', 'key|enter',
-                          expectation('ENTER-after-error-duplicates-X', 9, 1, negative=True),
-                          expectation('ENTER-after-error-lifts-old-Y', 18, 8),
+                          expectation('ENTER-after-error-duplicates-X', 20, 1, negative=True),
+                          expectation('ENTER-after-error-lifts-old-Y', 40, 8),
                           'key|5', 'key|enter', 'key|math', 'key|down', 'key|down', 'key|window',
                           'key|down', 'key|down', 'key|zoom', 'key|clear',
                           expectation('CLEAR-dismisses-a-visible-notice', 0, 5),
                           'key|zoom', 'delay|2000', 'key|clear',
                           expectation('notice-times-out-and-CLEAR-resumes-CLX', 0, 0),
+                          'key|2nd', 'key|mode', 'delay|1500']
+    sequence += launch + ['key|clear', 'key|clear', 'key|1', 'key|2nd', 'key|.',
+                          'key|2', 'key|enter',
+                          complex_expectation('keyboard-constructs-one-complex-value', 1, 2),
+                          'key|sto', 'key|math', 'key|2nd', 'key|mode', 'delay|1500']
+    sequence += launch + ['key|2nd', 'key|sto', 'key|math',
+                          complex_expectation('reopen-restores-both-complex-components', 1, 2),
+                          'key|^2', complex_expectation('keyboard-complex-square', 3, 4, True),
                           'key|2nd', 'key|mode', 'delay|1500']
     config = {'transfer_files': files, 'target': target, 'delay_after_key': 100,
               'sequence': sequence, 'hashes': hashes}

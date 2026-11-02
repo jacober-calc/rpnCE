@@ -231,7 +231,7 @@
     $('coverage-count').textContent = `${available.length - gaps.length}/${available.length} implemented commands have functional cases`;
     const body = $('coverage-body');
     body.append(el('p', `${C.groups.length} menu navigation cases; ${C.cases.filter(c => c.expected).length} result cases; ${C.cases.filter(c => c.kind === 'observation').length} observation cases. Catalog coverage describes available cases, not tests completed in this run.`), el('p', C.reference));
-    body.append(el('p', `${matrix.length} menu and keyboard functions have explicit coverage requirements. ${matrix.filter(row => !row.missing.length).length} meet all their catalog requirements, including edge and invalid-input cases where required. ${C.commands.length - available.length} reserved complex-number commands are checked for availability only.`));
+    body.append(el('p', `${matrix.length} menu and keyboard functions have explicit coverage requirements. ${matrix.filter(row => !row.missing.length).length} meet all their catalog requirements, including edge and invalid-input cases where required. Complex functions and result/display modes have functional cases.`));
     const detail = el('details', undefined, 'function-coverage'); detail.append(el('summary', 'Per-function coverage in the catalog'));
     const table = el('table'); const head = el('thead'); const titles = el('tr');
     for (const caption of ['Function', 'Cases', 'Edges', 'Invalid', 'Regressions']) { const cell = el('th', caption); cell.scope = 'col'; titles.append(cell); }

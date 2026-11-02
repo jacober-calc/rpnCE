@@ -1,4 +1,26 @@
+# Unreleased
+
+- Unified real, complex, DATE and unit values across stack movement,
+  register arithmetic, parsing, formatting and saved state.
+- Added RPN83P-style complex entry, LINK, modes and scientific arithmetic.
+- Made the status bar compact: format always shows; RAD, CRES, PRAD/PDEG,
+  nondecimal bases, carry and modifiers appear only when active.
+  DEG, RRES, RECT and DEC are implicit defaults; FIX with all digits shows ALL.
+  Crowded status bars show the time without the date.
+- Fresh calculators start in DEG; saved angle settings are restored.
+- Added a dedicated complex-number guide chapter with entry, arithmetic,
+  CPLX, all six result/display states, formatting, LINK and storage examples.
+  Updated chapter navigation, mode and number-type references and the
+  generated function index. HELP now has 26 pages,
+  including complex operations, number types and compact status indicators.
+- Replaced separate unit metadata and packed DATE runtime slots. Version-5
+  state is imported at the file boundary; new version-6 saves carry complete
+  values and cannot be read by older program versions.
+
 # rpnCE 0.7.0
+
+These historical notes describe the released binary; the current User
+Guide includes the development changes listed above.
 
 The first official pre-release of rpnCE.
 

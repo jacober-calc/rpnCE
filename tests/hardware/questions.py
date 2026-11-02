@@ -48,7 +48,7 @@ REFERENCES = {
     'units': 'Exact factors and offsets from tools/genunits.py, evaluated separately at 180 digits. This shares unit definitions with the program; it checks conversions, not an independent audit of the definitions.',
     'date': 'Python Gregorian date/datetime and exact integer second arithmetic. Epochs and fixed offsets are stated in the procedure.',
     'tvm': 'Independent annuity equations evaluated at 180 digits. Positive values are receipts; negative values are payments. The reference is not computed by the calculator solver.',
-    'contract': 'Current rpnCE 0.7.0 user guide and documented domains. Expected errors are checked separately from numerical results.'
+    'contract': 'Current rpnCE development user guide and documented domains. Released 0.7.0 predates complex support. Expected errors are checked separately from numerical results.'
 }
 
 def decimal(value):
@@ -746,18 +746,53 @@ q('tvm-rate-zero','TVM','I%YR: exact zero-interest cash flow',tvm_steps({'TVM_N'
 q('round-zero-significant','NUM','RNDG 0 uses one significant digit',['Enter 12345.',select('ROUND_TO_GUARD'),'At RNDG press 0.'],number(10000,exact=True),['ROUND_TO_GUARD'],reference='contract')
 q('round-full-precision','NUM','RNDG at full stored precision',['Enter 1 EE 13 ENTER 1 +.',select('ROUND_TO_GUARD'),'At RNDG press . then 4 for 14 significant digits. Use SHOW for the full stored value.'],number(10000000000001,exact=True),['ROUND_TO_GUARD'],reference='rounding')
 
+# Complex instructions use component extraction for numeric grading. The
+# browser's real-number input must not silently accept a complex answer.
+COMPLEX_FUNCTIONS = ['COMPLEX_REAL','COMPLEX_IMAG','COMPLEX_CONJ','COMPLEX_ABS','COMPLEX_ANGLE']
+for ident,value in [('COMPLEX_REAL',3),('COMPLEX_IMAG',4),('COMPLEX_CONJ',-4),('COMPLEX_ABS',5),('COMPLEX_ANGLE',mp.atan2(4,3))]:
+    steps=['Enter 3, then 2ND . (i), then 4 ENTER.',select(ident)]
+    if ident=='COMPLEX_CONJ': steps += ['Check that the complex value is 3 - 4i.',select('COMPLEX_IMAG')]
+    q('complex-function-'+ident.lower(),'CPLX',COMMANDS[ident]['label']+' of 3 + 4i',steps,number(value,exact=ident!='COMPLEX_ANGLE'),[ident],reference='math')
+    q('complex-date-rejected-'+ident.lower(),'CPLX',COMMANDS[ident]['label']+' rejects a DATE',
+      [record('DATE_CREATE',[2024,3,14]),select(ident)],error('Err: Data Type'),[ident],focus='domain',checks=['The original DATE and LASTX are retained.'],reference='contract')
+
+COMPLEX_MODES = ['NUM_RESULT_MODE_REAL','NUM_RESULT_MODE_COMPLEX','COMPLEX_MODE_RECT','COMPLEX_MODE_RAD','COMPLEX_MODE_DEG']
+for ident in COMPLEX_MODES:
+    q('complex-mode-preserves-'+ident.lower(),'MODE',COMMANDS[ident]['label']+' preserves a complete complex value',
+      ['Enter 3, then 2ND . (i), then 4 ENTER.',select(ident),
+       'Check the selected MODE choice and its status indicator before continuing.',select('COMPLEX_MODE_RECT'),
+       'Check that X is still 3 + 4i.',select('COMPLEX_REAL')],number(3,exact=True),[ident],focus='interaction',
+      checks=['The selected choice was marked active; only CRES, PRAD or PDEG has a corresponding status label.','After RECT, the original real and imaginary components were both unchanged.'],reference='contract')
+
+q('complex-link-roundtrip','CPLX','LINK joins and splits rectangular components',
+  ['Enter 3 ENTER 4.','Press 2ND X,T,theta,n (LINK). Check that X is 3 + 4i.','Press 2ND X,T,theta,n again.'],
+  number(4,exact=True),['COMPLEX_MODE_RECT'],focus='interaction',checks=['Joining consumed two real levels; splitting restored real Y=3 and real X=4.'],reference='integer')
+q('complex-cres-negative-root','CPLX','CRES allows a negative real square root',
+  [select('NUM_RESULT_MODE_COMPLEX'),'Enter 4 (−), then 2ND x².','Check that X is 0 + 2i.',select('COMPLEX_IMAG')],
+  number(2,exact=True),['NUM_RESULT_MODE_COMPLEX'],checks=['CRES is visible; the operation produced a complex value without a domain error.'],reference='integer')
+q('complex-rres-negative-root','CPLX','RRES retains the real square-root domain',
+  [select('NUM_RESULT_MODE_REAL'),'Enter 4 (−), then 2ND x².'],error('Err: Domain'),['NUM_RESULT_MODE_REAL'],focus='domain',checks=['X remains the real value -4; RRES has no status indicator.'],reference='contract')
+q('complex-zero-imag-real-boundary','CPLX','An imaginary zero remains complex until REAL extracts it',
+  ['Enter 2ND . ENTER, then x². X is -1 + 0i.',select('ROUND_TO_FIX'),'Check Err: Data Type and unchanged X.','Press CLEAR once to dismiss the message.',select('COMPLEX_REAL'),select('ROUND_TO_FIX')],
+  number(-1,exact=True),['COMPLEX_REAL','ROUND_TO_FIX'],focus='interaction',checks=['RNDF rejected complex -1 + 0i; after REAL it accepted real -1.'],reference='contract')
+q('status-implicit-defaults','MODE','Compact status defaults and active flags',
+  [select('DEC'),select('DEG'),select('NUM_RESULT_MODE_REAL'),select('COMPLEX_MODE_RECT'),'Inspect the status bar in DEC with FIX all digits.',
+   select('RAD'),select('NUM_RESULT_MODE_COMPLEX'),select('COMPLEX_MODE_DEG'),select('HEX'),select('SET_CARRY_FLAG'),
+   'Press 2ND and inspect the pending modifier badge; press 2ND again to cancel it.'],
+  covers=['DEG','RAD','NUM_RESULT_MODE_REAL','NUM_RESULT_MODE_COMPLEX','COMPLEX_MODE_RECT','COMPLEX_MODE_DEG','DEC','HEX','SET_CARRY_FLAG'],focus='interaction',
+  checks=['The default numeric label was ALL; DEG, DEC, RRES and RECT were absent.','The active labels RAD, CRES, PDEG, HEX and CF appeared, with the pending 2ND badge.','Labels fit without overlap; the clock used HH:MM if the full date would not fit.'],reference='contract')
+
 # Requirements are checked against the entire pool, not against completion counts.
 DOMAIN_IDS=set([
  'XROOT_Y','LOG2','LOG_BASE','LN_ONE_PLUS','GCD','LCM','PRIME','MOD','PERCENT_CHANGE','COMB','PERM','FACTORIAL','ACOSH','ATANH',
  *BASE_OPS,'SET_WORD_SIZE','STAT_MEAN','STAT_WEIGHTED_MEAN','STAT_SAMPLE_SDEV','STAT_SAMPLE_COV',
  'CFIT_LINEAR','CFIT_LOG','CFIT_EXP','CFIT_POWER','CFIT_SLOPE','CFIT_CORRELATION','CFIT_FORECAST_X','CFIT_FORECAST_Y','CFIT_BEST',
- 'TVM_N','TVM_IYR','TVM_PV','TVM_PMT','TVM_FV','TVM_PYR','TVM_CYR','TVM_ITER_MAX','SET_STACK_SIZE','SET_REG_SIZE'])
+ 'TVM_N','TVM_IYR','TVM_PV','TVM_PMT','TVM_FV','TVM_PYR','TVM_CYR','TVM_ITER_MAX','SET_STACK_SIZE','SET_REG_SIZE',*COMPLEX_FUNCTIONS])
 RULES=[]
 for ident,command in COMMANDS.items():
-    if ident not in {'COMPLEX_REAL','COMPLEX_IMAG','COMPLEX_CONJ','COMPLEX_ABS','COMPLEX_ANGLE','NUM_RESULT_MODE_REAL','NUM_RESULT_MODE_COMPLEX','COMPLEX_MODE_RECT','COMPLEX_MODE_RAD','COMPLEX_MODE_DEG'}:
-        required=['functional','edge']
-        if ident in DOMAIN_IDS or (command['section']=='DATE' and ident not in {'GET_NOW','GET_NOW_DATE','GET_NOW_TIME','GET_NOW_OFFSET_DATE_TIME','GET_NOW_OFFSET_DATE_TIME_UTC','GET_APP_TIME_ZONE','GET_CLOCK_TIME_ZONE','EPOCH_UNIX','EPOCH_NTP','EPOCH_GPS','EPOCH_TIOS','EPOCH_Y2K','EPOCH_CUSTOM','EPOCH_GET_CUSTOM'}): required+=['domain']
-        RULES.append({'id':ident,'required':required})
+    required=['functional','edge']
+    if ident in DOMAIN_IDS or (command['section']=='DATE' and ident not in {'GET_NOW','GET_NOW_DATE','GET_NOW_TIME','GET_NOW_OFFSET_DATE_TIME','GET_NOW_OFFSET_DATE_TIME_UTC','GET_APP_TIME_ZONE','GET_CLOCK_TIME_ZONE','EPOCH_UNIX','EPOCH_NTP','EPOCH_GPS','EPOCH_TIOS','EPOCH_Y2K','EPOCH_CUSTOM','EPOCH_GET_CUSTOM'}): required+=['domain']
+    RULES.append({'id':ident,'required':required})
 for ident in KEYS:
     RULES.append({'id':'key:'+ident,'required':['functional','edge']+(['domain'] if ident in ['DIV','RECIP','SQRT','LN','LOG','POW','ASIN','ACOS'] else [])})
 

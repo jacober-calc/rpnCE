@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fills in the generated appendices of docs/guide/19-reference.md:
+"""Fills in the generated appendices of docs/guide/20-reference.md:
 
   Appendix B (the menu map), from menus/menus.txt
   Appendix C (the units), from menus/menus.txt and tools/genunits.py
@@ -20,7 +20,7 @@ import genmenu   # noqa: E402
 import genunits  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-GUIDE = os.path.join(ROOT, 'docs', 'guide', '19-reference.md')
+GUIDE = os.path.join(ROOT, 'docs', 'guide', '20-reference.md')
 
 # menu label symbols, as shown on the calculator
 SYMBOLS = {'sq': '²', 'cube': '³', 'cuberoot': '³', 'root': '√', 'sigma': 'Σ',
@@ -107,7 +107,7 @@ def unit_list(roots):
              'selected by UBAS. Numeric factors are rounded to at most 12 significant',
              'digits for this table; the calculator uses 14-digit conversion factors.',
              'Temperature entries are formulas; reciprocal fuel entries divide by',
-             'the quantity shown. See [Units](14-units.md) for usage and conventions.', '']
+             'the quantity shown. See [Units](15-units.md) for usage and conventions.', '']
     by_dim = {}
     for ident, lab, where in found:
         dim = genunits.U[ident][0]
@@ -162,24 +162,29 @@ def function_index(roots):
         'MATH': '10-mathematics.md#math-menu',
         'NUM': '10-mathematics.md#num-menu',
         'PROB': '10-mathematics.md#prob-menu',
-        'COMPLEX': '18-compatibility.md#complex-number-placeholders',
-        'TVM': '13-tvm.md',
-        'BASE': '11-base.md',
+        'COMPLEX': '11-complex-numbers.md#cplx-menu-components-conjugate-magnitude-and-angle',
+        'TVM': '14-tvm.md',
+        'BASE': '12-base.md',
         'HYPERBOLIC': '10-mathematics.md#hyp-menu',
-        'STAT': '12-statistics.md',
+        'STAT': '13-statistics.md',
         'CONV': '10-mathematics.md#conv-menu',
         'CLEAR': '10-mathematics.md#stk-and-clr-menus',
         'MODE': '09-settings.md',
         'STACK': '06-stack.md#moving-things-around',
-        'UNIT': '14-units.md#ufcn',
-        'DATE': '15-date.md#the-date-submenus',
-        'EPOCH': '15-date.md#epochs',
-        'CLK': '15-date.md#the-clock-and-time-zones',
-        'CFIT': '12-statistics.md#curve-fitting',
+        'UNIT': '15-units.md#ufcn',
+        'DATE': '16-date.md#the-date-submenus',
+        'EPOCH': '16-date.md#epochs',
+        'CLK': '16-date.md#the-clock-and-time-zones',
+        'CFIT': '13-statistics.md#curve-fitting',
         'HELP': '07-menus.md#help',
     }
-    unavailable = {'NUM_RESULT_MODE_REAL', 'NUM_RESULT_MODE_COMPLEX',
-                   'COMPLEX_MODE_RECT', 'COMPLEX_MODE_RAD', 'COMPLEX_MODE_DEG'}
+    complex_modes = {
+        'NUM_RESULT_MODE_REAL': 'rres-and-cres-choosing-result-behavior',
+        'NUM_RESULT_MODE_COMPLEX': 'rres-and-cres-choosing-result-behavior',
+        'COMPLEX_MODE_RECT': 'rect-prad-and-pdeg-displaying-the-same-value',
+        'COMPLEX_MODE_RAD': 'rect-prad-and-pdeg-displaying-the-same-value',
+        'COMPLEX_MODE_DEG': 'rect-prad-and-pdeg-displaying-the-same-value',
+    }
     entries = {}
 
     def walk(g, path, destination=None):
@@ -191,8 +196,8 @@ def function_index(roots):
                 elif n[0] != 'blank' and n[3] not in genunits.U:
                     ident = n[3]
                     target = chapters.get(ident, destination)
-                    if ident in unavailable:
-                        target = chapters['COMPLEX']
+                    if ident in complex_modes:
+                        target = '11-complex-numbers.md#' + complex_modes[ident]
                     if not target:
                         sys.exit(f'guide index: no chapter for {ident}')
                     entry = entries.setdefault(ident, [label(n[1]), [], target])
@@ -226,7 +231,7 @@ def main():
     text = replace_block(text, 'UNITS', unit_list(roots))
     text = replace_block(text, 'FUNCTION INDEX', function_index(roots))
     open(GUIDE, 'w', encoding='utf-8').write(text)
-    print('19-reference.md menu map, units, and function index updated')
+    print('20-reference.md menu map, units, and function index updated')
 
 
 if __name__ == '__main__':

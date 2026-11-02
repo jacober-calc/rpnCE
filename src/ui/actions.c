@@ -5,9 +5,19 @@
 /* A menu action is data: one command byte and one argument byte. Missing
  * entries are CMD_NONE. Unit actions still come from RPNCEres, so their
  * indices stay tied to the resource table. */
-_Static_assert(CMD_NONE == 0 && CMD_GET_STACK_SIZE <= UINT8_MAX,
+_Static_assert(CMD_NONE == 0 && CMD_DATE_VALUE <= UINT8_MAX,
                "menu actions must fit in a byte");
 static const struct { uint8_t cmd, arg; } actions[] = {
+    [MID_COMPLEX_REAL] = { CMD_COMPLEX_REAL, 0 },
+    [MID_COMPLEX_IMAG] = { CMD_COMPLEX_IMAG, 0 },
+    [MID_COMPLEX_CONJ] = { CMD_COMPLEX_CONJ, 0 },
+    [MID_COMPLEX_ABS] = { CMD_COMPLEX_ABS, 0 },
+    [MID_COMPLEX_ANGLE] = { CMD_COMPLEX_ANGLE, 0 },
+    [MID_NUM_RESULT_MODE_REAL] = { CMD_RESULT_REAL, 0 },
+    [MID_NUM_RESULT_MODE_COMPLEX] = { CMD_RESULT_COMPLEX, 0 },
+    [MID_COMPLEX_MODE_RECT] = { CMD_COMPLEX_RECT, 0 },
+    [MID_COMPLEX_MODE_RAD] = { CMD_COMPLEX_RAD, 0 },
+    [MID_COMPLEX_MODE_DEG] = { CMD_COMPLEX_DEG, 0 },
     /* TVM, statistics, curve-fit models and radix */
     [MID_TVM_N] = { CMD_TVM_VAR, TVM_N },
     [MID_TVM_IYR] = { CMD_TVM_VAR, TVM_IYR },
@@ -285,6 +295,11 @@ calc_cmd_t action_for(menu_id_t id, bool shifted, uint8_t *arg)
 bool action_is_active(const calc_t *c, menu_id_t id)
 {
     switch (id) {
+        case MID_NUM_RESULT_MODE_REAL: return !c->complex_results;
+        case MID_NUM_RESULT_MODE_COMPLEX: return c->complex_results;
+        case MID_COMPLEX_MODE_RECT: return c->complex_mode == COMPLEX_RECT;
+        case MID_COMPLEX_MODE_RAD: return c->complex_mode == COMPLEX_RAD;
+        case MID_COMPLEX_MODE_DEG: return c->complex_mode == COMPLEX_DEG;
         case MID_RAD: return !c->degrees;
         case MID_DEG: return c->degrees;
         case MID_FORMAT_RECORD_RAW:    return !c->date_as_string;

@@ -42,15 +42,17 @@ int main(void)
                   m.row == menu_parent_row_of(e.arg));
         }
     }
-    /* 2ND LINK and 2ND ANGLE stay free for complex-number entry */
     {
         keys_t k2 = {0};
         keys_translate(&k2, sk_2nd);
-        check("2ND LINK does nothing (reserved for complex numbers)",
-              keys_translate(&k2, sk_GraphVar).kind == EV_NONE && !k2.second);
+        event_t link = keys_translate(&k2, sk_GraphVar);
+        check("2ND LINK combines or splits a value", link.kind == EV_CMD && link.cmd == CMD_COMPLEX_LINK && !k2.second);
         keys_translate(&k2, sk_2nd);
-        check("2ND ANGLE does nothing (reserved for complex numbers)",
-              keys_translate(&k2, sk_Apps).kind == EV_NONE && !k2.second);
+        event_t angle = keys_translate(&k2, sk_Apps);
+        check("2ND ANGLE enters polar values", angle.kind == EV_CMD && angle.cmd == CMD_COMPLEX_POLAR_ENTRY && !k2.second);
+        keys_translate(&k2, sk_2nd);
+        event_t imag = keys_translate(&k2, sk_DecPnt);
+        check("2ND i enters rectangular values", imag.kind == EV_CMD && imag.cmd == CMD_COMPLEX_RECT_ENTRY && !k2.second);
     }
     keys_t k = {0};
     {

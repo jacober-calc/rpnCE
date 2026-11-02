@@ -1,8 +1,8 @@
-# 14. UNIT: unit conversions
+# 15. UNIT: unit conversions
 
-rpnCE 0.7.0 · User Guide
+rpnCE development build · User Guide
 
-[Manual contents](../USER_GUIDE.md) · [Previous: 13. TVM: time value of money](13-tvm.md) · [Next: 15. DATE: dates, times and the clock](15-date.md)
+[Manual contents](../USER_GUIDE.md) · [Previous: 14. TVM: time value of money](14-tvm.md) · [Next: 16. DATE: dates, times and the clock](16-date.md)
 
 **In this chapter**
 
@@ -22,6 +22,11 @@ Type a value, then press a unit in the **UNIT** menu to attach it: X shows
 `12. ft`. Press another unit of the same kind to convert: **m** gives
 `3.6576 m`. The unit label moves with the value on the stack, into
 registers, and through quitting and restarting.
+
+Units attach to real values. Complex quantities and units on DATE objects
+are unsupported and give `Err: Data Type`. If a complex value has an
+imaginary zero and you intend to use only its real component, first select
+**CPLX** → **REAL**.
 
 <img src="../../assets/guide/screens/units-convert.png" alt="12 ft in Y, and converted to metres in X" width="320">
 
@@ -115,7 +120,7 @@ s, m/s or L/100 km).
 (power), **TIME**, **SPD** (speed) and **FUEL** (fuel economy). Some have
 submenus: survey, nautical and astronomical lengths; US, imperial and dry
 volumes; US, imperial and troy masses. Every unit is listed in
-[Appendix C](19-reference.md#appendix-c-units).
+[Appendix C](20-reference.md#appendix-c-units).
 
 Every conversion factor is computed from the unit's exact definition (1 ft
 is exactly 0.3048 m, 1 US gallon is 231 in³). Where definitions differ, rpnCE
@@ -182,4 +187,4 @@ its other labels; the SI unit symbol for kelvin is K.
 
 ---
 
-[Manual contents](../USER_GUIDE.md) · [Previous: 13. TVM: time value of money](13-tvm.md) · [Next: 15. DATE: dates, times and the clock](15-date.md)
+[Manual contents](../USER_GUIDE.md) · [Previous: 14. TVM: time value of money](14-tvm.md) · [Next: 16. DATE: dates, times and the clock](16-date.md)

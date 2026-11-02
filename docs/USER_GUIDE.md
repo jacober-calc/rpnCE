@@ -1,14 +1,15 @@
 # rpnCE User Guide
 
 **RPN scientific and financial calculator for the TI-84 Plus CE**\
-**Software version 0.7.0 · First edition · 19 October 2026**
+**Development build · Updated 1 November 2026**
 
 ![rpnCE calculator display](../assets/rpnCE-promo1.gif)
 
 This manual explains how to operate rpnCE, from a first calculation to
 statistics, time value of money, unit conversions, and calendar arithmetic.
-It describes the functions implemented in version 0.7.0. Complex-number
-functions remain unavailable in this version.
+A dedicated complex-number chapter explains entry, functions and display states.
+It describes the current source build, including complex numbers and unified
+value storage. Released 0.7.0 binaries predate those additions.
 
 [Project and source](https://github.com/jacober-calc/rpnCE) ·
 [Releases](https://github.com/jacober-calc/rpnCE/releases) ·
@@ -28,9 +29,12 @@ find its instructions.
 | Learn ENTER, stack lift, and LASTX | [6. The RPN stack](guide/06-stack.md) |
 | Store a value or retrieve a TVM variable | [8. Registers](guide/08-registers.md) |
 | Change digits, angles, or screen colors | [9. Settings](guide/09-settings.md) |
-| Find a function or menu item | [Alphabetical function index](guide/19-reference.md#appendix-d-alphabetical-function-index) |
-| Understand an error or recover saved work | [16. Troubleshooting](guide/16-troubleshooting.md) |
-| Check which files rpnCE creates | [17. Saving, memory and files](guide/17-memory.md) |
+| Enter complex numbers, calculate with them, or use LINK | [11. Complex numbers](guide/11-complex-numbers.md) |
+| Understand real, complex, unit and DATE values | [5. Number types](guide/05-number-entry.md#number-types) |
+| Decode the compact status indicators | [4. Status bar](guide/04-display.md#status-bar) |
+| Find a function or menu item | [Alphabetical function index](guide/20-reference.md#appendix-d-alphabetical-function-index) |
+| Understand an error or recover saved work | [17. Troubleshooting](guide/17-troubleshooting.md) |
+| Check which files rpnCE creates | [18. Saving, memory and files](guide/18-memory.md) |
 
 ## Contents
 
@@ -45,16 +49,17 @@ find its instructions.
 | [7. Menus and HELP](guide/07-menus.md) | Navigation, shortcuts, and on-device reference |
 | [8. Registers](guide/08-registers.md) | STO, RCL, register arithmetic, indirect addressing, and VARS |
 | [9. Settings](guide/09-settings.md) | FIX, SCI, ENG, angle mode, sizes, and DATE display |
-| [10. Mathematics](guide/10-mathematics.md) | Keyboard math, MATH, NUM, PROB, HYP, CONV, STK, and CLR |
-| [11. BASE](guide/11-base.md) | Number bases, unsigned words, logic, shifts, bits, and carry |
-| [12. Statistics](guide/12-statistics.md) | Data entry, summary statistics, and curve fitting |
-| [13. Time value of money](guide/13-tvm.md) | Payments, cash-flow signs, periods, and solving |
-| [14. Units](guide/14-units.md) | Quantities, conversions, arithmetic, and stored measurements |
-| [15. Dates and times](guide/15-date.md) | DATE objects, durations, time zones, epochs, and the clock |
-| [16. Troubleshooting](guide/16-troubleshooting.md) | Errors, corrective actions, and startup problems |
-| [17. Saving, memory and files](guide/17-memory.md) | Persistence, backups, reset, and TI-OS interaction |
-| [18. Limits and compatibility](guide/18-compatibility.md) | Numerical limits, unavailable functions, and differences |
-| [Reference tables](guide/19-reference.md) | Keys, complete menu map, units, and alphabetical function index |
+| [10. Mathematics](guide/10-mathematics.md) | Keyboard math, MATH, NUM, PROB, HYP, CONV, STK and CLR |
+| [11. Complex numbers](guide/11-complex-numbers.md) | Rectangular/polar entry, arithmetic, CPLX, all six result/display states, angle choices, formatting, LINK and storage |
+| [12. BASE](guide/12-base.md) | Number bases, unsigned words, logic, shifts, bits, and carry |
+| [13. Statistics](guide/13-statistics.md) | Data entry, summary statistics, and curve fitting |
+| [14. Time value of money](guide/14-tvm.md) | Payments, cash-flow signs, periods, and solving |
+| [15. Units](guide/15-units.md) | Quantities, conversions, arithmetic, and stored measurements |
+| [16. Dates and times](guide/16-date.md) | DATE objects, durations, time zones, epochs, and the clock |
+| [17. Troubleshooting](guide/17-troubleshooting.md) | Errors, corrective actions, and startup problems |
+| [18. Saving, memory and files](guide/18-memory.md) | Persistence, backups, reset, and TI-OS interaction |
+| [19. Limits and compatibility](guide/19-compatibility.md) | Numerical limits, unavailable functions, and differences |
+| [Reference tables](guide/20-reference.md) | Keys, complete menu map, units, and alphabetical function index |
 
 ## Conventions
 
@@ -74,7 +79,7 @@ function. For example, **PV** means the softkey below PV, not a letter
 entered with ALPHA. `MATH` opens HOME; **MATH** opens the submenu named MATH.
 Within a menu, `↑` and `↓` select rows. Menu paths in the examples name the
 required row rather than repeating every arrow press. The complete row
-layouts are in the [menu map](guide/19-reference.md#appendix-b-menu-map).
+layouts are in the [menu map](guide/20-reference.md#appendix-b-menu-map).
 
 ## Working through examples
 
@@ -95,5 +100,5 @@ The chapter-based organization and emphasis on operating procedures are
 informed by Brian T. Park's [RPN83P User Guide](https://github.com/bxparks/rpn83p/blob/develop/USER_GUIDE.md).
 The explanations and examples here describe rpnCE's implementation;
 keyboard mappings, storage registers, BASE word sizes, and available
-functions differ. See [Limits and compatibility](guide/18-compatibility.md)
+functions differ. See [Limits and compatibility](guide/19-compatibility.md)
 before applying instructions written for another calculator.

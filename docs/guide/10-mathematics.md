@@ -1,8 +1,8 @@
 # 10. Math functions
 
-rpnCE 0.7.0 · User Guide
+rpnCE development build · User Guide
 
-[Manual contents](../USER_GUIDE.md) · [Previous: 9. Display formats and MODE settings](09-settings.md) · [Next: 11. BASE: hexadecimal, octal and binary](11-base.md)
+[Manual contents](../USER_GUIDE.md) · [Previous: 9. Display formats and MODE settings](09-settings.md) · [Next: 11. Complex numbers](11-complex-numbers.md)
 
 **In this chapter**
 
@@ -33,11 +33,14 @@ rpnCE 0.7.0 · User Guide
 | `2ND SIN⁻¹ COS⁻¹ TAN⁻¹` | inverse trigonometry |
 | `2ND π` (on `^`), `2ND e` (on `÷`) | the constants π and e |
 
-**Negative numbers and powers** follow the HP rule (as on the HP-32SII and
-DM32): Y^X with a negative Y needs a whole-number X, and a root of a
+In **RRES**, **negative numbers and powers** follow the HP rule (as on the
+HP-32SII and DM32): Y^X with a negative Y needs a whole-number X, and a root of a
 negative number needs an odd whole-number index. So `8 (−) ENTER 3 ^` is
 −512, but (−8)^0.4 is "Err: Domain", even though it has a real value. To
 get such values, work with the positive number and apply the sign yourself.
+**CRES** permits principal complex results instead; see
+[Complex numbers](11-complex-numbers.md). Explicit complex operands work in
+either result mode.
 
 ## MATH menu
 
@@ -57,7 +60,7 @@ get such values, work with the positive number and apply the sign yourself.
 | **E^X-** | eˣ − 1, accurate for tiny X | |
 | **LN1+** | ln(1 + X), accurate for tiny X | |
 
-**X√Y** follows the negative-number rule above: `8 (−) ENTER 3` **X√Y** is
+In RRES, **X√Y** follows the negative-number rule above: `8 (−) ENTER 3` **X√Y** is
 −2, but an even or fractional index of a negative number is "Err: Domain".
 **ATN2** of (0, 0) is 0. **E^X-** and **LN1+** matter in finance and
 science where X is very small: for X = 0.00000000000001, ordinary
@@ -93,7 +96,7 @@ rounded to 2 places is 2.68, not the 2.67 a computer often gives.
 To factor a number completely, divide out each factor that **PRIM** finds.
 Because PRIM leaves the original number in Y, `÷` straight after it divides
 the factor out: `91` **PRIM** gives 7 (with 91 in Y), `÷` gives 13, and
-**PRIM** again gives 1, so 13 is prime and 91 = 7 × 13. The same works for
+**PRIM** again gives 1, so 13 is prime and 91 = 7 × 14. The same works for
 longer factorizations: `1981` **PRIM** gives 7, `÷` gives 283, and
 **PRIM** gives 1.
 
@@ -158,7 +161,7 @@ and **X<>** ([chapter 8](08-registers.md#exchanging-x-with-a-register)).
 | **CLST** | every stack level |
 | **CLRG** | registers A-Z, i and the extra registers |
 | **CLΣ** | the statistics |
-| **CLTV** | the TVM values (chapter 13) |
+| **CLTV** | the TVM values (chapter 14) |
 | **CLD** | the message line |
 
 
@@ -166,7 +169,7 @@ and **X<>** ([chapter 8](08-registers.md#exchanging-x-with-a-register)).
 
 **Menu locations:** **HOME** → **MATH**, **NUM**, **PROB**; **HOME** row 2
 → **HYP** or **CONV**. The keyboard functions are available without opening
-a menu. The [reference tables](19-reference.md) show every row.
+a menu. The [reference tables](20-reference.md) show every row.
 
 Most unary functions replace X and preserve the higher levels. Most binary
 functions use Y as the first operand, X as the second, and drop the stack.
@@ -242,7 +245,7 @@ part: `7 ENTER 3` **MOD** gives 1.
 | Request 10–19 digits in a digit prompt | Press `.`, then a digit 0–9. |
 
 RNDF uses decimal places in FIX and significant digits in SCI/ENG. In the
-all-digits setting (FIX-), RNDF leaves the value unchanged. If FIX falls
+all-digits setting (ALL), RNDF leaves the value unchanged. If FIX falls
 back to scientific notation for a very small value, RNDF still uses the
 requested FIX decimal-place count; it is not a copy of the rendered text.
 
@@ -288,6 +291,10 @@ settings do not scale the inputs to hyperbolic functions.
 
 ## Other domain restrictions
 
+These are the real-input rules in RRES. CRES extends the indicated roots,
+powers and logarithms to principal complex results; it does not extend
+LN1+, trigonometry, probability or integer functions.
+
 | Function | Required operands |
 | --- | --- |
 | LOG, LN, LOG2 | X > 0 |
@@ -309,4 +316,4 @@ it is not a prompt to continue a partial formula. See
 
 ---
 
-[Manual contents](../USER_GUIDE.md) · [Previous: 9. Display formats and MODE settings](09-settings.md) · [Next: 11. BASE: hexadecimal, octal and binary](11-base.md)
+[Manual contents](../USER_GUIDE.md) · [Previous: 9. Display formats and MODE settings](09-settings.md) · [Next: 11. Complex numbers](11-complex-numbers.md)

@@ -250,6 +250,9 @@ static event_t prompt_key(keys_t *k, sk_key_t key)
 static calc_cmd_t second_cmd(sk_key_t key)
 {
     switch (key) {
+        case sk_GraphVar: return CMD_COMPLEX_LINK;
+        case sk_Apps: return CMD_COMPLEX_POLAR_ENTRY;
+        case sk_DecPnt: return CMD_COMPLEX_RECT_ENTRY;
         case sk_Square: return CMD_SQRT;
         case sk_Log:    return CMD_ALOG;                  /* 10^x */
         case sk_Ln:     return CMD_EXP;                   /* e^x */
@@ -364,8 +367,6 @@ event_t keys_translate(keys_t *k, sk_key_t key)
             ev.kind = EV_MENU;
             ev.arg = key == sk_Add ? MENU_GROUP_CLEAR : MENU_GROUP_STACK;
         } else {
-            /* 2ND LINK (on X,T,theta,n) and 2ND ANGLE (on APPS) are left
-             * free on purpose: complex-number entry will need them. */
             ev.cmd = second_cmd(key);
             if (ev.cmd != CMD_NONE)
                 ev.kind = EV_CMD;

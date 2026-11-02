@@ -32,10 +32,12 @@ is missing or from a different version, rpnCE says so when it starts.
 Your data
 ---------
 rpnCE saves the stack, registers, statistics and settings when you quit
-(2ND QUIT) in appvars it creates: RPNCEdat, RPNCEcfg, and RPNCEunt when a
-register holds a unit. They are kept when you upgrade. Back them up as a
-set before deleting or replacing saved state. Deleting them resets rpnCE's
-private state; it does not clear shared TI-OS TVM values or reset the clock.
+(2ND QUIT) in RPNCEdat and RPNCEcfg. New saves use version 6 and store
+complete real, complex, DATE and unit values together. Version-5 saves and
+their matching RPNCEunt metadata are imported; the next successful save
+removes the old sidecar. Back up old saves before upgrading: older program
+versions cannot read version 6. Deleting the private state does not clear
+shared TI-OS TVM values or reset the clock.
 
 Getting started
 ---------------
@@ -47,6 +49,17 @@ The current number is X; the previous number is Y.
   MODE                  display format, angle mode, and more
   2ND 0                 on-device HELP
   2ND QUIT              save and exit
+
+Development number modes
+------------------------
+Fresh state starts in DEG, DEC, RRES and RECT. These defaults have no
+status labels; ALL means FIX with all display digits. RAD, CRES,
+PRAD/PDEG, HEX/OCT/BIN and CF appear when active. Saved modes are restored.
+
+In DEC, 3 then 2ND . then 4 ENTER enters 3 + 4i in one stack level.
+2ND APPS enters a polar pair; 2ND X,T,theta,n joins/splits with LINK.
+See the mathematics chapter of the User Guide for the illustrated tutorial.
+Released 0.7.0 binaries predate this development support.
 
 User documentation
 ------------------

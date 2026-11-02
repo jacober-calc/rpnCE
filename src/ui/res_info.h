@@ -5,7 +5,7 @@
 /* The RPNCEres appvar this build of the program expects. */
 #define RES_APPVAR "RPNCEres"
 #define RES_FORMAT 2
-#define RES_STAMP 0xC780FA24UL
-#define RES_SIZE 17289
+#define RES_STAMP 0xA1690273UL
+#define RES_SIZE 19149
 
 #endif

@@ -1,6 +1,6 @@
 # 7. The menus
 
-rpnCE 0.7.0 · User Guide
+rpnCE development build · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 6. The RPN stack](06-stack.md) · [Next: 8. Registers](08-registers.md)
 
@@ -26,7 +26,7 @@ its top, **HOME**, which has three rows:
 - <img src="../../assets/guide/menu/home-2.png" alt="HOME > Row 2" width="320">
 - <img src="../../assets/guide/menu/home-3.png" alt="HOME > Row 3" width="320">
 
-[Appendix B](19-reference.md#appendix-b-menu-map) lists every menu and item.
+[Appendix B](20-reference.md#appendix-b-menu-map) lists every menu and item.
 
 ## Using menus
 
@@ -62,18 +62,24 @@ its top, **HOME**, which has three rows:
 
 Inside a STO or RCL prompt, and after `ALPHA`, these keys still give their
 letters, so the shortcuts never get in the way of naming a register.
-`2ND LINK` and `2ND ANGLE` are left unassigned on purpose: they're reserved
-for complex numbers.
+`2ND LINK` combines or splits complex values; `2ND ANGLE` enters polar
+values. `2ND i` (decimal point) enters rectangular values.
 
 ## HELP
 
-**HELP** (HOME row 2, or `2ND CATALOG`) shows 19 quick-reference pages:
-using HELP and the menus, the RPN stack, variables, key shortcuts, one page
-per main menu, and About (the version and GitHub repository). The up and
+**HELP** (HOME row 2, or `2ND CATALOG`) shows 26 quick-reference pages:
+using HELP and the menus, the RPN stack, variables, key shortcuts, each
+main menu, complex entry/arithmetic/modes/LINK, number types, status
+indicators, numeric limits, and About (the version and GitHub repository). The up and
 down arrows change pages and wrap around; `UP` from the first page opens
 About. `ENTER`, `CLEAR`, `DEL` or `ON` returns to the calculator.
 
 <img src="../../assets/guide/screens/menus-help-1.png" alt="HELP, page 1" width="320"> <img src="../../assets/guide/screens/menus-help-about.png" alt="HELP, the About page" width="320">
+
+The complex pages give the physical entry/LINK keys and supported math;
+the status page explains the implicit defaults and optional indicators.
+
+<img src="../../assets/guide/screens/complex-help.png" alt="On-device CPLX help with the component, magnitude and angle functions" width="320"> <img src="../../assets/guide/screens/status-help.png" alt="On-device status-bar help listing implicit defaults and active indicators" width="320">
 
 ---
 

@@ -1,8 +1,8 @@
-# 15. DATE: dates, times and the clock
+# 16. DATE: dates, times and the clock
 
-rpnCE 0.7.0 · User Guide
+rpnCE development build · User Guide
 
-[Manual contents](../USER_GUIDE.md) · [Previous: 14. UNIT: unit conversions](14-units.md) · [Next: 16. Messages and errors](16-troubleshooting.md)
+[Manual contents](../USER_GUIDE.md) · [Previous: 15. UNIT: unit conversions](15-units.md) · [Next: 17. Messages and errors](17-troubleshooting.md)
 
 **In this chapter**
 
@@ -83,7 +83,12 @@ form.
 ## Arithmetic with dates
 
 `+` and `−` work on DATE objects, counting in the natural unit for each
-kind:
+kind.
+
+Numeric offsets and time-zone hours must be plain real values. Complex
+values, even those with zero imaginary part, and measurements with units
+give `Err: Data Type`. CRES and complex display modes do not change DATE
+arithmetic or the stored record.
 
 | Kind | Numbers count in | Example |
 | --- | --- | --- |
@@ -246,7 +251,8 @@ UTC−07:00:
 | −7 | −7 | 23:30 | 2026-12-31 | 2026-12-31 23:30 −07:00 | 2027-01-01 06:30 UTC |
 | −7 | +9 | 15:30 | 2027-01-01 | 2027-01-01 15:30 +09:00 | 2027-01-01 06:30 UTC |
 
-The status bar also shows the application date. The TI-OS clock continues
+The status bar also shows the application date when space permits; with
+many active indicators it shows just HH:MM. The TI-OS clock continues
 reading 23:30 in both cases. **NOW** gives the same epoch seconds for the
 same instant, regardless of ATZ.
 
@@ -324,4 +330,4 @@ TI-OS. Use CTZ and ATZ for time-zone changes; SETC is not needed for them.
 
 ---
 
-[Manual contents](../USER_GUIDE.md) · [Previous: 14. UNIT: unit conversions](14-units.md) · [Next: 16. Messages and errors](16-troubleshooting.md)
+[Manual contents](../USER_GUIDE.md) · [Previous: 15. UNIT: unit conversions](15-units.md) · [Next: 17. Messages and errors](17-troubleshooting.md)

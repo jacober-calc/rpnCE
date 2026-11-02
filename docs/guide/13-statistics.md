@@ -1,6 +1,6 @@
-# 12. STAT: statistics and curve fitting
+# 13. STAT: statistics and curve fitting
 
-rpnCE 0.7.0 · User Guide
+rpnCE development build · User Guide
 
 Variance and curve fitting can lose significant digits when the data's
 spread is very small compared with its magnitude. rpnCE reports
@@ -15,7 +15,7 @@ precision error for an ambiguous zero variance. Use CLΣ and re-enter the
 data to establish it again. Removing points cannot always restore proof
 of constancy; ordinary nonzero variance calculations remain available.
 
-[Manual contents](../USER_GUIDE.md) · [Previous: 11. BASE: hexadecimal, octal and binary](11-base.md) · [Next: 13. TVM: time value of money](13-tvm.md)
+[Manual contents](../USER_GUIDE.md) · [Previous: 12. BASE: hexadecimal, octal and binary](12-base.md) · [Next: 14. TVM: time value of money](14-tvm.md)
 
 **In this chapter**
 
@@ -28,6 +28,12 @@ of constancy; ordinary nonzero variance calculations remain available.
 - [Fit restrictions](#fit-restrictions)
 
 ## Entering data
+
+Statistics accepts plain real observations, including when CRES is
+selected. Complex values, DATE objects and measurements with units give
+`Err: Data Type`; the accumulated data is retained. Extract a real
+component with CPLX REAL/IMAG or remove a unit with UVAL if that is the
+intended data for the calculation.
 
 - <img src="../../assets/guide/menu/home-stat.png" alt="HOME > STAT" width="320">
     - <img src="../../assets/guide/menu/home-stat-1.png" alt="HOME > STAT > Row 1" width="320">
@@ -150,7 +156,7 @@ values cannot determine a straight-line slope. LOGF needs positive x,
 EXPF needs positive y, and PWRF needs both. **BEST** chooses among models
 available for the accumulated data; it is a comparison by correlation,
 not a guarantee that the selected relationship explains the process.
-Use the [error reference](16-troubleshooting.md#errors) if a result reports
+Use the [error reference](17-troubleshooting.md#errors) if a result reports
 `Err: Stat`.
 
 Entering a nonpositive value disables the logarithmic sums that need it.
@@ -162,4 +168,4 @@ set.
 
 ---
 
-[Manual contents](../USER_GUIDE.md) · [Previous: 11. BASE: hexadecimal, octal and binary](11-base.md) · [Next: 13. TVM: time value of money](13-tvm.md)
+[Manual contents](../USER_GUIDE.md) · [Previous: 12. BASE: hexadecimal, octal and binary](12-base.md) · [Next: 14. TVM: time value of money](14-tvm.md)

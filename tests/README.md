@@ -14,9 +14,13 @@ Run the desktop suites from the repository root:
 sh tests/run_tests.sh
 ```
 
-The 17 suites cover formatting, rounding, math, BASE, statistics, TVM,
+The 18 suites cover formatting, rounding, math, BASE, statistics, TVM,
 units, DATE, resources, menus, keys, fonts, saved state, calculator commands,
-entry sequences, display redraws and brightness. Host stand-ins use doubles
+entry sequences, universal values, complex arithmetic, display redraws and
+brightness. Complex checks use independent host complex references across
+all quadrants and exercise type boundaries, whole-value movement, entry,
+mode separation and formatting. Native regressions exercise complex
+arithmetic and entry using actual TI decimal routines. Host stand-ins use doubles
 for arithmetic; rounding tests use packed decimal digits.
 
 The sequence suite checks explicit arithmetic and editing examples, record
@@ -33,7 +37,7 @@ and tiny rates and invalid payment/compounding settings.
 
 ## Native CE checks
 
-`native/` compiles the core with `-Oz`/LTO settings and runs 161
+`native/` compiles the core with `-Oz`/LTO settings and runs 183
 checks in CEmu with TI-OS arithmetic. It covers arithmetic, DATE ranges,
 CTZ/ATZ conversion, units, all four curve-fit models, TVM and real GraphX
 pixels. The fixed clock makes results repeatable. The check count and
@@ -57,7 +61,7 @@ changes inside the emulator.
 
 `ce_smoke/` runs the built program through its keyboard loop, stores a
 register, quits, and reopens it to verify actual appvar persistence. Its
-nineteen checks include typed and recalled values at exponents −99 and +99,
+twenty-two checks include typed and recalled values at exponents −99 and +99,
 and zero deviation for constant data before and after reopening. After
 building the program, run it with the same emulator environment:
 
@@ -68,7 +72,8 @@ python3 tests/ce_smoke/run.py
 
 Omit `AUTOTESTER_LAUNCHER` for direct native execution.
 
-The keyboard checks also cover CLEAR dismissing SHOW, errors and notices
+The keyboard checks also verify complex entry, both saved components and
+complex squaring. They cover CLEAR dismissing SHOW, errors and notices
 without changing operands, ENTER performing its normal action after a
 message, and ordinary CLEAR behavior returning after a notice times out.
 

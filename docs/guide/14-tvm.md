@@ -1,8 +1,8 @@
-# 13. TVM: time value of money
+# 14. TVM: time value of money
 
-rpnCE 0.7.0 · User Guide
+rpnCE development build · User Guide
 
-[Manual contents](../USER_GUIDE.md) · [Previous: 12. STAT: statistics and curve fitting](12-statistics.md) · [Next: 14. UNIT: unit conversions](14-units.md)
+[Manual contents](../USER_GUIDE.md) · [Previous: 13. STAT: statistics and curve fitting](13-statistics.md) · [Next: 15. UNIT: unit conversions](15-units.md)
 
 **In this chapter**
 
@@ -24,6 +24,11 @@ rpnCE 0.7.0 · User Guide
 TVM solves for an unknown in a series of equal payments with compound
 interest: loan payments, a remaining balance, an investment's future value,
 or the rate or number of periods implied by the other values.
+
+TVM uses plain real values shared with TI-OS finance variables. CRES does
+not make finance calculations complex. A complex value, DATE object or
+measurement with a unit is rejected with `Err: Data Type` when stored;
+the existing finance value is retained.
 
 ## Variables and cash-flow signs
 
@@ -162,4 +167,4 @@ a changing interest rate from these seven values.
 
 ---
 
-[Manual contents](../USER_GUIDE.md) · [Previous: 12. STAT: statistics and curve fitting](12-statistics.md) · [Next: 14. UNIT: unit conversions](14-units.md)
+[Manual contents](../USER_GUIDE.md) · [Previous: 13. STAT: statistics and curve fitting](13-statistics.md) · [Next: 15. UNIT: unit conversions](15-units.md)

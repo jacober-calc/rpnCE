@@ -24,15 +24,23 @@ bottom of the screen, on a dot-matrix LCD-style display.
   BASE (HEX/OCT/BIN words up to 44 bits, logic, shifts, rotates, bit
   operations), and DATE
   (dates, times, time zones, durations, epochs, and the CE's clock).
+- **Complex numbers:** one value per stack level, mixed real/complex arithmetic,
+  roots, powers, logarithms and exponentials; rectangular and polar entry,
+  LINK/unlink, RRES/CRES and RECT/PRAD/PDEG modes.
+- **Compact status bar:** ALL/FIX/SCI/ENG stays visible. DEG, DEC, RRES and
+  RECT are implicit; RAD, CRES, polar modes, nondecimal bases, carry and
+  pending modifiers appear when active. Fresh calculators start in DEG.
 - **Remembers everything:** the stack, registers, statistics, and settings
   are saved when you quit and restored next time.
 - **Screen tints:** LCD, LCD+ (for real screens), GRAY, INVERTED, AYU DARK,
   MONOKAI, PASTEL, and COMMODORE.
 
-The **[User Guide](docs/USER_GUIDE.md)** is a chapter-based manual for 0.7.0,
+The **[User Guide](docs/USER_GUIDE.md)** describes the current development build,
 with operating procedures, worked keystroke examples, and a
-[function index](docs/guide/19-reference.md#appendix-d-alphabetical-function-index).
+[function index](docs/guide/20-reference.md#appendix-d-alphabetical-function-index).
 [docs/KEYS.md](docs/KEYS.md) is a compact key and menu reference.
+Start with the illustrated [complex-number tutorial](docs/guide/11-complex-numbers.md)
+for entry, arithmetic, CPLX functions and LINK.
 
 ## Installing
 
@@ -53,9 +61,11 @@ with operating procedures, worked keystroke examples, and a
 
 The program and `RPNCEres` must come from the same release; if the appvar
 is missing or doesn't match, rpnCE says so at startup. rpnCE saves its own
-data in up to three more appvars: `RPNCEdat` (calculator state), `RPNCEcfg`
-(display and DATE settings) and `RPNCEunt` (units on registers, only when
-some register has one). Deleting them resets rpnCE; upgrading keeps them.
+data in `RPNCEdat` (complete values, statistics and calculator modes) and
+`RPNCEcfg` (display and DATE settings). Version-5 saves and their optional
+`RPNCEunt` unit metadata are imported on first use. New saves use version 6,
+include units with each value, and remove the retired unit sidecar. Back up
+saved data before upgrading; older program versions cannot read version 6.
 
 ## Quick start
 
@@ -87,10 +97,11 @@ To try it without a calculator, load both files and `clibs.8xg` into the
 
 ### Memory
 
-The menu tree, unit tables and HELP pages (about 17 KB) live in `RPNCEres`
-and are read straight from archive, so they use no RAM. The 0.7.0 build has
-an 86,329-byte program image and 4,065 bytes of uninitialized static storage, excluding
-runtime stack and library allocations.
+The menu tree, unit tables and 26 HELP pages (about 19 KB) live in `RPNCEres`
+and are read straight from archive, so they use no RAM. The current build
+uses larger complete-value slots for stack and register
+storage. See the linker map for program and static-storage sizes; runtime
+stack and library allocations also need RAM.
 
 ## Tests
 
@@ -101,14 +112,15 @@ tested on a PC. With a C compiler installed:
 sh tests/run_tests.sh
 ```
 
-This builds and runs seventeen suites (number formatting, decimal rounding,
+This builds and runs eighteen suites (number formatting, decimal rounding,
 math, BASE, statistics, TVM and units, DATE, the RPNCEres appvar reader,
 menu actions, keyboard shortcuts, dot-font rendering, saved state, the
-calculator core, quantities, entry sequences, display redraws, and brightness controls), using
+calculator core, universal values and complex arithmetic, quantities, entry
+sequences, display redraws, and brightness controls), using
 stand-ins for the calculator's number routines.
 
 The [native tests](tests/README.md#native-ce-checks) additionally compile
-the real core with the CE toolchain and run 161 checks in CEmu using TI-OS
+the real core with the CE toolchain and run 183 checks in CEmu using TI-OS
 number routines. They cover CE execution, CTZ/ATZ conversions, unit round trips and all
 four curve-fit models and numeric boundaries. Nineteen further checks exercise
 the program's keyboard loop and saving/reopening in CEmu. Known numerical
@@ -147,7 +159,7 @@ stamp, so a program and appvar built from different sources can't be mixed
 up. The generated files are committed, so building doesn't need Python.
 After changing the menus or units, also run `python3 tools/guide_appendix.py`
 to refresh the menu map, unit list, and function index in
-`docs/guide/19-reference.md`. Update the operating instructions and examples
+`docs/guide/20-reference.md`. Update the operating instructions and examples
 in the corresponding chapter when behavior changes; generated tables do
 not replace those explanations. Both generators need the `mpmath` package.
 

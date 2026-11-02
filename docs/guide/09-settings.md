@@ -1,6 +1,6 @@
 # 9. Display formats and MODE settings
 
-rpnCE 0.7.0 · User Guide
+rpnCE development build · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 8. Registers](08-registers.md) · [Next: 10. Math functions](10-mathematics.md)
 
@@ -8,6 +8,7 @@ rpnCE 0.7.0 · User Guide
 
 - [FIX, SCI and ENG](#fix-sci-and-eng)
 - [Angle mode](#angle-mode)
+- [Complex result and display modes](#complex-result-and-display-modes)
 - [Sizes and tint](#sizes-and-tint)
 - [DATE display](#date-display)
 - [Decimal and grouping marks](#decimal-and-grouping-marks)
@@ -18,7 +19,7 @@ rpnCE 0.7.0 · User Guide
 | Row | Items |
 | --- | --- |
 | 1 | **FIX** **SCI** **ENG** **RAD** **DEG** |
-| 2 | **RRES** **CRES** **RECT** **PRAD** **PDEG** (complex numbers: not yet available) |
+| 2 | **RRES** **CRES** **RECT** **PRAD** **PDEG** |
 | 3 | **RSIZ** **RSZ?** **TINT** **SSIZ** **SSZ?** |
 | 4 | **{..}** **".."** (DATE display), **.** **,** (decimal mark) |
 
@@ -27,6 +28,12 @@ rpnCE 0.7.0 · User Guide
     - <img src="../../assets/guide/menu/home-mode-2.png" alt="HOME > MODE > Row 2" width="320">
     - <img src="../../assets/guide/menu/home-mode-3.png" alt="HOME > MODE > Row 3" width="320">
     - <img src="../../assets/guide/menu/home-mode-4.png" alt="HOME > MODE > Row 4" width="320">
+
+Complex result mode (RRES/CRES) and display mode (RECT/PRAD/PDEG) are
+independent of RAD/DEG. The status bar shows CRES and PRAD/PDEG when
+active; RRES and RECT are implicit defaults. MODE marks every selection.
+See [Complex numbers](11-complex-numbers.md)
+for entry, LINK behavior and supported functions.
 
 ## FIX, SCI and ENG
 
@@ -37,12 +44,12 @@ Each asks for a number of digits: the prompt shows `FIX _`.
 - `.` then a digit means 10 to 19, as on the HP-32SII: **FIX** `. 1` is FIX
   11.
 - 12 or more (`. 2` to `. 9`) means "as many digits as needed", shown in
-  the status bar as `FIX-`. This is the default, and the same as ALL on an
-  HP calculator.
+  the status bar as `ALL` for FIX (`SCI-` or `ENG-` for those formats).
+  FIX with all digits is the default, like ALL on an HP calculator.
 
 | Format | 1234.5678 shows as | 0.000012345 shows as | Screen |
 | --- | --- | --- | --- |
-| FIX- | `1,234.5678` | `0.000012345` | <img src="../../assets/guide/screens/settings-fmt-all.png" alt="FIX-" width="320"> |
+| ALL | `1,234.5678` | `0.000012345` | <img src="../../assets/guide/screens/settings-fmt-all.png" alt="ALL" width="320"> |
 | FIX 2 | `1,234.57` | `1.23 ᴇ-5` | <img src="../../assets/guide/screens/settings-fmt-fix2.png" alt="FIX 2" width="320"> |
 | SCI 3 | `1.235 ᴇ3` | `1.235 ᴇ-5` | <img src="../../assets/guide/screens/settings-fmt-sci3.png" alt="SCI 3" width="320"> |
 | ENG 2 | `1.23 ᴇ3` | `12.3 ᴇ-6` | <img src="../../assets/guide/screens/settings-fmt-eng2.png" alt="ENG 2" width="320"> |
@@ -56,8 +63,33 @@ The formats change only the display: the full value is kept, and SHOW
 ## Angle mode
 
 **RAD** and **DEG** set the unit for SIN, COS, TAN, their inverses, ATN2
-and the polar conversions. The status bar shows which is on. In DEG mode,
-exact quarter turns give exact answers: `180 SIN` is exactly 0.
+and the polar conversions. DEG is the default for a fresh calculator.
+The status bar shows **RAD** only in radian mode; no angle indicator means
+DEG. The MODE menu marks either selection, and saved angle settings are
+restored on startup. In DEG mode, exact quarter turns give exact answers:
+`180 SIN` is exactly 0.
+
+## Complex result and display modes
+
+MODE row 2 has two independent groups:
+
+| Group | Default | Alternatives |
+| --- | --- | --- |
+| Results from real inputs | **RRES**: real-domain rules | **CRES**: allow principal complex results for supported roots, logarithms and powers. |
+| Complex presentation and LINK | **RECT**: real and imaginary components | **PRAD**: magnitude and radians; **PDEG**: magnitude and degrees. |
+
+Explicit complex operands work in either result mode. Display settings
+keep the rectangular components stored at full precision. DEG/RAD controls
+CANG and real trigonometry, independently of PRAD/PDEG. Polar entry also
+states its own angle unit. Selecting CRES does not extend trigonometric,
+hyperbolic or other real-only functions to complex operands.
+
+The status bar shows **CRES** and **PRAD**/**PDEG** when selected; **RRES**
+and **RECT** are implicit. DEG and DEC are also implicit, so a fresh
+calculator's only numeric status label is **ALL**. MODE marks each active
+choice, and result/display modes are saved when you quit. Follow the
+[worked examples](11-complex-numbers.md#rres-and-cres-choosing-result-behavior)
+to compare RRES/CRES or join and split values with LINK.
 
 ## Sizes and tint
 
@@ -70,7 +102,7 @@ exact quarter turns give exact answers: `180 SIN` is exactly 0.
 
 **{..}** shows DATE objects as you'd type them, like `D{2024,3,14}`;
 **".."** shows them as readable text, like `2024-03-14`. See
-[chapter 15](15-date.md#15-date-dates-times-and-the-clock).
+[chapter 16](16-date.md#16-date-dates-times-and-the-clock).
 
 
 ## Decimal and grouping marks

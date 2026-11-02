@@ -6,6 +6,7 @@
 
 bool calc_entry_is_object(const calc_t *c);
 bool calc_entry_in_record(const calc_t *c);
+void calc_entry_complex(calc_t *c, char delimiter);
 void calc_entry_clear(calc_t *c);
 void calc_entry_append(calc_t *c, char ch);
 void calc_entry_digit(calc_t *c, uint8_t d);

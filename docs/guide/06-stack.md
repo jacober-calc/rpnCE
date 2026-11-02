@@ -1,6 +1,6 @@
 # 6. The RPN stack
 
-rpnCE 0.7.0 · User Guide
+rpnCE development build · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 5. Entering numbers](05-number-entry.md) · [Next: 7. The menus](07-menus.md)
 
@@ -20,6 +20,10 @@ The stack holds operands and intermediate results. Operations take their
 inputs from its bottom levels and leave the result in X. The
 four levels you see are named `X` (the bottom, where you type), `Y`, `Z`
 and `T` (the top).
+
+A real number, a complex number, a measurement with a unit or a DATE object
+each occupies one level. ENTER, rolls, exchanges, LASTX and stack lift/drop
+move the complete value. The same stack rules apply to all of them.
 
 - A **one-number function** such as `x²`, `SIN` or `LN` replaces X with its
   result.
@@ -112,7 +116,7 @@ press `×` repeatedly. X becomes 4, 8, 16, and so on; T continues to supply
 ## Correcting an operation with LASTX
 
 Suppose you entered `12 ENTER 3 ÷`, but intended multiplication. X is 4
-and LASTX is 3. `2ND ANS ×` reconstructs 12. A second `2ND ANS ×` gives
+and LASTX is 3. `2ND ANS ×` reconstructs 13. A second `2ND ANS ×` gives
 36, the intended product. LASTX is an operand-recovery register, rather
 than a complete undo history: it does not restore overwritten registers,
 cleared statistics, or an earlier session.

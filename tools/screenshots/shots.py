@@ -1,6 +1,6 @@
 """The user guide's screenshots: keystroke sequences run on rpnCE's real code.
 
-Each sequence starts from a fresh calculator: DEC, RAD, FIX- (all digits),
+Each sequence starts from a fresh calculator: DEC, DEG, ALL (all digits),
 a four-level stack, the clock at 2026-10-19 09:30, and the TI-OS TVM values
 at their defaults (P/YR = C/YR = 12).
 
@@ -18,6 +18,7 @@ import os
 
 FIX4 = 'MODE [FIX] 4 MATH'          # FIX 4, back to HOME
 FIX4_DEG = 'MODE [FIX] 4 [DEG] MATH'
+COMPLEX4 = f'{FIX4_DEG} MODE [RRES] [RECT] MATH'
 PI = '2ND ^'
 RCL = '2ND STO'
 SQRT = '2ND x²'
@@ -70,8 +71,8 @@ SEQUENCES = [
     # 4. The display
     f'{FIX4} 1264.136 ENTER 2 CHS ENTER 3 ÷ {PI} {RCL} ÷ MATH >display-anatomy',
     f'{FIX4_DEG} >display-status-1',
-    f'{FIX4} 2ND >display-status-2',
-    'MODE [SCI] 3 [DEG] APPS [HEX] [BCFS] [SCF] ALPHA >display-status-3',
+    f'{FIX4} MODE [RAD] [CRES] [PRAD] 2ND >display-status-2',
+    'MODE [SCI] 3 [DEG] [CRES] [PDEG] APPS [HEX] [BCFS] [SCF] ALPHA >display-status-3',
     '4294967295 APPS [BIN] >display-scroll',
     f'{FIX4} 1264.136 ENTER 2 CHS ENTER 3 ÷ {PI} MODE DOWN DOWN >tint-1 [TINT] >tint-2 [TINT] >tint-3 '
     '[TINT] >tint-4 [TINT] >tint-5 [TINT] >tint-6 [TINT] >tint-7 [TINT] >tint-8',
@@ -115,7 +116,38 @@ SEQUENCES = [
     f'{FIX4_DEG} @HOME>CONV 4 ENTER 3 >math-pol-1 [{{to}}POL] >math-pol-2 [{{to}}REC] >math-pol-3',
     f'{FIX4} @HOME>CONV 1.3 [{{to}}HR] >math-hms-1 1.45 ENTER .3 [HMS+] >math-hms-2',
 
-    # 11. BASE
+    # 11. Complex numbers: the manual's entry, arithmetic, functions and modes
+    f'{COMPLEX4} @HOME>CPLX 3 2ND . 4 >complex-entry ENTER >complex-values '
+    f'2 + >complex-add x² >complex-square {LASTX} >complex-lastx',
+    f'{COMPLEX4} 1 2ND . 1 LN >complex-ln 2ND LN >complex-exp '
+    '1 2ND . 1 ENTER 2 ^ >complex-power',
+    *[f'{COMPLEX4} @HOME>CPLX 3 2ND . 4 ENTER [{label}] >complex-{name}'
+      for label, name in [('REAL', 'real'), ('IMAG', 'imag'), ('CONJ', 'conj'),
+                          ('CABS', 'abs'), ('CANG', 'angle')]],
+    f'{COMPLEX4} 4 CHS {SQRT} >complex-rres CLEAR MODE [CRES] MATH {SQRT} '
+    '>complex-cres 1 CHS LN >complex-log',
+    f'{COMPLEX4} 3 2ND . 4 ENTER MODE [RECT] >complex-rect [PRAD] >complex-prad '
+    '[PDEG] >complex-pdeg [CRES] >complex-cres-pdeg [RECT] >complex-cres-rect '
+    '[PRAD] >complex-cres-prad',
+    f'{COMPLEX4} 3 2ND . 4 ENTER MODE [PRAD] MATH @HOME>CPLX [CANG] '
+    '>complex-angle-prad-deg',
+    f'{COMPLEX4} MODE [RAD] [PDEG] MATH 3 2ND . 4 ENTER @HOME>CPLX [CANG] '
+    '>complex-angle-pdeg-rad',
+    f'{COMPLEX4} 12.3456 2ND . .0123456 ENTER MODE [FIX] 2 >complex-format-fix2 '
+    '[SCI] 2 >complex-format-sci2 [ENG] 2 >complex-format-eng2 [FIX] . 2 '
+    '>complex-format-all MODE DOWN DOWN DOWN [,] >complex-format-comma',
+    f'{COMPLEX4} 3 2ND . 4 ENTER MODE [PRAD] MATH 2ND ENTER >complex-prad-show',
+    f'{COMPLEX4} 3 ENTER 4 >complex-link-before 2ND XTθn >complex-link-joined '
+    '2ND XTθn >complex-link-split',
+    f'{COMPLEX4} 2 2ND APPS 90 ENTER >complex-polar-entry',
+    f'{COMPLEX4} 3 2ND . 4 ENTER STO MATH >complex-store CLEAR {RCL} MATH '
+    '>complex-recall VARS >complex-vars',
+    f'{COMPLEX4} 2ND . ENTER x² @HOME>NUM [ABS] >complex-zero-type CLEAR '
+    '@HOME>CPLX [REAL] >complex-zero-real',
+    f'{HELP_KEY} '+ 'DOWN ' * 7 + '>complex-help',
+    f'{HELP_KEY} '+ 'DOWN ' * 23 + '>status-help',
+
+    # 12. BASE
     '255 ENTER 4895 ENTER 5133136320 APPS [HEX] >base-hex',
     'APPS [DEC] 8 [BCFS] [WSIZ] ON [HEX] ALPHA COS ALPHA COS ENTER >base-ovf-1 2 + >base-ovf-2 '
     '[DEC] >base-ovf-3',
@@ -123,20 +155,20 @@ SEQUENCES = [
     '>base-mask-2 ON [BIN] >base-mask-3 [DEC] >base-mask-4',
     '17 ENTER 5 APPS [BFCN] [BDIV] >base-bdiv',
 
-    # 12. Statistics
+    # 13. Statistics
     f'{FIX4} STAT [CL{{sigma}}] [ALL{{sigma}}] [CFIT] [LINF] ON 3.1 ENTER 1 [{{sigma}}+] '
     '>stat-entry-1 4.9 ENTER 2 [{sigma}+] 7.2 ENTER 3 [{sigma}+] 8.8 ENTER 4 [{sigma}+] '
     '11.1 ENTER 5 [{sigma}+] >stat-entry-5 [MEAN] >stat-mean [CFIT] [SLOP] >stat-slop '
     '[YINT] >stat-yint 6 [X{to}Y] >stat-forecast',
 
-    # 13. TVM
+    # 14. TVM
     f'{FIX4} @HOME>TVM [CLTV] [RSTV] 360 [N] >tvm-loan-1 6.5 [I%YR] >tvm-loan-2 200000 [PV] '
     '>tvm-loan-3 0 [FV] >tvm-loan-4 [PMT] >tvm-loan-5 6 [I%YR] [PMT] >tvm-loan-6',
     f'{FIX4} @HOME>TVM [CLTV] [RSTV] 1 [P/YR] 1 [C/YR] 10 [N] 5 [I%YR] 1000 CHS [PV] 0 [PMT] '
     '[FV] >tvm-save',
     f'{FIX4} @HOME>TVM [CLTV] [RSTV] 60 [N] 25000 [PV] 480 CHS [PMT] 0 [FV] [I%YR] >tvm-rate',
 
-    # 14. Units
+    # 15. Units
     f'{FIX4} XTθn [LENG] 12 [ft] ENTER [m] >units-convert',
     f'{FIX4} XTθn [LENG] 6 [ft] 2 [in] + >units-arith-1 3 ÷ >units-arith-2 [in] >units-arith-3',
     f'{FIX4} XTθn [LENG] 12 [ft] >units-store-1 STO MATH >units-store-2 CLEAR >units-store-3 '
@@ -144,7 +176,7 @@ SEQUENCES = [
     f'{FIX4} @HOME>UNIT>ENER 2 [kWh] >units-energy-1 2000 [kcal] >units-energy-2 @HOME>NUM [%CH] '
     '>units-energy-3',
 
-    # 15. Dates and times (Time, DayOfWeek and Duration started with their
+    # 16. Dates and times (Time, DayOfWeek and Duration started with their
     # menu keys)
     f'{DOTS_MODE} @HOME>DATE>D [D{{}}] 2024 , 3 , 14 ENTER @HOME>DATE>T [T{{}}] 15 , 36 , 1 ENTER '
     '@HOME>DATE>DW [DW{}] 4 ENTER @HOME>DATE>DR [DR{}] 285 , 8 , 23 , 59 '
@@ -156,13 +188,11 @@ SEQUENCES = [
     '2ND ( 2024 , 3 , 14 , 15 , 36 , 1 , 7 CHS , 0 ENTER 13 × >date-cvtz-1 x⁻¹ >date-cvtz-2 '
     '@HOME>DATE>DT [DLNK] >date-cvtz-3',
 
-    # 16. Troubleshooting
+    # 17. Troubleshooting
     f'{FIX4} 2 CHS {SQRT} >trouble-domain',
     '2ND ( 2024 , 2 , 30 ENTER >trouble-invalid',
     'NO_RES >trouble-no-res',
 
-    # 18. Limits and compatibility
-    '@HOME>CPLX [REAL] >compat-cplx',
 ]
 
 
@@ -192,7 +222,7 @@ def compose(screens):
     title, body = _font(26, True), _font(22)
     x = shot.width + 60
     # (y of the screen area, y of the text block, title, lines)
-    for y, top, name, lines in [(18, 0, 'Status bar', ['clock, display format, angle, base']),
+    for y, top, name, lines in [(18, 0, 'Status bar', ['clock and format; optional RAD,', 'base, carry, complex modes']),
                                 (66, 62, 'Message line', ['errors, SHOW, warnings;',
                                                           '↓↑: the menu has more rows']),
                                 (250, 226, 'Stack', ['T, Z, Y and X', '(X is the bottom row)']),

@@ -9,7 +9,8 @@
 #include "../src/sys/storage.h"
 #include "format.h"
 #include "units.h"
-#include "dateobj.h"
+#include "value.h"
+#include <stddef.h>
 
 typedef struct {
     unsigned char data[16384];
@@ -78,279 +79,192 @@ static void check(const char *name, bool pass)
     printf("%s %s\n", pass ? "ok  " : "FAIL", name);
 }
 
-static bool same_real(const real_t *a, const real_t *b)
-{
-    return a->sign == b->sign && a->exp == b->exp &&
-           memcmp(a->mant, b->mant, sizeof a->mant) == 0 &&
-           (obj_is(a) || a->v == b->v);
-}
 
-static void populate(calc_t *c, int count)
-{
-    memset(c, 0, sizeof *c);
-    c->depth = STACK_MAX;
-    c->extra_count = (uint8_t)count;
-    for (int i = 0; i < STACK_MAX; i++) {
-        c->stack[i] = mk(i + 0.125);
-        c->unit[i] = (uint8_t)(i + 1);
-    }
-    dt_obj_t date = { .type = OBJ_DATE, .year = 2026, .month = 10, .day = 18 };
-    c->stack[2] = obj_pack(&date);
-    c->lastx = mk(-42.5);
-    c->unit_lastx = UNIT_COUNT;
-    for (int i = 0; i < REG_BASE_COUNT; i++) {
-        c->regs[i] = mk(-i - 0.5);
-        c->reg_unit[i] = (uint8_t)(i + 1);
-    }
-    for (int i = 0; i < count; i++) {
-        c->extra[i] = mk(i + 1000);
-        c->extra_unit[i] = (uint8_t)(i + 1);
-    }
-    c->lift = true;
-    c->degrees = true;
-    c->disp_style = DISP_ENG;
-    c->disp_digits = 8;
-    c->tvm.begin = true;
-    tvm_settings_reset(&c->tvm);
-    c->tvm.iyr1 = mk(3.25);
-    c->tvm.iyr1_set = true;
-    c->stats.model = FIT_PWR;
-    c->stats.lnx_ok = true;
-    c->stats.linear_only = true;
-    for (int i = 0; i < SUM_COUNT; i++) c->stats.sum[i] = mk(i + 2000);
-    c->base.radix = 16;
-    c->base.bits = BASE_MAX_BITS;
-    c->base.carry = true;
-    c->date_as_string = true;
-    c->epoch = EPOCH_CUSTOM;
-    c->custom_epoch = date;
-    c->app_tz = -28;
-    c->clock_tz = 4;
-}
+/* Historical on-disk schema, frozen here to exercise the actual importer. */
+typedef struct {
+    real_t sum[SUM_COUNT]; bool linear_only, lnx_ok, lny_ok; uint8_t model;
+} old_stats_t;
+typedef struct {
+    uint8_t magic, version, depth;
+    real_t stack[STACK_MAX]; uint8_t unit[STACK_MAX];
+    real_t lastx; uint8_t unit_lastx;
+    real_t regs[REG_BASE_COUNT];
+    uint8_t extra_count, lift, degrees, disp_style; int8_t disp_digits;
+    tvm_settings_t tvm; old_stats_t stats; base_state_t base;
+    real_t extra[REG_EXTRA_MAX];
+} old_state_t;
 
 static bool same_saved(const calc_t *a, const calc_t *b)
 {
-    if (a->depth != b->depth || a->extra_count != b->extra_count ||
-        a->lift != b->lift || a->degrees != b->degrees ||
-        a->disp_style != b->disp_style || a->disp_digits != b->disp_digits ||
-        a->unit_lastx != b->unit_lastx || !same_real(&a->lastx, &b->lastx) ||
-        a->base.radix != b->base.radix || a->base.bits != b->base.bits ||
-        a->base.carry != b->base.carry || a->stats.model != b->stats.model ||
-        a->stats.linear_only != b->stats.linear_only || a->stats.lnx_ok != b->stats.lnx_ok ||
-        a->stats.lny_ok != b->stats.lny_ok || a->tvm.begin != b->tvm.begin ||
-        a->tvm.iter_max != b->tvm.iter_max || a->tvm.iyr1_set != b->tvm.iyr1_set ||
-        a->tvm.iyr2_set != b->tvm.iyr2_set || a->tvm.iter_max_set != b->tvm.iter_max_set ||
-        !same_real(&a->tvm.iyr1, &b->tvm.iyr1) || !same_real(&a->tvm.iyr2, &b->tvm.iyr2))
-        return false;
-    for (int i = 0; i < STACK_MAX; i++)
-        if (!same_real(&a->stack[i], &b->stack[i]) || a->unit[i] != b->unit[i]) return false;
-    for (int i = 0; i < REG_BASE_COUNT; i++)
-        if (!same_real(&a->regs[i], &b->regs[i]) || a->reg_unit[i] != b->reg_unit[i]) return false;
-    for (int i = 0; i < a->extra_count; i++)
-        if (!same_real(&a->extra[i], &b->extra[i]) || a->extra_unit[i] != b->extra_unit[i]) return false;
-    for (int i = 0; i < SUM_COUNT; i++)
-        if (!same_real(&a->stats.sum[i], &b->stats.sum[i])) return false;
-    return true;
+    return a->depth == b->depth && a->extra_count == b->extra_count &&
+        a->lift == b->lift && a->degrees == b->degrees &&
+        a->complex_results == b->complex_results && a->complex_mode == b->complex_mode &&
+        a->disp_style == b->disp_style && a->disp_digits == b->disp_digits &&
+        !memcmp(a->stack, b->stack, sizeof a->stack) &&
+        !memcmp(&a->lastx, &b->lastx, sizeof a->lastx) &&
+        !memcmp(a->regs, b->regs, sizeof a->regs) &&
+        !memcmp(a->extra, b->extra, sizeof(value_t) * a->extra_count) &&
+        !memcmp(&a->stats, &b->stats, sizeof(old_stats_t)) &&
+        !memcmp(&a->tvm, &b->tvm, sizeof a->tvm) &&
+        !memcmp(&a->base, &b->base, sizeof a->base);
 }
-
+static void populate(calc_t *c, int count)
+{
+    memset(c, 0, sizeof *c);
+    c->depth = STACK_MAX; c->extra_count = count;
+    for (int i = 0; i < STACK_MAX; i++) {
+        c->stack[i] = value_real(mk(i + .125)); c->stack[i].unit = i + 1;
+    }
+    dt_obj_t date = { .type = OBJ_DATE, .year = 2026, .month = 10, .day = 18 };
+    c->stack[2] = value_date(&date);
+    c->stack[3] = value_complex(mk(-2), mk(5));
+    c->lastx = value_complex(mk(1), mk(-7));
+    for (int i = 0; i < REG_BASE_COUNT; i++) {
+        c->regs[i] = value_real(mk(-i - .5)); c->regs[i].unit = i + 1;
+    }
+    c->regs[3] = value_complex(mk(3), mk(-4));
+    c->regs[4] = value_date(&date);
+    for (int i = 0; i < count; i++) {
+        c->extra[i] = value_complex(mk(i), mk(-i));
+    }
+    c->lift = c->degrees = c->complex_results = true;
+    c->complex_mode = COMPLEX_DEG;
+    c->disp_style = DISP_ENG; c->disp_digits = 8;
+    tvm_settings_reset(&c->tvm); c->tvm.begin = true;
+    c->stats.model = FIT_PWR; c->stats.lnx_ok = true;
+    for (int i = 0; i < SUM_COUNT; i++) c->stats.sum[i] = mk(i + 2000);
+    c->base.radix = 16; c->base.bits = BASE_MAX_BITS; c->base.carry = true;
+    c->date_as_string = true; c->epoch = EPOCH_CUSTOM; c->custom_epoch = date;
+    c->app_tz = -28; c->clock_tz = 4;
+}
 static void rejected_unchanged(const char *name, calc_t *c)
 {
-    calc_t before;
-    memcpy(&before, c, sizeof before);
-    bool loaded = storage_load(c);
-    check(name, !loaded && memcmp(c, &before, sizeof before) == 0);
+    calc_t before = *c;
+    check(name, !storage_load(c) && !memcmp(c, &before, sizeof before));
 }
-
+static void old_fixture(bool footer, bool sidecar)
+{
+    old_state_t old;
+    memset(&old, 0, sizeof old);
+    old.magic = 0x52; old.version = 5; old.depth = 4; old.extra_count = 2;
+    old.lift = old.degrees = 1; old.disp_style = DISP_FIX; old.disp_digits = DISP_FLOAT;
+    for (int i = 0; i < STACK_MAX; i++) old.stack[i] = mk(i);
+    for (int i = 0; i < REG_BASE_COUNT; i++) old.regs[i] = mk(i + 10);
+    old.lastx = mk(-42); old.unit[0] = 1; old.unit_lastx = 2;
+    /* A genuine packed DATE record from version 5. */
+    old.stack[1].sign = 0x61;
+    old.stack[1].exp = (int8_t)(2026 & 255);
+    old.stack[1].mant[0] = 2026 >> 8;
+    old.stack[1].mant[1] = 10; old.stack[1].mant[2] = 18;
+    old.extra[0] = mk(100); old.extra[1] = old.stack[1];
+    tvm_settings_reset(&old.tvm); old.base.radix = 10; old.base.bits = 32;
+    vars[0].exists = true;
+    vars[0].size = offsetof(old_state_t, extra) + sizeof(real_t) * old.extra_count;
+    memcpy(vars[0].data, &old, vars[0].size);
+    size_t count = REG_BASE_COUNT + old.extra_count;
+    if (footer) {
+        unsigned char *tail = vars[0].data + vars[0].size;
+        tail[0] = 'U'; tail[1] = 1;
+        memset(tail + 2, 0, count); tail[2] = 3;
+        vars[0].size += 2 + count;
+    }
+    vars[2].exists = sidecar;
+    if (sidecar) {
+        unsigned char *u = vars[2].data;
+        u[0] = 'U'; u[1] = 'N'; u[2] = 1; u[3] = count;
+        uint32_t h = 2166136261UL;
+        const unsigned char *p = (const unsigned char *)old.regs;
+        for (size_t i = 0; i < sizeof old.regs; i++) { h ^= p[i]; h *= 16777619UL; }
+        h ^= old.extra_count; h *= 16777619UL;
+        p = (const unsigned char *)old.extra;
+        for (size_t i = 0; i < sizeof(real_t) * old.extra_count; i++) { h ^= p[i]; h *= 16777619UL; }
+        for (int i = 0; i < 4; i++) u[4 + i] = h >> (8 * i);
+        memset(u + 8, 0, count); u[8] = 4;
+        h = 2166136261UL;
+        for (size_t i = 0; i < 8 + count; i++) { h ^= u[i]; h *= 16777619UL; }
+        for (int i = 0; i < 4; i++) u[8 + count + i] = h >> (8 * i);
+        vars[2].size = 12 + count;
+    }
+}
 int main(void)
 {
     calc_t original, loaded;
-    populate(&original, 0);
-    loaded = original;
-    rejected_unchanged("missing state leaves the calculator unchanged", &loaded);
-
+    populate(&original, 0); loaded = original;
+    rejected_unchanged("missing state leaves calculator unchanged", &loaded);
     size_t fixed_size = 0;
     const int counts[] = { 0, 5, REG_EXTRA_MAX, 0, REG_EXTRA_MAX };
-    for (unsigned n = 0; n < sizeof counts / sizeof counts[0]; n++) {
-        populate(&original, counts[n]);
-        int previous_finishes = finishes;
+    for (unsigned i = 0; i < sizeof counts / sizeof *counts; i++) {
+        populate(&original, counts[i]);
+        original.degrees = (i & 1) != 0;
+        loaded.degrees = !original.degrees;
+        int before = finishes;
+        vars[2].exists = true;
         storage_save(&original);
-        check("save finalizes entry and archives the appvar", finishes == previous_finishes + 1 && vars[0].archived);
-        if (n == 0) fixed_size = vars[0].size;
-        check("state payload includes only the configured extra registers",
-              vars[0].size == fixed_size + sizeof(real_t) * counts[n]);
-        check("register units go to an archived RPNCEunt",
-              vars[2].exists && vars[2].archived &&
-              vars[2].size == 8 + REG_BASE_COUNT + (size_t)counts[n] + 4);
-        memset(&loaded, 0, sizeof loaded);
-        check("all persistent state survives repeated save/load",
-              storage_load(&loaded) && same_saved(&original, &loaded));
-        if (n < 2) {  /* embedded footer boundaries: zero and five extras */
-            size_t base_size = vars[0].size;
-            vars[0].data[base_size] = 'U'; vars[0].data[base_size + 1] = 1;
-            memcpy(vars[0].data + base_size + 2, original.reg_unit, REG_BASE_COUNT);
-            memcpy(vars[0].data + base_size + 2 + REG_BASE_COUNT, original.extra_unit, original.extra_count);
-            vars[0].size += 2 + REG_BASE_COUNT + original.extra_count;
-            vars[2].exists = false;
-            check("embedded unit footer loads with zero or five extra registers",
-                  storage_load(&loaded) && same_saved(&original, &loaded));
-            storage_save(&loaded);
-            check("migration removes footer and archives the separate units file",
-                  vars[0].size == base_size && vars[2].exists && vars[2].archived);
-        }
+        if (!i) fixed_size = vars[0].size;
+        check("save finalizes entry and archives current state", finishes == before + 1 && vars[0].archived);
+        check("all configured objects survive save/load", storage_load(&loaded) && same_saved(&original, &loaded));
+        check("unused extra registers are omitted", vars[0].size == fixed_size + sizeof(value_t) * counts[i]);
+        check("current saves remove the retired unit sidecar", !vars[2].exists);
     }
-
     unsigned char saved[16384];
     size_t saved_size = vars[0].size;
     memcpy(saved, vars[0].data, saved_size);
-    const int bad_offsets[] = { 0, 1, 2 };
-    for (unsigned i = 0; i < sizeof bad_offsets / sizeof bad_offsets[0]; i++) {
-        vars[0].data[bad_offsets[i]] = 0;
-        rejected_unchanged("bad magic, version or depth is rejected", &loaded);
+    for (int i = 0; i < 3; i++) {
+        vars[0].data[i] = 0;
+        rejected_unchanged("invalid header rejected without mutation", &loaded);
         memcpy(vars[0].data, saved, saved_size);
     }
     const size_t precision_size = 2 + 2 * sizeof(real_t) + 1 + 4;
     vars[0].size = fixed_size - precision_size - 1;
-    rejected_unchanged("truncated fixed state is rejected", &loaded);
+    rejected_unchanged("truncated fixed objects rejected", &loaded);
     vars[0].size = saved_size - precision_size - 1;
-    rejected_unchanged("truncated extra registers are rejected", &loaded);
+    rejected_unchanged("truncated extra objects rejected", &loaded);
     vars[0].size = saved_size;
-    check("valid load after failed loads recovers the saved state",
-          storage_load(&loaded) && same_saved(&original, &loaded));
-
-    original.stats.first[0] = mk(7);
-    original.stats.first[1] = mk(11);
-    original.stats.constant = 3;
+    check("valid state still loads after rejection", storage_load(&loaded) && same_saved(&original, &loaded));
+    /* Corrupt a value's discriminator, not its numeric payload. */
+    value_t fixture = original.stack[0];
+    size_t object_offset = 0;
+    for (size_t i = 3; i + sizeof fixture <= saved_size; i++)
+        if (!memcmp(saved + i, &fixture, sizeof fixture)) { object_offset = i; break; }
+    check("fixture locates a complete saved value", object_offset != 0);
+    vars[0].data[object_offset + offsetof(value_t, type)] = 255;
+    rejected_unchanged("unknown object type rejected without mutation", &loaded);
+    memcpy(vars[0].data, saved, saved_size);
+    original.stats.first[0] = mk(7); original.stats.first[1] = mk(11); original.stats.constant = 3;
     storage_save(&original);
-    check("statistics precision witnesses survive save/load",
-          storage_load(&loaded) && loaded.stats.constant == 3 &&
-          same_real(&loaded.stats.first[0], &original.stats.first[0]) &&
-          same_real(&loaded.stats.first[1], &original.stats.first[1]));
+    check("precision witnesses round trip", storage_load(&loaded) && loaded.stats.constant == 3 &&
+          loaded.stats.first[0].v == 7 && loaded.stats.first[1].v == 11);
     vars[0].data[vars[0].size - 1] ^= 1;
-    check("damaged precision metadata preserves sums without claiming constancy",
-          storage_load(&loaded) && loaded.stats.constant == 0 && same_saved(&original, &loaded));
+    check("damaged witnesses retain sums without claiming constancy", storage_load(&loaded) &&
+          !loaded.stats.constant && same_saved(&original, &loaded));
     vars[0].size -= precision_size;
-    check("legacy state retains statistics and marks precision witnesses unknown",
-          storage_load(&loaded) && loaded.stats.constant == 0 && same_saved(&original, &loaded));
-    storage_save(&original);
-    memcpy(saved, vars[0].data, saved_size);
-
-    /* Every way RPNCEunt can fail keeps every value, dropping only the
-     * register units. */
-    calc_t no_units = original;
-    memset(no_units.reg_unit, 0, sizeof no_units.reg_unit);
-    memset(no_units.extra_unit, 0, sizeof no_units.extra_unit);
-    unsigned char units_saved[16384];
-    size_t units_size = vars[2].size;
-    memcpy(units_saved, vars[2].data, units_size);
-
-    vars[2].exists = false;
-    check("missing RPNCEunt: values load, registers without units",
-          storage_load(&loaded) && same_saved(&no_units, &loaded));
-    vars[2].exists = true;
-    vars[2].data[10] ^= 1;
-    check("damaged RPNCEunt (checksum): values load, units dropped",
-          storage_load(&loaded) && same_saved(&no_units, &loaded));
-    memcpy(vars[2].data, units_saved, units_size);
-    vars[2].size = units_size - 1;
-    check("truncated RPNCEunt: values load, units dropped",
-          storage_load(&loaded) && same_saved(&no_units, &loaded));
-    vars[2].size = units_size;
-    vars[2].data[2] = 99;
-    check("unknown RPNCEunt version: values load, units dropped",
-          storage_load(&loaded) && same_saved(&no_units, &loaded));
-    memcpy(vars[2].data, units_saved, units_size);
-    check("intact RPNCEunt restores every register unit",
-          storage_load(&loaded) && same_saved(&original, &loaded));
-
-    /* Units must never attach to different values: an RPNCEdat saved with
-     * other register values (an older copy, say) leaves the units off. */
-    {
-        calc_t other = original;
-        other.regs[0] = mk(12345);
-        unsigned char dat_saved[16384];
-        memcpy(dat_saved, vars[0].data, saved_size);
-        storage_save(&other);
-        memcpy(vars[2].data, units_saved, units_size);    /* the older units file */
-        vars[2].size = units_size;
-        vars[2].exists = true;
-        calc_t other_no_units = other;
-        memset(other_no_units.reg_unit, 0, sizeof other_no_units.reg_unit);
-        memset(other_no_units.extra_unit, 0, sizeof other_no_units.extra_unit);
-        check("RPNCEunt for other register values is ignored",
-              storage_load(&loaded) && same_saved(&other_no_units, &loaded));
-        memcpy(vars[0].data, dat_saved, saved_size);
-        vars[0].size = saved_size;
-        memcpy(vars[2].data, units_saved, units_size);
-    }
-    vars[2].data[8] = 255;      /* a unit tag out of range, checksum fixed up */
-    {
-        uint32_t h = 2166136261UL;
-        size_t body = units_size - 4;
-        for (size_t i = 0; i < body; i++) { h ^= vars[2].data[i]; h *= 16777619UL; }
-        for (int i = 0; i < 4; i++) vars[2].data[body + i] = (unsigned char)(h >> (8 * i));
-    }
-    check("an out-of-range unit tag becomes no unit",
-          storage_load(&loaded) && loaded.reg_unit[0] == 0 && loaded.reg_unit[1] == original.reg_unit[1]);
-    memcpy(vars[2].data, units_saved, units_size);
-
-    /* Migrate old register-unit footers when no RPNCEunt exists, without
-     * rejecting valid numbers if the optional footer is damaged. */
-    {
-        unsigned char tail[2 + REG_BASE_COUNT + REG_EXTRA_MAX] = { 'U', 1 };
-        size_t tail_size = 2 + REG_BASE_COUNT + original.extra_count;
-        memcpy(tail + 2, original.reg_unit, REG_BASE_COUNT);
-        memcpy(tail + 2 + REG_BASE_COUNT, original.extra_unit, original.extra_count);
-        memcpy(vars[0].data + saved_size, tail, tail_size);
-        vars[0].size = saved_size + tail_size;
-        vars[2].exists = false;
-        check("embedded unit tags preserve values and units",
-              storage_load(&loaded) && same_saved(&original, &loaded));
+    check("absent witnesses retain saved objects", storage_load(&loaded) && !loaded.stats.constant && same_saved(&original, &loaded));
+    for (int sidecar = 0; sidecar <= 1; sidecar++) {
+        old_fixture(true, sidecar);
+        memset(&loaded, 0, sizeof loaded);
+        check("version 5 imports real values, DATEs, units and LASTX", storage_load(&loaded) &&
+            loaded.stack[0].real.v == 0 && loaded.stack[0].unit == 1 &&
+            value_is_date(&loaded.stack[1]) && loaded.stack[1].date.year == 2026 &&
+            loaded.lastx.real.v == -42 && loaded.lastx.unit == 2 &&
+            loaded.regs[0].unit == (sidecar ? 4 : 3) &&
+            value_is_date(&loaded.extra[1]) && !loaded.complex_results && loaded.complex_mode == COMPLEX_RECT);
+        original = loaded;
         storage_save(&loaded);
-        check("migrated units are saved separately and survive reopening",
-              vars[0].size == saved_size && vars[2].exists && vars[2].archived &&
-              storage_load(&loaded) && same_saved(&original, &loaded));
-
-        memcpy(vars[0].data + saved_size, tail, tail_size);
-        vars[0].size = saved_size + tail_size - 1;
-        vars[2].exists = false;
-        check("truncated embedded footer drops only units, retaining values",
-              storage_load(&loaded) && same_saved(&no_units, &loaded));
-        vars[0].size = saved_size + tail_size;
-        vars[0].data[saved_size] = '?';
-        check("unknown embedded footer does not reject saved values",
-              storage_load(&loaded) && same_saved(&no_units, &loaded));
-        vars[0].data[saved_size] = 'U';
-
-        vars[2].exists = true;
-        memcpy(vars[2].data, units_saved, units_size);
-        vars[2].size = units_size;
-        vars[0].data[saved_size + 2] = 2;  /* differs from the matching file's tag */
-        check("a matching RPNCEunt takes precedence over embedded tags",
-              storage_load(&loaded) && same_saved(&original, &loaded));
-        vars[2].data[10] ^= 1;
-        check("damaged RPNCEunt does not fall back to stale embedded tags",
-              storage_load(&loaded) && same_saved(&no_units, &loaded));
-        vars[0].size = saved_size;
-        memcpy(vars[2].data, units_saved, units_size);
+        check("imported state writes only version 6 and reopens", vars[0].data[1] == 6 &&
+            !vars[2].exists && storage_load(&loaded) && same_saved(&original, &loaded));
     }
-
-    /* No register units at all: RPNCEunt is removed rather than kept stale. */
-    storage_save(&no_units);
-    check("saving with no register units removes RPNCEunt", !vars[2].exists);
-    check("...and loads with no register units",
-          storage_load(&loaded) && same_saved(&no_units, &loaded));
-    storage_save(&original);
-
-    /* Loading and then saving a smaller state must not retain old registers. */
-    populate(&original, 0);
-    storage_save(&original);
-    check("shrinking after load drops the unused saved tail", vars[0].size == fixed_size);
+    old_fixture(true, true);
+    vars[2].data[10] ^= 1;
+    check("damaged old sidecar drops only register units", storage_load(&loaded) &&
+          !loaded.regs[0].unit && value_is_date(&loaded.stack[1]) && loaded.lastx.unit == 2);
+    old_fixture(false, false); vars[0].size--;
+    rejected_unchanged("truncated version 5 retains runtime state", &loaded);
+    populate(&original, 0); storage_save(&original);
     open_fails = true;
-    rejected_unchanged("open failure leaves state unchanged", &loaded);
+    rejected_unchanged("open failure retains runtime state", &loaded);
     storage_save(&original);
-    check("failed save leaves the previous appvar intact", vars[0].size == fixed_size);
+    check("open failure retains saved file", vars[0].size == fixed_size);
     open_fails = false;
-
     original.decimal_comma = true;
     storage_save_settings(3, &original);
     memset(&loaded, 0, sizeof loaded);

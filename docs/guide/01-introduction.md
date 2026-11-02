@@ -1,6 +1,6 @@
 # 1. Introduction
 
-rpnCE 0.7.0 · User Guide
+rpnCE development build · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Next: 2. Installing rpnCE](02-installation.md)
 
@@ -44,8 +44,9 @@ HP-42S.
 - Completed stack values, registers, statistics, and settings are saved
   when you quit and restored when you start again.
 
-**Not yet available:** complex numbers. The **CPLX** menu opens, but its
-items, and the complex settings in **MODE**, show "Not available yet".
+**Complex numbers:** rectangular and polar entry, arithmetic and scientific
+functions, with result/display modes and a CPLX menu. See
+[Complex numbers](11-complex-numbers.md) for entry and worked examples.
 
 
 ## What this version provides
@@ -63,7 +64,7 @@ reference; this manual supplies the fuller procedures and examples.
 rpnCE's lettered registers are private to the program. Storing a value in
 rpnCE's A does not change TI-OS variable A or matrix [A]. The seven TVM
 values are deliberately shared with TI's Finance solver. See
-[Saving, memory and files](17-memory.md) for that distinction.
+[Saving, memory and files](18-memory.md) for that distinction.
 
 ---
 

@@ -7,7 +7,7 @@
 #include <ti/real.h>
 #include <ti/error.h>
 #include "calc.h"
-#include "dateobj.h"
+#include "value.h"
 
 #include "mock_calc_runtime.h"
 
@@ -53,11 +53,11 @@ static void expect_msg(const char *name, const char *want)
     printf("%s %-46s \"%s\" (want \"%s\")\n", ok ? "ok  " : "FAIL", name, m, want);
 }
 /* X as shown: finishes a number still being typed */
-static double x_now(void) { calc_finish_entry(&C); return C.stack[0].v; }
+static double x_now(void) { calc_finish_entry(&C); return C.stack[0].real.v; }
 #define X (x_now())
-#define Y (C.stack[1].v)
-#define Z (C.stack[2].v)
-#define T (C.stack[3].v)
+#define Y (C.stack[1].real.v)
+#define Z (C.stack[2].real.v)
+#define T (C.stack[3].real.v)
 
 int main(void)
 {
@@ -68,6 +68,8 @@ int main(void)
         expect("scientific entry preserves sign and exponent", X, entries[i]);
     }
     calc_init(&C);
+
+    expect("fresh calculator starts in degrees", C.degrees, true);
 
     /* ---- 4-level stack, HP rules ---- */
     num(1); cmd(CMD_ENTER, 0); num(2); cmd(CMD_ENTER, 0); num(3); cmd(CMD_ENTER, 0); num(4);
@@ -86,15 +88,15 @@ int main(void)
     num(8); cmd(CMD_SET_STACK_SIZE, 0);
     expect("SSIZ 8", C.depth, 8);
     for (int i = 1; i <= 8; i++) { num(i); if (i < 8) cmd(CMD_ENTER, 0); }
-    expect("level 8 holds 1", C.stack[7].v, 1);
+    expect("level 8 holds 1", C.stack[7].real.v, 1);
     expect("T (level 4) holds 5", T, 5);
     cmd(CMD_ADD, 0); cmd(CMD_ADD, 0); cmd(CMD_ADD, 0);
     expect("three drops: X = 8+7+6+5", X, 26);
     expect("hidden level moved into T", T, 2);
-    expect("top level duplicated", C.stack[7].v, 1);
+    expect("top level duplicated", C.stack[7].real.v, 1);
     cmd(CMD_ROLL_DOWN, 0);
     expect("R-down through 8 levels: X", X, 4);
-    expect("R-down: X went to level 8", C.stack[7].v, 26);
+    expect("R-down: X went to level 8", C.stack[7].real.v, 26);
     cmd(CMD_GET_STACK_SIZE, 0);
     expect("SSZ?", X, 8);
     num(3); cmd(CMD_SET_STACK_SIZE, 0);
@@ -169,17 +171,17 @@ int main(void)
     cmd(CMD_CLEAR_REGS, 0);
     cmd(CMD_RCL, 1);
     expect("CLRG cleared A", X, 0);
-    expect("CLRG cleared register 041", C.extra[0].v, 0);
+    expect("CLRG cleared register 041", C.extra[0].real.v, 0);
     expect("CLRG kept the stat data", C.stats.sum[SUM_N].v, 2);
 
     /* units travel with their values */
     cmd(CMD_CLEAR_STACK, 0);
     num(12); cmd(CMD_UNIT, 0);
-    expect("unit attached to X", C.unit[0], 1);
+    expect("unit attached to X", C.stack[0].unit, 1);
     cmd(CMD_ENTER, 0);
-    expect("ENTER copies the unit", C.unit[1], 1);
+    expect("ENTER copies the unit", C.stack[1].unit, 1);
     cmd(CMD_SWAP, 0); cmd(CMD_DROP, 0);
-    expect("units follow values through DROP", C.unit[0], 1);
+    expect("units follow values through DROP", C.stack[0].unit, 1);
 
     /* ---- NUM ---- */
     cmd(CMD_CLEAR_STACK, 0);
@@ -315,18 +317,18 @@ int main(void)
             num(7); cmd(CMD_ENTER, 0);          /* a deeper level to watch */
             num(t[i].y); cmd(CMD_ENTER, 0); num(t[i].x);
             calc_finish_entry(&C);
-            C.lastx = mk(42);
+            C.lastx = value_real(mk(42));
             cmd((calc_cmd_t)t[i].cmd, 0);
             if (t[i].ok) {
                 snprintf(name, sizeof name, "%s: Y=%g X=%g", t[i].id, t[i].y, t[i].x);
                 expect(name, X, t[i].want);
                 snprintf(name, sizeof name, "%s: stack dropped, LASTX = X", t[i].id);
-                expect(name, Y == 7 && C.lastx.v == t[i].x, 1);
+                expect(name, Y == 7 && C.lastx.real.v == t[i].x, 1);
             } else {
                 snprintf(name, sizeof name, "%s: Y=%g X=%g -> Err: Domain", t[i].id, t[i].y, t[i].x);
                 expect_msg(name, "Err: Domain");
                 snprintf(name, sizeof name, "%s: X, Y, Z and LASTX untouched", t[i].id);
-                expect(name, X == t[i].x && Y == t[i].y && Z == 7 && C.lastx.v == 42, 1);
+                expect(name, X == t[i].x && Y == t[i].y && Z == 7 && C.lastx.real.v == 42, 1);
             }
         }
         cmd(CMD_CLEAR_STACK, 0);
@@ -363,7 +365,7 @@ int main(void)
         else if (*p_ == '-') cmd(CMD_CHS, 0); else if (*p_ == '}') cmd(CMD_RECORD_CLOSE, 0); \
         else cmd(CMD_DIGIT, (uint8_t)(*p_ - '0')); } } while (0)
     #define XOBJ(name, want) do { calc_finish_entry(&C); char b_[40] = "(a number)"; \
-        if (obj_is(&C.stack[0])) { dt_obj_t o_ = obj_unpack(&C.stack[0]); dt_format(b_, &o_, false); } \
+        if (value_is_date(&C.stack[0])) { dt_obj_t o_ = C.stack[0].date; dt_format(b_, &o_, false); } \
         int ok_ = strcmp(b_, want) == 0; if (!ok_) fails++; \
         printf("%s %-46s %s (want %s)\n", ok_ ? "ok  " : "FAIL", name, b_, want); } while (0)
     REC("{1987,01,17"); cmd(CMD_ENTER, 0); num(15000); cmd(CMD_ADD, 0);
@@ -371,14 +373,14 @@ int main(void)
     cmd(CMD_CLEAR_STACK, 0);
     REC("{1987,01,17"); cmd(CMD_ENTER, 0); REC("{2026,10,19"); cmd(CMD_SUB, 0);
     expect("1987-01-17 minus 2026-10-19 is days", X, -14520);
-    expect("date subtraction remembers the original date in LASTX", obj_is(&C.lastx), 1);
+    expect("date subtraction remembers the original date in LASTX", value_is_date(&C.lastx), 1);
     cmd(CMD_CLEAR_STACK, 0);
     REC("{2026,10,19"); cmd(CMD_ENTER, 0); REC("{1987,01,17"); cmd(CMD_SUB, 0);
     expect("date difference reverses sign in the other order", X, 14520);
     cmd(CMD_CLEAR_STACK, 0);
     REC("{2024,3,14"); cmd(CMD_ENTER, 0);
     XOBJ("typed Date (no closing brace)", "D{2024,3,14}");
-    expect("ENTER copies the Date into Y", obj_is(&C.stack[1]), 1);
+    expect("ENTER copies the Date into Y", value_is_date(&C.stack[1]), 1);
     num(20); cmd(CMD_ADD, 0);
     XOBJ("Date + 20 (the + key)", "D{2024,4,3}");
     REC("{2024,12,25"); cmd(CMD_SWAP, 0); cmd(CMD_SUB, 0);
@@ -400,7 +402,7 @@ int main(void)
     XOBJ("x key converts to UTC+13", "DZ{2024,3,15,11,36,1,13,0}");
     cmd(CMD_RECIP, 0);
     XOBJ("1/x is DCUT: TimeZone in X", "TZ{13,0}");
-    expect("... DateTime in Y", obj_is(&C.stack[1]), 1);
+    expect("... DateTime in Y", value_is_date(&C.stack[1]), 1);
     cmd(CMD_DATE_FN, DF_LINK);
     XOBJ("DLNK puts them back together", "DZ{2024,3,15,11,36,1,13,0}");
     cmd(CMD_SQRT, 0);
@@ -544,35 +546,35 @@ int main(void)
                 C.depth = (uint8_t)depth;
                 C.lift = false;
                 for (int k = 0; k < depth; k++) {
-                    C.stack[k] = mk(k == 0 ? 2 : k == 1 ? 10 : 100 + k);
-                    C.unit[k] = k < 2 ? 0 : (uint8_t)(k + 1);
+                    C.stack[k] = value_real(mk(k == 0 ? 2 : k == 1 ? 10 : 100 + k));
+                    C.stack[k].unit = k < 2 ? 0 : (uint8_t)(k + 1);
                 }
-                C.regs[0] = mk(3);
+                C.regs[0] = value_real(mk(3));
                 cmd(cases[i].command, cases[i].arg);
-                expect("result matches operation", C.stack[0].v, cases[i].result);
-                expect("LASTX keeps the original X and unit", C.lastx.v == 2 && C.unit_lastx == 0, 1);
-                expect("result has no unit", C.unit[0], 0);
+                expect("result matches operation", C.stack[0].real.v, cases[i].result);
+                expect("LASTX keeps the original X and unit", C.lastx.real.v == 2 && C.lastx.unit == 0, 1);
+                expect("result has no unit", C.stack[0].unit, 0);
                 expect("operation keeps its lift rule", C.lift, cases[i].lift);
                 expect("Y and its unit follow the drop rule",
-                       C.stack[1].v == (cases[i].drops ? 102 : 10) &&
-                       C.unit[1] == (cases[i].drops ? 3 : 0), 1);
-                expect("top stack level stays duplicated", C.stack[depth - 1].v, 100 + depth - 1);
+                       C.stack[1].real.v == (cases[i].drops ? 102 : 10) &&
+                       C.stack[1].unit == (cases[i].drops ? 3 : 0), 1);
+                expect("top stack level stays duplicated", C.stack[depth - 1].real.v, 100 + depth - 1);
                 expect("no unexpected result error", C.message == NULL, 1);
             }
 
         calc_init(&C);
-        C.stack[0] = mk(0);
-        C.stack[1] = mk(10);
-        C.lastx = mk(42);
-        C.unit[0] = 3;
-        C.unit[1] = 4;
-        C.unit_lastx = 3;
+        C.stack[0] = value_real(mk(0));
+        C.stack[1] = value_real(mk(10));
+        C.lastx = value_real(mk(42));
+        C.stack[0].unit = 3;
+        C.stack[1].unit = 4;
+        C.lastx.unit = 3;
         C.lift = false;
         cmd(CMD_DIV, 0);
         expect_msg("failed result reports division by zero", "Err: Division By 0");
         expect("failed result preserves values, tags, LASTX and lift",
-               C.stack[0].v == 0 && C.stack[1].v == 10 && C.lastx.v == 42 &&
-               C.unit[0] == 3 && C.unit[1] == 4 && C.unit_lastx == 3 && !C.lift, 1);
+               C.stack[0].real.v == 0 && C.stack[1].real.v == 10 && C.lastx.real.v == 42 &&
+               C.stack[0].unit == 3 && C.stack[1].unit == 4 && C.lastx.unit == 3 && !C.lift, 1);
     }
 
     /* DATE conversion boundaries: ordinary epoch/duration functions need
@@ -581,27 +583,27 @@ int main(void)
         static const double hours[] = { -23.75, -7.75, -0.25, 0, 5.5, 23.75 };
         for (unsigned i = 0; i < sizeof hours / sizeof hours[0]; i++) {
             calc_init(&C);
-            C.stack[0] = mk(hours[i]);
+            C.stack[0] = value_real(mk(hours[i]));
             cmd(CMD_DATE_FN, DF_HR_TO_TZ);
-            dt_obj_t zone = obj_unpack(&C.stack[0]);
+            dt_obj_t zone = C.stack[0].date;
             expect("hours convert exactly to quarter-hour offsets",
-                   obj_is(&C.stack[0]) && zone.type == OBJ_TZ &&
+                   value_is_date(&C.stack[0]) && zone.type == OBJ_TZ &&
                    dt_tz_quarters(&zone) == (int)(hours[i] * 4), 1);
             cmd(CMD_DATE_FN, DF_SET_APP_TZ);
             expect("object offset sets application timezone", C.app_tz, hours[i] * 4);
-            C.stack[0] = mk(hours[i]);
+            C.stack[0] = value_real(mk(hours[i]));
             cmd(CMD_DATE_FN, DF_SET_CLOCK_TZ);
             expect("numeric offset sets clock timezone", C.clock_tz, hours[i] * 4);
         }
         calc_init(&C);
-        C.stack[0] = mk(1.1);
+        C.stack[0] = value_real(mk(1.1));
         cmd(CMD_DATE_FN, DF_SET_APP_TZ);
         expect_msg("fractional quarter-hour offset is rejected", "Err: Domain");
-        expect("rejected timezone keeps setting and X", C.app_tz == 0 && C.stack[0].v == 1.1, 1);
-        C.stack[0] = mk(86401);
+        expect("rejected timezone keeps setting and X", C.app_tz == 0 && C.stack[0].real.v == 1.1, 1);
+        C.stack[0] = value_real(mk(86401));
         cmd(CMD_DATE_FN, DF_ES_TO_D);
         XOBJ("whole epoch seconds still convert to a date", "D{1970,1,2}");
-        C.stack[0] = mk(0.25);
+        C.stack[0] = value_real(mk(0.25));
         cmd(CMD_DATE_FN, DF_SECONDS_TO_DR);
         expect_msg("duration seconds still require whole values", "Err: Domain");
     }

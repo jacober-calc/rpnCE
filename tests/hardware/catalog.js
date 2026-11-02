@@ -727,9 +727,11 @@ command('RECT_TO_POLAR','4 ENTER 3',exact(5),{ checks:['Y is approximately 0.927
 command('POLAR_TO_RECT','0 ENTER 5',exact(5),{checks:['Y is 0.']});
 command('RANDOM','0',{kind:'range',min:'0',max:'1'}, {checks:['Repeating RAND several times gives values within [0, 1), without an error.']});
 add('random-seed','PROB','Repeatable random seed', ['Enter 12345.',select('RANDOM_SEED'),select('RANDOM'),'Write the first result in the notes. Enter 12345 again.',select('RANDOM_SEED'),select('RANDOM')],null,['RANDOM_SEED'],{checks:['Reseeding gives exactly the same first random value.']});
-const unavailable = ['COMPLEX_REAL','COMPLEX_IMAG','COMPLEX_CONJ','COMPLEX_ABS','COMPLEX_ANGLE','NUM_RESULT_MODE_REAL','NUM_RESULT_MODE_COMPLEX','COMPLEX_MODE_RECT','COMPLEX_MODE_RAD','COMPLEX_MODE_DEG'];
-for (const id of unavailable) {
-  command(id,'2',null,{focus:'availability',checks:['The message is “Not available yet”; X stays 2 and the program remains responsive.']});
+for (const [id, value] of [['COMPLEX_REAL',2],['COMPLEX_IMAG',0],['COMPLEX_CONJ',2],['COMPLEX_ABS',2],['COMPLEX_ANGLE',0]]) {
+  command(id,'2',exact(value));
+}
+for (const [id, indicator] of [['NUM_RESULT_MODE_REAL',null],['NUM_RESULT_MODE_COMPLEX','CRES'],['COMPLEX_MODE_RECT',null],['COMPLEX_MODE_RAD','PRAD'],['COMPLEX_MODE_DEG','PDEG']]) {
+  command(id,'2',exact(2),{checks:[`${byId[id].label} is marked active in MODE; ${indicator ? indicator+' appears in the status bar' : 'its default status label is omitted'}.`]});
 }
 
 // Use decimal display so bitwise results can be entered without translating a base.
@@ -957,17 +959,18 @@ for (const test of cases) {
   else if (test.expected?.kind === 'error' && test.focus === 'normal') test.focus = 'domain';
 }
 const catalog = {
- revision: 'hardware-0.7.0-8', version: '0.7.0', menuDigest: source.menuDigest,
+ revision: 'hardware-dev-values-9', version: '0.7.0', menuDigest: source.menuDigest,
  reference: 'Exact integer and Gregorian references; basic mpmath references at 70 decimal digits and expanded references at 180 digits. Unit references reuse the exact definitions in tools/genunits.py and are evaluated separately. Most approximate checks allow 5E-11 relative error and zero absolute error; iterative-rate, near-pole and cancellation cases state their own tolerances. Use SHOW for numeric results, especially scientific notation. Passing means the reported observations satisfy these cases; it is not proof of a complete hardware audit.',
  baseline: [
   'Use a calculator with the current rpnCE program and matching resource appvar. Copy any stack/register values you want to keep: these exercises replace them. TVM cases replace the shared TI-OS Finance values.',
   'Before EACH case, cancel entry/prompts with ON or CLEAR as needed. Press APPS then Y= for DEC. Press MODE then TRACE for RAD. Press MODE then Y=, then . then 2 for FIX all digits.',
+  'Press MODE, then ↓ for row 2; press Y= for RRES and ZOOM for RECT. This real-domain, rectangular baseline is explicit even though fresh calculators now start in DEG. Individual cases may change it.',
   'Press MODE, ↓ three times, then Y= for raw DATE objects. Press MODE, ↓ three times, then ZOOM for period decimal. Enter 4; press MODE, ↓ twice, TRACE for stack depth 4.',
   'If a message is visible, press CLEAR once to dismiss it. Then press CLEAR twice to clear the stack. Follow the case-specific setup and steps after this baseline. A case that changes settings does not set up the next case.',
   'Named menu selections have a physical-key route below the steps. All routes begin with MATH (HOME). EE means the comma key; (−) is the sign key, distinct from subtraction.',
   'For a numeric answer, inspect any unit/Y-register checks FIRST, then press 2ND ENTER (ENTRY / SHOW) to read all stored digits. Enter that value, using E for its exponent, without the unit. For an error, enter its exact message. Raw DATE answers include their type and braces.'
  ],
- commands: source.commands.map(c => ({...c, available:!unavailable.includes(c.id)})), groups: source.groups, cases, requirements: expanded.requirements,
+ commands: source.commands.map(c => ({...c, available:true})), groups: source.groups, cases, requirements: expanded.requirements,
  gaps: [
   'Commands shown under “Functional gaps” have navigation coverage but no functional case yet. They must not be counted as functionally verified.',
   'This pool samples numeric classes and boundaries; it is not exhaustive. All-pairs unit limits, arbitrary noisy/nonlinear fits, every possible cash-flow convergence path, low-battery/power interruption, damaged appvars, and other ROM versions still need additional cases.',

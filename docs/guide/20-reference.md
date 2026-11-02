@@ -1,8 +1,8 @@
 # Reference tables
 
-rpnCE 0.7.0 · User Guide
+rpnCE development build · User Guide
 
-[Manual contents](../USER_GUIDE.md) · [Previous: 18. Limits and differences](18-compatibility.md)
+[Manual contents](../USER_GUIDE.md) · [Previous: 19. Limits and differences](19-compatibility.md)
 
 **In this chapter**
 
@@ -17,7 +17,8 @@ rpnCE 0.7.0 · User Guide
 
 | Key | Primary | With `2ND` |
 | --- | --- | --- |
-| `0`-`9`, `.` | type a number | |
+| `0`-`9` | type digits | |
+| `.` | decimal point | `i`: start or select rectangular complex entry |
 | `,` | EE (exponent); inside a DATE record, the field separator | EE |
 | `(−)` | change sign (of the exponent after EE) | ANS: LASTX |
 | `ENTER` | ENTER | ENTRY: SHOW all 14 digits |
@@ -55,10 +56,18 @@ rpnCE 0.7.0 · User Guide
 | `2ND MEM` | CLR |
 | `2ND LIST` | STK |
 | `2ND CATALOG` | HELP |
+| `2ND APPS` (`ANGLE`) | polar complex entry; repeat while editing to toggle degrees/radians |
+| `2ND X,T,θ,n` (`LINK`) | join two real levels or split complex X, using RECT/PRAD/PDEG |
 | `VARS` | the VARS catalog |
 | `ON` | back one menu level |
 | `ALPHA` | the next key's green letter (HEX digits A-F, DATE record names) |
 | `2ND QUIT`, `2ND OFF` | save and exit |
+
+See [Complex numbers](11-complex-numbers.md) for worked entry,
+arithmetic, CPLX and LINK examples, and [Status bar](04-display.md#status-bar)
+for the compact indicators. DEG, DEC, RRES and RECT are implicit defaults;
+MODE marks every active choice. Ordinary stack and register operations
+copy complete real, complex, unit or DATE values.
 
 ## Appendix B: Menu map
 
@@ -471,7 +480,7 @@ Each unit is listed in menu order with its value in the base unit
 selected by UBAS. Numeric factors are rounded to at most 12 significant
 digits for this table; the calculator uses 14-digit conversion factors.
 Temperature entries are formulas; reciprocal fuel entries divide by
-the quantity shown. See [Units](14-units.md) for usage and conventions.
+the quantity shown. See [Units](15-units.md) for usage and conventions.
 
 ### Length
 
@@ -719,266 +728,266 @@ are in [Appendix A](#appendix-a-key-reference).
 | %CH | HOME → NUM | [Read](10-mathematics.md#num-menu) |
 | , | HOME → MODE | [Read](09-settings.md) |
 | . | HOME → MODE | [Read](09-settings.md) |
-| .DAY | HOME → DATE → D | [Read](15-date.md#the-date-submenus) |
-| .DAY | HOME → DATE → DR | [Read](15-date.md#the-date-submenus) |
-| .DT{ | HOME → DATE → DZ | [Read](15-date.md#the-date-submenus) |
-| .D{} | HOME → DATE → DT | [Read](15-date.md#the-date-submenus) |
-| .D{} | HOME → DATE → DZ | [Read](15-date.md#the-date-submenus) |
-| .HR | HOME → DATE → DR | [Read](15-date.md#the-date-submenus) |
-| .HR | HOME → DATE → T | [Read](15-date.md#the-date-submenus) |
-| .HR | HOME → DATE → TZ | [Read](15-date.md#the-date-submenus) |
-| .MIN | HOME → DATE → DR | [Read](15-date.md#the-date-submenus) |
-| .MIN | HOME → DATE → T | [Read](15-date.md#the-date-submenus) |
-| .MIN | HOME → DATE → TZ | [Read](15-date.md#the-date-submenus) |
-| .MON | HOME → DATE → D | [Read](15-date.md#the-date-submenus) |
-| .SEC | HOME → DATE → DR | [Read](15-date.md#the-date-submenus) |
-| .SEC | HOME → DATE → T | [Read](15-date.md#the-date-submenus) |
-| .TZ{ | HOME → DATE → DZ | [Read](15-date.md#the-date-submenus) |
-| .T{} | HOME → DATE → DT | [Read](15-date.md#the-date-submenus) |
-| .T{} | HOME → DATE → DZ | [Read](15-date.md#the-date-submenus) |
-| .YR | HOME → DATE → D | [Read](15-date.md#the-date-submenus) |
+| .DAY | HOME → DATE → D | [Read](16-date.md#the-date-submenus) |
+| .DAY | HOME → DATE → DR | [Read](16-date.md#the-date-submenus) |
+| .DT{ | HOME → DATE → DZ | [Read](16-date.md#the-date-submenus) |
+| .D{} | HOME → DATE → DT | [Read](16-date.md#the-date-submenus) |
+| .D{} | HOME → DATE → DZ | [Read](16-date.md#the-date-submenus) |
+| .HR | HOME → DATE → DR | [Read](16-date.md#the-date-submenus) |
+| .HR | HOME → DATE → T | [Read](16-date.md#the-date-submenus) |
+| .HR | HOME → DATE → TZ | [Read](16-date.md#the-date-submenus) |
+| .MIN | HOME → DATE → DR | [Read](16-date.md#the-date-submenus) |
+| .MIN | HOME → DATE → T | [Read](16-date.md#the-date-submenus) |
+| .MIN | HOME → DATE → TZ | [Read](16-date.md#the-date-submenus) |
+| .MON | HOME → DATE → D | [Read](16-date.md#the-date-submenus) |
+| .SEC | HOME → DATE → DR | [Read](16-date.md#the-date-submenus) |
+| .SEC | HOME → DATE → T | [Read](16-date.md#the-date-submenus) |
+| .TZ{ | HOME → DATE → DZ | [Read](16-date.md#the-date-submenus) |
+| .T{} | HOME → DATE → DT | [Read](16-date.md#the-date-submenus) |
+| .T{} | HOME → DATE → DZ | [Read](16-date.md#the-date-submenus) |
+| .YR | HOME → DATE → D | [Read](16-date.md#the-date-submenus) |
 | 2^X | HOME → MATH | [Read](10-mathematics.md#math-menu) |
 | ABS | HOME → NUM | [Read](10-mathematics.md#num-menu) |
 | ACSH | HOME → HYP | [Read](10-mathematics.md#hyp-menu) |
-| ALLΣ | HOME → STAT | [Read](12-statistics.md) |
-| AND | HOME → BASE → LOGI | [Read](11-base.md) |
+| ALLΣ | HOME → STAT | [Read](13-statistics.md) |
+| AND | HOME → BASE → LOGI | [Read](12-base.md) |
 | ASNH | HOME → HYP | [Read](10-mathematics.md#hyp-menu) |
-| ASR | HOME → BASE → ROTS | [Read](11-base.md) |
+| ASR | HOME → BASE → ROTS | [Read](12-base.md) |
 | ATN2 | HOME → MATH | [Read](10-mathematics.md#math-menu) |
 | ATNH | HOME → HYP | [Read](10-mathematics.md#hyp-menu) |
-| ATZ | HOME → DATE → CLK | [Read](15-date.md#the-clock-and-time-zones) |
-| ATZ? | HOME → DATE → CLK | [Read](15-date.md#the-clock-and-time-zones) |
-| B? | HOME → BASE → BITS | [Read](11-base.md) |
-| BAS+ | HOME → BASE → BFCN | [Read](11-base.md) |
-| BAS- | HOME → BASE → BFCN | [Read](11-base.md) |
-| BAS/ | HOME → BASE → BFCN | [Read](11-base.md) |
-| BAS× | HOME → BASE → BFCN | [Read](11-base.md) |
-| BDIV | HOME → BASE → BFCN | [Read](11-base.md) |
-| BEG | HOME → TVM | [Read](13-tvm.md) |
-| BEST | HOME → STAT → CFIT | [Read](12-statistics.md#curve-fitting) |
-| BIN | HOME → BASE | [Read](11-base.md) |
-| C/YR | HOME → TVM | [Read](13-tvm.md) |
-| CABS | HOME → CPLX | [Read](18-compatibility.md#complex-number-placeholders) |
-| CANG | HOME → CPLX | [Read](18-compatibility.md#complex-number-placeholders) |
-| CB | HOME → BASE → BITS | [Read](11-base.md) |
-| CCF | HOME → BASE → BCFS | [Read](11-base.md) |
+| ATZ | HOME → DATE → CLK | [Read](16-date.md#the-clock-and-time-zones) |
+| ATZ? | HOME → DATE → CLK | [Read](16-date.md#the-clock-and-time-zones) |
+| B? | HOME → BASE → BITS | [Read](12-base.md) |
+| BAS+ | HOME → BASE → BFCN | [Read](12-base.md) |
+| BAS- | HOME → BASE → BFCN | [Read](12-base.md) |
+| BAS/ | HOME → BASE → BFCN | [Read](12-base.md) |
+| BAS× | HOME → BASE → BFCN | [Read](12-base.md) |
+| BDIV | HOME → BASE → BFCN | [Read](12-base.md) |
+| BEG | HOME → TVM | [Read](14-tvm.md) |
+| BEST | HOME → STAT → CFIT | [Read](13-statistics.md#curve-fitting) |
+| BIN | HOME → BASE | [Read](12-base.md) |
+| C/YR | HOME → TVM | [Read](14-tvm.md) |
+| CABS | HOME → CPLX | [Read](11-complex-numbers.md#cplx-menu-components-conjugate-magnitude-and-angle) |
+| CANG | HOME → CPLX | [Read](11-complex-numbers.md#cplx-menu-components-conjugate-magnitude-and-angle) |
+| CB | HOME → BASE → BITS | [Read](12-base.md) |
+| CCF | HOME → BASE → BCFS | [Read](12-base.md) |
 | CEIL | HOME → NUM | [Read](10-mathematics.md#num-menu) |
-| CEPC | HOME → DATE → EPCH | [Read](15-date.md#epochs) |
-| CF? | HOME → BASE → BCFS | [Read](11-base.md) |
+| CEPC | HOME → DATE → EPCH | [Read](16-date.md#epochs) |
+| CF? | HOME → BASE → BCFS | [Read](12-base.md) |
 | CLD | HOME → CLR | [Read](10-mathematics.md#stk-and-clr-menus) |
 | CLRG | HOME → CLR | [Read](10-mathematics.md#stk-and-clr-menus) |
 | CLST | HOME → CLR | [Read](10-mathematics.md#stk-and-clr-menus) |
 | CLTV | HOME → CLR | [Read](10-mathematics.md#stk-and-clr-menus) |
-| CLTV | HOME → TVM | [Read](13-tvm.md) |
+| CLTV | HOME → TVM | [Read](14-tvm.md) |
 | CLX | HOME → CLR | [Read](10-mathematics.md#stk-and-clr-menus) |
 | CLΣ | HOME → CLR | [Read](10-mathematics.md#stk-and-clr-menus) |
-| CLΣ | HOME → STAT | [Read](12-statistics.md) |
-| CNTB | HOME → BASE → BITS | [Read](11-base.md) |
+| CLΣ | HOME → STAT | [Read](13-statistics.md) |
+| CNTB | HOME → BASE → BITS | [Read](12-base.md) |
 | COMB | HOME → PROB | [Read](10-mathematics.md#prob-menu) |
-| CONJ | HOME → CPLX | [Read](18-compatibility.md#complex-number-placeholders) |
-| CORR | HOME → STAT → CFIT | [Read](12-statistics.md#curve-fitting) |
+| CONJ | HOME → CPLX | [Read](11-complex-numbers.md#cplx-menu-components-conjugate-magnitude-and-angle) |
+| CORR | HOME → STAT → CFIT | [Read](13-statistics.md#curve-fitting) |
 | COSH | HOME → HYP | [Read](10-mathematics.md#hyp-menu) |
-| CRES | HOME → MODE | [Read](18-compatibility.md#complex-number-placeholders) |
-| CTZ | HOME → DATE → CLK | [Read](15-date.md#the-clock-and-time-zones) |
-| CTZ? | HOME → DATE → CLK | [Read](15-date.md#the-clock-and-time-zones) |
-| CVTZ | HOME → DATE → D | [Read](15-date.md#the-date-submenus) |
-| CVTZ | HOME → DATE → DT | [Read](15-date.md#the-date-submenus) |
-| CVTZ | HOME → DATE → DZ | [Read](15-date.md#the-date-submenus) |
-| DAY→ | HOME → DATE → DR | [Read](15-date.md#the-date-submenus) |
-| DCUT | HOME → DATE → D | [Read](15-date.md#the-date-submenus) |
-| DCUT | HOME → DATE → DT | [Read](15-date.md#the-date-submenus) |
-| DCUT | HOME → DATE → DZ | [Read](15-date.md#the-date-submenus) |
-| DEC | HOME → BASE | [Read](11-base.md) |
+| CRES | HOME → MODE | [Read](11-complex-numbers.md#rres-and-cres-choosing-result-behavior) |
+| CTZ | HOME → DATE → CLK | [Read](16-date.md#the-clock-and-time-zones) |
+| CTZ? | HOME → DATE → CLK | [Read](16-date.md#the-clock-and-time-zones) |
+| CVTZ | HOME → DATE → D | [Read](16-date.md#the-date-submenus) |
+| CVTZ | HOME → DATE → DT | [Read](16-date.md#the-date-submenus) |
+| CVTZ | HOME → DATE → DZ | [Read](16-date.md#the-date-submenus) |
+| DAY→ | HOME → DATE → DR | [Read](16-date.md#the-date-submenus) |
+| DCUT | HOME → DATE → D | [Read](16-date.md#the-date-submenus) |
+| DCUT | HOME → DATE → DT | [Read](16-date.md#the-date-submenus) |
+| DCUT | HOME → DATE → DZ | [Read](16-date.md#the-date-submenus) |
+| DEC | HOME → BASE | [Read](12-base.md) |
 | DEG | HOME → MODE | [Read](09-settings.md) |
-| DEXD | HOME → DATE → D | [Read](15-date.md#the-date-submenus) |
-| DEXD | HOME → DATE → DT | [Read](15-date.md#the-date-submenus) |
-| DEXD | HOME → DATE → DZ | [Read](15-date.md#the-date-submenus) |
-| DLNK | HOME → DATE → D | [Read](15-date.md#the-date-submenus) |
-| DLNK | HOME → DATE → DT | [Read](15-date.md#the-date-submenus) |
-| DLNK | HOME → DATE → DZ | [Read](15-date.md#the-date-submenus) |
-| DOW | HOME → DATE → D | [Read](15-date.md#the-date-submenus) |
-| DOW | HOME → DATE → DT | [Read](15-date.md#the-date-submenus) |
-| DOW | HOME → DATE → DZ | [Read](15-date.md#the-date-submenus) |
+| DEXD | HOME → DATE → D | [Read](16-date.md#the-date-submenus) |
+| DEXD | HOME → DATE → DT | [Read](16-date.md#the-date-submenus) |
+| DEXD | HOME → DATE → DZ | [Read](16-date.md#the-date-submenus) |
+| DLNK | HOME → DATE → D | [Read](16-date.md#the-date-submenus) |
+| DLNK | HOME → DATE → DT | [Read](16-date.md#the-date-submenus) |
+| DLNK | HOME → DATE → DZ | [Read](16-date.md#the-date-submenus) |
+| DOW | HOME → DATE → D | [Read](16-date.md#the-date-submenus) |
+| DOW | HOME → DATE → DT | [Read](16-date.md#the-date-submenus) |
+| DOW | HOME → DATE → DZ | [Read](16-date.md#the-date-submenus) |
 | DROP | HOME → STK | [Read](06-stack.md#moving-things-around) |
-| DR{} | HOME → DATE → DR | [Read](15-date.md#the-date-submenus) |
-| DSHK | HOME → DATE → D | [Read](15-date.md#the-date-submenus) |
-| DSHK | HOME → DATE → DT | [Read](15-date.md#the-date-submenus) |
-| DSHK | HOME → DATE → DZ | [Read](15-date.md#the-date-submenus) |
-| DT{} | HOME → DATE → DT | [Read](15-date.md#the-date-submenus) |
+| DR{} | HOME → DATE → DR | [Read](16-date.md#the-date-submenus) |
+| DSHK | HOME → DATE → D | [Read](16-date.md#the-date-submenus) |
+| DSHK | HOME → DATE → DT | [Read](16-date.md#the-date-submenus) |
+| DSHK | HOME → DATE → DZ | [Read](16-date.md#the-date-submenus) |
+| DT{} | HOME → DATE → DT | [Read](16-date.md#the-date-submenus) |
 | DUP | HOME → STK | [Read](06-stack.md#moving-things-around) |
-| DW{} | HOME → DATE → DW | [Read](15-date.md#the-date-submenus) |
-| DZ{} | HOME → DATE → DZ | [Read](15-date.md#the-date-submenus) |
-| D{} | HOME → DATE → D | [Read](15-date.md#the-date-submenus) |
+| DW{} | HOME → DATE → DW | [Read](16-date.md#the-date-submenus) |
+| DZ{} | HOME → DATE → DZ | [Read](16-date.md#the-date-submenus) |
+| D{} | HOME → DATE → D | [Read](16-date.md#the-date-submenus) |
 | E^X- | HOME → MATH | [Read](10-mathematics.md#math-menu) |
-| ED→ | HOME → DATE → D | [Read](15-date.md#the-date-submenus) |
-| ED→ | HOME → DATE → DT | [Read](15-date.md#the-date-submenus) |
-| ED→ | HOME → DATE → DZ | [Read](15-date.md#the-date-submenus) |
-| END | HOME → TVM | [Read](13-tvm.md) |
+| ED→ | HOME → DATE → D | [Read](16-date.md#the-date-submenus) |
+| ED→ | HOME → DATE → DT | [Read](16-date.md#the-date-submenus) |
+| ED→ | HOME → DATE → DZ | [Read](16-date.md#the-date-submenus) |
+| END | HOME → TVM | [Read](14-tvm.md) |
 | ENG | HOME → MODE | [Read](09-settings.md) |
-| EPC | HOME → DATE → EPCH | [Read](15-date.md#epochs) |
-| EPC? | HOME → DATE → EPCH | [Read](15-date.md#epochs) |
-| ES→ | HOME → DATE → D | [Read](15-date.md#the-date-submenus) |
-| ES→ | HOME → DATE → DT | [Read](15-date.md#the-date-submenus) |
-| ES→ | HOME → DATE → DZ | [Read](15-date.md#the-date-submenus) |
-| ES→@ | HOME → DATE → DZ | [Read](15-date.md#the-date-submenus) |
-| EXPF | HOME → STAT → CFIT | [Read](12-statistics.md#curve-fitting) |
+| EPC | HOME → DATE → EPCH | [Read](16-date.md#epochs) |
+| EPC? | HOME → DATE → EPCH | [Read](16-date.md#epochs) |
+| ES→ | HOME → DATE → D | [Read](16-date.md#the-date-submenus) |
+| ES→ | HOME → DATE → DT | [Read](16-date.md#the-date-submenus) |
+| ES→ | HOME → DATE → DZ | [Read](16-date.md#the-date-submenus) |
+| ES→@ | HOME → DATE → DZ | [Read](16-date.md#the-date-submenus) |
+| EXPF | HOME → STAT → CFIT | [Read](13-statistics.md#curve-fitting) |
 | FIX | HOME → MODE | [Read](09-settings.md) |
 | FLR | HOME → NUM | [Read](10-mathematics.md#num-menu) |
 | FP | HOME → NUM | [Read](10-mathematics.md#num-menu) |
-| FV | HOME → TVM | [Read](13-tvm.md) |
+| FV | HOME → TVM | [Read](14-tvm.md) |
 | GCD | HOME → NUM | [Read](10-mathematics.md#num-menu) |
-| GPS | HOME → DATE → EPCH | [Read](15-date.md#epochs) |
+| GPS | HOME → DATE → EPCH | [Read](16-date.md#epochs) |
 | HELP | HOME | [Read](07-menus.md#help) |
-| HEX | HOME → BASE | [Read](11-base.md) |
+| HEX | HOME → BASE | [Read](12-base.md) |
 | HMS+ | HOME → CONV | [Read](10-mathematics.md#conv-menu) |
 | HMS- | HOME → CONV | [Read](10-mathematics.md#conv-menu) |
-| HR→ | HOME → DATE → DR | [Read](15-date.md#the-date-submenus) |
-| HR→ | HOME → DATE → TZ | [Read](15-date.md#the-date-submenus) |
-| I%YR | HOME → TVM | [Read](13-tvm.md) |
-| IMAG | HOME → CPLX | [Read](18-compatibility.md#complex-number-placeholders) |
+| HR→ | HOME → DATE → DR | [Read](16-date.md#the-date-submenus) |
+| HR→ | HOME → DATE → TZ | [Read](16-date.md#the-date-submenus) |
+| I%YR | HOME → TVM | [Read](14-tvm.md) |
+| IMAG | HOME → CPLX | [Read](11-complex-numbers.md#cplx-menu-components-conjugate-magnitude-and-angle) |
 | IP | HOME → NUM | [Read](10-mathematics.md#num-menu) |
-| ISO→ | HOME → DATE → DW | [Read](15-date.md#the-date-submenus) |
-| IYR1 | HOME → TVM | [Read](13-tvm.md) |
-| IYR2 | HOME → TVM | [Read](13-tvm.md) |
+| ISO→ | HOME → DATE → DW | [Read](16-date.md#the-date-submenus) |
+| IYR1 | HOME → TVM | [Read](14-tvm.md) |
+| IYR2 | HOME → TVM | [Read](14-tvm.md) |
 | LCM | HOME → NUM | [Read](10-mathematics.md#num-menu) |
-| LEAP | HOME → DATE → D | [Read](15-date.md#the-date-submenus) |
-| LEAP | HOME → DATE → DT | [Read](15-date.md#the-date-submenus) |
-| LEAP | HOME → DATE → DZ | [Read](15-date.md#the-date-submenus) |
-| LINF | HOME → STAT → CFIT | [Read](12-statistics.md#curve-fitting) |
-| LINΣ | HOME → STAT | [Read](12-statistics.md) |
+| LEAP | HOME → DATE → D | [Read](16-date.md#the-date-submenus) |
+| LEAP | HOME → DATE → DT | [Read](16-date.md#the-date-submenus) |
+| LEAP | HOME → DATE → DZ | [Read](16-date.md#the-date-submenus) |
+| LINF | HOME → STAT → CFIT | [Read](13-statistics.md#curve-fitting) |
+| LINΣ | HOME → STAT | [Read](13-statistics.md) |
 | LN1+ | HOME → MATH | [Read](10-mathematics.md#math-menu) |
 | LOG2 | HOME → MATH | [Read](10-mathematics.md#math-menu) |
 | LOGB | HOME → MATH | [Read](10-mathematics.md#math-menu) |
-| LOGF | HOME → STAT → CFIT | [Read](12-statistics.md#curve-fitting) |
+| LOGF | HOME → STAT → CFIT | [Read](13-statistics.md#curve-fitting) |
 | MAX | HOME → NUM | [Read](10-mathematics.md#num-menu) |
-| MEAN | HOME → STAT | [Read](12-statistics.md) |
+| MEAN | HOME → STAT | [Read](13-statistics.md) |
 | MIN | HOME → NUM | [Read](10-mathematics.md#num-menu) |
-| MIN→ | HOME → DATE → DR | [Read](15-date.md#the-date-submenus) |
+| MIN→ | HOME → DATE → DR | [Read](16-date.md#the-date-submenus) |
 | MOD | HOME → NUM | [Read](10-mathematics.md#num-menu) |
-| N | HOME → STAT | [Read](12-statistics.md) |
-| N | HOME → TVM | [Read](13-tvm.md) |
+| N | HOME → STAT | [Read](13-statistics.md) |
+| N | HOME → TVM | [Read](14-tvm.md) |
 | N! | HOME → PROB | [Read](10-mathematics.md#prob-menu) |
 | NEAR | HOME → NUM | [Read](10-mathematics.md#num-menu) |
-| NEG | HOME → BASE → LOGI | [Read](11-base.md) |
-| NOT | HOME → BASE → LOGI | [Read](11-base.md) |
-| NOW | HOME → DATE → CLK | [Read](15-date.md#the-clock-and-time-zones) |
-| NOWD | HOME → DATE → CLK | [Read](15-date.md#the-clock-and-time-zones) |
-| NOWT | HOME → DATE → CLK | [Read](15-date.md#the-clock-and-time-zones) |
-| NTP | HOME → DATE → EPCH | [Read](15-date.md#epochs) |
-| NWDZ | HOME → DATE → CLK | [Read](15-date.md#the-clock-and-time-zones) |
-| NWUT | HOME → DATE → CLK | [Read](15-date.md#the-clock-and-time-zones) |
-| OCT | HOME → BASE | [Read](11-base.md) |
-| OR | HOME → BASE → LOGI | [Read](11-base.md) |
-| P/YR | HOME → TVM | [Read](13-tvm.md) |
-| PCOV | HOME → STAT | [Read](12-statistics.md) |
-| PDEG | HOME → MODE | [Read](18-compatibility.md#complex-number-placeholders) |
-| PDEV | HOME → STAT | [Read](12-statistics.md) |
+| NEG | HOME → BASE → LOGI | [Read](12-base.md) |
+| NOT | HOME → BASE → LOGI | [Read](12-base.md) |
+| NOW | HOME → DATE → CLK | [Read](16-date.md#the-clock-and-time-zones) |
+| NOWD | HOME → DATE → CLK | [Read](16-date.md#the-clock-and-time-zones) |
+| NOWT | HOME → DATE → CLK | [Read](16-date.md#the-clock-and-time-zones) |
+| NTP | HOME → DATE → EPCH | [Read](16-date.md#epochs) |
+| NWDZ | HOME → DATE → CLK | [Read](16-date.md#the-clock-and-time-zones) |
+| NWUT | HOME → DATE → CLK | [Read](16-date.md#the-clock-and-time-zones) |
+| OCT | HOME → BASE | [Read](12-base.md) |
+| OR | HOME → BASE → LOGI | [Read](12-base.md) |
+| P/YR | HOME → TVM | [Read](14-tvm.md) |
+| PCOV | HOME → STAT | [Read](13-statistics.md) |
+| PDEG | HOME → MODE | [Read](11-complex-numbers.md#rect-prad-and-pdeg-displaying-the-same-value) |
+| PDEV | HOME → STAT | [Read](13-statistics.md) |
 | PERM | HOME → PROB | [Read](10-mathematics.md#prob-menu) |
-| PMT | HOME → TVM | [Read](13-tvm.md) |
-| PRAD | HOME → MODE | [Read](18-compatibility.md#complex-number-placeholders) |
+| PMT | HOME → TVM | [Read](14-tvm.md) |
+| PRAD | HOME → MODE | [Read](11-complex-numbers.md#rect-prad-and-pdeg-displaying-the-same-value) |
 | PRIM | HOME → NUM | [Read](10-mathematics.md#num-menu) |
-| PV | HOME → TVM | [Read](13-tvm.md) |
-| PWRF | HOME → STAT → CFIT | [Read](12-statistics.md#curve-fitting) |
+| PV | HOME → TVM | [Read](14-tvm.md) |
+| PWRF | HOME → STAT → CFIT | [Read](13-statistics.md#curve-fitting) |
 | RAD | HOME → MODE | [Read](09-settings.md) |
 | RAND | HOME → PROB | [Read](10-mathematics.md#prob-menu) |
-| REAL | HOME → CPLX | [Read](18-compatibility.md#complex-number-placeholders) |
-| RECT | HOME → MODE | [Read](18-compatibility.md#complex-number-placeholders) |
-| REVB | HOME → BASE → BITS | [Read](11-base.md) |
-| RL | HOME → BASE → ROTS | [Read](11-base.md) |
-| RLC | HOME → BASE → ROTS | [Read](11-base.md) |
-| RLCn | HOME → BASE → ROTS | [Read](11-base.md) |
-| RLn | HOME → BASE → ROTS | [Read](11-base.md) |
+| REAL | HOME → CPLX | [Read](11-complex-numbers.md#cplx-menu-components-conjugate-magnitude-and-angle) |
+| RECT | HOME → MODE | [Read](11-complex-numbers.md#rect-prad-and-pdeg-displaying-the-same-value) |
+| REVB | HOME → BASE → BITS | [Read](12-base.md) |
+| RL | HOME → BASE → ROTS | [Read](12-base.md) |
+| RLC | HOME → BASE → ROTS | [Read](12-base.md) |
+| RLCn | HOME → BASE → ROTS | [Read](12-base.md) |
+| RLn | HOME → BASE → ROTS | [Read](12-base.md) |
 | RNDF | HOME → NUM | [Read](10-mathematics.md#num-menu) |
 | RNDG | HOME → NUM | [Read](10-mathematics.md#num-menu) |
 | RNDN | HOME → NUM | [Read](10-mathematics.md#num-menu) |
-| RR | HOME → BASE → ROTS | [Read](11-base.md) |
-| RRC | HOME → BASE → ROTS | [Read](11-base.md) |
-| RRCn | HOME → BASE → ROTS | [Read](11-base.md) |
-| RRES | HOME → MODE | [Read](18-compatibility.md#complex-number-placeholders) |
-| RRn | HOME → BASE → ROTS | [Read](11-base.md) |
+| RR | HOME → BASE → ROTS | [Read](12-base.md) |
+| RRC | HOME → BASE → ROTS | [Read](12-base.md) |
+| RRCn | HOME → BASE → ROTS | [Read](12-base.md) |
+| RRES | HOME → MODE | [Read](11-complex-numbers.md#rres-and-cres-choosing-result-behavior) |
+| RRn | HOME → BASE → ROTS | [Read](12-base.md) |
 | RSIZ | HOME → MODE | [Read](09-settings.md) |
-| RSTV | HOME → TVM | [Read](13-tvm.md) |
+| RSTV | HOME → TVM | [Read](14-tvm.md) |
 | RSZ? | HOME → MODE | [Read](09-settings.md) |
 | R↑ | HOME → STK | [Read](06-stack.md#moving-things-around) |
 | R↓ | HOME → STK | [Read](06-stack.md#moving-things-around) |
-| SB | HOME → BASE → BITS | [Read](11-base.md) |
-| SCF | HOME → BASE → BCFS | [Read](11-base.md) |
+| SB | HOME → BASE → BITS | [Read](12-base.md) |
+| SCF | HOME → BASE → BCFS | [Read](12-base.md) |
 | SCI | HOME → MODE | [Read](09-settings.md) |
-| SCOV | HOME → STAT | [Read](12-statistics.md) |
-| SDEV | HOME → STAT | [Read](12-statistics.md) |
-| SEC→ | HOME → DATE → DR | [Read](15-date.md#the-date-submenus) |
+| SCOV | HOME → STAT | [Read](13-statistics.md) |
+| SDEV | HOME → STAT | [Read](13-statistics.md) |
+| SEC→ | HOME → DATE → DR | [Read](16-date.md#the-date-submenus) |
 | SEED | HOME → PROB | [Read](10-mathematics.md#prob-menu) |
-| SETC | HOME → DATE → CLK | [Read](15-date.md#the-clock-and-time-zones) |
+| SETC | HOME → DATE → CLK | [Read](16-date.md#the-clock-and-time-zones) |
 | SIGN | HOME → NUM | [Read](10-mathematics.md#num-menu) |
 | SINH | HOME → HYP | [Read](10-mathematics.md#hyp-menu) |
-| SL | HOME → BASE → ROTS | [Read](11-base.md) |
-| SLn | HOME → BASE → ROTS | [Read](11-base.md) |
-| SLOP | HOME → STAT → CFIT | [Read](12-statistics.md#curve-fitting) |
-| SR | HOME → BASE → ROTS | [Read](11-base.md) |
-| SRn | HOME → BASE → ROTS | [Read](11-base.md) |
+| SL | HOME → BASE → ROTS | [Read](12-base.md) |
+| SLn | HOME → BASE → ROTS | [Read](12-base.md) |
+| SLOP | HOME → STAT → CFIT | [Read](13-statistics.md#curve-fitting) |
+| SR | HOME → BASE → ROTS | [Read](12-base.md) |
+| SRn | HOME → BASE → ROTS | [Read](12-base.md) |
 | SSIZ | HOME → MODE | [Read](09-settings.md) |
 | SSZ? | HOME → MODE | [Read](09-settings.md) |
-| SUM | HOME → STAT | [Read](12-statistics.md) |
-| S→ | HOME → DATE → T | [Read](15-date.md#the-date-submenus) |
+| SUM | HOME → STAT | [Read](13-statistics.md) |
+| S→ | HOME → DATE → T | [Read](16-date.md#the-date-submenus) |
 | TANH | HOME → HYP | [Read](10-mathematics.md#hyp-menu) |
 | TINT | HOME → MODE | [Read](09-settings.md) |
-| TIOS | HOME → DATE → EPCH | [Read](15-date.md#epochs) |
-| TMAX | HOME → TVM | [Read](13-tvm.md) |
-| TZ{} | HOME → DATE → TZ | [Read](15-date.md#the-date-submenus) |
-| T{} | HOME → DATE → T | [Read](15-date.md#the-date-submenus) |
-| UBAS | HOME → UNIT → UFCN | [Read](14-units.md#ufcn) |
-| UNIX | HOME → DATE → EPCH | [Read](15-date.md#epochs) |
-| UNX→ | HOME → DATE → DW | [Read](15-date.md#the-date-submenus) |
-| UVAL | HOME → UNIT → UFCN | [Read](14-units.md#ufcn) |
-| WMN | HOME → STAT | [Read](12-statistics.md) |
-| WSIZ | HOME → BASE → BCFS | [Read](11-base.md) |
-| WSZ? | HOME → BASE → BCFS | [Read](11-base.md) |
+| TIOS | HOME → DATE → EPCH | [Read](16-date.md#epochs) |
+| TMAX | HOME → TVM | [Read](14-tvm.md) |
+| TZ{} | HOME → DATE → TZ | [Read](16-date.md#the-date-submenus) |
+| T{} | HOME → DATE → T | [Read](16-date.md#the-date-submenus) |
+| UBAS | HOME → UNIT → UFCN | [Read](15-units.md#ufcn) |
+| UNIX | HOME → DATE → EPCH | [Read](16-date.md#epochs) |
+| UNX→ | HOME → DATE → DW | [Read](16-date.md#the-date-submenus) |
+| UVAL | HOME → UNIT → UFCN | [Read](15-units.md#ufcn) |
+| WMN | HOME → STAT | [Read](13-statistics.md) |
+| WSIZ | HOME → BASE → BCFS | [Read](12-base.md) |
+| WSZ? | HOME → BASE → BCFS | [Read](12-base.md) |
 | X<> | HOME → STK | [Read](06-stack.md#moving-things-around) |
 | X^3 | HOME → MATH | [Read](10-mathematics.md#math-menu) |
-| XOR | HOME → BASE → LOGI | [Read](11-base.md) |
+| XOR | HOME → BASE → LOGI | [Read](12-base.md) |
 | X←→Y | HOME → STK | [Read](06-stack.md#moving-things-around) |
-| X→Y | HOME → STAT → CFIT | [Read](12-statistics.md#curve-fitting) |
+| X→Y | HOME → STAT → CFIT | [Read](13-statistics.md#curve-fitting) |
 | X√Y | HOME → MATH | [Read](10-mathematics.md#math-menu) |
-| Y2K | HOME → DATE → EPCH | [Read](15-date.md#epochs) |
-| YINT | HOME → STAT → CFIT | [Read](12-statistics.md#curve-fitting) |
-| Y→X | HOME → STAT → CFIT | [Read](12-statistics.md#curve-fitting) |
+| Y2K | HOME → DATE → EPCH | [Read](16-date.md#epochs) |
+| YINT | HOME → STAT → CFIT | [Read](13-statistics.md#curve-fitting) |
+| Y→X | HOME → STAT → CFIT | [Read](13-statistics.md#curve-fitting) |
 | {..} | HOME → MODE | [Read](09-settings.md) |
 | ³√X | HOME → MATH | [Read](10-mathematics.md#math-menu) |
-| Σ+ | HOME → STAT | [Read](12-statistics.md) |
-| Σ- | HOME → STAT | [Read](12-statistics.md) |
-| ΣLX | HOME → STAT → Σ | [Read](12-statistics.md) |
-| ΣLX2 | HOME → STAT → Σ | [Read](12-statistics.md) |
-| ΣLXL | HOME → STAT → Σ | [Read](12-statistics.md) |
-| ΣLY | HOME → STAT → Σ | [Read](12-statistics.md) |
-| ΣLY2 | HOME → STAT → Σ | [Read](12-statistics.md) |
-| ΣN | HOME → STAT → Σ | [Read](12-statistics.md) |
-| ΣX | HOME → STAT → Σ | [Read](12-statistics.md) |
-| ΣX2 | HOME → STAT → Σ | [Read](12-statistics.md) |
-| ΣXLY | HOME → STAT → Σ | [Read](12-statistics.md) |
-| ΣXY | HOME → STAT → Σ | [Read](12-statistics.md) |
-| ΣY | HOME → STAT → Σ | [Read](12-statistics.md) |
-| ΣY2 | HOME → STAT → Σ | [Read](12-statistics.md) |
-| ΣYLX | HOME → STAT → Σ | [Read](12-statistics.md) |
+| Σ+ | HOME → STAT | [Read](13-statistics.md) |
+| Σ- | HOME → STAT | [Read](13-statistics.md) |
+| ΣLX | HOME → STAT → Σ | [Read](13-statistics.md) |
+| ΣLX2 | HOME → STAT → Σ | [Read](13-statistics.md) |
+| ΣLXL | HOME → STAT → Σ | [Read](13-statistics.md) |
+| ΣLY | HOME → STAT → Σ | [Read](13-statistics.md) |
+| ΣLY2 | HOME → STAT → Σ | [Read](13-statistics.md) |
+| ΣN | HOME → STAT → Σ | [Read](13-statistics.md) |
+| ΣX | HOME → STAT → Σ | [Read](13-statistics.md) |
+| ΣX2 | HOME → STAT → Σ | [Read](13-statistics.md) |
+| ΣXLY | HOME → STAT → Σ | [Read](13-statistics.md) |
+| ΣXY | HOME → STAT → Σ | [Read](13-statistics.md) |
+| ΣY | HOME → STAT → Σ | [Read](13-statistics.md) |
+| ΣY2 | HOME → STAT → Σ | [Read](13-statistics.md) |
+| ΣYLX | HOME → STAT → Σ | [Read](13-statistics.md) |
 | →DEG | HOME → CONV | [Read](10-mathematics.md#conv-menu) |
-| →ED | HOME → DATE → D | [Read](15-date.md#the-date-submenus) |
-| →ED | HOME → DATE → DT | [Read](15-date.md#the-date-submenus) |
-| →ED | HOME → DATE → DZ | [Read](15-date.md#the-date-submenus) |
-| →ES | HOME → DATE → D | [Read](15-date.md#the-date-submenus) |
-| →ES | HOME → DATE → DT | [Read](15-date.md#the-date-submenus) |
-| →ES | HOME → DATE → DZ | [Read](15-date.md#the-date-submenus) |
+| →ED | HOME → DATE → D | [Read](16-date.md#the-date-submenus) |
+| →ED | HOME → DATE → DT | [Read](16-date.md#the-date-submenus) |
+| →ED | HOME → DATE → DZ | [Read](16-date.md#the-date-submenus) |
+| →ES | HOME → DATE → D | [Read](16-date.md#the-date-submenus) |
+| →ES | HOME → DATE → DT | [Read](16-date.md#the-date-submenus) |
+| →ES | HOME → DATE → DZ | [Read](16-date.md#the-date-submenus) |
 | →HMS | HOME → CONV | [Read](10-mathematics.md#conv-menu) |
 | →HR | HOME → CONV | [Read](10-mathematics.md#conv-menu) |
-| →HR | HOME → DATE → TZ | [Read](15-date.md#the-date-submenus) |
-| →ISO | HOME → DATE → DW | [Read](15-date.md#the-date-submenus) |
+| →HR | HOME → DATE → TZ | [Read](16-date.md#the-date-submenus) |
+| →ISO | HOME → DATE → DW | [Read](16-date.md#the-date-submenus) |
 | →POL | HOME → CONV | [Read](10-mathematics.md#conv-menu) |
 | →RAD | HOME → CONV | [Read](10-mathematics.md#conv-menu) |
 | →REC | HOME → CONV | [Read](10-mathematics.md#conv-menu) |
-| →S | HOME → DATE → DR | [Read](15-date.md#the-date-submenus) |
-| →S | HOME → DATE → T | [Read](15-date.md#the-date-submenus) |
-| →UNX | HOME → DATE → DW | [Read](15-date.md#the-date-submenus) |
+| →S | HOME → DATE → DR | [Read](16-date.md#the-date-submenus) |
+| →S | HOME → DATE → T | [Read](16-date.md#the-date-submenus) |
+| →UNX | HOME → DATE → DW | [Read](16-date.md#the-date-submenus) |
 
 <!-- END FUNCTION INDEX -->
 
 ---
 
-[Manual contents](../USER_GUIDE.md) · [Previous: 18. Limits and differences](18-compatibility.md)
+[Manual contents](../USER_GUIDE.md) · [Previous: 19. Limits and differences](19-compatibility.md)

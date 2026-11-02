@@ -2,7 +2,7 @@
 
 #include "catalog.h"
 #include "menu_data.h"      /* MSYM_SIGMA, MSYM_SQ */
-#include "../core/dateobj.h"
+#include "../core/value.h"
 
 /* Names of the stat registers 028-040. */
 static const char *const stat_names[REG_STAT_LAST - REG_STAT_FIRST + 1] = {
@@ -20,37 +20,19 @@ static bool is_tvm(uint8_t item)
     return item >= CAT_TVM_FIRST && item <= CAT_TVM_LAST;
 }
 
-static bool is_zero_real(const real_t *v)
+bool catalog_value(const calc_t *c, uint8_t item, value_t *out)
 {
-    if (obj_is(v))
-        return false;                       /* a DATE object is never "zero" */
-    real_t zero = os_Int24ToReal(0);
-    return os_RealCompare(v, &zero) == 0;
-}
-
-const real_t *catalog_value(calc_t *c, uint8_t item)
-{
-    if (item == CAT_LASTX)
-        return &c->lastx;
-    if (is_tvm(item))
-        return tvm_var((uint8_t)(item - CAT_TVM_FIRST));
-    return calc_register(c, item);
-}
-
-uint8_t catalog_unit(calc_t *c, uint8_t item)
-{
-    if (item == CAT_LASTX)
-        return c->unit_lastx;
-    uint8_t *tag = calc_register_unit(c, item);
-    return tag ? *tag : 0;
+    if (item == CAT_LASTX) { *out = c->lastx; return true; }
+    if (is_tvm(item)) { *out = value_real(*tvm_var((uint8_t)(item - CAT_TVM_FIRST))); return true; }
+    return calc_register_read(c, item, out);
 }
 
 bool catalog_open(catalog_t *cat, calc_t *c)
 {
     cat->count = 0;
     for (int num = REG_A; num < REG_EXTRA_FIRST + c->extra_count; num++) {
-        const real_t *v = calc_register(c, (uint8_t)num);
-        if (v && (catalog_unit(c, (uint8_t)num) || !is_zero_real(v)))
+        value_t v;
+        if (calc_register_read(c, (uint8_t)num, &v) && !value_is_zero(&v))
             cat->items[cat->count++] = (uint8_t)num;
     }
     /* Zero is meaningful in TVM, notably FV=0 for a paid-off loan. */

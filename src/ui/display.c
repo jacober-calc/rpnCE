@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stddef.h>
 #include <graphx.h>
 
 #include "display.h"
@@ -7,7 +8,7 @@
 #include "dotfont.h"
 #include "res.h"
 #include "../core/units.h"
-#include "../core/dateobj.h"
+#include "../core/value_format.h"
 
 /* ---------- colors ---------- */
 
@@ -217,8 +218,8 @@ static void draw_label_tall(const char *s, int x, int y, uint8_t color)
 static void reset_value_cache(void);
 static struct {
     bool active;
-    real_t value;
-    uint8_t radix, bits, unit;
+    value_t value;
+    uint8_t radix, bits;
 } dismissed_warning;
 
 void display_open(void)
@@ -300,23 +301,24 @@ static void clock_text(const calc_t *c, char *out)
 static void draw_status(const calc_t *c, bool second, bool alpha)
 {
     const int y = (STATUS_H - 8) / 2;
-    char clock[20], fmt[8], base[7];
+    char clock[20], fmt[8];
 
     gfx_SetColor(g_accents ? COL_BAR : COL_INK);
     gfx_FillRectangle(0, 0, SCREEN_W, STATUS_H);
     gfx_SetTextScale(1, 1);
     gfx_SetTextFGColor(g_accents ? COL_BAR_TEXT : COL_PANEL);
 
-    clock_text(c, clock);
-    if (clock[0])
-        gfx_PrintStringXY(clock, 4, y);
-
-    /* the annunciators, right-aligned */
+    /* Format is always visible. DEG, RRES, RECT and DEC are implicit
+     * defaults; optional indicators occupy space only when active. */
     static const char names[][4] = { "", "FIX", "SCI", "ENG" };
     memcpy(fmt, names[c->disp_style], 3);
     if (c->disp_digits == DISP_FLOAT) {
-        fmt[3] = '-';
-        fmt[4] = '\0';
+        if (c->disp_style == DISP_FIX)
+            strcpy(fmt, "ALL");
+        else {
+            fmt[3] = '-';
+            fmt[4] = '\0';
+        }
     } else if (c->disp_digits >= 10) {      /* FIX10, FIX11 */
         fmt[3] = '1';
         fmt[4] = (char)('0' + c->disp_digits - 10);
@@ -325,25 +327,40 @@ static void draw_status(const calc_t *c, bool second, bool alpha)
         fmt[3] = (char)('0' + c->disp_digits);
         fmt[4] = '\0';
     }
-    strcpy(base, (c->base.radix == 16) ? "HEX" : (c->base.radix == 8) ? "OCT" :
-                 (c->base.radix == 2) ? "BIN" : "DEC");
-    if (c->base.carry)
-        strcat(base, " CF");
-    const char *angle = c->degrees ? "DEG" : "RAD";
+    const char *base = c->base.radix == 16 ? "HEX" : c->base.radix == 8 ? "OCT" :
+                       c->base.radix == 2 ? "BIN" : NULL;
+    const char *angle = c->degrees ? NULL : "RAD";
     const char *shift = second ? "2ND" : alpha ? "A" : NULL;     /* A: ALPHA pending */
 
-    int w = (int)gfx_GetStringWidth(fmt) + STATUS_GAP + (int)gfx_GetStringWidth(angle) +
-            STATUS_GAP + (int)gfx_GetStringWidth(base);
+    const char *const modes[] = {
+        fmt, angle, base, c->base.carry ? "CF" : NULL,
+        c->complex_results ? "CRES" : NULL,
+        c->complex_mode == COMPLEX_RAD ? "PRAD" :
+        c->complex_mode == COMPLEX_DEG ? "PDEG" : NULL,
+    };
+    const unsigned count = sizeof modes / sizeof *modes;
+    int w = 0;
+    for (unsigned i = 0; i < count; i++) {
+        if (!modes[i]) continue;
+        if (w) w += STATUS_GAP;
+        w += (int)gfx_GetStringWidth(modes[i]);
+    }
     if (shift)
         w += STATUS_GAP + 2 + (int)gfx_GetStringWidth(shift) + 2;
     int x = SCREEN_W - 4 - w;
 
-    gfx_PrintStringXY(fmt, x, y);
-    x += (int)gfx_GetStringWidth(fmt) + STATUS_GAP;
-    gfx_PrintStringXY(angle, x, y);
-    x += (int)gfx_GetStringWidth(angle) + STATUS_GAP;
-    gfx_PrintStringXY(base, x, y);
-    x += (int)gfx_GetStringWidth(base) + STATUS_GAP;
+    clock_text(c, clock);
+    if (clock[0]) {
+        /* Keep every mode visible. Use HH:MM when the full date/time would
+         * overlap the indicators, including the carry and modifier badges. */
+        const char *text = 4 + (int)gfx_GetStringWidth(clock) + STATUS_GAP > x ? clock + 11 : clock;
+        gfx_PrintStringXY(text, 4, y);
+    }
+    for (unsigned i = 0; i < count; i++) {
+        if (!modes[i]) continue;
+        gfx_PrintStringXY(modes[i], x, y);
+        x += (int)gfx_GetStringWidth(modes[i]) + STATUS_GAP;
+    }
     if (shift) {                            /* a light badge on the dark bar */
         gfx_SetColor(g_accents ? COL_BAR_TEXT : COL_PANEL);
         gfx_FillRectangle(x, y - 2, (int)gfx_GetStringWidth(shift) + 4, 12);
@@ -467,40 +484,34 @@ static void draw_value(const char *s, int row_y, const char *label, int *scroll,
  * is on and the value is a word of the current size. Says which it did. */
 typedef enum { FV_NORMAL, FV_BASE, FV_DECIMAL_IN_BASE } fv_kind_t;
 
-static fv_kind_t format_value(char *buf, const calc_t *c, const real_t *v)
+static fv_kind_t format_value(char *buf, const calc_t *c, const value_t *v)
 {
     base_word_t w;
-    if (obj_is(v)) {                        /* a DATE object */
-        dt_obj_t o = obj_unpack(v);
-        dt_format(buf, &o, c->date_as_string);
-        return FV_NORMAL;
-    }
-    if (c->base.radix != 10 && base_word(&c->base, v, &w)) {
+    if (value_is_real(v) && c->base.radix != 10 && base_word(&c->base, &v->real, &w)) {
         base_format(buf, &c->base, w);
         return FV_BASE;
     }
-    format_real(buf, v, c->disp_style, c->disp_digits,
-                DISPLAY_DIGITS, DISPLAY_EXP_DIGITS, true);
-    format_separators(buf, c->decimal_comma);
-    return c->base.radix != 10 ? FV_DECIMAL_IN_BASE : FV_NORMAL;
+    value_format(buf, v, c->disp_style, c->disp_digits, c->complex_mode,
+                 c->decimal_comma, c->date_as_string, false);
+    return c->base.radix != 10 && value_is_real(v) ? FV_DECIMAL_IN_BASE : FV_NORMAL;
 }
 
 /* Cache keys cover value bytes and every format setting. DATE values must
  * bypass real-number math; labels and messages use live state. */
-#define VALUE_BUFFER_SIZE 48
+#define VALUE_BUFFER_SIZE VALUE_FORMAT_MAX
 _Static_assert(VALUE_BUFFER_SIZE >= FORMAT_MAX && VALUE_BUFFER_SIZE >= DT_FORMAT_MAX &&
                VALUE_BUFFER_SIZE >= BASE_MAX_BITS + 1 && VALUE_BUFFER_SIZE >= ENTRY_MAX + 2,
                "stack text buffer is too small");
 
 static struct {
-    real_t value;
+    value_t value;
     char text[VALUE_BUFFER_SIZE];
     fv_kind_t kind;
     bool valid;
 } value_cache[4];
 
 static struct {
-    uint8_t style, radix, bits;
+    uint8_t style, radix, bits, complex_mode;
     int8_t digits;
     bool date_as_string, decimal_comma, valid;
 } value_cache_format;
@@ -517,7 +528,7 @@ static void prepare_value_cache(const calc_t *c)
     if (value_cache_format.valid && value_cache_format.style == c->disp_style &&
         value_cache_format.digits == c->disp_digits && value_cache_format.radix == c->base.radix &&
         value_cache_format.bits == c->base.bits && value_cache_format.date_as_string == c->date_as_string &&
-        value_cache_format.decimal_comma == c->decimal_comma)
+        value_cache_format.decimal_comma == c->decimal_comma && value_cache_format.complex_mode == c->complex_mode)
         return;
 
     reset_value_cache();
@@ -527,12 +538,13 @@ static void prepare_value_cache(const calc_t *c)
     value_cache_format.bits = c->base.bits;
     value_cache_format.date_as_string = c->date_as_string;
     value_cache_format.decimal_comma = c->decimal_comma;
+    value_cache_format.complex_mode = c->complex_mode;
     value_cache_format.valid = true;
 }
 
-static const char *stack_value_text(const calc_t *c, const real_t *v, int row, fv_kind_t *kind)
+static const char *stack_value_text(const calc_t *c, const value_t *v, int row, fv_kind_t *kind)
 {
-    if (!value_cache[row].valid || memcmp(&value_cache[row].value, v, sizeof *v) != 0) {
+    if (!value_cache[row].valid || memcmp(&value_cache[row].value, v, offsetof(value_t, unit)) != 0) {
         value_cache[row].kind = format_value(value_cache[row].text, c, v);
         memcpy(&value_cache[row].value, v, sizeof *v);
         value_cache[row].valid = true;
@@ -546,13 +558,13 @@ static const char *base_warning(const calc_t *c, char *buf)
 {
     base_word_t w;
     if (dismissed_warning.active &&
-        (memcmp(&dismissed_warning.value, &c->stack[0], sizeof(real_t)) ||
+        (memcmp(&dismissed_warning.value, &c->stack[0], sizeof(value_t)) ||
          dismissed_warning.radix != c->base.radix ||
-         dismissed_warning.bits != c->base.bits || dismissed_warning.unit != c->unit[0]))
+         dismissed_warning.bits != c->base.bits))
         dismissed_warning.active = false;
-    if (dismissed_warning.active || c->base.radix == 10 || c->editing || obj_is(&c->stack[0]))
+    if (dismissed_warning.active || c->base.radix == 10 || c->editing || !value_is_real(&c->stack[0]))
         return NULL;
-    switch (base_fit(&c->base, &c->stack[0], &w)) {
+    switch (base_fit(&c->base, &c->stack[0].real, &w)) {
         case BW_TOO_BIG: {                  /* e.g. Exceeds 32-bit word */
             char *p = buf;
             strcpy(p, "Exceeds ");
@@ -589,7 +601,6 @@ void display_dismiss_message(calc_t *c)
     dismissed_warning.value = c->stack[0];
     dismissed_warning.radix = c->base.radix;
     dismissed_warning.bits = c->base.bits;
-    dismissed_warning.unit = c->unit[0];
 }
 
 
@@ -599,10 +610,9 @@ void display_dismiss_message(calc_t *c)
 static void draw_stack(const calc_t *c, const char *prompt, bool lifted)
 {
     static const char *const labels[4] = { "T:", "Z:", "Y:", "X:" };
-    static const uint8_t regs[4] = { REG_T, REG_Z, REG_Y, REG_X };
-    const real_t *values[4] = { &c->stack[3], &c->stack[2], &c->stack[1], &c->stack[0] };
-    const real_t *shown_lifted[4] = { &c->stack[2], &c->stack[1], &c->stack[0], &c->stack[0] };
-    char buf[ENTRY_MAX + ENTRY_MAX / 3 + 2];  /* grouping, cursor, terminator */
+    const value_t *values[4] = { &c->stack[3], &c->stack[2], &c->stack[1], &c->stack[0] };
+    const value_t *shown_lifted[4] = { &c->stack[2], &c->stack[1], &c->stack[0], &c->stack[0] };
+    char buf[VALUE_FORMAT_MAX];  /* grouping, complex delimiter, cursor */
 
     prepare_value_cache(c);
 
@@ -619,16 +629,13 @@ static void draw_stack(const calc_t *c, const char *prompt, bool lifted)
             format_separators(buf, c->decimal_comma);
             draw_value(buf, y, NULL, NULL, ink);
         } else if (is_x && c->editing) {
-            if (c->base.radix == 10 && !dt_text_is_object(c->entry))
-                format_entry(buf, c->entry, c->decimal_comma);
-            else
-                strcpy(buf, c->entry);
+            value_format_entry(buf, c->entry, c->decimal_comma, c->base.radix != 10);
             strcat(buf, "_");
             draw_value(buf, y, NULL, NULL, ink);     /* typing: the end is shown */
         } else {
             bool shift = prompt && lifted;
-            const real_t *v = shift ? shown_lifted[i] : values[i];
-            uint8_t tag = c->unit[shift && i < 3 ? regs[i + 1] : regs[i]];
+            const value_t *v = shift ? shown_lifted[i] : values[i];
+            uint8_t tag = v->unit;
             /* In HEX, OCT and BIN a value that isn't a word of the current
              * size stays decimal, tagged "dec" so it's never mistaken for a
              * base number. */
@@ -648,7 +655,7 @@ static void draw_stack(const calc_t *c, const char *prompt, bool lifted)
  * inverted. */
 static void draw_catalog(const calc_t *c, const catalog_t *cat)
 {
-    char name[12], buf[48];             /* room for 44 binary digits */
+    char name[12], buf[VALUE_FORMAT_MAX];             /* room for 44 binary digits */
 
     for (int row = 0; row < 4; row++) {
         int idx = cat->top + row;
@@ -671,8 +678,10 @@ static void draw_catalog(const calc_t *c, const catalog_t *cat)
         dot_draw(name, LABEL_X, top, ink, 0);
         int name_end = LABEL_X + dot_width(name) + 6;
 
-        uint8_t kind = format_value(buf, c, catalog_value((calc_t *)c, item));
-        uint8_t tag = catalog_unit((calc_t *)c, item);
+        value_t v;
+        if (!catalog_value(c, item, &v)) continue;
+        uint8_t kind = format_value(buf, c, &v);
+        uint8_t tag = v.unit;
         const char *label = tag ? unit_label((uint8_t)(tag - 1)) : NULL;
         if (kind == FV_DECIMAL_IN_BASE)
             label = "dec";

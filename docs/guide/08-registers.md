@@ -1,6 +1,6 @@
 # 8. Registers
 
-rpnCE 0.7.0 · User Guide
+rpnCE development build · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 7. The menus](07-menus.md) · [Next: 9. Display formats and MODE settings](09-settings.md)
 
@@ -20,8 +20,9 @@ rpnCE 0.7.0 · User Guide
 
 ## The registers
 
-Registers store numbers, numbers with units, and DATE objects. They are
-numbered as on the HP-32SII:
+Ordinary registers store real or complex numbers, real numbers with units,
+and DATE objects. Statistics registers remain plain real values. Registers
+are numbered as on the HP-32SII:
 
 | Number | Register |
 | --- | --- |
@@ -53,11 +54,14 @@ a moment before it runs.
 | `CLEAR`, `DEL` or `ON` | cancel |
 
 - **STO** copies X into the register and never moves the stack.
+- Complex STO/RCL keeps both components, including an imaginary zero;
+  register arithmetic supports the same mixed real/complex operations as
+  the stack. See [Complex numbers](11-complex-numbers.md).
 - **RCL** brings the register's value into X like typing a number: it
   lifts the stack, except right after ENTER, when it replaces the copy.
 - A value's **unit** goes with it: store `12 ft` in A, and RCL A gives
   back `12 ft`. Register arithmetic follows the unit rules in
-  [chapter 14](14-units.md#14-unit-unit-conversions).
+  [chapter 15](15-units.md#15-unit-unit-conversions).
 
 ## Register arithmetic
 
@@ -117,7 +121,7 @@ stays available until you clear the statistics with **CLΣ**.
 1. every register that holds a value other than zero, or a unit, by name
    (`A`, `i`, `n`, `R041` and so on);
 2. the seven TVM values: `N`, `I%YR`, `PV`, `PMT`, `FV`, `P/YR` and
-   `C/YR`, always, even when zero ([chapter 13](13-tvm.md#13-tvm-time-value-of-money));
+   `C/YR`, always, even when zero ([chapter 14](14-tvm.md#14-tvm-time-value-of-money));
 3. `LASTX`, always, as the last entry.
 
 <img src="../../assets/guide/screens/reg-vars.png" alt="The VARS catalog" width="320">

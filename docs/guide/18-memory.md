@@ -1,8 +1,8 @@
-# 17. Saving, memory and files
+# 18. Saving, memory and files
 
-rpnCE 0.7.0 · User Guide
+rpnCE development build · User Guide
 
-[Manual contents](../USER_GUIDE.md) · [Previous: 16. Messages and errors](16-troubleshooting.md) · [Next: 18. Limits and differences](18-compatibility.md)
+[Manual contents](../USER_GUIDE.md) · [Previous: 17. Messages and errors](17-troubleshooting.md) · [Next: 19. Limits and differences](19-compatibility.md)
 
 **In this chapter**
 
@@ -24,21 +24,20 @@ session; complete it before quitting.
 | Appvar | Holds | Made by |
 | --- | --- | --- |
 | `RPNCEres` | the menus, unit tables and HELP pages | sent by you, from each release |
-| `RPNCEdat` | the stack (with units), LASTX, registers, statistics and settings | rpnCE, when you quit |
+| `RPNCEdat` | complete real/complex/DATE/unit values in stack, LASTX and ordinary registers; statistics, angle/result/display modes and other settings | rpnCE, when you quit |
 | `RPNCEcfg` | the screen tint, DATE settings and decimal separator preference | rpnCE, when you quit |
-| `RPNCEunt` | units on registers | rpnCE, only when a register holds a unit |
 
 All of them are kept in archive memory, so they survive a RAM clear. You
 can see them in `2ND MEM` > Mem Management > AppVars.
 
 - **To reset rpnCE's private saved state**, exit and delete `RPNCEdat`,
-  `RPNCEcfg`, and `RPNCEunt` there. Keep `RPNCEres`: rpnCE needs it to
+  `RPNCEcfg` there (also delete `RPNCEunt` if retained from an old version). Keep `RPNCEres`: rpnCE needs it to
   start. This does not clear shared TI-OS TVM values or reset the clock.
-- **Upgrading** keeps all your data.
-- **Register units are stored separately on purpose.** `RPNCEunt` carries
-  a checksum and a fingerprint of the register values its units belong
-  to. If it's ever missing or damaged, or doesn't match, the registers load
-  without their units; your values are never lost.
+- **Upgrading** imports version-5 state, including packed DATE values and
+  verified register-unit metadata. New saves use version 6, with each
+  value's type, payload and unit together in RPNCEdat. RPNCEunt is removed
+  after a successful save. Older program versions cannot read version 6;
+  keep a backup of old state before upgrading.
 
 ## The TVM values
 
@@ -48,9 +47,12 @@ TI-OS rather than in rpnCE's appvars.
 
 ## Memory
 
-rpnCE is stored compressed and unpacks into RAM when it starts. The 0.7.0
-program image and static variables occupy about 90 KB before runtime stack
-and library allocations; this is not a complete measurement of peak RAM.
+rpnCE is stored compressed and unpacks into RAM when it starts. Complete
+stack and ordinary register values use 20 bytes on the CE, whether real,
+complex or DATE. A unit travels with its real value. Statistics working
+sums and shared TI-OS finance values remain real. Runtime stack and library
+allocations also need RAM; the
+linker map reports program and static-storage sizes.
 Menus, unit tables, and HELP text are read from archive. Available memory
 therefore needs to accommodate more than just the compressed program file.
 Archive other files or free memory if the OS cannot load the program.
@@ -59,17 +61,15 @@ Archive other files or free memory if the OS cannot load the program.
 ## Backing up your work
 
 1. Finish current entry and exit with `2ND QUIT` to save the latest state.
-2. In TI Connect CE, copy `RPNCEdat`, `RPNCEcfg`, and `RPNCEunt` if present
+2. In TI Connect CE, copy `RPNCEdat` and `RPNCEcfg`
    to one backup folder on your computer.
 3. Keep the matching rpnCE program and resource files, or note their build.
 4. Record the seven shared TVM values separately if you need to preserve
    the finance problem; rpnCE's saved appvars do not contain those values.
 
-Restore the saved-data files as a set from the same backup. In particular,
-RPNCEunt belongs to the register values in RPNCEdat. If a mismatched unit
-file is restored, rpnCE keeps the numeric values but declines to attach
-unverified unit labels. A missing RPNCEunt is normal when no ordinary
-register holds a unit.
+Restore RPNCEdat and RPNCEcfg together. When restoring a version-5 backup,
+also restore its RPNCEunt if present; the importer verifies that its unit
+tags belong to the saved register values.
 
 ## Interaction with TI-OS
 
@@ -80,7 +80,7 @@ register holds a unit.
 | N, I%YR, PV, PMT, FV, P/YR, C/YR | Shared TI-OS finance variables; stores, solves, and CLTV affect the values visible to TI's solver. |
 | Hardware clock | Shared device clock; SETC changes it. ATZ and CTZ are rpnCE interpretation settings. |
 | RPNCEres | Read-only program resources supplied with a build. |
-| RPNCEdat, RPNCEcfg, RPNCEunt | rpnCE's own saved state, created on normal exit as needed. |
+| RPNCEdat, RPNCEcfg | rpnCE's own saved state, created on normal exit as needed. |
 
 Archive protects saved appvars from a RAM clear, not from deleting files
 or clearing archive memory. A normal exit is the point at which rpnCE
@@ -93,10 +93,10 @@ preference and LCD backlight. They do not create an additional appvar.
 ## Removing rpnCE
 
 After backing up anything you need, delete the rpnCE program, RPNCEres,
-and its three private saved-data appvars. The CE libraries may also be
+and its private saved-data appvars (including an old RPNCEunt if present). The CE libraries may also be
 used by other programs; keep them if those programs need them. Removing
 rpnCE does not itself erase shared finance values or alter the clock.
 
 ---
 
-[Manual contents](../USER_GUIDE.md) · [Previous: 16. Messages and errors](16-troubleshooting.md) · [Next: 18. Limits and differences](18-compatibility.md)
+[Manual contents](../USER_GUIDE.md) · [Previous: 17. Messages and errors](17-troubleshooting.md) · [Next: 19. Limits and differences](19-compatibility.md)

@@ -15,10 +15,11 @@ reports you want reviewed in `tests/hardware/results/` or attach them when
 reporting an issue. Reports are never uploaded or committed automatically.
 Review personal notes before sharing them.
 
-The catalog has 2,602 cases. All 421 implemented menu commands and 18
-keyboard math functions have functional and edge coverage, with additional
-invalid-input cases where required. The ten reserved complex-number
-commands are checked for their unavailable message. The boundary filter
+The development catalog has 2,622 cases. All 431 implemented menu commands
+and 18 keyboard math functions have functional and edge coverage, with
+additional invalid-input cases where required. CPLX functions and complex
+result/display modes now have working-value cases, including typed
+rejections, zero imaginary parts, LINK and compact status indicators. The boundary filter
 and per-function coverage table help find specific risks.
 
 Questions include zeros and signs, rounding ties, extreme magnitudes,
@@ -40,11 +41,17 @@ range cases accept either the stated numerical reference or the specific
 error listed in that question. Other errors and misleading zero answers
 still fail. Tolerances are stated in the individual questions.
 
-Catalog revision `hardware-0.7.0-8` uses the rpnCE branding and retains
-the message acknowledgement checks:
+Catalog revision `hardware-dev-values-9` targets the current development
+build; released 0.7.0 does not include complex support. Each case explicitly
+starts in DEC, RAD, RRES, RECT and FIX all digits, even though fresh
+calculators now start in DEG. Complex results are checked through component
+extraction plus observations so the numeric answer field still accepts
+only real numbers. The catalog retains the message acknowledgement checks:
 CLEAR dismisses a visible message without changing the stack; other keys
 dismiss it and perform their normal action. Routine notices time out after
 about 1.5 seconds. The carry indicator is **CF**, including in DEC mode.
+DEG, DEC, RRES and RECT are implicit; RAD, CRES, PRAD/PDEG and nondecimal
+bases appear when selected. ALL is FIX with all display digits.
 New runs start with all cases selected.
 The focused run and completed 14-case numerical confirmation run have been
 removed, along with the 14 completed individual cases. Their original device reports

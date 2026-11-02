@@ -28,8 +28,7 @@ void catalog_move(catalog_t *cat, int delta);
 
 /* Names include A, i, stat sums, R041, LASTX and the seven TVM labels. */
 void catalog_name(uint8_t item, char *out);
-const real_t *catalog_value(calc_t *c, uint8_t item);
-uint8_t catalog_unit(calc_t *c, uint8_t item);
+bool catalog_value(const calc_t *c, uint8_t item, value_t *out);
 
 /* Recall through the appropriate calculator command, preserving lift rules. */
 void catalog_recall(calc_t *c, uint8_t item);
