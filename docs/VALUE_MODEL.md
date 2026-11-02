@@ -11,6 +11,8 @@ DATE and quantity rules are specialized mathematical rules within that
 interface, not alternative stack/register implementations. Mixed numeric
 operations promote real operands to complex. Real-only consumers use the
 shared value predicates or `value_get_real()` boundary.
+Numeric operands are range-checked before dispatch. The real kernel checks
+converted quantities again because unit conversion can change their range.
 
 `value_parse()` is the canonical parser for completed user entry, including
 DATE records, BASE words and rectangular/polar complex pairs. Editing only

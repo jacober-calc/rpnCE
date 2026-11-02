@@ -3,7 +3,7 @@
 'use strict';
 const data = {
   "sourceDigest": "e9ed3df847b8ad0e82650147a5e75b26383ed254da73e98eac6aef91f786fcd5",
-  "unitDefinitionsDigest": "ee13b09abd4559912230c76eaa18b06df811585357e557de213354ab829422d9",
+  "unitDefinitionsDigest": "dbba602118879ce7de8dd94bed990898bf53647e86edf71e3b938bd4e0ecfc87",
   "cases": [
     {"id":"expand-arithmetic-add-0","section":"Keyboard","title":"ADD: 0.1, 0.2","steps":["Enter 0.1 ENTER 0.2; press +."],"expected":{"kind":"number","value":"0.3","relative":"0","absolute":"0"},"covers":[],"kind":"result","focus":"normal","checks":[],"reference":"Exact integer / rational arithmetic. No floating-point tolerance.","operands":["0.1","0.2"],"keyFunction":"ADD"},
     {"id":"expand-arithmetic-add-1","section":"Keyboard","title":"ADD: -8, 3","steps":["Enter 8 (−) ENTER 3; press +."],"expected":{"kind":"number","value":"-5.0","relative":"0","absolute":"0"},"covers":[],"kind":"result","focus":"boundary","checks":[],"reference":"Exact integer / rational arithmetic. No floating-point tolerance.","operands":["-8","3"],"keyFunction":"ADD"},

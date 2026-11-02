@@ -248,7 +248,7 @@ static real_t reduce_degrees(const real_t *x)
 
 static bool g_degrees;
 
-/* Inputs for unit conversions and TVM solving run inside compute(). */
+/* Inputs for unit conversions and TVM solving run inside compute_real(). */
 static uint8_t g_unit_to;
 static uint8_t g_tvm_which;
 static const tvm_settings_t *g_tvm_settings;
@@ -417,8 +417,6 @@ static real_t cube_root(const real_t *x)
     return os_RealPow(x, &third);
 }
 
-/* Runs one math operation under the OS error handler. y is ignored by
- * one-argument operations. On success the answer is in g_result. */
 /* Which operands an operation reads, so a DATE object never reaches the
  * real-number routines. */
 static bool reads_x(calc_cmd_t cmd)
@@ -452,17 +450,13 @@ static real_t signed_power(const real_t *y, const real_t *e)
     return negative ? os_RealNeg(&r) : r;
 }
 
+/* value_eval() validates the operands and masks units on unread operands
+ * before entering this real-number kernel under its OS error handler. */
 static calc_err_t compute_real(calc_cmd_t cmd, const real_t *y, const real_t *x,
                           uint8_t uy, uint8_t ux, uint8_t *result_unit)
 {
-    if (result_unit) *result_unit = 0;
-
     real_t converted_x;
     uint8_t tag = 0;
-    if (!reads_x(cmd)) ux = 0;
-    if (!reads_y(cmd)) uy = 0;
-    if (reads_x(cmd)) mx_check_range(x);
-    if (reads_y(cmd)) mx_check_range(y);
     if ((uy || ux) && cmd != CMD_UNIT) {
         quantity_err_t qe = quantity_prepare(cmd, uy, x, ux, &converted_x, &tag);
         if (qe != QUANTITY_OK) {
@@ -678,7 +672,7 @@ static calc_err_t compute_real(calc_cmd_t cmd, const real_t *y, const real_t *x,
         cmd == CMD_STAT_MEAN || cmd == CMD_STAT_WMEAN ||
         cmd == CMD_STAT_SDEV || cmd == CMD_STAT_PDEV)
         mx_check_range(&g_result2);
-    if (result_unit) *result_unit = tag;
+    *result_unit = tag;
     return ERR_NONE;
 }
 

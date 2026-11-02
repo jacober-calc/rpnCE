@@ -212,7 +212,6 @@ static void numeric_boundaries(void)
     c.stack[0] = value_real(os_StrToReal("1E-99", NULL)); c.stack[0].unit = meter;
     before = c.stack[0].real;
     cmd(CMD_UNIT, km - 1);
-    int exponent = (uint8_t)c.stack[0].real.exp - 128;
     check(km && meter && c.message && !strcmp(c.message, "Err: Underflow") &&
           !memcmp(&before, &c.stack[0], sizeof before) && c.stack[0].unit == meter);
 }

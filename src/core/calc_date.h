@@ -4,7 +4,6 @@
 /* Private DATE integration used by command and register execution. */
 #include "calc.h"
 
-void calc_date_error(calc_t *c, dt_err_t e);
 void calc_date_execute(calc_t *c, date_fn_t fn);
 
 #endif

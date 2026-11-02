@@ -10,11 +10,6 @@
 
 /* ---------- DATE ---------- */
 
-void calc_date_error(calc_t *c, dt_err_t e)
-{
-    c->message = value_date_error(e);
-}
-
 static dt_int epoch_days(const calc_t *c)
 {
     switch (c->epoch) {
@@ -77,7 +72,7 @@ static bool tz_from_value(calc_t *c, const dt_val_t *v, int *q)
         *q = (int)v->quarters;
         return true;
     }
-    calc_date_error(c, !value_is_plain(&c->stack[REG_X]) ? DT_ERR_TYPE : DT_ERR_DOMAIN);
+    c->message = value_date_error(!value_is_plain(&c->stack[REG_X]) ? DT_ERR_TYPE : DT_ERR_DOMAIN);
     return false;
 }
 
@@ -303,6 +298,6 @@ void calc_date_execute(calc_t *c, date_fn_t fn)
             return;
     }
     if (e)
-        calc_date_error(c, e);
+        c->message = value_date_error(e);
 }
 
