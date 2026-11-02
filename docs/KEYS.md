@@ -357,8 +357,7 @@ exponent; SHOW (2ND ENTRY) shows all 14.
 
 The stack, LASTX, variables, angle mode, and display format are saved on exit
 (in the archived appvar `RPNCEdat`) and restored on the next run. Units on
-registers are stored with their values in RPNCEdat. Version-5 saves and
-matching RPNCEunt files can be imported; a successful version-6 save removes
-that sidecar. Older program versions cannot load version 6. After
+registers are stored with their values in RPNCEdat. rpnCE 0.8.0 does not read
+data saved by 0.7.0 or earlier, and earlier versions cannot read 0.8.0 data. After
 five minutes without a key press, rpnCE saves and exits so the calculator
 can power down.

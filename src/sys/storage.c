@@ -1,22 +1,79 @@
+/* Saved state (RPNCEdat) and settings (RPNCEcfg), both archived appvars.
+ * Each value is stored complete, with its type, payload and unit. Saves
+ * from rpnCE 0.7.0 and earlier (format 5) are not read. */
 #include <string.h>
 #include <stddef.h>
 #include <fileioc.h>
-#include "storage_internal.h"
+#include "storage.h"
 #include "../core/format.h"
 
+#define STATE_APPVAR "RPNCEdat"
+#define STATE_MAGIC 0x52
+#define STATE_VERSION 6
+
+/* The statistics as saved: the sums and modes, a fixed prefix of stats_t.
+ * Its constancy witnesses follow the state in a checksummed footer. */
+typedef struct {
+    real_t sum[SUM_COUNT];
+    bool linear_only, lnx_ok, lny_ok;
+    uint8_t model;
+} storage_stats_t;
+_Static_assert(offsetof(stats_t, first) == sizeof(storage_stats_t), "statistics prefix changed");
+
+typedef struct {
+    uint8_t magic, version, depth;
+    value_t stack[STACK_MAX], lastx, regs[REG_BASE_COUNT];
+    uint8_t extra_count, lift, degrees, complex_results, complex_mode, disp_style;
+    int8_t disp_digits;
+    tvm_settings_t tvm;
+    storage_stats_t stats;
+    base_state_t base;
+    value_t extra[REG_EXTRA_MAX];   /* only extra_count of these are saved */
+} storage_state_t;
 #define SAVED_FIXED_SIZE offsetof(storage_state_t, extra)
 
-static void precision_checksum(uint8_t out[4], const storage_stats_t *stats,
-                               const uint8_t *precision)
+/* Footer: 'P', 1, the two witnesses, the constancy bits, then an FNV-1a
+ * hash of the saved statistics and the footer so far. */
+#define PRECISION_SIZE (2 + 2 * sizeof(real_t) + 1 + 4)
+#define PRECISION_CONSTANT (PRECISION_SIZE - 5)
+#define PRECISION_HASH (PRECISION_SIZE - 4)
+
+#ifdef __ez80__
+_Static_assert(sizeof(storage_state_t) == 2958, "version-6 disk layout changed");
+#endif
+
+/* Staging for a save or load, kept off the CE's small stack. A load reads
+ * everything here first, so a damaged file never alters live values. */
+static struct {
+    storage_state_t state;
+    uint8_t precision[PRECISION_SIZE];
+} work;
+
+static uint32_t fnv1a(uint32_t h, const void *data, size_t n)
 {
-    uint32_t h = storage_precision_hash(stats, precision);
-    for (int i = 0; i < 4; i++) out[i] = (uint8_t)(h >> (8 * i));
+    const uint8_t *p = data;
+    while (n--) { h ^= *p++; h *= 16777619UL; }
+    return h;
+}
+
+static uint32_t precision_hash(const storage_stats_t *stats, const uint8_t *precision)
+{
+    return fnv1a(fnv1a(2166136261UL, stats, sizeof *stats), precision, PRECISION_HASH);
+}
+
+static bool precision_valid(const storage_stats_t *stats, const uint8_t *p)
+{
+    const uint8_t *h = p + PRECISION_HASH;
+    uint32_t stored = (uint32_t)h[0] | (uint32_t)h[1] << 8 |
+                      (uint32_t)h[2] << 16 | (uint32_t)h[3] << 24;
+    return p[0] == 'P' && p[1] == 1 && p[PRECISION_CONSTANT] <= 3 &&
+           stored == precision_hash(stats, p);
 }
 
 void storage_save(calc_t *c)
 {
-    storage_state_t *s = &storage_workspace.current.state;
-    uint8_t *precision = storage_workspace.current.precision;
+    storage_state_t *s = &work.state;
+    uint8_t *precision = work.precision;
     calc_finish_entry(c);
     if (c->editing) return;
     memset(s, 0, sizeof *s);
@@ -31,37 +88,55 @@ void storage_save(calc_t *c)
     s->disp_style = c->disp_style; s->disp_digits = c->disp_digits;
     s->tvm = c->tvm; s->base = c->base;
     memcpy(&s->stats, &c->stats, sizeof s->stats);
+
     precision[0] = 'P'; precision[1] = 1;
     memcpy(precision + 2, c->stats.first, sizeof c->stats.first);
-    precision[2 + sizeof c->stats.first] = c->stats.constant;
-    precision_checksum(precision + PRECISION_SIZE - 4, &s->stats, precision);
-    uint8_t h = ti_Open(STATE_APPVAR, "w");
-    if (!h) return;
+    precision[PRECISION_CONSTANT] = c->stats.constant;
+    uint32_t h = precision_hash(&s->stats, precision);
+    for (int i = 0; i < 4; i++) precision[PRECISION_HASH + i] = (uint8_t)(h >> (8 * i));
+
+    uint8_t f = ti_Open(STATE_APPVAR, "w");
+    if (!f) return;
     size_t n = SAVED_FIXED_SIZE + sizeof(value_t) * c->extra_count;
-    bool saved = ti_Write(s, 1, n, h) == n && ti_Write(precision, 1, PRECISION_SIZE, h) == PRECISION_SIZE;
-    ti_SetArchiveStatus(true, h);
-    ti_Close(h);
-    if (saved) ti_Delete("RPNCEunt"); /* superseded by each value's own unit */
+    ti_Write(s, 1, n, f);
+    ti_Write(precision, 1, PRECISION_SIZE, f);
+    ti_SetArchiveStatus(true, f);
+    ti_Close(f);
 }
 
-/* The rest of a version-6 save, after its header. */
-static bool load_current(calc_t *c, uint8_t h)
+/* Reads the whole file into the workspace; true if its structure is sound.
+ * *have_precision says whether the witness footer is present and intact. */
+static bool read_state(bool *have_precision)
 {
-    storage_state_t *s = &storage_workspace.current.state;
-    uint8_t *precision = storage_workspace.current.precision;
-    const size_t rest = SAVED_FIXED_SIZE - STORAGE_HEADER_SIZE;
-    if (ti_Read((uint8_t *)s + STORAGE_HEADER_SIZE, 1, rest, h) != rest ||
-        s->depth < STACK_MIN || s->depth > STACK_MAX || s->extra_count > REG_EXTRA_MAX)
-        return false;
-    size_t tail = sizeof(value_t) * s->extra_count;
-    if (ti_Read(s->extra, 1, tail, h) != tail)
-        return false;
-    bool have_precision = ti_Read(precision, 1, PRECISION_SIZE, h) == PRECISION_SIZE &&
-                          storage_precision_valid(&s->stats, precision);
+    storage_state_t *s = &work.state;
+    uint8_t f = ti_Open(STATE_APPVAR, "r");
+    if (!f) return false;
+    bool ok = ti_Read(s, 1, SAVED_FIXED_SIZE, f) == SAVED_FIXED_SIZE &&
+              s->magic == STATE_MAGIC && s->version == STATE_VERSION &&
+              s->depth >= STACK_MIN && s->depth <= STACK_MAX &&
+              s->extra_count <= REG_EXTRA_MAX;
+    if (ok) {
+        size_t tail = sizeof(value_t) * s->extra_count;
+        ok = ti_Read(s->extra, 1, tail, f) == tail;
+    }
+    *have_precision = ok && ti_Read(work.precision, 1, PRECISION_SIZE, f) == PRECISION_SIZE &&
+                      precision_valid(&s->stats, work.precision);
+    ti_Close(f);
+    if (!ok) return false;
     for (int i = 0; i < STACK_MAX; i++) if (!value_valid(&s->stack[i])) return false;
     if (!value_valid(&s->lastx)) return false;
     for (int i = 0; i < REG_BASE_COUNT; i++) if (!value_valid(&s->regs[i])) return false;
     for (int i = 0; i < s->extra_count; i++) if (!value_valid(&s->extra[i])) return false;
+    return true;
+}
+
+bool storage_load(calc_t *c)
+{
+    bool have_precision;
+    if (!read_state(&have_precision))
+        return false;
+
+    const storage_state_t *s = &work.state;
     c->depth = s->depth; c->lastx = s->lastx;
     memcpy(c->stack, s->stack, sizeof c->stack);
     memcpy(c->regs, s->regs, sizeof c->regs);
@@ -75,87 +150,85 @@ static bool load_current(calc_t *c, uint8_t h)
         s->disp_digits >= DISP_FLOAT && s->disp_digits <= DISP_MAX_DIGITS) {
         c->disp_style = s->disp_style; c->disp_digits = s->disp_digits;
     }
-    storage_restore_math(c, &s->tvm, &s->stats, &s->base, have_precision ? precision : NULL);
-    return true;
-}
 
-/* One pass over the appvar: the header picks the reader, which continues
- * from the same handle. Readers stage everything before changing c. */
-bool storage_load(calc_t *c)
-{
-    storage_state_t *s = &storage_workspace.current.state;
-    uint8_t h = ti_Open(STATE_APPVAR, "r");
-    if (!h) return false;
-    bool loaded = ti_Read(s, 1, STORAGE_HEADER_SIZE, h) == STORAGE_HEADER_SIZE &&
-                  s->magic == STATE_MAGIC &&
-                  (s->version == 5 ? storage_import_v5(c, h) :
-                   s->version == STATE_VERSION && load_current(c, h));
-    ti_Close(h);
-    return loaded;
+    c->tvm = s->tvm;
+    if (!c->tvm.iter_max) tvm_settings_reset(&c->tvm);
+    memcpy(&c->stats, &s->stats, sizeof s->stats);
+    memset(c->stats.first, 0, sizeof c->stats.first);
+    c->stats.constant = 0;          /* without witnesses, claim no constancy */
+    if (have_precision) {
+        memcpy(c->stats.first, work.precision + 2, sizeof c->stats.first);
+        c->stats.constant = work.precision[PRECISION_CONSTANT];
+    }
+    if (c->stats.model >= FIT_COUNT) c->stats.model = FIT_LIN;
+    c->base = s->base;
+    base_validate(&c->base);
+    return true;
 }
 
 /* ---------- settings ---------- */
 
-
 #define SETTINGS_NAME "RPNCEcfg"
+#define SETTINGS_VERSION 3          /* the layout rpnCE 0.7.0 and later write */
 
 typedef struct {
     uint8_t magic;
-    uint8_t version;        /* 1: tint; 2: DATE; 3: appended decimal preference */
+    uint8_t version;
     uint8_t tint;
     uint8_t date_as_string;
     uint8_t epoch;
     dt_obj_t custom_epoch;
     int8_t app_tz, clock_tz;
+    uint8_t decimal_comma;
 } settings_t;
+/* The file ends with the decimal preference; any padding after it is not
+ * written. rpnCE 0.7.0 and 0.8.0 write the same 21 bytes on the CE. */
+#define SETTINGS_SIZE (offsetof(settings_t, decimal_comma) + 1)
+#ifdef __ez80__
+_Static_assert(SETTINGS_SIZE == 21, "settings disk layout changed");
+#endif
 
 void storage_save_settings(uint8_t tint, const calc_t *c)
 {
     settings_t s;
     memset(&s, 0, sizeof s);
     s.magic = STATE_MAGIC;
-    s.version = 3;
+    s.version = SETTINGS_VERSION;
     s.tint = tint;
     s.date_as_string = c->date_as_string;
     s.epoch = c->epoch;
     s.custom_epoch = c->custom_epoch;
     s.app_tz = c->app_tz;
     s.clock_tz = c->clock_tz;
-    uint8_t h = ti_Open(SETTINGS_NAME, "w");
-    if (!h)
+    s.decimal_comma = c->decimal_comma;
+    uint8_t f = ti_Open(SETTINGS_NAME, "w");
+    if (!f)
         return;
-    ti_Write(&s, sizeof s, 1, h);
-    /* The decimal preference follows the fixed settings prefix. */
-    uint8_t decimal_comma = c->decimal_comma;
-    ti_Write(&decimal_comma, 1, 1, h);
-    ti_SetArchiveStatus(true, h);
-    ti_Close(h);
+    ti_Write(&s, 1, SETTINGS_SIZE, f);
+    ti_SetArchiveStatus(true, f);
+    ti_Close(f);
 }
 
 uint8_t storage_load_settings(calc_t *c)
 {
     settings_t s;
-    uint8_t h = ti_Open(SETTINGS_NAME, "r");
-    if (!h)
+    uint8_t f = ti_Open(SETTINGS_NAME, "r");
+    if (!f)
         return 0;
-    size_t n = ti_Read(&s, 1, sizeof s, h);
-    uint8_t decimal_comma = 0;
-    if (n == sizeof s && s.version >= 3)
-        ti_Read(&decimal_comma, 1, 1, h);
-    ti_Close(h);
-    if (n < 3 || s.magic != STATE_MAGIC)
+    bool ok = ti_Read(&s, 1, SETTINGS_SIZE, f) == SETTINGS_SIZE &&
+              s.magic == STATE_MAGIC && s.version == SETTINGS_VERSION;
+    ti_Close(f);
+    if (!ok)
         return 0;
-    c->decimal_comma = decimal_comma == 1;
-    if (s.version >= 2 && n >= sizeof s) {
-        c->date_as_string = s.date_as_string != 0;
-        if (s.epoch <= EPOCH_CUSTOM)
-            c->epoch = s.epoch;
-        if (s.custom_epoch.type == OBJ_DATE && dt_validate(&s.custom_epoch) == DT_OK)
-            c->custom_epoch = s.custom_epoch;
-        if (s.app_tz >= -95 && s.app_tz <= 95)
-            c->app_tz = s.app_tz;
-        if (s.clock_tz >= -95 && s.clock_tz <= 95)
-            c->clock_tz = s.clock_tz;
-    }
+    c->decimal_comma = s.decimal_comma == 1;
+    c->date_as_string = s.date_as_string != 0;
+    if (s.epoch <= EPOCH_CUSTOM)
+        c->epoch = s.epoch;
+    if (s.custom_epoch.type == OBJ_DATE && dt_validate(&s.custom_epoch) == DT_OK)
+        c->custom_epoch = s.custom_epoch;
+    if (s.app_tz >= -95 && s.app_tz <= 95)
+        c->app_tz = s.app_tz;
+    if (s.clock_tz >= -95 && s.clock_tz <= 95)
+        c->clock_tz = s.clock_tz;
     return s.tint;
 }

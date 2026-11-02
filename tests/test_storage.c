@@ -17,14 +17,14 @@ typedef struct {
     size_t size, pos;
     bool exists, archived;
 } appvar_t;
-static appvar_t vars[3];               /* RPNCEdat, RPNCEcfg, RPNCEunt */
+static appvar_t vars[2];               /* RPNCEdat, RPNCEcfg */
 static bool open_fails;
 static int finishes, fails;
 
 uint8_t ti_Open(const char *name, const char *mode)
 {
-    int i = strcmp(name, "RPNCEdat") == 0 ? 0 : strcmp(name, "RPNCEcfg") == 0 ? 1 : 2;
-    assert(i != 2 || strcmp(name, "RPNCEunt") == 0);
+    int i = strcmp(name, "RPNCEdat") == 0 ? 0 : 1;
+    assert(i == 0 || strcmp(name, "RPNCEcfg") == 0);
     if (open_fails || (*mode == 'r' && !vars[i].exists)) return 0;
     if (*mode == 'w') {
         vars[i].size = 0;
@@ -54,13 +54,6 @@ size_t ti_Write(const void *data, size_t size, size_t count, uint8_t handle)
 int ti_Close(uint8_t handle) { (void)handle; return 1; }
 bool ti_SetArchiveStatus(bool archived, uint8_t handle)
 { vars[handle - 1].archived = archived; return true; }
-int ti_Delete(const char *name)
-{
-    assert(strcmp(name, "RPNCEunt") == 0);
-    vars[2].exists = false;
-    vars[2].size = 0;
-    return 1;
-}
 
 /* Entry parsing is tested in test_calc.c; storage must still call it. */
 void calc_finish_entry(calc_t *c) { assert(!c->editing); finishes++; }
@@ -80,20 +73,6 @@ static void check(const char *name, bool pass)
 }
 
 
-/* Historical on-disk schema, frozen here to exercise the actual importer. */
-typedef struct {
-    real_t sum[SUM_COUNT]; bool linear_only, lnx_ok, lny_ok; uint8_t model;
-} old_stats_t;
-typedef struct {
-    uint8_t magic, version, depth;
-    real_t stack[STACK_MAX]; uint8_t unit[STACK_MAX];
-    real_t lastx; uint8_t unit_lastx;
-    real_t regs[REG_BASE_COUNT];
-    uint8_t extra_count, lift, degrees, disp_style; int8_t disp_digits;
-    tvm_settings_t tvm; old_stats_t stats; base_state_t base;
-    real_t extra[REG_EXTRA_MAX];
-} old_state_t;
-
 static bool same_saved(const calc_t *a, const calc_t *b)
 {
     return a->depth == b->depth && a->extra_count == b->extra_count &&
@@ -104,7 +83,7 @@ static bool same_saved(const calc_t *a, const calc_t *b)
         !memcmp(&a->lastx, &b->lastx, sizeof a->lastx) &&
         !memcmp(a->regs, b->regs, sizeof a->regs) &&
         !memcmp(a->extra, b->extra, sizeof(value_t) * a->extra_count) &&
-        !memcmp(&a->stats, &b->stats, sizeof(old_stats_t)) &&
+        !memcmp(&a->stats, &b->stats, offsetof(stats_t, first)) &&
         !memcmp(&a->tvm, &b->tvm, sizeof a->tvm) &&
         !memcmp(&a->base, &b->base, sizeof a->base);
 }
@@ -142,68 +121,6 @@ static void rejected_unchanged(const char *name, calc_t *c)
     calc_t before = *c;
     check(name, !storage_load(c) && !memcmp(c, &before, sizeof before));
 }
-static void old_fixture(bool footer, bool sidecar)
-{
-    old_state_t old;
-    memset(&old, 0, sizeof old);
-    old.magic = 0x52; old.version = 5; old.depth = 4; old.extra_count = 2;
-    old.lift = old.degrees = 1; old.disp_style = DISP_FIX; old.disp_digits = DISP_FLOAT;
-    for (int i = 0; i < STACK_MAX; i++) old.stack[i] = mk(i);
-    for (int i = 0; i < REG_BASE_COUNT; i++) old.regs[i] = mk(i + 10);
-    old.lastx = mk(-42); old.unit[0] = 1; old.unit_lastx = 2;
-    /* A genuine packed DATE record from version 5. */
-    old.stack[1].sign = 0x61;
-    old.stack[1].exp = (int8_t)(2026 & 255);
-    old.stack[1].mant[0] = 2026 >> 8;
-    old.stack[1].mant[1] = 10; old.stack[1].mant[2] = 18;
-    old.extra[0] = mk(100); old.extra[1] = old.stack[1];
-    tvm_settings_reset(&old.tvm); old.base.radix = 10; old.base.bits = 32;
-    vars[0].exists = true;
-    vars[0].size = offsetof(old_state_t, extra) + sizeof(real_t) * old.extra_count;
-    memcpy(vars[0].data, &old, vars[0].size);
-    size_t count = REG_BASE_COUNT + old.extra_count;
-    if (footer) {
-        unsigned char *tail = vars[0].data + vars[0].size;
-        tail[0] = 'U'; tail[1] = 1;
-        memset(tail + 2, 0, count); tail[2] = 3;
-        vars[0].size += 2 + count;
-    }
-    vars[2].exists = sidecar;
-    if (sidecar) {
-        unsigned char *u = vars[2].data;
-        u[0] = 'U'; u[1] = 'N'; u[2] = 1; u[3] = count;
-        uint32_t h = 2166136261UL;
-        const unsigned char *p = (const unsigned char *)old.regs;
-        for (size_t i = 0; i < sizeof old.regs; i++) { h ^= p[i]; h *= 16777619UL; }
-        h ^= old.extra_count; h *= 16777619UL;
-        p = (const unsigned char *)old.extra;
-        for (size_t i = 0; i < sizeof(real_t) * old.extra_count; i++) { h ^= p[i]; h *= 16777619UL; }
-        for (int i = 0; i < 4; i++) u[4 + i] = h >> (8 * i);
-        memset(u + 8, 0, count); u[8] = 4;
-        h = 2166136261UL;
-        for (size_t i = 0; i < 8 + count; i++) { h ^= u[i]; h *= 16777619UL; }
-        for (int i = 0; i < 4; i++) u[8 + count + i] = h >> (8 * i);
-        vars[2].size = 12 + count;
-    }
-}
-
-static void old_precision_fixture(void)
-{
-    old_state_t old;
-    memcpy(&old, vars[0].data, offsetof(old_state_t, extra));
-    unsigned char *p = vars[0].data + vars[0].size;
-    const real_t first[2] = { mk(7), mk(11) };
-    const size_t size = 2 + sizeof first + 1 + 4;
-    p[0] = 'P'; p[1] = 1;
-    memcpy(p + 2, first, sizeof first); p[2 + sizeof first] = 3;
-    uint32_t h = 2166136261UL;
-    const unsigned char *s = (const unsigned char *)&old.stats;
-    for (size_t i = 0; i < sizeof old.stats; i++) { h ^= s[i]; h *= 16777619UL; }
-    for (size_t i = 0; i < size - 4; i++) { h ^= p[i]; h *= 16777619UL; }
-    for (int i = 0; i < 4; i++) p[size - 4 + i] = h >> (8 * i);
-    vars[0].size += size;
-}
-
 int main(void)
 {
     calc_t original, loaded;
@@ -216,13 +133,11 @@ int main(void)
         original.degrees = (i & 1) != 0;
         loaded.degrees = !original.degrees;
         int before = finishes;
-        vars[2].exists = true;
         storage_save(&original);
         if (!i) fixed_size = vars[0].size;
         check("save finalizes entry and archives current state", finishes == before + 1 && vars[0].archived);
         check("all configured objects survive save/load", storage_load(&loaded) && same_saved(&original, &loaded));
         check("unused extra registers are omitted", vars[0].size == fixed_size + sizeof(value_t) * counts[i]);
-        check("current saves remove the retired unit sidecar", !vars[2].exists);
     }
     unsigned char saved[16384];
     size_t saved_size = vars[0].size;
@@ -257,29 +172,12 @@ int main(void)
           !loaded.stats.constant && same_saved(&original, &loaded));
     vars[0].size -= precision_size;
     check("absent witnesses retain saved objects", storage_load(&loaded) && !loaded.stats.constant && same_saved(&original, &loaded));
-    for (int sidecar = 0; sidecar <= 1; sidecar++) {
-        old_fixture(true, sidecar);
-        old_precision_fixture();
-        memset(&loaded, 0, sizeof loaded);
-        check("version 5 imports real values, DATEs, units and LASTX", storage_load(&loaded) &&
-            loaded.stack[0].real.v == 0 && loaded.stack[0].unit == 1 &&
-            value_is_date(&loaded.stack[1]) && loaded.stack[1].date.year == 2026 &&
-            loaded.lastx.real.v == -42 && loaded.lastx.unit == 2 &&
-            loaded.regs[0].unit == (sidecar ? 4 : 3) &&
-            value_is_date(&loaded.extra[1]) && !loaded.complex_results && loaded.complex_mode == COMPLEX_RECT);
-        check("version 5 precision footer survives workspace reuse", loaded.stats.constant == 3 &&
-              loaded.stats.first[0].v == 7 && loaded.stats.first[1].v == 11);
-        original = loaded;
-        storage_save(&loaded);
-        check("imported state writes only version 6 and reopens", vars[0].data[1] == 6 &&
-            !vars[2].exists && storage_load(&loaded) && same_saved(&original, &loaded));
-    }
-    old_fixture(true, true);
-    vars[2].data[10] ^= 1;
-    check("damaged old sidecar drops only register units", storage_load(&loaded) &&
-          !loaded.regs[0].unit && value_is_date(&loaded.stack[1]) && loaded.lastx.unit == 2);
-    old_fixture(false, false); vars[0].size--;
-    rejected_unchanged("truncated version 5 retains runtime state", &loaded);
+    /* rpnCE 0.7.0 saves (format 5) are not read; they are left alone. */
+    memcpy(vars[0].data, saved, saved_size);
+    vars[0].size = saved_size;
+    vars[0].data[1] = 5;
+    rejected_unchanged("format 5 saves are not read", &loaded);
+    check("an unread save is not modified", vars[0].data[1] == 5 && vars[0].size == saved_size);
     populate(&original, 0); storage_save(&original);
     open_fails = true;
     rejected_unchanged("open failure retains runtime state", &loaded);
@@ -294,30 +192,19 @@ int main(void)
           loaded.epoch == EPOCH_CUSTOM && loaded.custom_epoch.year == 2026 &&
           loaded.custom_epoch.month == 10 && loaded.custom_epoch.day == 18 &&
           loaded.app_tz == -28 && loaded.clock_tz == 4 && loaded.decimal_comma);
-    /* A genuine version-2 file has exactly the old prefix, no new byte. */
     size_t settings_size = vars[1].size;
-    vars[1].data[1] = 2;
-    vars[1].size = settings_size - 1;
-    memset(&loaded, 0, sizeof loaded);
-    loaded.decimal_comma = true;
-    check("version-2 settings retain DATE/time zones and default to decimal point",
-          storage_load_settings(&loaded) == 3 && !loaded.decimal_comma &&
-          loaded.date_as_string && loaded.app_tz == -28 && loaded.clock_tz == 4);
-    vars[1].data[1] = 3;
-    loaded.decimal_comma = true;
-    check("truncated new settings default to decimal point",
-          storage_load_settings(&loaded) == 3 && !loaded.decimal_comma && loaded.app_tz == -28);
-    vars[1].size = settings_size;
     vars[1].data[settings_size - 1] = 2;
     loaded.decimal_comma = true;
     check("invalid separator preference falls back to decimal point",
           storage_load_settings(&loaded) == 3 && !loaded.decimal_comma);
-    vars[1].data[1] = 1;
-    vars[1].size = 3;
-    memset(&loaded, 0, sizeof loaded);
-    loaded.app_tz = 12;
-    check("tint-only settings retain DATE defaults",
-          storage_load_settings(&loaded) == 3 && loaded.app_tz == 12 && !loaded.date_as_string);
+    calc_t before = loaded;
+    vars[1].size = settings_size - 1;
+    check("truncated settings are ignored",
+          storage_load_settings(&loaded) == 0 && !memcmp(&before, &loaded, sizeof loaded));
+    vars[1].size = settings_size;
+    vars[1].data[1] = 2;
+    check("settings older than rpnCE 0.7.0 are ignored",
+          storage_load_settings(&loaded) == 0 && !memcmp(&before, &loaded, sizeof loaded));
     printf("%d failures\n", fails);
     return fails != 0;
 }

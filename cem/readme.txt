@@ -40,11 +40,17 @@ Your data
 ---------
 rpnCE saves the stack, registers, statistics and settings when you quit
 (2ND QUIT) in RPNCEdat and RPNCEcfg. Saved data uses version 6 and stores
-complete real, complex, DATE and unit values together. Version-5 saves and
-their matching RPNCEunt metadata are imported; the next successful save
-removes the old sidecar. Back up old saves before upgrading: older program
-versions cannot read version 6. Deleting the private state does not clear
-shared TI-OS TVM values or reset the clock.
+complete real, complex, DATE and unit values together. Deleting the private
+state does not clear shared TI-OS TVM values or reset the clock.
+
+Upgrading from 0.7.0 or earlier
+-------------------------------
+Complex-number support changed how every value is stored, so 0.8.0 does not
+read the RPNCEdat saved by 0.7.0 and earlier. The first start shows an empty
+stack, registers and statistics, and the old RPNCEdat is replaced when you
+quit. Note any values you need before upgrading. The screen tint, DATE
+settings and decimal separator in RPNCEcfg carry over. Delete RPNCEunt if a
+0.7.0 installation left one; 0.8.0 does not use it.
 
 Getting started
 ---------------

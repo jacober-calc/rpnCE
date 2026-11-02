@@ -62,9 +62,14 @@ The program and `RPNCEres` must come from the same release; if the appvar
 is missing or doesn't match, rpnCE says so at startup. rpnCE saves its own
 data in `RPNCEdat` (complete values, statistics and calculator modes) and
 `RPNCEcfg` (display and DATE settings). Saved data uses version 6 and includes
-units with each value. Version-5 saves and their optional `RPNCEunt` metadata
-can be imported; a successful save removes that sidecar. Back up
-saved data before upgrading; older program versions cannot read version 6.
+units with each value.
+
+**Upgrading from 0.7.0 or earlier:** complex-number support changed how
+every value is stored, so rpnCE 0.8.0 does not read calculator data saved by
+earlier versions. It starts with an empty stack, registers and statistics,
+and replaces the old `RPNCEdat` when you quit. Display and DATE settings in
+`RPNCEcfg` carry over. Note any values you need before upgrading, and delete
+the obsolete `RPNCEunt` appvar if you have one.
 
 ## Quick start
 

@@ -30,14 +30,14 @@ session; complete it before quitting.
 All of them are kept in archive memory, so they survive a RAM clear. You
 can see them in `2ND MEM` > Mem Management > AppVars.
 
-- **To reset rpnCE's private saved state**, exit and delete `RPNCEdat`,
-  `RPNCEcfg` there (also delete `RPNCEunt` if retained from an old version). Keep `RPNCEres`: rpnCE needs it to
-  start. This does not clear shared TI-OS TVM values or reset the clock.
-- **Upgrading** imports version-5 state and verified register-unit metadata.
-  Saved data uses version 6, with each
-  value's type, payload and unit together in RPNCEdat. RPNCEunt is removed
-  after a successful save. Older program versions cannot read version 6;
-  keep a backup of old state before upgrading.
+- **To reset rpnCE's private saved state**, exit and delete `RPNCEdat` and
+  `RPNCEcfg` there. Keep `RPNCEres`: rpnCE needs it to start. This does not
+  clear shared TI-OS TVM values or reset the clock.
+- **Saved data uses version 6**, with each value's type, payload and unit
+  together in RPNCEdat. rpnCE 0.8.0 does not read the version-5 data saved
+  by 0.7.0 and earlier; it starts fresh and replaces it when you quit.
+  RPNCEcfg carries over. A `RPNCEunt` appvar left by 0.7.0 is no longer
+  used and can be deleted.
 
 ## The TVM values
 
@@ -67,9 +67,8 @@ Archive other files or free memory if the OS cannot load the program.
 4. Record the seven shared TVM values separately if you need to preserve
    the finance problem; rpnCE's saved appvars do not contain those values.
 
-Restore RPNCEdat and RPNCEcfg together. When restoring a version-5 backup,
-also restore its RPNCEunt if present; the importer verifies that its unit
-tags belong to the saved register values.
+Restore RPNCEdat and RPNCEcfg together, with a program from the same
+release line: a backup made with 0.7.0 or earlier works only with 0.7.0.
 
 ## Interaction with TI-OS
 
@@ -93,7 +92,7 @@ preference and LCD backlight. They do not create an additional appvar.
 ## Removing rpnCE
 
 After backing up anything you need, delete the rpnCE program, RPNCEres,
-and its private saved-data appvars (including an old RPNCEunt if present). The CE libraries may also be
+and its private saved-data appvars (and any RPNCEunt left by 0.7.0). The CE libraries may also be
 used by other programs; keep them if those programs need them. Removing
 rpnCE does not itself erase shared finance values or alter the clock.
 

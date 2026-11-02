@@ -87,7 +87,7 @@ from the same build. Packaged releases use versioned filenames.
 | TVM result has an unexpected sign or amount | Cash-flow signs, N, P/YR, C/YR, BEG/END | Enter all assumptions explicitly; N counts payments, not years. |
 | A curve fit reports Err: Stat | Count, variation, ALLΣ/LINΣ, and positive-data requirements | Select the correct mode, clear the sums, and re-enter valid data if necessary. |
 | A unit operation fails | Operand kinds and TEMP/FUEL restrictions | Use compatible quantities; review the operation table in the units chapter. |
-| A quantity imported from a version-5 backup has lost its unit | Its old RPNCEunt metadata was absent, damaged, or mismatched | Restore a matched old backup or reattach the verified unit. Current saves keep units with their values. |
+| After upgrading from 0.7.0, the stack and registers are empty | 0.8.0 does not read data saved by 0.7.0 or earlier | Re-enter the values you need. A copy of the old RPNCEdat works only with 0.7.0. See [Upgrade an installation](02-installation.md#upgrade-an-installation). |
 | No program starts from PRGM | Native-program support for this OS | Follow the launcher's current instructions; sending files alone does not enable native code. |
 
 ## Recovering without clearing saved work

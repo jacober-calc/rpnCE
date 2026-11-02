@@ -117,8 +117,10 @@ The 14 native neighbor checks cover genuine zero results, ordinary
 polar conversion and standard deviation, both range endpoints, rejected
 statistics/register updates, and defensive formatting of legacy invalid
 values. Native checks verify operand preservation, not just the message.
-Desktop storage checks verify precision metadata round trips, damaged
-metadata and legacy state without discarding the saved values.
+Desktop storage checks verify precision metadata round trips, and that
+damaged or missing metadata never discards the saved values. Saves from
+rpnCE 0.7.0 and earlier (format 5) are rejected without changing the
+calculator or the file.
 
 Remaining limits include convergence for arbitrary TVM cash flows, noisy
 curve fits, conversions between every pair of compatible units at numeric

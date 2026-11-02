@@ -68,6 +68,13 @@ to replace them.
 
 ## Upgrade an installation
 
+> **From 0.7.0 or earlier:** complex-number support changed how every value
+> is stored, so 0.8.0 does not read calculator data saved by earlier
+> versions. It starts with an empty stack, registers and statistics, and
+> replaces the old `RPNCEdat` when you quit. Write down any values you need
+> before upgrading and re-enter them afterward. Display and DATE settings
+> carry over. Delete the obsolete `RPNCEunt` appvar if you have one.
+
 1. Exit rpnCE normally with `2ND QUIT` so current work is saved.
 2. Keep the saved appvars in place. For a backup, copy them to your
    computer as described in [chapter 18](18-memory.md#backing-up-your-work).

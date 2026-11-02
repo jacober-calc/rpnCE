@@ -9,8 +9,9 @@ in 10¹⁰ of its first term, unless the entered data is known to be constant.
 An error leaves the stack and accumulated data unchanged. Genuinely
 constant data entered with Σ+ still has zero standard deviation.
 
-Constancy tracking is saved when you quit. Older saved statistics, or
-manually edited sums, have no such proof of constancy and can produce a
+Constancy tracking is saved when you quit. Statistics whose saved tracking
+data is missing or damaged, and manually edited sums, have no such proof of
+constancy and can produce a
 precision error for an ambiguous zero variance. Use CLΣ and re-enter the
 data to establish it again. Removing points cannot always restore proof
 of constancy; ordinary nonzero variance calculations remain available.
