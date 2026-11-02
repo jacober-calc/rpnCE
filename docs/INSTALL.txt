@@ -6,10 +6,15 @@ real and complex arithmetic, units, BASE arithmetic, and dates and times.
 
 Files
 -----
-  rpnCE-0.8.0.8xp      the program
-  rpnCEres-0.8.0.8xv   its menus, unit tables and HELP pages (required)
-  readme.txt          installation, documentation and support
-  LICENSE             redistribution terms
+  rpnCE-0.8.0.8xp       the program
+  rpnCEres-0.8.0.8xv    its menus, unit tables and HELP pages (required)
+  readme.txt           installation, documentation and support
+  LICENSE              redistribution terms
+  rpnCE-0.8.0-*.png     stack, TVM and unit-conversion screenshots
+  rpnCE-promo1.gif      animated program preview
+
+The images are for viewing on your computer; only the program, resources
+and required CE libraries need to be sent to the calculator.
 
 Source builds write bin/rpnCE.8xp and bin/rpnCEres.8xv; packaged builds
 use the versioned filenames above.

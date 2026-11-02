@@ -44,10 +44,9 @@ for entry, arithmetic, CPLX functions and LINK.
 
 ## Installing
 
-1. Build version 0.8.0 as described below and use `bin/rpnCE.8xp` (the program)
-   and `bin/rpnCEres.8xv` (its menus and unit tables). Packaged versions are
-   available from [releases](https://github.com/jacober-calc/rpnCE/releases);
-   use the documentation supplied with that version. Also get the
+1. Download and extract [rpnCE 0.8.0](cem/rpnCE-0.8.0.zip). Use
+   `rpnCE-0.8.0.8xp` (the program) and `rpnCEres-0.8.0.8xv` (its menus,
+   unit tables and HELP pages). Also get the
    [CE C libraries](https://github.com/CE-Programming/libraries/releases)
    (`clibs.8xg`) if you don't already have them.
 2. Send all three to the calculator with TI Connect CE. They can all stay
@@ -88,9 +87,10 @@ saved data before upgrading; older program versions cannot read version 6.
 
 The version is set in `src/core/version.h`.
 
-The release files in [cem/](cem/) use versioned filenames. TI-OS still lists
-the program as `RPNCE`; its resource and saved-data appvar names are unchanged
-so existing calculator data remains available.
+The release files in [cem/](cem/) use versioned filenames. The ZIP also
+includes installation notes, the license, screenshots and `rpnCE-promo1.gif`.
+TI-OS still lists the program as `RPNCE`; its resource and saved-data appvar
+names are unchanged so existing calculator data remains available.
 
 To try a source build without a calculator, load both files from `bin/`
 and `clibs.8xg` into the

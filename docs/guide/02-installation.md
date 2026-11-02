@@ -20,14 +20,15 @@ operating system and any installed native-program launcher.
 
 | File | Purpose | Where it comes from |
 | --- | --- | --- |
-| `rpnCE.8xp` | Executable program | Build version 0.8.0; output is in `bin/` |
-| `rpnCEres.8xv` | Menus, unit tables, and HELP pages; required | The same build as the program |
+| `rpnCE-0.8.0.8xp` | Executable program | [rpnCE 0.8.0 package](../../cem/rpnCE-0.8.0.zip) |
+| `rpnCEres-0.8.0.8xv` | Menus, unit tables, and HELP pages; required | The same package as the program |
 | `clibs.8xg` | CE C runtime libraries | [CE Programming libraries releases](https://github.com/CE-Programming/libraries/releases) |
 
-A packaged release also contains the first two files, with versioned
-filenames. Use its matching documentation. Install the CE libraries if
-they are not already present. See [Building](../../README.md#building)
-for source-build instructions.
+Extract the ZIP before transferring files. It also includes installation
+notes, the license, screenshots and an animated preview. Install the CE
+libraries if they are not already present. Source builds write
+`bin/rpnCE.8xp` and `bin/rpnCEres.8xv`; see
+[Building](../../README.md#building) for instructions.
 The filenames on your computer do not change their names on the calculator:
 the program is `RPNCE` and its resource appvar is `RPNCEres`.
 
@@ -49,7 +50,8 @@ will run it on an unmodified newer OS.
 ## Transfer and start
 
 1. Connect the calculator with USB and open TI Connect CE.
-2. Transfer `rpnCE.8xp` and `rpnCEres.8xv` from the same build, plus `clibs.8xg` if needed.
+2. Transfer `rpnCE-0.8.0.8xp` and `rpnCEres-0.8.0.8xv` from the package,
+   plus `clibs.8xg` if needed.
    The rpnCE files can be archived.
 3. Launch rpnCE using the method supported by the OS or installed
    launcher. On an OS that supports `Asm(`, the home-screen command is
