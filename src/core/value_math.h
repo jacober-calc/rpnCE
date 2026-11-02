@@ -20,7 +20,6 @@ typedef struct {
  * expands one operand into Y and X instead of replacing two levels. */
 typedef struct { value_t x, y; bool pair, drop, split; } value_result_t;
 void value_math_init(void);
-bool value_binary(calc_cmd_t cmd);
 /* NULL on success; errors leave operands and the caller's state untouched.
  * Statistics callers supply a trial accumulator for transactional updates. */
 const char *value_eval(const value_context_t *ctx, calc_cmd_t cmd,

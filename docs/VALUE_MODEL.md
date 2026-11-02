@@ -7,12 +7,18 @@ statistics and TI-OS finance working data continue to use `real_t`.
 
 `value_eval()` owns arithmetic dispatch and error protection. Stack math,
 STO/RCL arithmetic, structural DATE aliases and BASE operations use it.
+`commands.c` supplies the shared operand, stack-effect, entry and statistics
+traits; value-dependent LINK and BASE counts are resolved by the evaluator.
 DATE and quantity rules are specialized mathematical rules within that
 interface, not alternative stack/register implementations. Mixed numeric
 operations promote real operands to complex. Real-only consumers use the
 shared value predicates or `value_get_real()` boundary.
 Numeric operands are range-checked before dispatch. The real kernel checks
 converted quantities again because unit conversion can change their range.
+Angles, rounding, units and working-data pointers come from the call's
+`value_context_t`. Real kernels write directly into the caller's `value_result_t`;
+per-evaluation settings and results are not stored in globals. This keeps
+model selection independent of the outcome of a previous arithmetic call.
 
 `value_parse()` is the canonical parser for completed user entry, including
 DATE records, BASE words and rectangular/polar complex pairs. Editing only
@@ -36,6 +42,15 @@ for version 5, including its nine-byte DATE markers and optional unit
 sidecar/footer. These representations exist only at that historical file
 boundary. No current writer emits them. Importing and saving removes the
 retired unit sidecar; old binaries reject the new version.
+Private disk layouts and precision/checksum helpers live in
+`storage_internal.h` and `storage_format.c`. Current and version-5 paths
+share one staged workspace because they run sequentially. Neither decoder
+needs a second full state buffer, and a failed read leaves live state alone.
+
+The size-optimized CE build keeps shared constructors and separate real
+and complex kernel call boundaries. Expanding these functions into callers
+under LTO increases the linked code; the boundaries do not change the
+value representation or mathematical algorithms.
 
 ## Numeric modes and presentation
 

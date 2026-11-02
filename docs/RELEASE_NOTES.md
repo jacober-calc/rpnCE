@@ -8,6 +8,9 @@
   DEG, RRES, RECT and DEC are implicit defaults; FIX with all digits shows ALL.
   Crowded status bars show the time without the date.
 - Fresh calculators start in DEG; saved angle settings are restored.
+- Refactored shared command traits, numerical call state and storage
+  workspace lifetimes to reduce code size and static RAM. Persistence
+  formats and calculator operations retain their existing contracts.
 - Added a dedicated complex-number guide chapter with entry, arithmetic,
   CPLX, all six result/display states, formatting, LINK and storage examples.
   Updated chapter navigation, mode and number-type references and the

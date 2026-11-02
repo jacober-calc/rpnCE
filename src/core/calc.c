@@ -353,19 +353,17 @@ static void do_stat(calc_t *c, calc_cmd_t cmd)
 
     c->stats = trial;
 
+    if (result.pair) {
+        calc_stack_enter(c, &result.y);
+        calc_stack_push(c, &result.x);
+        return;
+    }
     switch (cmd) {
         case CMD_STAT_PLUS:
         case CMD_STAT_MINUS:
             calc_stack_set_x(c, &result.x);
             c->lift = false;
             break;
-        case CMD_STAT_SUM: case CMD_STAT_MEAN: case CMD_STAT_WMEAN:
-        case CMD_STAT_SDEV: case CMD_STAT_PDEV: {
-            value_t y = result.y, x = result.x;
-            calc_stack_enter(c, &y);
-            calc_stack_push(c, &x);
-            break;
-        }
         case CMD_FIT_X:
         case CMD_FIT_Y:
             calc_stack_set_x(c, &result.x);
@@ -501,10 +499,7 @@ void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg)
 
     /* Finish and validate every entry through one parser before any consumer
      * sees it. A failed entry remains open for repair with DEL or CLEAR. */
-    bool editing_key = cmd == CMD_DIGIT || cmd == CMD_DOT || cmd == CMD_EE ||
-        cmd == CMD_CHS || cmd == CMD_BACKSPACE || cmd == CMD_CLEAR ||
-        cmd == CMD_RECORD_OPEN || cmd == CMD_ALPHA_LETTER || cmd == CMD_RECORD_TAG ||
-        cmd == CMD_COMPLEX_RECT_ENTRY || cmd == CMD_COMPLEX_POLAR_ENTRY ||
+    bool editing_key = (command_flags(cmd) & COMMAND_ENTRY) ||
         (cmd == CMD_RECORD_CLOSE && calc_entry_in_record(c));
     if (c->editing && !editing_key) {
         calc_finish_entry(c);
@@ -512,6 +507,10 @@ void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg)
     }
     cmd = base_key(c, cmd, &arg);
     c->last_cmd = cmd;
+    if (command_flags(cmd) & COMMAND_STAT) {
+        do_stat(c, cmd);
+        return;
+    }
 
     switch (cmd) {
         case CMD_COMPLEX_RECT_ENTRY: calc_entry_complex(c, 'i'); break;
@@ -667,14 +666,6 @@ void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg)
         case CMD_TVM_IYR2:
         case CMD_TVM_ITER_MAX:
             do_tvm_setting(c, cmd, arg);
-            break;
-
-        case CMD_STAT_PLUS: case CMD_STAT_MINUS: case CMD_STAT_SUM:
-        case CMD_STAT_MEAN: case CMD_STAT_WMEAN: case CMD_STAT_SDEV:
-        case CMD_STAT_PDEV: case CMD_STAT_SCOV: case CMD_STAT_PCOV:
-        case CMD_FIT_X: case CMD_FIT_Y: case CMD_FIT_SLOPE:
-        case CMD_FIT_INTERCEPT: case CMD_FIT_CORR: case CMD_FIT_BEST:
-            do_stat(c, cmd);
             break;
 
         case CMD_STAT_N:

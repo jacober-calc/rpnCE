@@ -179,9 +179,48 @@ static void input_modes_format(void)
     value_format_entry(text,"2d90",false,false);
     check("polar entry identifies degrees", !strcmp(text,"2 <d 90"));
 }
+static void evaluation_boundaries(void)
+{
+    value_context_t ctx = {0};
+    value_result_t result;
+    value_t invalid = { .type = 255 }, nine = value_real(mk(9));
+    const char *error = value_eval(&ctx, CMD_PI, &invalid, &invalid, &result);
+    check("constants ignore unrelated invalid stack values", !error && same(&result.x, M_PI));
+    error = value_eval(&ctx, CMD_SQRT, &invalid, &nine, &result);
+    check("unary evaluation ignores invalid Y", !error && same(&result.x, 3) && !result.drop);
+    error = value_eval(&ctx, CMD_ADD, &invalid, &nine, &result);
+    check("binary evaluation validates Y", error && !strcmp(error, "Err: Data Type"));
+    value_t number = z(3,4);
+    error = value_eval(&ctx, CMD_COMPLEX_LINK, &invalid, &number, &result);
+    check("complex LINK splits without reading unrelated Y", !error && result.split &&
+          !result.drop && same(&result.y,3) && same(&result.x,4));
+    ctx.degrees = true;
+    error = value_eval(&ctx, CMD_COMPLEX_ANGLE, &invalid, &number, &result);
+    check("angle context selects degrees", !error && same(&result.x,atan2(4,3)*180/M_PI));
+    ctx.complex_results = true;
+    value_t negative = value_real(mk(-1));
+    error = value_eval(&ctx, CMD_LN, &invalid, &negative, &result);
+    check("complex logarithm keeps radians inside a degree context", !error && same(&result.x,I*M_PI));
+    error = value_eval(&ctx, CMD_COMPLEX_ANGLE, &invalid, &number, &result);
+    check("logarithm evaluation leaves the angle context intact", !error && same(&result.x,atan2(4,3)*180/M_PI));
+
+    calc_init(&c);
+    for (int i = 1; i <= 3; i++) {
+        c.stack[0] = value_real(mk(i)); c.stack[1] = value_real(mk(i*2));
+        calc_execute(&c,CMD_STAT_PLUS,0);
+    }
+    c.stack[0] = value_real(mk(1e99));
+    refused(CMD_SQUARE,0,"Err: Overflow");
+    calc_t before = c;
+    calc_execute(&c,CMD_FIT_BEST,0);
+    check("model selection cannot reuse a failed arithmetic result", c.message && !strcmp(c.message,"LINF"));
+    check("model selection preserves stack and LASTX after an error",
+          !memcmp(c.stack,before.stack,sizeof c.stack) && !memcmp(&c.lastx,&before.lastx,sizeof c.lastx));
+}
+
 int main(void)
 {
-    value_math_init(); arithmetic(); stack_registers(); input_modes_format();
+    value_math_init(); arithmetic(); stack_registers(); input_modes_format(); evaluation_boundaries();
     printf("%d value checks\n%d failures\n",checks,fails);
     return fails != 0;
 }

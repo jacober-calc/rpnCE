@@ -3,7 +3,9 @@
 #include "mathx.h"
 #include "units.h"
 
-value_t value_real(real_t n)
+/* Keep one constructor body per value kind. CE LTO otherwise duplicates
+ * the complete container initialization across many callers. */
+__attribute__((noinline)) value_t value_real(real_t n)
 {
     value_t v;
     memset(&v, 0, sizeof v);
@@ -11,7 +13,7 @@ value_t value_real(real_t n)
     return v;
 }
 
-value_t value_complex(real_t re, real_t im)
+__attribute__((noinline)) value_t value_complex(real_t re, real_t im)
 {
     value_t v = value_real(re);
     v.imag = im;
@@ -19,7 +21,7 @@ value_t value_complex(real_t re, real_t im)
     return v;
 }
 
-value_t value_date(const dt_obj_t *date)
+__attribute__((noinline)) value_t value_date(const dt_obj_t *date)
 {
     value_t v;
     memset(&v, 0, sizeof v);

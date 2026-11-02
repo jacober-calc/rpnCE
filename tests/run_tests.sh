@@ -8,7 +8,7 @@ CC=${CC:-cc}
 OUT=$(mktemp -d)
 trap 'rm -rf "$OUT"' EXIT
 M="-Itests/mock -Isrc/core"
-CORE_SRC="src/core/calc.c src/core/calc_entry.c src/core/calc_date.c
+CORE_SRC="src/core/commands.c src/core/calc.c src/core/calc_entry.c src/core/calc_date.c
 src/core/value.c src/core/value_parse.c src/core/value_math.c src/core/value_date.c src/core/value_format.c src/core/mathx.c src/core/stats.c src/core/tvm.c
 src/core/units.c src/core/base.c src/core/datetime.c src/core/format.c"
 fail=0
@@ -45,7 +45,7 @@ run keys     -Itests/mock_fileioc $M -Isrc/ui tests/test_keys.c src/ui/keys.c \
 run dotfont  -Itests/mock_graphx -Isrc/ui tests/test_dotfont.c \
              src/ui/dotfont.c
 run storage  -Itests/mock_storage $M tests/test_storage.c \
-             src/sys/storage.c src/sys/storage_import.c src/core/value.c src/core/base.c src/core/tvm.c src/core/mathx.c \
+             src/sys/storage.c src/sys/storage_import.c src/sys/storage_format.c src/core/value.c src/core/base.c src/core/tvm.c src/core/mathx.c \
              src/core/datetime.c
 run core     -DRPNCE_HOST_TEST $M tests/test_calc.c tests/mock_calc_runtime.c \
              $CORE_SRC tests/units_data.c
