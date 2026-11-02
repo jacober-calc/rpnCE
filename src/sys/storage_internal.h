@@ -9,6 +9,7 @@
 #define STATE_VERSION 6
 #define PRECISION_SIZE (2 + 2 * sizeof(real_t) + 1 + 4)
 #define LEGACY_UNITS_MAX (REG_BASE_COUNT + REG_EXTRA_MAX)
+#define STORAGE_HEADER_SIZE 2   /* magic and version, in every format */
 
 /* Frozen disk prefixes. Adding runtime statistics must not move these. */
 typedef struct {
@@ -61,6 +62,13 @@ extern storage_workspace_t storage_workspace;
 _Static_assert(sizeof(storage_state_t) == 2958, "version-6 disk layout changed");
 _Static_assert(sizeof(storage_legacy_state_t) == 1428, "version-5 disk layout changed");
 #endif
+/* Both formats start with the header, so reading it into the workspace
+ * serves whichever reader the version selects. */
+_Static_assert(offsetof(storage_state_t, version) == 1 &&
+               offsetof(storage_legacy_state_t, version) == 1 &&
+               offsetof(storage_state_t, depth) == STORAGE_HEADER_SIZE &&
+               offsetof(storage_legacy_state_t, depth) == STORAGE_HEADER_SIZE,
+               "saved formats must share their header");
 
 uint32_t storage_hash(uint32_t h, const void *data, size_t n);
 uint32_t storage_get32(const uint8_t *p);
@@ -69,6 +77,7 @@ bool storage_precision_valid(const storage_stats_t *stats, const uint8_t *precis
 void storage_restore_math(calc_t *c, const tvm_settings_t *tvm,
                           const storage_stats_t *stats, const base_state_t *base,
                           const uint8_t *precision);
-bool storage_import_v5(calc_t *c);
+/* Reads a version-5 save from h, positioned after its header. */
+bool storage_import_v5(calc_t *c, uint8_t h);
 
 #endif

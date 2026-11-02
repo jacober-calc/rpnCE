@@ -148,39 +148,35 @@ static bool is_glyph(char ch)
     return (uint8_t)ch >= 1 && (uint8_t)ch <= MSYM_COUNT;
 }
 
-static int label_width_scaled(const char *s, uint8_t scale)
+/* Labels mix system-font text with the MSYM_* glyphs. Widths are the same
+ * at every height: GraphX widths use only the horizontal text scale. */
+static int label_width(const char *s)
 {
     int w = 0;
     gfx_SetTextScale(1, 1);
     for (; *s; s++)
         w += is_glyph(*s) ? glyph_width[(uint8_t)*s - 1] : (int)gfx_GetCharWidth(*s);
-    return w * scale;
+    return w;
 }
 
-static int label_width(const char *s)
-{
-    return label_width_scaled(s, 1);
-}
-
-static void draw_label_scaled(const char *s, int x, int y, uint8_t color, uint8_t scale)
+/* A label at normal width and y_scale times the normal height. */
+static void draw_label_scaled(const char *s, int x, int y, uint8_t color, uint8_t y_scale)
 {
     gfx_SetTextFGColor(color);
     gfx_SetColor(color);
+    gfx_SetTextScale(1, y_scale);
     for (; *s; s++) {
         if (is_glyph(*s)) {
             uint8_t g = (uint8_t)*s - 1;
             for (int row = 0; row < 8; row++)
                 for (int col = 0; col < 8; col++)
                     if (glyph_bits[g][row] & (0x80 >> col))
-                        gfx_FillRectangle(x + col * scale, y + row * scale, scale, scale);
-            x += glyph_width[g] * scale;
+                        gfx_FillRectangle(x + col, y + row * y_scale, 1, y_scale);
+            x += glyph_width[g];
         } else {
-            gfx_SetTextScale(1, 1);
-            int w = (int)gfx_GetCharWidth(*s) * scale;
-            gfx_SetTextScale(scale, scale);
             gfx_SetTextXY(x, y);
             gfx_PrintChar(*s);
-            x += w;
+            x += (int)gfx_GetCharWidth(*s);
         }
     }
     gfx_SetTextScale(1, 1);
@@ -191,28 +187,10 @@ static void draw_label(const char *s, int x, int y, uint8_t color)
     draw_label_scaled(s, x, y, color, 1);
 }
 
-/* A label at normal width and double height (the message line). */
+/* The message line's double-height text. */
 static void draw_label_tall(const char *s, int x, int y, uint8_t color)
 {
-    gfx_SetTextFGColor(color);
-    gfx_SetColor(color);
-    for (; *s; s++) {
-        if (is_glyph(*s)) {
-            uint8_t g = (uint8_t)*s - 1;
-            for (int row = 0; row < 8; row++)
-                for (int col = 0; col < 8; col++)
-                    if (glyph_bits[g][row] & (0x80 >> col))
-                        gfx_FillRectangle(x + col, y + row * MSG_SCALE_Y, 1, MSG_SCALE_Y);
-            x += glyph_width[g];
-        } else {
-            gfx_SetTextScale(1, MSG_SCALE_Y);
-            gfx_SetTextXY(x, y);
-            gfx_PrintChar(*s);
-            gfx_SetTextScale(1, 1);
-            x += gfx_GetCharWidth(*s);
-        }
-    }
-    gfx_SetTextScale(1, 1);
+    draw_label_scaled(s, x, y, color, MSG_SCALE_Y);
 }
 
 static void reset_value_cache(void);
@@ -417,6 +395,17 @@ static void draw_arrow(int x, int top, bool left, uint8_t ink)
     }
 }
 
+/* A unit (or "dec") label right-aligned at `right`, on the baseline of the
+ * stack font at `top`. Returns the right edge left for the value. */
+static int draw_value_label(const char *label, int right, int top, uint8_t ink)
+{
+    if (!label)
+        return right;
+    int lw = label_width(label);
+    draw_label(label, right - lw, top + DOT_HEIGHT - 8, ink);
+    return right - lw - 5;
+}
+
 static int substring_width(const char *s, int from, int to)
 {
     char tmp[48];
@@ -435,14 +424,8 @@ static int substring_width(const char *s, int from, int to)
  * says how many characters are hidden at the right. */
 static void draw_value(const char *s, int row_y, const char *label, int *scroll, uint8_t ink)
 {
-    int right = VALUE_RIGHT;
     int top = row_y + (ROW_H - DOT_HEIGHT) / 2;
-
-    if (label) {
-        int lw = label_width(label);
-        draw_label(label, VALUE_RIGHT - lw, top + DOT_HEIGHT - 8, ink);
-        right = VALUE_RIGHT - lw - 5;
-    }
+    int right = draw_value_label(label, VALUE_RIGHT, top, ink);
 
     int w = dot_width(s);
     if (w <= right - VALUE_LEFT) {
@@ -494,6 +477,16 @@ static fv_kind_t format_value(char *buf, const calc_t *c, const value_t *v)
     value_format(buf, v, c->disp_style, c->disp_digits, c->complex_mode,
                  c->decimal_comma, c->date_as_string, false);
     return c->base.radix != 10 && value_is_real(v) ? FV_DECIMAL_IN_BASE : FV_NORMAL;
+}
+
+/* In HEX, OCT and BIN a value that isn't a word of the current size stays
+ * decimal, tagged "dec" so it's never mistaken for a base number. Other
+ * values show their unit, if any. */
+static const char *value_label(const value_t *v, fv_kind_t kind)
+{
+    if (kind == FV_DECIMAL_IN_BASE)
+        return "dec";
+    return v->unit ? unit_label((uint8_t)(v->unit - 1)) : NULL;
 }
 
 /* Cache keys cover value bytes and every format setting. DATE values must
@@ -584,9 +577,7 @@ bool display_has_message(const calc_t *c)
 
 bool display_message_is_notice(const calc_t *c)
 {
-    return c->message && c->message != c->show_buf &&
-           strncmp(c->message, "Err:", 4) && strcmp(c->message, "TVM Not Found") &&
-           strcmp(c->message, "Not available yet");
+    return c->message && c->message_kind == MSG_NOTICE;
 }
 
 void display_dismiss_message(calc_t *c)
@@ -630,16 +621,9 @@ static void draw_stack(const calc_t *c, const char *prompt, bool lifted)
         } else {
             bool shift = prompt && lifted;
             const value_t *v = shift ? shown_lifted[i] : values[i];
-            uint8_t tag = v->unit;
-            /* In HEX, OCT and BIN a value that isn't a word of the current
-             * size stays decimal, tagged "dec" so it's never mistaken for a
-             * base number. */
-            const char *label = tag ? unit_label((uint8_t)(tag - 1)) : NULL;
             fv_kind_t kind;
             const char *text = stack_value_text(c, v, i, &kind);
-            if (kind == FV_DECIMAL_IN_BASE)
-                label = "dec";
-            draw_value(text, y, label, is_x ? &g_x_scroll : NULL, ink);
+            draw_value(text, y, value_label(v, kind), is_x ? &g_x_scroll : NULL, ink);
         }
     }
 }
@@ -675,17 +659,8 @@ static void draw_catalog(const calc_t *c, const catalog_t *cat)
 
         value_t v;
         if (!catalog_value(c, item, &v)) continue;
-        uint8_t kind = format_value(buf, c, &v);
-        uint8_t tag = v.unit;
-        const char *label = tag ? unit_label((uint8_t)(tag - 1)) : NULL;
-        if (kind == FV_DECIMAL_IN_BASE)
-            label = "dec";
-        int right = VALUE_RIGHT;
-        if (label) {
-            int width = label_width(label);
-            draw_label(label, right - width, top + DOT_HEIGHT - 8, ink);
-            right -= width + 5;
-        }
+        fv_kind_t kind = format_value(buf, c, &v);
+        int right = draw_value_label(value_label(&v, kind), VALUE_RIGHT, top, ink);
         dot_draw(buf, right - dot_width(buf), top, ink, name_end);
     }
 }

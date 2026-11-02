@@ -198,8 +198,9 @@ static void appearance(void)
     draw(&c, &m, &cat, NULL, false);
     display_close();
     printf("display fingerprint: %016" PRIx64 "\n", fingerprint);
-    /* Format remains visible; default mode indicators are omitted. */
-    check("whole-display drawing commands match approved layout", fingerprint == UINT64_C(0x7a8153558ccee8c7));
+    /* Format remains visible; default mode indicators are omitted. Labels
+     * set the text scale once per label rather than once per character. */
+    check("whole-display drawing commands match approved layout", fingerprint == UINT64_C(0xf3277bfe6b89cab4));
 }
 
 static void formatting_work(void)
@@ -279,7 +280,8 @@ static void formatting_work(void)
     check("word-size changes invalidate all rows", mock_format_calls == 4);
     c.base.radix = 10;
     c.regs[0] = value_real(mk(1));
-    check("catalog fixture opens", catalog_open(&cat, &c));
+    catalog_open(&cat, &c);
+    check("catalog fixture opens", cat.open);
     draw(&c, &m, &cat, NULL, false);
     c.disp_style = DISP_ENG;
     draw(&c, &m, &cat, NULL, false);
@@ -316,7 +318,8 @@ static void quantity_catalog_and_help(void)
         if (!strcmp(unit_label(i), "in")) c.lastx.unit = i + 1;
     }
     display_open();
-    check("zero quantities appear in catalog", catalog_open(&cat, &c) && cat.count == 2 + TVM_VAR_COUNT);
+    catalog_open(&cat, &c);
+    check("zero quantities appear in catalog", cat.open && cat.count == 2 + TVM_VAR_COUNT);
     printed_count = 0; printed[0] = '\0';
     draw(&c, &m, &cat, NULL, false);
     catalog_move(&cat, -1);  /* LASTX now follows every TVM entry. */
@@ -391,15 +394,21 @@ static void message_acknowledgement(void)
     expected.message = NULL;
     display_dismiss_message(&c);
     check("dismissing SHOW preserves all calculator state", !memcmp(&expected, &c, sizeof c));
-    c.message = "Err: Domain";
-    check("errors persist until a key", !display_message_is_notice(&c));
+    c.stack[0] = value_real(mk(-1));
+    calc_execute(&c, CMD_SQRT, 0);
+    check("errors persist until a key",
+          c.message && !strcmp(c.message, "Err: Domain") && !display_message_is_notice(&c));
     expected = c; expected.message = NULL;
     display_dismiss_message(&c);
     check("dismissing an error changes only the message", !memcmp(&expected, &c, sizeof c));
-    c.message = "TVM Stored";
-    check("ordinary notices can time out", display_message_is_notice(&c));
-    c.message = "TVM Not Found";
-    check("TVM solver failures remain warnings", !display_message_is_notice(&c));
+    c.stack[0] = value_real(mk(0));
+    calc_execute(&c, CMD_TVM_VAR, TVM_PMT);          /* stores PMT = 0 */
+    check("ordinary notices can time out",
+          c.message && !strcmp(c.message, "TVM Stored") && display_message_is_notice(&c));
+    os_Fin_I = mk(0); os_Fin_PY = os_Fin_CY = mk(12);
+    calc_execute(&c, CMD_TVM_VAR, TVM_N);            /* no payments: no N */
+    check("TVM solver failures remain warnings",
+          c.message && !strcmp(c.message, "TVM Not Found") && !display_message_is_notice(&c));
     c.message = NULL; c.stack[0].unit = 0;
     c.base.radix = 16; c.base.bits = 8; c.stack[0] = value_real(mk(256));
     check("automatic BASE warnings are messages", display_has_message(&c));
@@ -510,7 +519,7 @@ static void warning_size(void)
         "Register Size Set", "Stack Size Set", "Word Size Set",
         "Epoch Set", "Time Zone Set", "Clock Set",
         "TVM Stored", "TVM Calculated", "TVM Not Found", "TVM Cleared", "TVM Reset",
-        "Not available yet", "VARS", "All Vars = 0",
+        "VARS",
         "LINF", "LOGF", "EXPF", "PWRF",
         "Err: Division By 0", "Err: Domain", "Err: Overflow", "Err: Stat",
         "Err: Data Type", "Err: Unit Mismatch", "Err: Math", "Err: Index",

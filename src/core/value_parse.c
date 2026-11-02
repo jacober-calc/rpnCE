@@ -18,7 +18,7 @@ static const char *parse_real(const char *text, size_t n, real_t *out)
 {
     if (n >= VALUE_FORMAT_MAX) return "Err: Syntax";
     char token[VALUE_FORMAT_MAX];
-    memcpy(token, text, n); token[n] = '\0';
+    memcpy(token, text, n);
     /* EE and its sign may still be waiting for digits when entry ends. */
     if (n && token[n - 1] == '-') {
         if (n == 1) n = 0;
@@ -28,13 +28,17 @@ static const char *parse_real(const char *text, size_t n, real_t *out)
     int error = os_PushErrorHandler();
     if (error) return (error & OS_E_MASK) == (OS_E_OVERFLOW & OS_E_MASK) ? "Err: Overflow" :
                       (error & OS_E_MASK) == (MX_E_UNDERFLOW & OS_E_MASK) ? "Err: Underflow" : "Err: Syntax";
+    const char *e = NULL;
     char *end;
     real_t result = n ? os_StrToReal(token, &end) : mx_zero;
-    if (n && (end == token || *end)) { os_PopErrorHandler(); return "Err: Syntax"; }
-    mx_check_range(&result);
-    *out = result;
+    if (n && (end == token || *end)) {
+        e = "Err: Syntax";
+    } else {
+        mx_check_range(&result);
+        *out = result;
+    }
     os_PopErrorHandler();
-    return NULL;
+    return e;
 }
 const char *value_parse(const char *text, const base_state_t *base, value_t *out)
 {

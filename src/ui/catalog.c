@@ -27,7 +27,7 @@ bool catalog_value(const calc_t *c, uint8_t item, value_t *out)
     return calc_register_read(c, item, out);
 }
 
-bool catalog_open(catalog_t *cat, calc_t *c)
+void catalog_open(catalog_t *cat, const calc_t *c)
 {
     cat->count = 0;
     for (int num = REG_A; num < REG_EXTRA_FIRST + c->extra_count; num++) {
@@ -42,8 +42,7 @@ bool catalog_open(catalog_t *cat, calc_t *c)
     cat->items[cat->count++] = CAT_LASTX; /* always visible, always last */
 
     cat->sel = cat->top = 0;
-    cat->open = cat->count > 0;
-    return cat->open;
+    cat->open = true;
 }
 
 void catalog_move(catalog_t *cat, int delta)

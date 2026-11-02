@@ -3,9 +3,12 @@
 
 #include "calc.h"
 
-/* Neutral byte-valued settings share their assignment and menu selection
- * rules. Entry completion remains the responsibility of calc_execute(). */
+/* Settings chosen directly by a command, such as RAD or BEG. calc_execute()
+ * finishes entry first; the stack and stack lift are untouched. Returns
+ * false for any other command. */
 bool calc_mode_set(calc_t *c, calc_cmd_t cmd, uint8_t arg);
+
+/* Whether the setting a command selects is in effect, for menu labels. */
 bool calc_mode_active(const calc_t *c, calc_cmd_t cmd, uint8_t arg);
 
 #endif

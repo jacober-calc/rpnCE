@@ -847,6 +847,139 @@ static bool complex_result_needed(calc_cmd_t cmd, const real_t *y, const real_t 
     }
 }
 
+/* ---------- evaluation by operand family ----------
+ * Each runs under value_eval()'s error handler: OS math errors unwind
+ * straight to it, and every other outcome returns a message or NULL. */
+
+/* Logic, shift, rotate, bit and word arithmetic on BASE words. */
+static const char *eval_base(const value_context_t *ctx, bool ry,
+                             const value_t *y, const value_t *x, value_result_t *out)
+{
+    base_op_t op = (base_op_t)ctx->arg;
+    if (!ctx->base || !value_is_plain(x) || (ry && !value_is_plain(y)))
+        return "Err: Data Type";
+    base_word_t bx, by = 0, r, r2 = 0;
+    base_fit_t fx = base_fit(ctx->base, &x->real, &bx);
+    base_fit_t fy = ry ? base_fit(ctx->base, &y->real, &by) : BW_OK;
+    if (fx != BW_OK || fy != BW_OK)
+        return fx == BW_TOO_BIG || fy == BW_TOO_BIG ? "Err: Word Size" : "Err: Domain";
+    if (!base_apply(ctx->base, op, by, bx, &r, &r2))
+        return (op == BOP_DIV || op == BOP_DIV2) && !bx ? "Err: Division By 0" : "Err: Domain";
+    out->pair = op == BOP_DIV2;
+    out->drop = ry && !out->pair;
+    out->x = value_real(base_real(out->pair ? r2 : r));
+    if (out->pair) out->y = value_real(base_real(r));
+    return NULL;
+}
+
+/* LINK: splits a complex X into its parts (Y, X), or joins two reals. */
+static const char *eval_link(const value_context_t *ctx, const value_t *y,
+                             const value_t *x, value_result_t *out)
+{
+    if (x->type == VALUE_COMPLEX && !x->unit) {
+        real_t first = x->real, second = x->imag;
+        if (ctx->complex_mode != COMPLEX_RECT) {
+            first = magnitude(&x->real, &x->imag);
+            second = atan2_real(&x->imag, &x->real, ctx->complex_mode == COMPLEX_DEG);
+        }
+        out->y = value_real(first);
+        out->x = value_real(second);
+        out->pair = out->split = true;
+        out->drop = false;
+        return NULL;
+    }
+    if (!value_is_plain(x) || !value_is_plain(y))
+        return "Err: Data Type";
+    out->x = value_complex(y->real, x->real);
+    if (ctx->complex_mode != COMPLEX_RECT) {
+        bool degrees = ctx->complex_mode == COMPLEX_DEG;
+        real_t cs = trig(CMD_COS, &x->real, degrees), sn = trig(CMD_SIN, &x->real, degrees);
+        out->x = value_complex(os_RealMul(&y->real, &cs), os_RealMul(&y->real, &sn));
+    }
+    return NULL;
+}
+
+/* REAL, IMAG, CONJ, ABS and ANGLE, which also accept plain reals. */
+static const char *eval_complex_part(const value_context_t *ctx, calc_cmd_t cmd,
+                                     const value_t *x, value_result_t *out)
+{
+    if (x->unit)
+        return "Err: Data Type";
+    value_t z = complex_promote(x);
+    switch (cmd) {
+        case CMD_COMPLEX_REAL: out->x = value_real(z.real); break;
+        case CMD_COMPLEX_IMAG: out->x = value_real(z.imag); break;
+        case CMD_COMPLEX_CONJ:
+            out->x = *x;
+            if (x->type == VALUE_COMPLEX) out->x.imag = os_RealNeg(&x->imag);
+            break;
+        case CMD_COMPLEX_ABS: out->x = value_real(magnitude(&z.real, &z.imag)); break;
+        default:              /* CMD_COMPLEX_ANGLE */
+            out->x = value_real(value_is_real(x) ? mx_zero : atan2_real(&z.imag, &z.real, ctx->degrees));
+            break;
+    }
+    return NULL;
+}
+
+/* Complex arithmetic: a complex operand, or a real one whose answer is
+ * complex while CRES is on. Results with no imaginary part become real. */
+static const char *eval_complex(calc_cmd_t cmd, bool rx, bool ry,
+                                const value_t *y, const value_t *x, value_result_t *out)
+{
+    if ((rx && x->unit) || (ry && y->unit))
+        return "Err: Data Type";
+    calc_err_t e = compute_complex(cmd, y, x, &out->x);
+    if (e != ERR_NONE)
+        return error_text(e);
+    if (value_is_real(x) && (!ry || value_is_real(y)) && mx_is_zero(&out->x.imag))
+        out->x = value_real(out->x.real);
+    return NULL;
+}
+
+static bool wants_complex(const value_context_t *ctx, calc_cmd_t cmd, bool rx, bool ry,
+                          const value_t *y, const value_t *x)
+{
+    if ((rx && x->type == VALUE_COMPLEX) || (ry && y->type == VALUE_COMPLEX))
+        return true;
+    return ctx->complex_results && value_is_plain(x) && (!ry || value_is_plain(y)) &&
+           complex_result_needed(cmd, &y->real, &x->real);
+}
+
+static const char *eval_guarded(const value_context_t *ctx, calc_cmd_t cmd,
+                                uint8_t flags, bool rx, bool ry,
+                                const value_t *y, const value_t *x, value_result_t *out)
+{
+    memset(out, 0, sizeof *out);
+    out->drop = (flags & COMMAND_DROP) != 0;
+    if ((rx && value_is_date(x)) || (ry && value_is_date(y)))
+        return value_date_error(value_date_eval(cmd, y, x, out));
+    if (rx) { mx_check_range(&x->real); if (x->type == VALUE_COMPLEX) mx_check_range(&x->imag); }
+    if (ry) { mx_check_range(&y->real); if (y->type == VALUE_COMPLEX) mx_check_range(&y->imag); }
+
+    const char *e;
+    if (cmd == CMD_BASE_OP) {
+        e = eval_base(ctx, ry, y, x, out);
+    } else if (cmd == CMD_COMPLEX_LINK) {
+        e = eval_link(ctx, y, x, out);
+    } else if (cmd >= CMD_COMPLEX_REAL && cmd <= CMD_COMPLEX_ANGLE) {
+        e = eval_complex_part(ctx, cmd, x, out);
+    } else if (wants_complex(ctx, cmd, rx, ry, y, x)) {
+        e = eval_complex(cmd, rx, ry, y, x, out);
+    } else {
+        calc_err_t err = compute_real(ctx, cmd, &y->real, &x->real,
+                                      ry ? y->unit : 0, rx ? x->unit : 0, flags, out);
+        e = err == ERR_NONE ? NULL : error_text(err);
+        out->pair = (flags & COMMAND_PAIR) != 0;
+    }
+    if (e)
+        return e;
+    if (!value_is_date(&out->x)) {
+        mx_check_range(&out->x.real);
+        if (out->x.type == VALUE_COMPLEX) mx_check_range(&out->x.imag);
+    }
+    return NULL;
+}
+
 const char *value_eval(const value_context_t *ctx, calc_cmd_t cmd,
                        const value_t *y, const value_t *x, value_result_t *out)
 {
@@ -873,86 +1006,9 @@ const char *value_eval(const value_context_t *ctx, calc_cmd_t cmd,
     os_ResetFlag(ON, INTERRUPT);
     int error = os_PushErrorHandler();
     if (error) return error_text(map_os_error(error));
-    memset(out, 0, sizeof *out);
-    out->drop = (flags & COMMAND_DROP) != 0;
-    if ((rx && value_is_date(x)) || (ry && value_is_date(y))) {
-        dt_err_t e = value_date_eval(cmd, y, x, out);
-        os_PopErrorHandler();
-        return value_date_error(e);
-    }
-    if (rx) { mx_check_range(&x->real); if (x->type == VALUE_COMPLEX) mx_check_range(&x->imag); }
-    if (ry) { mx_check_range(&y->real); if (y->type == VALUE_COMPLEX) mx_check_range(&y->imag); }
-    if (cmd == CMD_BASE_OP) {
-        if (!ctx->base || !value_is_plain(x) || (ry && !value_is_plain(y))) {
-            os_PopErrorHandler(); return "Err: Data Type";
-        }
-        base_word_t bx, by = 0, r, r2 = 0;
-        base_fit_t fx = base_fit(ctx->base, &x->real, &bx);
-        base_fit_t fy = ry ? base_fit(ctx->base, &y->real, &by) : BW_OK;
-        if (fx != BW_OK || fy != BW_OK) {
-            os_PopErrorHandler();
-            return fx == BW_TOO_BIG || fy == BW_TOO_BIG ? "Err: Word Size" : "Err: Domain";
-        }
-        if (!base_apply(ctx->base, (base_op_t)ctx->arg, by, bx, &r, &r2)) {
-            os_PopErrorHandler();
-            return ((base_op_t)ctx->arg == BOP_DIV || (base_op_t)ctx->arg == BOP_DIV2) && !bx ? "Err: Division By 0" : "Err: Domain";
-        }
-        out->pair = (base_op_t)ctx->arg == BOP_DIV2;
-        out->drop = ry && !out->pair;
-        out->x = value_real(base_real(out->pair ? r2 : r));
-        if (out->pair) out->y = value_real(base_real(r));
-    } else if (cmd == CMD_COMPLEX_LINK) {
-        if (x->type == VALUE_COMPLEX && !x->unit) {
-            real_t first = x->real, second = x->imag;
-            if (ctx->complex_mode != COMPLEX_RECT) {
-                first = magnitude(&x->real, &x->imag);
-                second = atan2_real(&x->imag, &x->real, ctx->complex_mode == COMPLEX_DEG);
-            }
-            out->y = value_real(first); out->x = value_real(second); out->pair = out->split = true;
-            out->drop = false;
-        } else if (value_is_plain(x) && value_is_plain(y)) {
-            out->x = value_complex(y->real, x->real);
-            if (ctx->complex_mode != COMPLEX_RECT) {
-                bool degrees = ctx->complex_mode == COMPLEX_DEG;
-                real_t cs = trig(CMD_COS, &x->real, degrees), sn = trig(CMD_SIN, &x->real, degrees);
-                out->x = value_complex(os_RealMul(&y->real, &cs), os_RealMul(&y->real, &sn));
-            }
-        } else { os_PopErrorHandler(); return "Err: Data Type"; }
-    } else if (cmd >= CMD_COMPLEX_REAL && cmd <= CMD_COMPLEX_ANGLE) {
-        if (x->unit) { os_PopErrorHandler(); return "Err: Data Type"; }
-        value_t z = complex_promote(x);
-        switch (cmd) {
-            case CMD_COMPLEX_REAL: out->x = value_real(z.real); break;
-            case CMD_COMPLEX_IMAG: out->x = value_real(z.imag); break;
-            case CMD_COMPLEX_CONJ:
-                out->x = *x;
-                if (x->type == VALUE_COMPLEX) out->x.imag = os_RealNeg(&x->imag);
-                break;
-            case CMD_COMPLEX_ABS: out->x = value_real(magnitude(&z.real, &z.imag)); break;
-            case CMD_COMPLEX_ANGLE:
-                out->x = value_real(value_is_real(x) ? mx_zero : atan2_real(&z.imag, &z.real, ctx->degrees)); break;
-            default: break;
-        }
-    } else if ((rx && x->type == VALUE_COMPLEX) || (ry && y->type == VALUE_COMPLEX) ||
-               (ctx->complex_results && value_is_plain(x) && (!ry || value_is_plain(y)) &&
-                complex_result_needed(cmd, &y->real, &x->real))) {
-        if ((rx && x->unit) || (ry && y->unit)) { os_PopErrorHandler(); return "Err: Data Type"; }
-        calc_err_t e = compute_complex(cmd, y, x, &out->x);
-        if (e != ERR_NONE) { os_PopErrorHandler(); return error_text(e); }
-        if (value_is_real(x) && (!ry || value_is_real(y)) && mx_is_zero(&out->x.imag))
-            out->x = value_real(out->x.real);
-    } else {
-        calc_err_t e = compute_real(ctx, cmd, &y->real, &x->real,
-                                    ry ? y->unit : 0, rx ? x->unit : 0, flags, out);
-        if (e != ERR_NONE) { os_PopErrorHandler(); return error_text(e); }
-        out->pair = (flags & COMMAND_PAIR) != 0;
-    }
-    if (!value_is_date(&out->x)) {
-        mx_check_range(&out->x.real);
-        if (out->x.type == VALUE_COMPLEX) mx_check_range(&out->x.imag);
-    }
+    const char *e = eval_guarded(ctx, cmd, flags, rx, ry, y, x, out);
     os_PopErrorHandler();
-    return NULL;
+    return e;
 }
 
 const char *value_polar(const value_t *v, bool degrees, real_t *r, real_t *angle)

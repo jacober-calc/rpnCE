@@ -43,7 +43,6 @@ completed stack value.
 | Err: Syntax | number, complex or DATE entry that can't be read |
 | Err: Clock | the CE's clock can't be read |
 | TVM Not Found | no interest rate fits the TVM values |
-| Not available yet | a menu action without an implementation |
 
 ## Notices
 

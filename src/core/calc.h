@@ -40,6 +40,10 @@
 /* Stack levels. */
 enum { REG_X, REG_Y, REG_Z, REG_T };
 
+/* What a message is: an error stays until a key is pressed, a notice may
+ * time out, and SHOW's full-precision view stays like an error. */
+typedef enum { MSG_ERROR, MSG_NOTICE, MSG_SHOW } message_kind_t;
+
 typedef struct {
     value_t stack[STACK_MAX];    /* stack[0] is X, [1] Y, [2] Z, [3] T, ... */
     uint8_t depth;              /* stack levels in use: 4 to STACK_MAX */
@@ -72,11 +76,15 @@ typedef struct {
 
     calc_cmd_t last_cmd;        /* previous command, for CLEAR CLEAR */
 
-    const char *message;        /* error or info text, or NULL */
+    const char *message;        /* text to show, or NULL */
+    uint8_t message_kind;       /* message_kind_t of a non-NULL message */
     char show_buf[VALUE_FORMAT_MAX]; /* SHOW also needs room for raw DATE records */
 } calc_t;
 
 void calc_init(calc_t *c);
+
+/* Shows text (NULL for none) with the way it should be treated. */
+void calc_set_message(calc_t *c, message_kind_t kind, const char *text);
 void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg);
 
 /* Seeds the random generator (call once at startup, e.g. from the clock). */

@@ -58,6 +58,10 @@ int dt_iso_dow(dt_int days);                                /* Monday 1 ... Sund
 
 dt_err_t dt_validate(const dt_obj_t *o);
 
+/* Changes a record's type, keeping the fields the new type uses and
+ * zeroing the rest, so every record has one canonical byte form. */
+void dt_retype(dt_obj_t *o, obj_type_t type);
+
 /* Reads typed text: an optional type tag (D, T, DT, TZ, DZ, DR, DW), then
  * {fields separated by commas}, the closing brace optional. Without a tag
  * the type comes from the number of fields: 2 TZ, 3 D, 4 DR, 6 DT, 8 DZ.
@@ -84,9 +88,11 @@ dt_err_t dt_to_epoch_seconds(const dt_obj_t *o, dt_int epoch_days, dt_int *out);
 dt_err_t dt_from_epoch_seconds(dt_int secs, dt_int epoch_days, obj_type_t type,
                                int tz_quarters, dt_obj_t *out);
 
-/* Offsets: TimeZone <-> quarter hours (TZ{5,30} is 22). */
+/* Offsets: TimeZone <-> quarter hours (TZ{5,30} is 22). dt_set_tz_quarters
+ * fills just the offset fields of any record, without a range check. */
 int dt_tz_quarters(const dt_obj_t *tz);
 dt_err_t dt_tz_from_quarters(dt_int quarters, dt_obj_t *out);
+void dt_set_tz_quarters(dt_obj_t *o, int quarters);
 
 /* Time <-> seconds after midnight; Duration <-> seconds. */
 dt_int dt_time_seconds(const dt_obj_t *t);

@@ -44,32 +44,20 @@ void storage_save(calc_t *c)
     if (saved) ti_Delete("RPNCEunt"); /* superseded by each value's own unit */
 }
 
-bool storage_load(calc_t *c)
+/* The rest of a version-6 save, after its header. */
+static bool load_current(calc_t *c, uint8_t h)
 {
     storage_state_t *s = &storage_workspace.current.state;
     uint8_t *precision = storage_workspace.current.precision;
-    uint8_t h = ti_Open(STATE_APPVAR, "r");
-    if (!h) return false;
-    uint8_t header[2];
-    bool header_ok = ti_Read(header, 1, 2, h) == 2 && header[0] == STATE_MAGIC;
-    ti_Close(h);
-    if (!header_ok) return false;
-    if (header[1] == 5) return storage_import_v5(c);
-    if (header[1] != STATE_VERSION) return false;
-    h = ti_Open(STATE_APPVAR, "r");
-    if (!h) return false;
-    bool valid = ti_Read(s, 1, SAVED_FIXED_SIZE, h) == SAVED_FIXED_SIZE &&
-                 s->depth >= STACK_MIN && s->depth <= STACK_MAX && s->extra_count <= REG_EXTRA_MAX;
-    if (valid) {
-        size_t tail = sizeof(value_t) * s->extra_count;
-        valid = ti_Read(s->extra, 1, tail, h) == tail;
-    }
-    bool have_precision = false;
-    if (valid && ti_Read(precision, 1, PRECISION_SIZE, h) == PRECISION_SIZE) {
-        have_precision = storage_precision_valid(&s->stats, precision);
-    }
-    ti_Close(h);
-    if (!valid) return false;
+    const size_t rest = SAVED_FIXED_SIZE - STORAGE_HEADER_SIZE;
+    if (ti_Read((uint8_t *)s + STORAGE_HEADER_SIZE, 1, rest, h) != rest ||
+        s->depth < STACK_MIN || s->depth > STACK_MAX || s->extra_count > REG_EXTRA_MAX)
+        return false;
+    size_t tail = sizeof(value_t) * s->extra_count;
+    if (ti_Read(s->extra, 1, tail, h) != tail)
+        return false;
+    bool have_precision = ti_Read(precision, 1, PRECISION_SIZE, h) == PRECISION_SIZE &&
+                          storage_precision_valid(&s->stats, precision);
     for (int i = 0; i < STACK_MAX; i++) if (!value_valid(&s->stack[i])) return false;
     if (!value_valid(&s->lastx)) return false;
     for (int i = 0; i < REG_BASE_COUNT; i++) if (!value_valid(&s->regs[i])) return false;
@@ -89,6 +77,21 @@ bool storage_load(calc_t *c)
     }
     storage_restore_math(c, &s->tvm, &s->stats, &s->base, have_precision ? precision : NULL);
     return true;
+}
+
+/* One pass over the appvar: the header picks the reader, which continues
+ * from the same handle. Readers stage everything before changing c. */
+bool storage_load(calc_t *c)
+{
+    storage_state_t *s = &storage_workspace.current.state;
+    uint8_t h = ti_Open(STATE_APPVAR, "r");
+    if (!h) return false;
+    bool loaded = ti_Read(s, 1, STORAGE_HEADER_SIZE, h) == STORAGE_HEADER_SIZE &&
+                  s->magic == STATE_MAGIC &&
+                  (s->version == 5 ? storage_import_v5(c, h) :
+                   s->version == STATE_VERSION && load_current(c, h));
+    ti_Close(h);
+    return loaded;
 }
 
 /* ---------- settings ---------- */

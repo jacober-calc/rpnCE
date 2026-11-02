@@ -26,17 +26,7 @@ static int digit_of(sk_key_t key)
     }
 }
 
-/* The green ALPHA letters printed above the CE keys. */
-static int letter_index(sk_key_t key);
-
-/* The register named by a key in a STO/RCL/x<> prompt: its green ALPHA
- * letter (A = 1 ... Z = 26), or -1. */
-static int letter_of(sk_key_t key)
-{
-    int i = letter_index(key);
-    return i < 0 ? -1 : i + 1;
-}
-
+/* The green ALPHA letters printed above the CE keys: A = 0 ... Z = 25. */
 static int letter_index(sk_key_t key)
 {
     switch (key) {
@@ -70,6 +60,19 @@ static int letter_index(sk_key_t key)
     }
 }
 
+/* The register named by a key in a STO/RCL/x<> prompt: its green ALPHA
+ * letter (A = 1 ... Z = 26), or -1. */
+static int letter_of(sk_key_t key)
+{
+    int i = letter_index(key);
+    return i < 0 ? -1 : i + 1;
+}
+
+/* Register arithmetic in a STO/RCL prompt: 1 +, 2 -, 3 x, 4 /, else 0.
+ * The value is added to CMD_STO or CMD_RCL to pick the command. */
+_Static_assert(CMD_STO_ADD == CMD_STO + 1 && CMD_STO_DIV == CMD_STO + 4 &&
+               CMD_RCL_ADD == CMD_RCL + 1 && CMD_RCL_DIV == CMD_RCL + 4,
+               "prompt arithmetic relies on the STO/RCL command order");
 static uint8_t op_of(sk_key_t key)
 {
     switch (key) {
@@ -192,6 +195,8 @@ static event_t prompt_key(keys_t *k, sk_key_t key)
         ev.kind = EV_CMD;
         static const calc_cmd_t cmds[] = { CMD_DISP_FIX, CMD_DISP_SCI, CMD_DISP_ENG,
                                            CMD_ROUND_N, CMD_ROUND_G };
+        _Static_assert(sizeof cmds / sizeof cmds[0] == PROMPT_RNDG - PROMPT_FIX + 1,
+                       "every digit prompt needs a command");
         ev.cmd = cmds[k->prompt - PROMPT_FIX];
         ev.arg = value;
         k->prompt = PROMPT_NONE;

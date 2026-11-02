@@ -9,7 +9,6 @@ COMPRESSED = YES
 ARCHIVED = YES
 
 CFLAGS = -Wall -Wextra -Oz
-CXXFLAGS = -Wall -Wextra -Oz
 
 # Keep linker output with the other intermediate files.
 TARGETOBJ = ../$(OBJDIR)/rpnCE.obj

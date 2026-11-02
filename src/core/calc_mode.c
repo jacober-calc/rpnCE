@@ -1,62 +1,76 @@
-#include <stddef.h>
 #include "calc_mode.h"
 
-enum { REVERSE = 1, HIGHLIGHT = 2 };
-typedef struct {
-    uint16_t offset;
-    uint8_t first, count, flags;
-} calc_mode_t;
-
-/* Command IDs stay unchanged. DATE subcommands occupy the following range
- * only within this private lookup. Every target field is one byte; bool
- * assignments use only the canonical representations 0 and 1. */
-#define DATE_KEY(fn) (CMD_COUNT + (fn))
-#define MODE(first, last, field, flags) \
-    { offsetof(calc_t, field), first, (last) - (first) + 1, flags }
-static const calc_mode_t modes[] = {
-    MODE(CMD_MODE_RAD, CMD_MODE_DEG, degrees, HIGHLIGHT),
-    MODE(CMD_CLEAR_CARRY, CMD_SET_CARRY, base.carry, 0),
-    MODE(CMD_TVM_BEGIN, CMD_TVM_END, tvm.begin, REVERSE | HIGHLIGHT),
-    MODE(CMD_DECIMAL_POINT, CMD_DECIMAL_COMMA, decimal_comma, HIGHLIGHT),
-    MODE(CMD_RESULT_REAL, CMD_RESULT_COMPLEX, complex_results, HIGHLIGHT),
-    MODE(CMD_COMPLEX_RECT, CMD_COMPLEX_DEG, complex_mode, HIGHLIGHT),
-    MODE(DATE_KEY(DF_EPOCH_UNIX), DATE_KEY(DF_EPOCH_CUSTOM), epoch, HIGHLIGHT),
-    MODE(DATE_KEY(DF_FORMAT_RAW), DATE_KEY(DF_FORMAT_STRING), date_as_string, HIGHLIGHT)
-};
-#undef MODE
-
-_Static_assert(sizeof(bool) == 1, "mode flags require byte booleans");
-_Static_assert(sizeof(calc_t) <= UINT16_MAX, "mode offsets require 16 bits");
-_Static_assert(DATE_KEY(DF_FORMAT_STRING) <= UINT8_MAX, "mode keys require 8 bits");
-_Static_assert(CMD_TVM_END == CMD_TVM_BEGIN + 1, "reversed TVM choices require two modes");
-
-static const calc_mode_t *find_mode(calc_cmd_t cmd, uint8_t arg, uint8_t *value)
-{
-    if ((unsigned)cmd >= CMD_COUNT) return NULL;
-    unsigned key = cmd == CMD_DATE_FN ? DATE_KEY(arg) : (unsigned)cmd;
-    for (const calc_mode_t *m = modes; m < modes + sizeof modes / sizeof modes[0]; m++) {
-        unsigned v = key - m->first;
-        if (v < m->count) {
-            *value = (uint8_t)(v ^ (m->flags & REVERSE));
-            return m;
-        }
-    }
-    return NULL;
-}
+/* Settings mirror their commands' order, so a command's offset from the
+ * first choice is the setting's value. */
+_Static_assert(CMD_COMPLEX_RAD - CMD_COMPLEX_RECT == COMPLEX_RAD &&
+               CMD_COMPLEX_DEG - CMD_COMPLEX_RECT == COMPLEX_DEG &&
+               DF_EPOCH_CUSTOM - DF_EPOCH_UNIX == EPOCH_CUSTOM,
+               "mode commands must follow their settings' order");
 
 bool calc_mode_set(calc_t *c, calc_cmd_t cmd, uint8_t arg)
 {
-    uint8_t value;
-    const calc_mode_t *m = find_mode(cmd, arg, &value);
-    if (!m) return false;
-    *((unsigned char *)c + m->offset) = value;
-    return true;
+    switch (cmd) {
+        case CMD_MODE_RAD: case CMD_MODE_DEG:
+            c->degrees = cmd == CMD_MODE_DEG;
+            return true;
+        case CMD_CLEAR_CARRY: case CMD_SET_CARRY:
+            c->base.carry = cmd == CMD_SET_CARRY;
+            return true;
+        case CMD_TVM_BEGIN: case CMD_TVM_END:
+            c->tvm.begin = cmd == CMD_TVM_BEGIN;
+            return true;
+        case CMD_DECIMAL_POINT: case CMD_DECIMAL_COMMA:
+            c->decimal_comma = cmd == CMD_DECIMAL_COMMA;
+            return true;
+        case CMD_RESULT_REAL: case CMD_RESULT_COMPLEX:
+            c->complex_results = cmd == CMD_RESULT_COMPLEX;
+            return true;
+        case CMD_COMPLEX_RECT: case CMD_COMPLEX_RAD: case CMD_COMPLEX_DEG:
+            c->complex_mode = (uint8_t)(cmd - CMD_COMPLEX_RECT);
+            return true;
+        case CMD_DATE_FN:
+            if (arg >= DF_EPOCH_UNIX && arg <= DF_EPOCH_CUSTOM) {
+                c->epoch = (uint8_t)(arg - DF_EPOCH_UNIX);
+                return true;
+            }
+            if (arg == DF_FORMAT_RAW || arg == DF_FORMAT_STRING) {
+                c->date_as_string = arg == DF_FORMAT_STRING;
+                return true;
+            }
+            return false;
+        default:
+            return false;
+    }
 }
 
 bool calc_mode_active(const calc_t *c, calc_cmd_t cmd, uint8_t arg)
 {
-    uint8_t value;
-    const calc_mode_t *m = find_mode(cmd, arg, &value);
-    return m && (m->flags & HIGHLIGHT) &&
-           *((const unsigned char *)c + m->offset) == value;
+    switch (cmd) {
+        case CMD_MODE_RAD:       return !c->degrees;
+        case CMD_MODE_DEG:       return c->degrees;
+        case CMD_TVM_BEGIN:      return c->tvm.begin;
+        case CMD_TVM_END:        return !c->tvm.begin;
+        case CMD_DECIMAL_POINT:  return !c->decimal_comma;
+        case CMD_DECIMAL_COMMA:  return c->decimal_comma;
+        case CMD_RESULT_REAL:    return !c->complex_results;
+        case CMD_RESULT_COMPLEX: return c->complex_results;
+        case CMD_COMPLEX_RECT: case CMD_COMPLEX_RAD: case CMD_COMPLEX_DEG:
+            return c->complex_mode == cmd - CMD_COMPLEX_RECT;
+        case CMD_BASE_RADIX:     return c->base.radix == arg;
+        case CMD_STAT_ALL_MODE:  return !c->stats.linear_only;
+        case CMD_STAT_LIN_MODE:  return c->stats.linear_only;
+        case CMD_FIT_MODEL:      return c->stats.model == arg;
+        /* TVM solver settings show whether they differ from the defaults. */
+        case CMD_TVM_IYR1:       return c->tvm.iyr1_set;
+        case CMD_TVM_IYR2:       return c->tvm.iyr2_set;
+        case CMD_TVM_ITER_MAX:   return c->tvm.iter_max_set;
+        case CMD_DATE_FN:
+            if (arg >= DF_EPOCH_UNIX && arg <= DF_EPOCH_CUSTOM)
+                return c->epoch == arg - DF_EPOCH_UNIX;
+            if (arg == DF_FORMAT_RAW || arg == DF_FORMAT_STRING)
+                return c->date_as_string == (arg == DF_FORMAT_STRING);
+            return false;
+        default:
+            return false;
+    }
 }

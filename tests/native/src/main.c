@@ -424,7 +424,8 @@ static void calculator_regressions(void)
     check(c.message && !strcmp(c.message, "TVM Calculated") &&
           os_RealToInt24(&c.stack[0].real) == -100);
     catalog_t catalog = {0};
-    bool vars_ok = catalog_open(&catalog, &c) && catalog.items[catalog.count - 1] == CAT_LASTX;
+    catalog_open(&catalog, &c);
+    bool vars_ok = catalog.open && catalog.items[catalog.count - 1] == CAT_LASTX;
     for (uint8_t item = CAT_TVM_FIRST; item <= CAT_TVM_LAST; item++) {
         bool found = false;
         for (uint8_t i = 0; i < catalog.count; i++) found |= catalog.items[i] == item;

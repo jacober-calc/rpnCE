@@ -123,9 +123,7 @@ dt_err_t value_date_eval(calc_cmd_t cmd, const value_t *y, const value_t *x, val
     switch (cmd) {
         case CMD_SQRT:
             if (t != OBJ_DATETIME && t != OBJ_DZ) return DT_ERR_TYPE;
-            first.type = t == OBJ_DZ ? OBJ_DATETIME : OBJ_DATE;
-            if (first.type == OBJ_DATE) first.hour = first.minute = first.second = 0;
-            first.tz_hour = first.tz_minute = 0;
+            dt_retype(&first, t == OBJ_DZ ? OBJ_DATETIME : OBJ_DATE);
             break;
         case CMD_SQUARE:
             if (t != OBJ_DATE && t != OBJ_DATETIME) return DT_ERR_TYPE;
@@ -133,18 +131,8 @@ dt_err_t value_date_eval(calc_cmd_t cmd, const value_t *y, const value_t *x, val
             break;
         case CMD_RECIP:
             if (t != OBJ_DATETIME && t != OBJ_DZ) return DT_ERR_TYPE;
-            if (t == OBJ_DATETIME) {
-                first.type = OBJ_DATE;
-                first.hour = first.minute = first.second = 0;
-                second.type = OBJ_TIME;
-                second.year = 0; second.month = second.day = 0;
-            } else {
-                first.type = OBJ_DATETIME;
-                first.tz_hour = first.tz_minute = 0;
-                memset(&second, 0, sizeof second);
-                second.type = OBJ_TZ;
-                second.tz_hour = x->date.tz_hour; second.tz_minute = x->date.tz_minute;
-            }
+            dt_retype(&first, t == OBJ_DATETIME ? OBJ_DATE : OBJ_DATETIME);
+            dt_retype(&second, t == OBJ_DATETIME ? OBJ_TIME : OBJ_TZ);
             out->y = value_date(&first); out->x = value_date(&second); out->pair = out->split = true;
             out->drop = false;
             return DT_OK;

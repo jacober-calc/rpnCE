@@ -61,8 +61,7 @@ bool calc_clock_now(const calc_t *c, bool utc, dt_obj_t *out)
     out->type = OBJ_DZ;
     out->year = (int16_t)y; out->month = (int8_t)mo; out->day = (int8_t)d;
     out->hour = (int8_t)h; out->minute = (int8_t)mi; out->second = (int8_t)s;
-    out->tz_hour = (int8_t)(c->clock_tz / 4);
-    out->tz_minute = (int8_t)((c->clock_tz % 4) * 15);
+    dt_set_tz_quarters(out, c->clock_tz);
     if (dt_validate(out) != DT_OK)
         return false;
     int zone = utc ? 0 : c->app_tz;
@@ -83,7 +82,7 @@ static bool tz_from_value(calc_t *c, const dt_val_t *v, int *q)
         *q = (int)v->quarters;
         return true;
     }
-    c->message = value_date_error(!value_is_plain(&c->stack[REG_X]) ? DT_ERR_TYPE : DT_ERR_DOMAIN);
+    calc_error(c, value_date_error(!value_is_plain(&c->stack[REG_X]) ? DT_ERR_TYPE : DT_ERR_DOMAIN));
     return false;
 }
 
@@ -154,12 +153,8 @@ static __attribute__((noinline)) dt_err_t convert_value(const calc_t *c, date_fn
                 ((fn == DF_GET_DT || fn == DF_GET_TZ) && t != OBJ_DZ))
                 return DT_ERR_TYPE;
             *o = x.obj;
-            o->type = (fn == DF_GET_DATE) ? OBJ_DATE : (fn == DF_GET_TIME) ? OBJ_TIME :
-                      (fn == DF_GET_DT) ? OBJ_DATETIME : OBJ_TZ;
-            if (o->type == OBJ_DATE)
-                o->hour = o->minute = o->second = 0;
-            if (o->type != OBJ_TZ)
-                o->tz_hour = o->tz_minute = 0;
+            dt_retype(o, (fn == DF_GET_DATE) ? OBJ_DATE : (fn == DF_GET_TIME) ? OBJ_TIME :
+                         (fn == DF_GET_DT) ? OBJ_DATETIME : OBJ_TZ);
             return DT_OK;
         case DF_TIME_TO_S:
             if (t != OBJ_TIME) return DT_ERR_TYPE;
@@ -216,33 +211,27 @@ void calc_date_execute(calc_t *c, date_fn_t fn)
     switch (fn) {
         /* Menu aliases share the universal evaluator's arithmetic rules. */
         case DF_CVTZ: case DF_SHRINK: case DF_EXTEND: case DF_CUT: case DF_LINK:
-            calc_execute(c, CMD_DATE_VALUE, fn);
+            calc_apply(c, CMD_DATE_VALUE, fn);
             return;
         case DF_EPOCH_SET_CUSTOM:
             if (t != OBJ_DATE) { e = DT_ERR_TYPE; break; }
             c->custom_epoch = x->date;
             c->epoch = EPOCH_CUSTOM;
-            c->message = "Epoch Set";
+            calc_notice(c, "Epoch Set");
             return;
         case DF_EPOCH_GET_CUSTOM:
             *o = c->custom_epoch;
             break;
         case DF_NOW: case DF_NOW_DATE: case DF_NOW_TIME: case DF_NOW_DZ: case DF_NOW_DZ_UTC:
             if (!calc_clock_now(c, fn == DF_NOW || fn == DF_NOW_DZ_UTC, o)) {
-                c->message = "Err: Clock";
+                calc_error(c, "Err: Clock");
                 return;
             }
             if (fn == DF_NOW) {
                 dt_to_epoch_seconds(o, epoch_days(c), &result.num);
                 result.is_obj = false;
-            } else if (fn == DF_NOW_DATE) {
-                o->type = OBJ_DATE;
-                o->hour = o->minute = o->second = 0;
-                o->tz_hour = o->tz_minute = 0;
-            } else if (fn == DF_NOW_TIME) {
-                o->type = OBJ_TIME;
-                o->year = 0; o->month = o->day = 0;
-                o->tz_hour = o->tz_minute = 0;
+            } else if (fn == DF_NOW_DATE || fn == DF_NOW_TIME) {
+                dt_retype(o, fn == DF_NOW_DATE ? OBJ_DATE : OBJ_TIME);
             }
             break;
         case DF_SET_APP_TZ:
@@ -252,7 +241,7 @@ void calc_date_execute(calc_t *c, date_fn_t fn)
             if (!tz_from_value(c, &v, &q)) return;
             if (fn == DF_SET_APP_TZ) c->app_tz = (int8_t)q;
             else c->clock_tz = (int8_t)q;
-            c->message = "Time Zone Set";
+            calc_notice(c, "Time Zone Set");
             return;
         }
         case DF_GET_APP_TZ:
@@ -269,7 +258,7 @@ void calc_date_execute(calc_t *c, date_fn_t fn)
                 if (e) break;
             }
             sys_clock_write(o->year, o->month, o->day, o->hour, o->minute, o->second);
-            c->message = "Clock Set";
+            calc_notice(c, "Clock Set");
             return;
         default:
             if (fn > DF_UNIX_TO_DW) return;
@@ -278,7 +267,7 @@ void calc_date_execute(calc_t *c, date_fn_t fn)
             break;
     }
     if (e) {
-        c->message = value_date_error(e);
+        calc_error(c, value_date_error(e));
         return;
     }
     value_t v = value_date_result(&result);

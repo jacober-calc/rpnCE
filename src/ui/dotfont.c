@@ -9,7 +9,8 @@ typedef struct {
     uint8_t rows[DOT_ROWS]; /* bit 4 = leftmost column */
 } glyph_t;
 
-/* 5x7 glyphs, one byte per row (bit 4 = leftmost dot). */
+/* 5x7 glyphs, one byte per row (bit 4 = leftmost dot), in ascending
+ * character order for find_glyph()'s binary search. */
 static const glyph_t glyphs[] = {
     { '\x01', 3, { 0x18, 0x04, 0x08, 0x1c, 0x00, 0x00, 0x00 } },
     { '\x05', 5, { 0x1f, 0x10, 0x08, 0x04, 0x08, 0x10, 0x1f } },
@@ -100,13 +101,21 @@ static const uint8_t comma_rows[DOT_ROWS + 1] = { 0, 0, 0, 0, 0, 0, 0x10, 0x10 }
 static const uint8_t small_e_rows[5] = { 0x1e, 0x10, 0x1c, 0x10, 0x1e };
 #define SMALL_E_WIDTH 4
 
+/* Every character drawn is looked up, so search the sorted table. */
 static const glyph_t *find_glyph(char ch)
 {
-    if ((uint8_t)ch == MSYM_TIMES)
-        ch = '*';
-    for (unsigned i = 0; i < sizeof glyphs / sizeof glyphs[0]; i++)
-        if (glyphs[i].ch == ch)
-            return &glyphs[i];
+    uint8_t want = (uint8_t)ch == MSYM_TIMES ? (uint8_t)'*' : (uint8_t)ch;
+    unsigned lo = 0, hi = sizeof glyphs / sizeof glyphs[0];
+    while (lo < hi) {
+        unsigned mid = (lo + hi) / 2;
+        uint8_t have = (uint8_t)glyphs[mid].ch;
+        if (have == want)
+            return &glyphs[mid];
+        if (have < want)
+            lo = mid + 1;
+        else
+            hi = mid;
+    }
     return NULL;
 }
 

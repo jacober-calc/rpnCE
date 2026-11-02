@@ -22,8 +22,9 @@ typedef struct {
     uint8_t items[REG_EXTRA_FIRST + REG_EXTRA_MAX + TVM_VAR_COUNT];
 } catalog_t;
 
-/* Opens the catalog. TVM and the final LASTX entry are included even if zero. */
-bool catalog_open(catalog_t *cat, calc_t *c);
+/* Opens the catalog. TVM and the final LASTX entry are included even if
+ * zero, so it is never empty. */
+void catalog_open(catalog_t *cat, const calc_t *c);
 void catalog_move(catalog_t *cat, int delta);
 
 /* Names include A, i, stat sums, R041, LASTX and the seven TVM labels. */

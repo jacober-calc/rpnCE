@@ -46,6 +46,7 @@ void calc_entry_append(calc_t *c, char ch)
     insert_char(c, c->entry_len, ch);
 }
 
+/* Starts number entry unless it is already under way. */
 static void begin_entry(calc_t *c)
 {
     if (c->editing)
@@ -74,7 +75,7 @@ void calc_finish_entry(calc_t *c)
     if (!c->editing)
         return;
     value_t result;
-    c->message = value_parse(c->entry, &c->base, &result);
+    calc_error(c, value_parse(c->entry, &c->base, &result));
     if (c->message) return;
     c->stack[0] = result;
     c->editing = false;
@@ -223,8 +224,7 @@ void calc_entry_backspace(calc_t *c)
 /* 2ND {: starts a record, after an optional type tag. */
 void calc_entry_record_open(calc_t *c)
 {
-    if (!c->editing)
-        begin_entry(c);
+    begin_entry(c);
     if (entry_has(c, '{'))
         return;
     for (int i = 0; i < c->entry_len; i++)
@@ -239,8 +239,7 @@ void calc_entry_record_tag(calc_t *c, uint8_t type)
     static const char *const tag[OBJ_COUNT] = { "", "D{", "T{", "DT{", "TZ{", "DZ{", "DW{", "DR{" };
     if (type == OBJ_NONE || type >= OBJ_COUNT)
         return;
-    if (!c->editing)
-        begin_entry(c);
+    begin_entry(c);
     if (c->entry_len)
         return;
     for (const char *p = tag[type]; *p; p++)
@@ -258,8 +257,7 @@ void calc_entry_alpha(calc_t *c, uint8_t letter)
     if (letter >= 26)
         return;
     char ch = (char)('A' + letter);
-    if (!c->editing)
-        begin_entry(c);
+    begin_entry(c);
     if (entry_has(c, '{'))
         return;
 

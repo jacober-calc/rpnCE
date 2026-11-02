@@ -188,7 +188,8 @@ static void registers(void)
           near(c.stack[1].real.v, 6 + 2.0/12) && c.stack[1].unit == unit("ft"));
     number(0); cmd(CMD_UNIT, unit("ft") - 1); cmd(CMD_STO, 2);
     catalog_t cat = {0};
-    check("VARS includes zero quantities and exposes their units", catalog_open(&cat, &c) &&
+    catalog_open(&cat, &c);
+    check("VARS includes zero quantities and exposes their units", cat.open &&
           cat.items[0] == REG_A && cat.items[1] == 2 && catalog_item(2).unit == unit("ft"));
     refused("statistics registers cannot store quantities", CMD_STO, REG_STAT_FIRST, "Err: Data Type");
     refused("statistics registers cannot exchange quantities", CMD_XCH, REG_STAT_FIRST, "Err: Data Type");
@@ -225,8 +226,9 @@ static void tvm_catalog(void)
     calc_init(&c);
     calc_t before = c;
     catalog_t cat = {0};
+    catalog_open(&cat, &c);
     check("VARS includes all seven TVM values, including zero FV",
-          catalog_open(&cat, &c) && cat.count == TVM_VAR_COUNT + 1);
+          cat.open && cat.count == TVM_VAR_COUNT + 1);
     check("zero LASTX is always the final VARS entry",
           cat.items[cat.count - 1] == CAT_LASTX && catalog_item(CAT_LASTX).real.v == 0);
     check("opening VARS does not change calculator state", !memcmp(&before, &c, sizeof c));

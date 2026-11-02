@@ -74,15 +74,28 @@ static value_context_t context(calc_t *c, uint8_t arg)
     ctx.stats = &c->stats;
     return ctx;
 }
+/* BASE operations may change the carry, so they work on a copy of the BASE
+ * state that is kept only when the operation succeeds. */
 static bool evaluate(calc_t *c, calc_cmd_t cmd, uint8_t arg,
                      const value_t *y, const value_t *x, value_result_t *out)
 {
+    base_state_t base = c->base;
     value_context_t ctx = context(c, arg);
-    c->message = value_eval(&ctx, cmd, y, x, out);
-    return c->message == NULL;
+    ctx.base = &base;
+    calc_error(c, value_eval(&ctx, cmd, y, x, out));
+    if (c->message)
+        return false;
+    c->base = base;
+    return true;
 }
 
-static void do_math(calc_t *c, calc_cmd_t cmd, uint8_t arg)
+void calc_set_message(calc_t *c, message_kind_t kind, const char *text)
+{
+    c->message = text;
+    c->message_kind = (uint8_t)kind;
+}
+
+void calc_apply(calc_t *c, calc_cmd_t cmd, uint8_t arg)
 {
     value_result_t result;
     if (!evaluate(c, cmd, arg, &c->stack[1], &c->stack[0], &result)) return;
@@ -107,7 +120,8 @@ static const uint8_t stat_reg_sum[REG_STAT_LAST - REG_STAT_FIRST + 1] = {
     SUM_LX, SUM_LX2, SUM_LY, SUM_LY2, SUM_LXLY, SUM_XLY, SUM_YLX,
 };
 
-static value_t *ordinary_register(calc_t *c, uint8_t num)
+/* A-Z, i and the extra registers in use; NULL for anything else. */
+static const value_t *ordinary_register(const calc_t *c, uint8_t num)
 {
     if (num >= REG_A && num <= REG_I) return &c->regs[num - REG_A];
     if (num >= REG_EXTRA_FIRST && num < REG_EXTRA_FIRST + c->extra_count)
@@ -120,23 +134,22 @@ bool calc_register_read(const calc_t *c, uint8_t num, value_t *out)
         *out = value_real(c->stats.sum[stat_reg_sum[num - REG_STAT_FIRST]]);
         return true;
     }
-    if (num >= REG_A && num <= REG_I) *out = c->regs[num - REG_A];
-    else if (num >= REG_EXTRA_FIRST && num < REG_EXTRA_FIRST + c->extra_count)
-        *out = c->extra[num - REG_EXTRA_FIRST];
-    else return false;
+    const value_t *r = ordinary_register(c, num);
+    if (!r) return false;
+    *out = *r;
     return true;
 }
 bool calc_register_write(calc_t *c, uint8_t num, const value_t *v)
 {
     if (num >= REG_STAT_FIRST && num <= REG_STAT_LAST) {
         const real_t *n = value_get_real(v);
-        if (!n) { c->message = "Err: Data Type"; return false; }
+        if (!n) { calc_error(c, "Err: Data Type"); return false; }
         c->stats.sum[stat_reg_sum[num - REG_STAT_FIRST]] = *n;
         c->stats.constant = 0;
         if (num < REG_STAT_FIRST + 6) c->stats.lnx_ok = c->stats.lny_ok = false;
         return true;
     }
-    value_t *r = ordinary_register(c, num);
+    value_t *r = (value_t *)ordinary_register(c, num);    /* c is writable here */
     if (!r || !value_valid(v)) return false;
     *r = *v;
     return true;
@@ -146,16 +159,16 @@ static bool target_register(calc_t *c, uint8_t arg, uint8_t *num, value_t *out)
     *num = arg;
     if (arg == REG_INDIRECT) {
         const real_t *index = value_get_real(&c->regs[REG_I - REG_A]);
-        if (!index) { c->message = "Err: Data Type"; return false; }
+        if (!index) { calc_error(c, "Err: Data Type"); return false; }
         real_t ip = os_RealInt(index);
         real_t lo = os_Int24ToReal(1), hi = os_Int24ToReal(255);
         if (os_RealCompare(&ip, &lo) < 0 || os_RealCompare(&ip, &hi) > 0) {
-            c->message = "Err: Index"; return false;
+            calc_error(c, "Err: Index"); return false;
         }
         *num = (uint8_t)os_RealToInt24(&ip);
     }
     if (calc_register_read(c, *num, out)) return true;
-    c->message = "Err: Index";
+    calc_error(c, "Err: Index");
     return false;
 }
 static calc_cmd_t arith_of(calc_cmd_t cmd)
@@ -202,40 +215,23 @@ static void do_exchange(calc_t *c, uint8_t arg)
     c->lift = true;
 }
 
-/* A whole number from X for a size setting: below lo becomes lo (the
- * default); above hi, or not a whole number, is an error (-1). */
-static int size_from_x(calc_t *c, int lo, int hi)
+/* A whole number from X in [lo, hi], or -1 (with an error message). For a
+ * size setting (lo_is_default), anything below lo means lo. */
+static int whole_from_x(calc_t *c, int lo, int hi, bool lo_is_default)
 {
     if (!value_is_plain(&c->stack[0])) {
-        c->message = "Err: Data Type";
+        calc_error(c, "Err: Data Type");
         return -1;
     }
-    real_t f = os_RealFrac(&c->stack[0].real);
+    const real_t *x = &c->stack[0].real;
+    real_t f = os_RealFrac(x);
     real_t a = os_Int24ToReal(lo), b = os_Int24ToReal(hi);
-    if (!mx_is_zero(&f) || os_RealCompare(&c->stack[0].real, &b) > 0) {
-        c->message = "Err: Domain";
+    bool below = os_RealCompare(x, &a) < 0;
+    if (!mx_is_zero(&f) || os_RealCompare(x, &b) > 0 || (below && !lo_is_default)) {
+        calc_error(c, "Err: Domain");
         return -1;
     }
-    if (os_RealCompare(&c->stack[0].real, &a) < 0)
-        return lo;
-    return os_RealToInt24(&c->stack[0].real);
-}
-
-/* A whole number from X in [lo, hi], or -1 (with an error message). */
-static int whole_from_x(calc_t *c, int lo, int hi)
-{
-    if (!value_is_plain(&c->stack[0])) {
-        c->message = "Err: Data Type";
-        return -1;
-    }
-    real_t f = os_RealFrac(&c->stack[0].real);
-    real_t a = os_Int24ToReal(lo), b = os_Int24ToReal(hi);
-    if (!mx_is_zero(&f) || os_RealCompare(&c->stack[0].real, &a) < 0 ||
-        os_RealCompare(&c->stack[0].real, &b) > 0) {
-        c->message = "Err: Domain";
-        return -1;
-    }
-    return os_RealToInt24(&c->stack[0].real);
+    return below ? lo : os_RealToInt24(x);
 }
 
 /* RSIZ: X is the total number of registers, from the standard 40 (A-Z, i
@@ -243,25 +239,25 @@ static int whole_from_x(calc_t *c, int lo, int hi)
  * removed lose their values. */
 static void set_reg_size(calc_t *c)
 {
-    int total = size_from_x(c, REG_STAT_LAST, REG_STAT_LAST + REG_EXTRA_MAX);
+    int total = whole_from_x(c, REG_STAT_LAST, REG_STAT_LAST + REG_EXTRA_MAX, true);
     if (total < 0)
         return;
     int n = total - REG_STAT_LAST;
     clear_values(c->extra + n, (uint8_t)(REG_EXTRA_MAX - n));
     c->extra_count = (uint8_t)n;
-    c->message = "Register Size Set";
+    calc_notice(c, "Register Size Set");
 }
 
 /* SSIZ: X is the stack depth, 4 to 12; less than 4 means 4. New levels
  * start at zero; levels beyond a smaller depth are lost. */
 static void set_stack_size(calc_t *c)
 {
-    int n = size_from_x(c, STACK_MIN, STACK_MAX);
+    int n = whole_from_x(c, STACK_MIN, STACK_MAX, true);
     if (n < 0)
         return;
     clear_values(c->stack + n, (uint8_t)(STACK_MAX - n));
     c->depth = (uint8_t)n;
-    c->message = "Stack Size Set";
+    calc_notice(c, "Stack Size Set");
 }
 
 /* ---------- random numbers ---------- */
@@ -303,25 +299,10 @@ static void do_unit_base(calc_t *c)
     uint8_t tag = c->stack[REG_X].unit;
     if (tag == 0)
         return;
-    do_math(c, CMD_UNIT, unit_base_of(unit_dim((uint8_t)(tag - 1))));
+    calc_apply(c, CMD_UNIT, unit_base_of(unit_dim((uint8_t)(tag - 1))));
 }
 
 /* ---------- BASE ---------- */
-
-/* Runs a logic, shift, rotate, bit or word-arithmetic operation. Its
- * arguments must be whole numbers that fit the word size. */
-static void do_base_op(calc_t *c, base_op_t op)
-{
-    base_state_t trial = c->base;
-    value_context_t ctx = context(c, (uint8_t)op);
-    ctx.base = &trial;
-    value_result_t result;
-    c->message = value_eval(&ctx, CMD_BASE_OP, &c->stack[1], &c->stack[0], &result);
-    if (c->message) return;
-    calc_stack_set_result(c, &result.x, result.drop);
-    if (result.pair) c->stack[1] = result.y;
-    c->base = trial;
-}
 
 /* In HEX, OCT and BIN the arithmetic keys work on words. */
 static calc_cmd_t base_key(const calc_t *c, calc_cmd_t cmd, uint8_t *arg)
@@ -357,7 +338,7 @@ static void do_stat(calc_t *c, calc_cmd_t cmd)
     value_context_t ctx = context(c, 0);
     ctx.stats = &trial;
     value_result_t result;
-    c->message = value_eval(&ctx, cmd, &c->stack[1], &c->stack[0], &result);
+    calc_error(c, value_eval(&ctx, cmd, &c->stack[1], &c->stack[0], &result));
     if (c->message) return;
 
     c->stats = trial;
@@ -378,7 +359,7 @@ static void do_stat(calc_t *c, calc_cmd_t cmd)
             calc_stack_set_x(c, &result.x);
             break;
         case CMD_FIT_BEST:
-            c->message = model_names[c->stats.model];
+            calc_notice(c, model_names[c->stats.model]);
             break;
         default:
             calc_stack_enter(c, &result.x);
@@ -402,16 +383,16 @@ static void do_tvm_var(calc_t *c, uint8_t arg, calc_cmd_t prev)
 
     bool solve = which <= TVM_FV && prev == CMD_TVM_VAR;
     if (!solve && (!value_is_plain(&c->stack[0]))) {
-        c->message = "Err: Data Type";
+        calc_error(c, "Err: Data Type");
         return;
     }
     if (!solve) {
         if (which >= TVM_PYR && os_RealCompare(&c->stack[0].real, &mx_zero) <= 0) {
-            c->message = "Err: Domain";
+            calc_error(c, "Err: Domain");
             return;
         }
         *var = c->stack[0].real;
-        c->message = "TVM Stored";
+        calc_notice(c, "TVM Stored");
         return;
     }
 
@@ -419,7 +400,7 @@ static void do_tvm_var(calc_t *c, uint8_t arg, calc_cmd_t prev)
     if (!evaluate(c, CMD_TVM_VAR, which, &c->stack[1], &c->stack[0], &result)) return;
     *var = result.x.real;
     calc_stack_enter(c, &result.x);
-    c->message = "TVM Calculated";
+    calc_notice(c, "TVM Calculated");
 }
 
 /* IYR1, IYR2 (starting guesses for I%YR) and TMAX (most iterations). */
@@ -435,18 +416,14 @@ static void do_tvm_setting(calc_t *c, calc_cmd_t cmd, uint8_t arg)
     }
 
     if (!value_is_plain(&c->stack[0])) {
-        c->message = "Err: Data Type";
+        calc_error(c, "Err: Data Type");
         return;
     }
     if (cmd == CMD_TVM_ITER_MAX) {
-        real_t max = os_Int24ToReal(255);
-        real_t f = os_RealFrac(&c->stack[0].real);
-        if (os_RealCompare(&c->stack[0].real, &mx_zero) <= 0 || !mx_is_zero(&f) ||
-            os_RealCompare(&c->stack[0].real, &max) > 0) {
-            c->message = "Err: Domain";
+        int n = whole_from_x(c, 1, UINT8_MAX, false);
+        if (n < 0)
             return;
-        }
-        t->iter_max = (uint8_t)os_RealToInt24(&c->stack[0].real);
+        t->iter_max = (uint8_t)n;
         t->iter_max_set = true;
     } else if (cmd == CMD_TVM_IYR1) {
         t->iyr1 = c->stack[0].real;
@@ -455,7 +432,7 @@ static void do_tvm_setting(calc_t *c, calc_cmd_t cmd, uint8_t arg)
         t->iyr2 = c->stack[0].real;
         t->iyr2_set = true;
     }
-    c->message = "TVM Stored";
+    calc_notice(c, "TVM Stored");
 }
 
 /* ---------- public ---------- */
@@ -465,6 +442,11 @@ void calc_seed_random(uint32_t seed)
     srandom(seed);
 }
 
+/* Zeroing gives every unlisted setting its default: END payments, ALL-Sigma
+ * statistics with the LIN model, the Unix epoch, UTC zones, RRES, RECT,
+ * decimal point, raw DATE display. TI reals need explicit zero values. */
+_Static_assert(EPOCH_UNIX == 0 && FIT_LIN == 0 && COMPLEX_RECT == 0,
+               "calc_init relies on zero-valued defaults");
 void calc_init(calc_t *c)
 {
     value_math_init();
@@ -473,26 +455,17 @@ void calc_init(calc_t *c)
     clear_stack(c);
     c->lastx = value_real(mx_zero);
     clear_registers(c);
-    c->extra_count = 0;
     c->lift = true;
     c->degrees = true;
     c->disp_style = DISP_FIX;
     c->disp_digits = DISP_FLOAT;
     tvm_settings_reset(&c->tvm);
-    c->tvm.begin = false;
-    c->stats.linear_only = false;
-    c->stats.model = FIT_LIN;
     stats_clear(&c->stats);
     base_reset(&c->base);
-    c->date_as_string = false;
-    c->epoch = EPOCH_UNIX;
-    memset(&c->custom_epoch, 0, sizeof c->custom_epoch);
     c->custom_epoch.type = OBJ_DATE;            /* 2050-01-01, as on RPN83P */
     c->custom_epoch.year = 2050;
     c->custom_epoch.month = 1;
     c->custom_epoch.day = 1;
-    c->app_tz = 0;
-    c->clock_tz = 0;
 }
 
 void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg)
@@ -528,7 +501,7 @@ void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg)
 
         case CMD_CHS:
             if (c->editing) calc_entry_chs(c);
-            else do_math(c, cmd, 0);
+            else calc_apply(c, cmd, 0);
             break;
 
         case CMD_BACKSPACE:
@@ -542,7 +515,7 @@ void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg)
             if (prev == CMD_CLEAR && !c->editing) {
                 clear_stack(c);                         /* CLEAR CLEAR */
                 c->lift = false;
-                c->message = "Stack cleared";
+                calc_notice(c, "Stack cleared");
                 c->last_cmd = CMD_NONE;                 /* a third press is CLX */
             } else {
                 calc_entry_clear(c);
@@ -565,7 +538,7 @@ void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg)
 
         case CMD_CLEAR_REGS:                    /* CLRG */
             clear_registers(c);
-            c->message = "Registers Cleared";
+            calc_notice(c, "Registers Cleared");
             break;
 
         case CMD_SET_REG_SIZE:
@@ -624,7 +597,7 @@ void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg)
         case CMD_SHOW:
             value_format(c->show_buf, &c->stack[0], c->disp_style, c->disp_digits,
                          c->complex_mode, c->decimal_comma, false, true);
-            c->message = c->show_buf;
+            calc_set_message(c, MSG_SHOW, c->show_buf);
             break;
 
         case CMD_ROLL_UP:
@@ -647,7 +620,7 @@ void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg)
             break;
 
         case CMD_UNIT:
-            do_math(c, CMD_UNIT, arg);
+            calc_apply(c, CMD_UNIT, arg);
             break;
 
         case CMD_UNIT_VALUE:                    /* UVAL: drop the unit */
@@ -682,7 +655,7 @@ void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg)
 
         case CMD_STAT_CLEAR:
             stats_clear(&c->stats);
-            c->message = "Stats Cleared";
+            calc_notice(c, "Stats Cleared");
             break;
 
         case CMD_STAT_ALL_MODE:
@@ -703,11 +676,7 @@ void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg)
             if (arg < FIT_COUNT && stats_model_ok(&c->stats, arg))
                 c->stats.model = arg;
             else
-                c->message = "Err: Stat";
-            break;
-
-        case CMD_BASE_OP:
-            do_base_op(c, (base_op_t)arg);
+                calc_error(c, "Err: Stat");
             break;
 
         case CMD_BASE_RADIX:
@@ -717,11 +686,11 @@ void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg)
             break;
 
         case CMD_SET_WORD_SIZE: {
-            int n = whole_from_x(c, 1, BASE_MAX_BITS);     /* WSIZ: 1 to 44 bits */
+            int n = whole_from_x(c, 1, BASE_MAX_BITS, false);  /* WSIZ: 1 to 44 bits */
             if (n < 0)
                 break;
             c->base.bits = (uint8_t)n;
-            c->message = "Word Size Set";
+            calc_notice(c, "Word Size Set");
             break;
         }
 
@@ -762,12 +731,12 @@ void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg)
 
         case CMD_TVM_CLEAR:                     /* CLTV */
             tvm_clear(&c->tvm);
-            c->message = "TVM Cleared";
+            calc_notice(c, "TVM Cleared");
             break;
 
         case CMD_TVM_RESET:                     /* RSTV */
             tvm_settings_reset(&c->tvm);
-            c->message = "TVM Reset";
+            calc_notice(c, "TVM Reset");
             break;
 
         case CMD_RAND:
@@ -776,7 +745,7 @@ void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg)
             break;
 
         case CMD_SEED:
-            if (!value_is_plain(&c->stack[0])) c->message = "Err: Data Type";
+            if (!value_is_plain(&c->stack[0])) calc_error(c, "Err: Data Type");
             else seed_from(&c->stack[0].real);           /* stack unchanged */
             break;
 
@@ -805,7 +774,7 @@ void calc_execute(calc_t *c, calc_cmd_t cmd, uint8_t arg)
             break;
 
         default:
-            do_math(c, cmd, arg);
+            calc_apply(c, cmd, arg);
             break;
     }
 }

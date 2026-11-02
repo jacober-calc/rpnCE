@@ -70,7 +70,7 @@ static value_t import_value(const real_t *r, uint8_t unit)
         date.month = (int8_t)r->mant[1]; date.day = (int8_t)r->mant[2];
         date.hour = (int8_t)r->mant[3]; date.minute = (int8_t)r->mant[4];
         date.second = (int8_t)r->mant[5];
-        date.tz_hour = (int8_t)(q / 4); date.tz_minute = (int8_t)((q % 4) * 15);
+        dt_set_tz_quarters(&date, q);
         return value_date(&date);
     }
     value_t v = value_real(*r);
@@ -78,16 +78,13 @@ static value_t import_value(const real_t *r, uint8_t unit)
     return v;
 }
 
-bool storage_import_v5(calc_t *c)
+bool storage_import_v5(calc_t *c, uint8_t h)
 {
     storage_legacy_state_t *s = &storage_workspace.legacy.state;
     uint8_t *unit_file = storage_workspace.legacy.units;
     uint8_t *precision_file = storage_workspace.legacy.precision;
-    uint8_t h = ti_Open(STATE_APPVAR, "r");
-    if (!h)
-        return false;
-    bool valid = ti_Read(s, 1, SAVED_FIXED_SIZE, h) == SAVED_FIXED_SIZE &&
-                 s->magic == STATE_MAGIC && s->version == 5 &&
+    const size_t rest = SAVED_FIXED_SIZE - STORAGE_HEADER_SIZE;
+    bool valid = ti_Read((uint8_t *)s + STORAGE_HEADER_SIZE, 1, rest, h) == rest &&
                  s->depth >= STACK_MIN && s->depth <= STACK_MAX &&
                  s->extra_count <= REG_EXTRA_MAX;
     if (valid) {
@@ -112,7 +109,6 @@ bool storage_import_v5(calc_t *c)
             } else break;
         }
     }
-    ti_Close(h);
     if (!valid)
         return false;
 

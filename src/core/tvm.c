@@ -114,12 +114,18 @@ static factors_t factors(const tvm_t *t, const real_t *i)
     return f;
 }
 
+/* The payments' present value, b PMT a. */
+static real_t payments(const tvm_t *t, const factors_t *f)
+{
+    real_t bp = os_RealMul(&f->b, &t->pmt);
+    return os_RealMul(&bp, &f->a);
+}
+
 /* The equation's value at rate i; zero at the solution. */
 static real_t residual(const tvm_t *t, const real_t *i)
 {
     factors_t f = factors(t, i);
-    real_t bp = os_RealMul(&f.b, &t->pmt);
-    real_t bpa = os_RealMul(&bp, &f.a);
+    real_t bpa = payments(t, &f);
     real_t fvv = os_RealMul(&t->fv, &f.v);
     real_t s = os_RealAdd(&t->pv, &bpa);
     return os_RealAdd(&s, &fvv);
@@ -130,8 +136,7 @@ static real_t residual(const tvm_t *t, const real_t *i)
 static real_t solve_fv(const tvm_t *t, const real_t *i)
 {
     factors_t f = factors(t, i);
-    real_t bp = os_RealMul(&f.b, &t->pmt);
-    real_t bpa = os_RealMul(&bp, &f.a);
+    real_t bpa = payments(t, &f);
     real_t s = os_RealAdd(&t->pv, &bpa);
     real_t q = os_RealDiv(&s, &f.v);
     return os_RealNeg(&q);
@@ -140,8 +145,7 @@ static real_t solve_fv(const tvm_t *t, const real_t *i)
 static real_t solve_pv(const tvm_t *t, const real_t *i)
 {
     factors_t f = factors(t, i);
-    real_t bp = os_RealMul(&f.b, &t->pmt);
-    real_t bpa = os_RealMul(&bp, &f.a);
+    real_t bpa = payments(t, &f);
     real_t fvv = os_RealMul(&t->fv, &f.v);
     real_t s = os_RealAdd(&bpa, &fvv);
     return os_RealNeg(&s);
