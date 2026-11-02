@@ -37,11 +37,23 @@ and tiny rates and invalid payment/compounding settings.
 
 ## Native CE checks
 
-`native/` compiles the core with `-Oz`/LTO settings and runs 183
+`native/` compiles the core with `-Oz`/LTO settings and runs 195
 checks in CEmu with TI-OS arithmetic. It covers arithmetic, DATE ranges,
 CTZ/ATZ conversion, units, all four curve-fit models, TVM and real GraphX
 pixels. The fixed clock makes results repeatable. The check count and
 completion marker are verified independently of the display.
+
+DATE component checks cover signed timezone fields and the wider Duration
+day field. Every epoch choice is checked against its zero date. Stack
+regressions exercise overlapping moves of complete mixed values at the
+maximum depth; mode checks also verify the corresponding menu selections.
+
+The resource contract hashes all decoded nodes, groups, unit metadata and
+HELP lines against a fingerprint captured before packing. Both host and
+native checks use it, covering unaligned records on the CE as well as the
+desktop. Desktop menu checks exercise all 580 slots, including submenu
+entry/back navigation, action selection and inert blanks. Resource tests
+also reject the preceding layout even when the size/stamp match.
 
 The native numeric cases compare against decimal references rather than
 host `double` results. Exact checks compare the stored digits; approximate

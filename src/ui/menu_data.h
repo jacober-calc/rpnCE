@@ -520,19 +520,17 @@ typedef enum { MENU_BLANK, MENU_ITEM, MENU_ALT, MENU_GROUP } menu_kind_t;
 
 /* Records as stored in the RPNCEres appvar (labels are offsets into its
  * text; see res.h for reading them). */
-typedef struct {
+typedef struct __attribute__((packed)) {
     uint16_t label;
     uint16_t alt_label;      /* MENU_ALT only; 0xFFFF otherwise */
     uint16_t id;             /* menu_id_t */
-    uint8_t kind;            /* menu_kind_t */
-    uint8_t group;           /* MENU_GROUP: the submenu */
+    uint8_t group;           /* submenu index, 0xFF for an action/blank */
 } menu_node_t;
 
-typedef struct {
+typedef struct __attribute__((packed)) {
     uint16_t label;
     uint16_t first;          /* first node; each row is 5 nodes */
     uint8_t rows;
-    uint8_t spare;           /* keeps the record 6 bytes on any compiler */
 } menu_group_t;
 
 /* Top-level menus, opened by keys. */

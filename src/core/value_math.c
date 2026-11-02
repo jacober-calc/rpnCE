@@ -414,6 +414,43 @@ static real_t signed_power(const real_t *y, const real_t *e)
     return negative ? os_RealNeg(&r) : r;
 }
 
+/* Direct unary operations share one call site. The outer kernel still owns
+ * quantity conversion, prechecks and result/error guards for every command. */
+typedef real_t (*unary_fn_t)(const real_t *);
+static unary_fn_t unary_for(calc_cmd_t cmd)
+{
+    static const struct { uint8_t cmd; unary_fn_t fn; } unary[] = {
+        { CMD_CHS, os_RealNeg },
+        { CMD_SQRT, os_RealSqrt },
+        { CMD_RECIP, os_RealInv },
+        { CMD_LN, os_RealLog },
+        { CMD_EXP, os_RealExp },
+        { CMD_CUBE_ROOT, cube_root },
+        { CMD_EXP_MINUS_ONE, mx_expm1 },
+        { CMD_LN_ONE_PLUS, mx_ln1p },
+        { CMD_INT_PART, os_RealInt },
+        { CMD_FRAC_PART, os_RealFrac },
+        { CMD_FLOOR, os_RealFloor },
+        { CMD_NEAR, os_RealRoundInt },
+        { CMD_ABS, mx_abs },
+        { CMD_FACTORIAL, factorial },
+        { CMD_PRIME, smallest_prime_factor },
+        { CMD_SINH, mx_sinh },
+        { CMD_COSH, mx_cosh },
+        { CMD_TANH, mx_tanh },
+        { CMD_ASINH, mx_asinh },
+        { CMD_ACOSH, mx_acosh },
+        { CMD_ATANH, mx_atanh },
+        { CMD_TO_HOURS, mx_hms_to_hours },
+        { CMD_TO_HMS, mx_hours_to_hms },
+        { CMD_TO_DEG, os_RealRadToDeg },
+        { CMD_TO_RAD, os_RealDegToRad },
+    };
+    for (unsigned i = 0; i < sizeof unary / sizeof unary[0]; i++)
+        if (unary[i].cmd == cmd) return unary[i].fn;
+    return NULL;
+}
+
 /* value_eval() validates the operands and masks units on unread operands
  * before entering this real-number kernel under its OS error handler.
  * Preserve both kernel call boundaries: CE LTO grows the dispatcher when
@@ -437,25 +474,22 @@ static __attribute__((noinline)) calc_err_t compute_real(const value_context_t *
         return pre;
     }
 
-    switch (cmd) {
+    unary_fn_t unary = unary_for(cmd);
+    if (unary) out->x.real = unary(x);
+    else switch (cmd) {
         case CMD_PI: out->x.real = r_pi; break;
         case CMD_E: out->x.real = os_RealExp(&mx_one); break;
-        case CMD_CHS:    out->x.real = os_RealNeg(x); tag = ux; break;
         case CMD_ADD:    out->x.real = mx_add(y, x); break;
         case CMD_SUB:    out->x.real = mx_sub(y, x); break;
         case CMD_MUL:    out->x.real = os_RealMul(y, x); break;
         case CMD_DIV:    out->x.real = os_RealDiv(y, x); break;
         case CMD_POW:    out->x.real = signed_power(y, x); break;
         case CMD_SQUARE: out->x.real = os_RealMul(x, x); break;
-        case CMD_SQRT:   out->x.real = os_RealSqrt(x); break;
-        case CMD_RECIP:  out->x.real = os_RealInv(x); break;
-        case CMD_LN:     out->x.real = os_RealLog(x); break;
         case CMD_LOG: {
             real_t ln = os_RealLog(x);
             out->x.real = os_RealDiv(&ln, &r_ln10);
             break;
         }
-        case CMD_EXP:    out->x.real = os_RealExp(x); break;
         case CMD_ALOG:   out->x.real = os_RealPow(&mx_ten, x); break;
         case CMD_SIN:
         case CMD_COS:
@@ -529,31 +563,22 @@ static __attribute__((noinline)) calc_err_t compute_real(const value_context_t *
             out->x.real = os_RealMul(&sq, x);
             break;
         }
-        case CMD_CUBE_ROOT: out->x.real = cube_root(x); break;
         case CMD_ATAN2:     out->x.real = atan2_real(y, x, ctx->degrees); break;
-        case CMD_EXP_MINUS_ONE: out->x.real = mx_expm1(x); break;
-        case CMD_LN_ONE_PLUS:   out->x.real = mx_ln1p(x); break;
         case CMD_TWO_POW:   out->x.real = os_RealPow(&mx_two, x); break;
         case CMD_LOG2: {
             real_t ln = os_RealLog(x);
             out->x.real = os_RealDiv(&ln, &r_ln2);
             break;
         }
-        case CMD_INT_PART:  out->x.real = os_RealInt(x); break;
-        case CMD_FRAC_PART: out->x.real = os_RealFrac(x); break;
-        case CMD_FLOOR:     out->x.real = os_RealFloor(x); break;
         case CMD_CEIL: {
             real_t n = os_RealNeg(x);
             real_t f = os_RealFloor(&n);
             out->x.real = os_RealNeg(&f);
             break;
         }
-        case CMD_NEAR:      out->x.real = os_RealRoundInt(x); break;
-        case CMD_ABS:       out->x.real = mx_is_neg(x) ? os_RealNeg(x) : *x; break;
         case CMD_SIGN:
             out->x.real = os_Int24ToReal(mx_is_zero(x) ? 0 : (mx_is_neg(x) ? -1 : 1));
             break;
-        case CMD_FACTORIAL: out->x.real = factorial(x); break;
         case CMD_UNIT:
             if (ctx->arg >= UNIT_COUNT) { return ERR_TYPE; }
             if (ux && unit_dim((uint8_t)(ux - 1)) != unit_dim(ctx->arg)) {
@@ -562,18 +587,9 @@ static __attribute__((noinline)) calc_err_t compute_real(const value_context_t *
             out->x.real = ux ? unit_convert(x, (uint8_t)(ux - 1), ctx->arg) : *x;
             tag = (uint8_t)(ctx->arg + 1);
             break;
-        case CMD_PRIME:     out->x.real = smallest_prime_factor(x); break;
         case CMD_ROUND_FIX: out->x.real = round_to_display(x, ctx); break;
         case CMD_ROUND_N:   out->x.real = round_decimals(x, ctx->arg); break;
         case CMD_ROUND_G:   out->x.real = round_significant(x, ctx->arg ? ctx->arg : 1); break;
-        case CMD_SINH:      out->x.real = mx_sinh(x); break;
-        case CMD_COSH:      out->x.real = mx_cosh(x); break;
-        case CMD_TANH:      out->x.real = mx_tanh(x); break;
-        case CMD_ASINH:     out->x.real = mx_asinh(x); break;
-        case CMD_ACOSH:     out->x.real = mx_acosh(x); break;
-        case CMD_ATANH:     out->x.real = mx_atanh(x); break;
-        case CMD_TO_HOURS:  out->x.real = mx_hms_to_hours(x); break;
-        case CMD_TO_HMS:    out->x.real = mx_hours_to_hms(x); break;
         case CMD_HMS_ADD:
         case CMD_HMS_SUB: {
             real_t hy = mx_hms_to_hours(y), hx = mx_hms_to_hours(x);
@@ -619,8 +635,6 @@ static __attribute__((noinline)) calc_err_t compute_real(const value_context_t *
         case CMD_FIT_CORR:   out->x.real = stats_corr(ctx->stats); break;
         case CMD_FIT_BEST:   stats_best(ctx->stats); break;
         case CMD_TVM_VAR:   out->x.real = tvm_solve(ctx->arg, ctx->tvm); break;
-        case CMD_TO_DEG:    out->x.real = os_RealRadToDeg(x); break;
-        case CMD_TO_RAD:    out->x.real = os_RealDegToRad(x); break;
         default: return ERR_TYPE;
     }
 

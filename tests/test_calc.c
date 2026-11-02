@@ -608,6 +608,122 @@ int main(void)
         expect_msg("duration seconds still require whole values", "Err: Domain");
     }
 
+    /* Neutral settings finish valid entry and leave stack lift/LASTX alone.
+     * An invalid entry must be repaired before any setting takes effect. */
+    calc_init(&C);
+    C.lift = false;
+    C.lastx = value_complex(mk(3), mk(4));
+    num(42);
+    cmd(CMD_MODE_RAD, 255); /* unused arguments remain ignored */
+    expect("mode selection finishes entry without changing lift/LASTX",
+           !C.editing && !C.degrees && X == 42 && C.lift &&
+           C.lastx.type == VALUE_COMPLEX && C.lastx.imag.v == 4, 1);
+    cmd(CMD_RESULT_COMPLEX, 0);
+    cmd(CMD_COMPLEX_DEG, 0);
+    cmd(CMD_DECIMAL_COMMA, 0);
+    cmd(CMD_TVM_BEGIN, 0);
+    cmd(CMD_SET_CARRY, 0);
+    cmd(CMD_DATE_FN, DF_EPOCH_NTP);
+    cmd(CMD_DATE_FN, DF_FORMAT_STRING);
+    expect("independent modes coexist without touching the stack",
+           C.complex_results && C.complex_mode == COMPLEX_DEG && C.decimal_comma &&
+           C.tvm.begin && C.base.carry && C.epoch == EPOCH_NTP && C.date_as_string &&
+           X == 42 && C.lift && !C.message, 1);
+    REC("{2024,2,30");
+    cmd(CMD_RESULT_REAL, 0);
+    expect_msg("bad entry blocks mode selection", "Err: Invalid");
+    expect("blocked setting keeps its previous value", C.editing && C.complex_results, 1);
+
+    /* Component extraction must distinguish the seven DATE record types,
+     * including the wider signed day count in a Duration. */
+    {
+        static const struct {
+            const char *record;
+            int component[8]; /* YEAR MONTH DAY HOUR MINUTE SECOND TZH TZM */
+        } cases[] = {
+            { "D{9999,12,31}", {9999,12,31,10000,10000,10000,10000,10000} },
+            { "T{23,59,58}", {10000,10000,10000,23,59,58,10000,10000} },
+            { "DT{1,1,1,23,59,58}", {1,1,1,23,59,58,10000,10000} },
+            { "TZ{-23,-45}", {10000,10000,10000,10000,10000,10000,-23,-45} },
+            { "DZ{2024,2,29,15,36,1,5,45}", {2024,2,29,15,36,1,5,45} },
+            { "DW{7}", {10000,10000,10000,10000,10000,10000,10000,10000} },
+            { "DR{-9999,-23,-59,-59}", {10000,10000,-9999,-23,-59,-59,10000,10000} }
+        };
+        for (unsigned i = 0; i < sizeof cases / sizeof cases[0]; i++) {
+            dt_obj_t record = {0};
+            expect("component fixture is a valid record", dt_parse(cases[i].record, &record), DT_OK);
+            value_t original = value_date(&record);
+            for (int k = 0; k < 8; k++) {
+                calc_init(&C);
+                C.stack[0] = original;
+                C.stack[1] = value_complex(mk(3), mk(4));
+                C.lastx = value_real(mk(42));
+                C.lift = false;
+                cmd(CMD_DATE_FN, (uint8_t)(DF_YEAR + k));
+                if (cases[i].component[k] == 10000) {
+                    expect_msg("unsupported record component reports a type error", "Err: Data Type");
+                    expect("rejected component preserves X, LASTX and lift",
+                           !memcmp(&C.stack[0], &original, sizeof original) &&
+                           C.lastx.real.v == 42 && !C.lift, 1);
+                } else {
+                    expect("component returns its signed value", X, cases[i].component[k]);
+                    expect("component saves the complete record in LASTX",
+                           !C.message && !memcmp(&C.lastx, &original, sizeof original) && C.lift, 1);
+                }
+                expect("component leaves complex Y intact",
+                       C.stack[1].type == VALUE_COMPLEX && C.stack[1].real.v == 3 && C.stack[1].imag.v == 4, 1);
+            }
+        }
+    }
+
+    /* Compare fixed epoch offsets against calendar arithmetic, including
+     * floor division on the second before the epoch. */
+    {
+        static const int epochs[][3] = {
+            {1970,1,1}, {1900,1,1}, {1980,1,6}, {1997,1,1}, {2000,1,1}, {2050,1,1}
+        };
+        dt_obj_t unix_date = { .type = OBJ_DATE, .year = 1970, .month = 1, .day = 1 };
+        for (unsigned i = 0; i < sizeof epochs / sizeof epochs[0]; i++) {
+            calc_init(&C);
+            cmd(CMD_DATE_FN, (uint8_t)(DF_EPOCH_UNIX + i));
+            C.stack[0] = value_date(&unix_date);
+            cmd(CMD_DATE_FN, DF_TO_ED);
+            expect("epoch days agree with calendar arithmetic", X,
+                   -(double)dt_days_from_civil(epochs[i][0], epochs[i][1], epochs[i][2]));
+            C.stack[0] = value_real(mk(-1));
+            cmd(CMD_DATE_FN, DF_ES_TO_DT);
+            cmd(CMD_DATE_FN, DF_TO_ED);
+            expect("second before every epoch has day -1", X, -1);
+        }
+    }
+
+    /* Overlapping moves retain complete heterogeneous values at every stack
+     * depth, including the duplicated top level after DROP. */
+    for (int depth = STACK_MIN; depth <= STACK_MAX; depth++) {
+        value_t original[STACK_MAX];
+        calc_init(&C);
+        C.depth = (uint8_t)depth;
+        for (int k = 0; k < depth; k++) {
+            if (k % 3 == 0) C.stack[k] = value_complex(mk(k), mk(-k));
+            else if (k % 3 == 1) {
+                dt_obj_t record = { .type = OBJ_DATE, .year = 2024, .month = 2, .day = (int8_t)(k+1) };
+                C.stack[k] = value_date(&record);
+            } else {
+                C.stack[k] = value_real(mk(k));
+                C.stack[k].unit = 1;
+            }
+        }
+        memcpy(original, C.stack, sizeof original);
+        cmd(CMD_ROLL_UP, 0);
+        expect("ROLL UP rotates complete values", !memcmp(&C.stack[0], &original[depth-1], sizeof(value_t)) &&
+               !memcmp(C.stack+1, original, (depth-1)*sizeof(value_t)), 1);
+        cmd(CMD_ROLL_DOWN, 0);
+        expect("opposite rolls restore the whole stack", !memcmp(C.stack, original, sizeof original), 1);
+        cmd(CMD_DROP, 0);
+        expect("DROP shifts complete values and repeats the top", !memcmp(C.stack, original+1, (depth-1)*sizeof(value_t)) &&
+               !memcmp(&C.stack[depth-1], &original[depth-1], sizeof(value_t)), 1);
+    }
+
     printf("%d failures\n", fails);
     return fails != 0;
 }

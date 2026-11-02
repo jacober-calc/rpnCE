@@ -13,6 +13,36 @@ static void check(const char *name, bool pass)
     if (!pass) fails++;
     printf("%s %s\n", pass ? "ok  " : "FAIL", name);
 }
+static void all_menu_slots(void)
+{
+    unsigned checked = 0;
+    bool actions = true, submenus = true, blanks = true;
+    for (uint8_t g = 0; g < MENU_GROUP_COUNT; g++) {
+        for (uint8_t row = 0; row < menu_group(g)->rows; row++) {
+            for (uint8_t slot = 0; slot < 5; slot++) {
+                menu_t m = {0};
+                menu_jump(&m, g);
+                m.row = row;
+                menu_t before = m;
+                const menu_node_t *n = menu_slot(&m, slot);
+                const menu_node_t *selected = menu_press(&m, slot);
+                checked++;
+                if (menu_node_kind(n) == MENU_GROUP) {
+                    if (selected || m.group != n->group || m.row != 0) submenus = false;
+                    menu_back(&m);
+                    if (m.group != before.group || m.row != before.row || m.depth != before.depth)
+                        submenus = false;
+                } else if (menu_node_kind(n) == MENU_BLANK) {
+                    if (selected || memcmp(&m, &before, sizeof m)) blanks = false;
+                } else if (selected != n || memcmp(&m, &before, sizeof m)) actions = false;
+            }
+        }
+    }
+    check("all menu slots are exercised", checked == MENU_NODE_COUNT);
+    check("every submenu opens and ON returns to its original row", submenus);
+    check("every action returns its node without changing menus", actions);
+    check("every blank is inert", blanks);
+}
 int main(void)
 {
     FILE *f = fopen("data/rpnCEres.bin", "rb");
@@ -108,11 +138,12 @@ int main(void)
     menu_t m;
     menu_home(&m);
     const menu_node_t *n = menu_slot(&m, 4);
-    check("TVM occupies HOME first row fifth slot", n->kind == MENU_GROUP && n->group == MENU_GROUP_TVM);
+    check("TVM occupies HOME first row fifth slot", menu_node_kind(n) == MENU_GROUP && n->group == MENU_GROUP_TVM);
     menu_press(&m, 4);
     check("TVM submenu still opens", m.group == MENU_GROUP_TVM && menu_slot(&m, 0)->id == MID_TVM_N);
     menu_back(&m); menu_row_down(&m); n = menu_slot(&m, 4);
-    check("HELP occupies HOME second row fifth slot", n->kind == MENU_ITEM && n->id == MID_HELP);
+    check("HELP occupies HOME second row fifth slot", menu_node_kind(n) == MENU_ITEM && n->id == MID_HELP);
+    all_menu_slots();
     printf("%d failures\n", fails);
     return fails != 0;
 }

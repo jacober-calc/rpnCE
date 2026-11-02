@@ -52,7 +52,41 @@ and complex kernel call boundaries. Expanding these functions into callers
 under LTO increases the linked code; the boundaries do not change the
 value representation or mathematical algorithms.
 
+Straightforward unary real operations share a function table and one call
+site inside the real kernel. Quantity conversion, input prechecks and
+result/range guards still surround every operation. DATE menu conversions
+stage the same `dt_result_t` used by calendar arithmetic, then construct a
+complete value through `value_date_result()`. Clock/settings handling stays
+in the stack adapter. Component extraction uses one field/type table;
+fixed epoch offsets are stored as day counts.
+
+Stack shifts use overlapping `memmove()` of complete values. Initialization,
+clear and resize operations share one typed zero-fill helper; a bytewise
+zero is not substituted for a TI decimal zero. Display-cache invalidation
+compares one byte key containing every formatting setting.
+
+Resource format 3 stores seven-byte menu nodes, five-byte menu groups and
+seven-byte unit records. A menu's kind is derived from its submenu target,
+blank ID and alternate-label fields rather than stored separately. Unit
+dimensions occupy seven bits, with the reciprocal flag in the eighth;
+the generator rejects dimension indexes that exceed that capacity. Packed
+record sizes are asserted for both desktop and CE builds.
+
+The resource generator pools all strings together, storing longer strings
+first and sharing shorter suffixes where possible. Runtime access still
+reads ordinary NUL-terminated strings directly from archive. No resource
+decompression buffer is needed. Matching program/resource builds are
+required; the loader rejects earlier resource formats. Saved calculator
+state and settings retain their existing formats.
+
 ## Numeric modes and presentation
+
+`calc_mode.c` defines neutral byte-valued settings once. Command execution
+and menu selection checks share that table, including angle, complex,
+decimal-mark, TVM timing, epoch and DATE presentation choices. Carry
+set/clear uses the same assignment path without gaining a menu highlight.
+Entry is completed and validated before any setting is changed. Modes
+with additional validation or effects retain their corresponding handlers.
 
 `calc_t.degrees` starts true (DEG) on fresh state; saved state restores the
 user's choice. `complex_results` starts false (RRES), and `complex_mode`

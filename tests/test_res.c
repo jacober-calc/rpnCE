@@ -11,6 +11,7 @@
 #include "res_info.h"
 #include "units.h"
 #include "version.h"
+#include "resource_contract.h"
 
 uint8_t mock_res[65536];
 size_t mock_res_size;
@@ -32,7 +33,7 @@ static const menu_node_t *find(menu_id_t id)
 int main(void)
 {
     ok("struct sizes match the file layout",
-       sizeof(menu_node_t) == 8 && sizeof(menu_group_t) == 6, NULL);
+       sizeof(menu_node_t) == 7 && sizeof(menu_group_t) == 5, NULL);
 
     bool none = !res_open();
     ok("missing RPNCEres is reported", none && strcmp(res_problem(), "RPNCEres not found") == 0, res_problem());
@@ -42,16 +43,25 @@ int main(void)
     fclose(f);
     bool opened = res_open();
     ok("RPNCEres opens and matches this build", opened, opened ? "" : res_problem());
+    ok("all decoded resources match the pre-packing contract",
+       resource_contract() == RESOURCE_CONTRACT_EXPECTED, NULL);
+
+    /* A layout mismatch is rejected even with the current size/stamp. */
+    mock_res[4] = RES_FORMAT - 1;
+    ok("the preceding resource format is rejected",
+       !res_open() && !strcmp(res_problem(), "RPNCEres is the wrong version"), NULL);
+    mock_res[4] = RES_FORMAT;
+    ok("matching resources reopen after rejecting a mismatch", res_open(), NULL);
 
     ok("HOME is menu 0 with 3 rows", strcmp(res_text(menu_group(MENU_ROOT_HOME)->label), "HOME") == 0 &&
        menu_group(MENU_ROOT_HOME)->rows == 3, NULL);
     const menu_node_t *n = menu_node(menu_group(MENU_ROOT_HOME)->first);
-    ok("HOME's first key is MATH (a submenu)", strcmp(res_text(n->label), "MATH") == 0 && n->kind == MENU_GROUP, res_text(n->label));
+    ok("HOME's first key is MATH (a submenu)", strcmp(res_text(n->label), "MATH") == 0 && menu_node_kind(n) == MENU_GROUP, res_text(n->label));
     ok("MODE menu's parent is HOME", menu_parent_of(MENU_GROUP_MODE) == MENU_ROOT_HOME, NULL);
     n = find(MID_DATE_CREATE);
     ok("DATE > D starts with D{}", n && strcmp(res_text(n->label), "D{}") == 0, n ? res_text(n->label) : "");
     n = find(MID_FORMAT_RECORD_STRING);
-    ok("\"..\" is a mode item with its marked label", n && n->kind == MENU_ALT &&
+    ok("\"..\" is a mode item with its marked label", n && menu_node_kind(n) == MENU_ALT &&
        strcmp(res_text(n->alt_label), "\"..\"\x07") == 0, NULL);
     n = find(MID_CUBE);
     ok("X^3 is labeled as in the menu file", n && strcmp(res_text(n->label), "X^3") == 0, n ? res_text(n->label) : "");

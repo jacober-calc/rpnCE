@@ -50,7 +50,7 @@ dt_val_t value_date_operand(const value_t *v, bool quarters)
     return d;
 }
 
-static value_t value_from_date_result(const dt_result_t *r)
+value_t value_date_result(const dt_result_t *r)
 {
     if (r->is_obj)
         return value_date(&r->obj);
@@ -105,7 +105,7 @@ static dt_err_t value_date_binary(calc_cmd_t op, const value_t *y, const value_t
     else
         e = DT_ERR_TYPE;
     if (e == DT_OK)
-        *out = value_from_date_result(&r);
+        *out = value_date_result(&r);
     return e;
 }
 

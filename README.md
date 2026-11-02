@@ -97,7 +97,7 @@ To try it without a calculator, load both files and `clibs.8xg` into the
 
 ### Memory
 
-The menu tree, unit tables and 26 HELP pages (about 19 KB) live in `RPNCEres`
+The menu tree, unit tables and 26 HELP pages (about 18 KB) live in `RPNCEres`
 and are read straight from archive, so they use no RAM. The current build
 uses larger complete-value slots for stack and register
 storage. See the linker map for program and static-storage sizes; runtime
@@ -120,9 +120,9 @@ sequences, display redraws, and brightness controls), using
 stand-ins for the calculator's number routines.
 
 The [native tests](tests/README.md#native-ce-checks) additionally compile
-the real core with the CE toolchain and run 183 checks in CEmu using TI-OS
+the real core with the CE toolchain and run 195 checks in CEmu using TI-OS
 number routines. They cover CE execution, CTZ/ATZ conversions, unit round trips and all
-four curve-fit models and numeric boundaries. Nineteen further checks exercise
+four curve-fit models and numeric boundaries. Twenty-two further checks exercise
 the program's keyboard loop and saving/reopening in CEmu. Known numerical
 checks and coverage limits are described in [tests/README.md](tests/README.md#numeric-limit-checks).
 

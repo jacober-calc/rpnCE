@@ -16,6 +16,14 @@ const char *res_problem(void);
 
 const menu_node_t *menu_node(uint16_t index);
 const menu_group_t *menu_group(uint8_t group);
+/* Submenu target, blank ID and alternate label already identify the kind;
+ * storing a second discriminator would duplicate that information. */
+static inline menu_kind_t menu_node_kind(const menu_node_t *n)
+{
+    if (n->group != UINT8_MAX) return MENU_GROUP;
+    if (n->id == MID_NONE) return MENU_BLANK;
+    return n->alt_label == UINT16_MAX ? MENU_ITEM : MENU_ALT;
+}
 uint8_t menu_parent_of(uint8_t group);       /* 0xFF for a top-level menu */
 uint8_t menu_parent_row_of(uint8_t group);
 

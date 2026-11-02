@@ -1,4 +1,5 @@
 #include "actions.h"
+#include "../core/calc_mode.h"
 #include "res.h"
 #include "../core/format.h"
 
@@ -295,23 +296,6 @@ calc_cmd_t action_for(menu_id_t id, bool shifted, uint8_t *arg)
 bool action_is_active(const calc_t *c, menu_id_t id)
 {
     switch (id) {
-        case MID_NUM_RESULT_MODE_REAL: return !c->complex_results;
-        case MID_NUM_RESULT_MODE_COMPLEX: return c->complex_results;
-        case MID_COMPLEX_MODE_RECT: return c->complex_mode == COMPLEX_RECT;
-        case MID_COMPLEX_MODE_RAD: return c->complex_mode == COMPLEX_RAD;
-        case MID_COMPLEX_MODE_DEG: return c->complex_mode == COMPLEX_DEG;
-        case MID_RAD: return !c->degrees;
-        case MID_DEG: return c->degrees;
-        case MID_FORMAT_RECORD_RAW:    return !c->date_as_string;
-        case MID_FORMAT_RECORD_STRING: return c->date_as_string;
-        case MID_DECIMAL_POINT: return !c->decimal_comma;
-        case MID_DECIMAL_COMMA: return c->decimal_comma;
-        case MID_EPOCH_UNIX:   return c->epoch == EPOCH_UNIX;
-        case MID_EPOCH_NTP:    return c->epoch == EPOCH_NTP;
-        case MID_EPOCH_GPS:    return c->epoch == EPOCH_GPS;
-        case MID_EPOCH_TIOS:   return c->epoch == EPOCH_TIOS;
-        case MID_EPOCH_Y2K:    return c->epoch == EPOCH_Y2K;
-        case MID_EPOCH_CUSTOM: return c->epoch == EPOCH_CUSTOM;
         case MID_DEC: return c->base.radix == 10;
         case MID_HEX: return c->base.radix == 16;
         case MID_OCT: return c->base.radix == 8;
@@ -322,14 +306,14 @@ bool action_is_active(const calc_t *c, menu_id_t id)
         case MID_CFIT_LOG:    return c->stats.model == FIT_LOG;
         case MID_CFIT_EXP:    return c->stats.model == FIT_EXP;
         case MID_CFIT_POWER:  return c->stats.model == FIT_PWR;
-        case MID_TVM_BEGIN: return c->tvm.begin;
-        case MID_TVM_END:   return !c->tvm.begin;
         case MID_TVM_IYR0:  return c->tvm.iyr1_set;
         case MID_TVM_IYR1:  return c->tvm.iyr2_set;
         case MID_TVM_ITER_MAX: return c->tvm.iter_max_set;
         case MID_FIX: return c->disp_style == DISP_FIX && c->disp_digits != DISP_FLOAT;
         case MID_SCI: return c->disp_style == DISP_SCI;
         case MID_ENG: return c->disp_style == DISP_ENG;
-        default:      return false;
+        default:
+            return (unsigned)id < sizeof actions / sizeof actions[0] &&
+                   calc_mode_active(c, (calc_cmd_t)actions[id].cmd, actions[id].arg);
     }
 }

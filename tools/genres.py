@@ -32,7 +32,7 @@ OUT_INFO_H = os.path.join(ROOT, 'src', 'ui', 'res_info.h')
 OUT_COUNT_H = os.path.join(ROOT, 'src', 'core', 'units_count.h')
 OUT_UNITS_C = os.path.join(ROOT, 'tests', 'units_data.c')
 
-RES_FORMAT = 2      # bump when the layout below changes (2: HELP pages)
+RES_FORMAT = 3      # packed records; menu kind is derived from record fields
 HELP_FILE = os.path.join(ROOT, 'help', 'help.txt')
 HELP_MAX_LINES = 8      # a page's lines, title included
 HELP_MAX_CHARS = 44     # fits the screen in the system font
@@ -44,10 +44,11 @@ NONE16 = 0xFFFF
 #            u16 id_count, u32 hash (FNV-1a of everything after the header)
 #   offsets  u16 x 9: nodes, groups, parents, parent_rows, units, unit_base,
 #            unit_map, help, text (from the start of the appvar)
-#   nodes    8 bytes each: u16 label, u16 alt_label, u16 id, u8 kind, u8 group
-#   groups   6 bytes each: u16 label, u16 first node, u8 rows, u8 spare
+#   nodes    7 bytes each: u16 label, u16 alt_label, u16 id, u8 group
+#            group=0xFF for non-submenus; id=0 for blank; alt_label for MENU_ALT
+#   groups   5 bytes each: u16 label, u16 first node, u8 rows
 #   parents  u8 per group (0xFF for a top-level menu), then parent rows
-#   units    8 bytes each: u16 label, u8 dim, u8 reciprocal, u16 factor,
+#   units    7 bytes each: u16 label, u8 dim_flags (low 7: dim, high: reciprocal), u16 factor,
 #            u16 offset (0xFFFF for none)
 #   unit_base u8 per dimension; unit_map u8 per menu ID (0xFF: not a unit)
 #   help     u8 page count; then per page u8 line count and u16 per line
@@ -68,16 +69,26 @@ def label_bytes(text):
 
 
 class Text:
-    """The text section: each distinct string stored once."""
-    def __init__(self):
+    """One NUL-terminated pool, sharing strings and their suffixes.
+
+    Longest strings go first so a shorter one can point inside an existing
+    string. All clients still read ordinary C strings directly from archive.
+    """
+    def __init__(self, strings):
         self.data = bytearray()
         self.index = {}
+        for b in sorted(set(strings), key=lambda b: (-len(b), b)):
+            terminated = b + b'\0'
+            offset = self.data.find(terminated)
+            if offset < 0:
+                offset = len(self.data)
+                self.data += terminated
+            self.index[b] = offset
 
-    def add(self, b):
-        if b not in self.index:
-            self.index[b] = len(self.data)
-            self.data += b + b'\0'
-        return self.index[b]
+    def pack(self, fmt, records):
+        """Encode records, resolving byte strings to their pool offsets."""
+        return b''.join(struct.pack(fmt, *(self.index[v] if isinstance(v, bytes) else v
+                                          for v in row)) for row in records)
 
 
 def fnv1a(data):
@@ -127,6 +138,8 @@ def build_menus():
                     prow[gindex[id(n)]] = ri
     if len(groups) > 255 or len(nodes) > 0xFFFF:
         sys.exit('menus.txt: too many menus')
+    if any(kind != 'MENU_BLANK' and ident == 'NONE' for kind, _, _, ident, _ in nodes):
+        sys.exit('menus.txt: NONE is reserved for blank slots')
     return roots, groups, ids, nodes, group_rows, parent, prow
 
 
@@ -198,30 +211,28 @@ def main():
     roots, groups, ids, nodes, group_rows, parent, prow = build_menus()
     help_pages = build_help()
     units, dims, base = build_units()
+    if len(dims) > 128:
+        sys.exit('units: packed dimension index exceeds 7 bits')
     id_num = {ident: i for i, ident in enumerate(ids)}
-    text = Text()
-
-    node_bytes = bytearray()
-    for kind, label, alt, ident, grp in nodes:
-        kinds = {'MENU_BLANK': 0, 'MENU_ITEM': 1, 'MENU_ALT': 2, 'MENU_GROUP': 3}
-        node_bytes += struct.pack('<HHHBB', text.add(label_bytes(label)),
-                                  text.add(label_bytes(alt)) if alt else NONE16,
-                                  id_num[ident or 'NONE'], kinds[kind], grp)
-    group_bytes = bytearray()
-    for label, first, rows in group_rows:
-        group_bytes += struct.pack('<HHBx', text.add(label_bytes(label)), first, rows)
-    unit_bytes = bytearray()
-    for ident, label, dim, factor, offset, recip in units:
-        unit_bytes += struct.pack('<HBBHH', text.add(label_bytes(label)), dims.index(dim),
-                                  1 if recip else 0, text.add(factor.encode()),
-                                  text.add(offset.encode()) if offset else NONE16)
+    node_records = [(label_bytes(label), label_bytes(alt) if alt else NONE16,
+                     id_num[ident or 'NONE'], grp if kind == 'MENU_GROUP' else 0xFF)
+                    for kind, label, alt, ident, grp in nodes]
+    group_records = [(label_bytes(label), first, rows) for label, first, rows in group_rows]
+    unit_records = [(label_bytes(label), dims.index(dim) | (0x80 if recip else 0),
+                     factor.encode(), offset.encode() if offset else NONE16)
+                    for ident, label, dim, factor, offset, recip in units]
+    help_records = [[line.encode('ascii') for line in page] for page in help_pages]
+    text = Text(v for records in (node_records, group_records, unit_records, help_records)
+                for row in records for v in row if isinstance(v, bytes))
+    node_bytes = text.pack('<HHHB', node_records)
+    group_bytes = text.pack('<HHB', group_records)
+    unit_bytes = text.pack('<HBHH', unit_records)
     unit_index = {u[0]: k for k, u in enumerate(units)}
     unit_map = bytes(unit_index.get(ident, 0xFF) for ident in ids)
     help_bytes = bytearray([len(help_pages)])
-    for page in help_pages:
+    for page in help_records:
         help_bytes.append(len(page))
-        for line in page:
-            help_bytes += struct.pack('<H', text.add(line.encode('ascii')))
+        help_bytes += text.pack('<H', [(line,) for line in page])
 
     sections = [node_bytes, group_bytes, bytes(parent), bytes(prow), unit_bytes,
                 bytes(base), unit_map, bytes(help_bytes), bytes(text.data)]
@@ -257,18 +268,16 @@ def main():
         f.write('typedef enum { MENU_BLANK, MENU_ITEM, MENU_ALT, MENU_GROUP } menu_kind_t;\n\n')
         f.write('/* Records as stored in the RPNCEres appvar (labels are offsets into its\n'
                 ' * text; see res.h for reading them). */\n')
-        f.write('typedef struct {\n'
+        f.write('typedef struct __attribute__((packed)) {\n'
                 '    uint16_t label;\n'
                 '    uint16_t alt_label;      /* MENU_ALT only; 0xFFFF otherwise */\n'
                 '    uint16_t id;             /* menu_id_t */\n'
-                '    uint8_t kind;            /* menu_kind_t */\n'
-                '    uint8_t group;           /* MENU_GROUP: the submenu */\n'
+                '    uint8_t group;           /* submenu index, 0xFF for an action/blank */\n'
                 '} menu_node_t;\n\n')
-        f.write('typedef struct {\n'
+        f.write('typedef struct __attribute__((packed)) {\n'
                 '    uint16_t label;\n'
                 '    uint16_t first;          /* first node; each row is 5 nodes */\n'
                 '    uint8_t rows;\n'
-                '    uint8_t spare;           /* keeps the record 6 bytes on any compiler */\n'
                 '} menu_group_t;\n\n')
         f.write('/* Top-level menus, opened by keys. */\n')
         for i, r in enumerate(roots):
