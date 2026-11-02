@@ -1,6 +1,6 @@
 # 19. Limits and differences
 
-rpnCE development build · User Guide
+rpnCE 0.8.0 · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 18. Saving, memory and files](18-memory.md) · [Next: Reference tables](20-reference.md)
 
@@ -88,10 +88,8 @@ restrictions described in [Units](15-units.md).
 
 ## Scope of the documentation
 
-This guide describes the current development source, including complex
-support and the unified value model. Released 0.7.0 binaries predate these
-changes; the source build retains the 0.7.0 version label until the next
-release. Use matching program/resource files and record the build when
+This guide describes rpnCE 0.8.0. Use matching program/resource files and
+record the version and build when
 reporting a problem. Reference tables follow the current menu and unit
 definitions.
 

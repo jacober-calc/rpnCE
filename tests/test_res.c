@@ -43,7 +43,7 @@ int main(void)
     fclose(f);
     bool opened = res_open();
     ok("RPNCEres opens and matches this build", opened, opened ? "" : res_problem());
-    ok("all decoded resources match the pre-packing contract",
+    ok("all decoded resources match their expected contents",
        resource_contract() == RESOURCE_CONTRACT_EXPECTED, NULL);
 
     /* A layout mismatch is rejected even with the current size/stamp. */

@@ -1,6 +1,6 @@
 # 17. Messages and errors
 
-rpnCE development build · User Guide
+rpnCE 0.8.0 · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 16. DATE: dates, times and the clock](16-date.md) · [Next: 18. Saving, memory and files](18-memory.md)
 
@@ -67,8 +67,8 @@ word", or "Not a whole number". See [chapter 12](12-base.md#12-base-hexadecimal-
 
 If its resource appvar is missing or doesn't match the program, rpnCE shows
 a notice instead of starting: "RPNCEres not found", "RPNCEres is damaged"
-or "RPNCEres is the wrong version". Send `rpnCEres-0.7.0.8xv` from the same
-release as `rpnCE-0.7.0.8xp`. Local builds omit the version from the filenames.
+or "RPNCEres is the wrong version". Send `rpnCEres.8xv` and `rpnCE.8xp`
+from the same build. Packaged releases use versioned filenames.
 
 <img src="../../assets/guide/screens/trouble-no-res.png" alt="The startup notice when RPNCEres is missing" width="320">
 

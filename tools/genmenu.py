@@ -124,7 +124,7 @@ def c_label(text):
 
 
 if __name__ == '__main__':
-    # The menu tables are now built into the RPNCEres appvar by genres.py,
+    # The menu tables are built into the RPNCEres appvar by genres.py,
     # which uses this file as a library.
     import genres
     genres.main()

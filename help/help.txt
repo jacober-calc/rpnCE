@@ -237,9 +237,9 @@ Intermediate limits can also cause errors.
 CLEAR dismisses errors without clearing X.
 ---
 HELP 26/26 - ABOUT
-rpnCE 0.7.0
+rpnCE 0.8.0
 An RPN calculator for the TI-84 Plus CE.
-Development build: complex numbers.
+Real and complex scientific arithmetic.
 Units, statistics, TVM, BASE and DATE.
 Inspired by RPN83P. MIT License.
 Source, releases and full user guide:

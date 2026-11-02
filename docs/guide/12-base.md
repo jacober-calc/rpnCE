@@ -1,6 +1,6 @@
 # 12. BASE: hexadecimal, octal and binary
 
-rpnCE development build · User Guide
+rpnCE 0.8.0 · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 11. Complex numbers](11-complex-numbers.md) · [Next: 13. STAT: statistics and curve fitting](13-statistics.md)
 

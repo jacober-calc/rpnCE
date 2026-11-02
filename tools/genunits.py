@@ -175,7 +175,7 @@ def d14(x):
 
 
 if __name__ == '__main__':
-    # The unit tables are now built into the RPNCEres appvar by genres.py,
+    # The unit tables are built into the RPNCEres appvar by genres.py,
     # which uses this file as a library.
     import genres
     genres.main()

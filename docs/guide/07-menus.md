@@ -1,6 +1,6 @@
 # 7. The menus
 
-rpnCE development build · User Guide
+rpnCE 0.8.0 · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 6. The RPN stack](06-stack.md) · [Next: 8. Registers](08-registers.md)
 

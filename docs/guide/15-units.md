@@ -1,6 +1,6 @@
 # 15. UNIT: unit conversions
 
-rpnCE development build · User Guide
+rpnCE 0.8.0 · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 14. TVM: time value of money](14-tvm.md) · [Next: 16. DATE: dates, times and the clock](16-date.md)
 

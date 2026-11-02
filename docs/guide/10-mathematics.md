@@ -1,6 +1,6 @@
 # 10. Math functions
 
-rpnCE development build · User Guide
+rpnCE 0.8.0 · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 9. Display formats and MODE settings](09-settings.md) · [Next: 11. Complex numbers](11-complex-numbers.md)
 

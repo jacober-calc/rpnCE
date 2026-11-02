@@ -16,7 +16,7 @@ sh tests/run_tests.sh
 
 The 18 suites cover formatting, rounding, math, BASE, statistics, TVM,
 units, DATE, resources, menus, keys, fonts, saved state, calculator commands,
-entry sequences, universal values, complex arithmetic, display redraws and
+entry sequences, typed values, complex arithmetic, display redraws and
 brightness. Complex checks use independent host complex references across
 all quadrants and exercise type boundaries, whole-value movement, entry,
 mode separation and formatting. Native regressions exercise complex
@@ -49,14 +49,14 @@ regressions exercise overlapping moves of complete mixed values at the
 maximum depth; mode checks also verify the corresponding menu selections.
 
 The resource contract hashes all decoded nodes, groups, unit metadata and
-HELP lines against a fingerprint captured before packing. Both host and
+HELP lines against an expected fingerprint. Both host and
 native checks use it, covering unaligned records on the CE as well as the
 desktop. Desktop menu checks exercise all 580 slots, including submenu
 entry/back navigation, action selection and inert blanks. Resource tests
 also reject the preceding layout even when the size/stamp match.
 
 The action contract checks all 488 menu IDs both plain and shifted against
-the mapping captured before action generation. It includes every unit index
+the expected command/argument mapping. It includes every unit index
 and TVM recall modifier. Desktop checks also reject out-of-range menu IDs
 without reading past the action data.
 
@@ -96,10 +96,11 @@ message, and ordinary CLEAR behavior returning after a notice times out.
 
 ## Numeric limit checks
 
-The native suite now checks explicit overflow, underflow and precision
+The native suite checks explicit overflow, underflow and precision
 errors for the 14 cases confirmed on a TI-84 Plus CE running OS 5.8.4.0058.
-The [original build-25 report](hardware/results/rpnce-hardware-c3165aca-19a2-48e9-b053-c58681dee30e.json)
-is preserved. The [build-26 hardware retest](hardware/results/rpnce-hardware-2a9a2054-33d6-4bce-82e9-f1fb8e8df91a.json)
+The [device report](hardware/results/rpnce-hardware-c3165aca-19a2-48e9-b053-c58681dee30e.json)
+and [hardware retest](hardware/results/rpnce-hardware-2a9a2054-33d6-4bce-82e9-f1fb8e8df91a.json)
+record these checks. The retest
 passes all 14 revised cases, with none skipped: six overflow, three underflow
 and five precision warnings. This confirms the specified error behavior
 for these cases on that device and OS; it is not a complete hardware audit.
@@ -112,7 +113,7 @@ into zero, and ambiguous cancellation in variance calculations. Large
 SINH may report overflow when its intermediate exponential exceeds the
 range. Precision is not extended to force a numerical answer.
 
-The 14 added native neighbor checks cover genuine zero results, ordinary
+The 14 native neighbor checks cover genuine zero results, ordinary
 polar conversion and standard deviation, both range endpoints, rejected
 statistics/register updates, and defensive formatting of legacy invalid
 values. Native checks verify operand preservation, not just the message.

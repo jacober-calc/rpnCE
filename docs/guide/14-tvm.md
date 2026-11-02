@@ -1,6 +1,6 @@
 # 14. TVM: time value of money
 
-rpnCE development build · User Guide
+rpnCE 0.8.0 · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 13. STAT: statistics and curve fitting](13-statistics.md) · [Next: 15. UNIT: unit conversions](15-units.md)
 

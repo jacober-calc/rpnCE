@@ -1,6 +1,6 @@
 # 16. DATE: dates, times and the clock
 
-rpnCE development build · User Guide
+rpnCE 0.8.0 · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 15. UNIT: unit conversions](15-units.md) · [Next: 17. Messages and errors](17-troubleshooting.md)
 

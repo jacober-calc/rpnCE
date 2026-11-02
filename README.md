@@ -1,4 +1,4 @@
-# rpnCE
+# rpnCE 0.8.0
 ![rpnCE Screenshot](assets/rpnCE-promo1.gif)
 
 An RPN calculator for the TI-84 Plus CE, written in C. It turns the CE into
@@ -35,7 +35,7 @@ bottom of the screen, on a dot-matrix LCD-style display.
 - **Screen tints:** LCD, LCD+ (for real screens), GRAY, INVERTED, AYU DARK,
   MONOKAI, PASTEL, and COMMODORE.
 
-The **[User Guide](docs/USER_GUIDE.md)** describes the current development build,
+The **[User Guide](docs/USER_GUIDE.md)** describes rpnCE 0.8.0,
 with operating procedures, worked keystroke examples, and a
 [function index](docs/guide/20-reference.md#appendix-d-alphabetical-function-index).
 [docs/KEYS.md](docs/KEYS.md) is a compact key and menu reference.
@@ -44,10 +44,10 @@ for entry, arithmetic, CPLX functions and LINK.
 
 ## Installing
 
-1. Download `rpnCE-0.7.0.zip` from the
-   [releases](https://github.com/jacober-calc/rpnCE/releases) and unzip it.
-   You need `rpnCE-0.7.0.8xp` (the program)
-   and `rpnCEres-0.7.0.8xv` (its menus and unit tables). Also get the
+1. Build version 0.8.0 as described below and use `bin/rpnCE.8xp` (the program)
+   and `bin/rpnCEres.8xv` (its menus and unit tables). Packaged versions are
+   available from [releases](https://github.com/jacober-calc/rpnCE/releases);
+   use the documentation supplied with that version. Also get the
    [CE C libraries](https://github.com/CE-Programming/libraries/releases)
    (`clibs.8xg`) if you don't already have them.
 2. Send all three to the calculator with TI Connect CE. They can all stay
@@ -62,9 +62,9 @@ for entry, arithmetic, CPLX functions and LINK.
 The program and `RPNCEres` must come from the same release; if the appvar
 is missing or doesn't match, rpnCE says so at startup. rpnCE saves its own
 data in `RPNCEdat` (complete values, statistics and calculator modes) and
-`RPNCEcfg` (display and DATE settings). Version-5 saves and their optional
-`RPNCEunt` unit metadata are imported on first use. New saves use version 6,
-include units with each value, and remove the retired unit sidecar. Back up
+`RPNCEcfg` (display and DATE settings). Saved data uses version 6 and includes
+units with each value. Version-5 saves and their optional `RPNCEunt` metadata
+can be imported; a successful save removes that sidecar. Back up
 saved data before upgrading; older program versions cannot read version 6.
 
 ## Quick start
@@ -92,15 +92,16 @@ The release files in [cem/](cem/) use versioned filenames. TI-OS still lists
 the program as `RPNCE`; its resource and saved-data appvar names are unchanged
 so existing calculator data remains available.
 
-To try it without a calculator, load both files and `clibs.8xg` into the
+To try a source build without a calculator, load both files from `bin/`
+and `clibs.8xg` into the
 [CEmu](https://ce-programming.github.io/CEmu/) emulator.
 
 ### Memory
 
 The menu tree, unit tables and 26 HELP pages (about 18 KB) live in `RPNCEres`
-and are read straight from archive, so they use no RAM. The current build
-uses larger complete-value slots for stack and register
-storage. See the linker map for program and static-storage sizes; runtime
+and are read straight from archive, so they use no RAM. Stack and ordinary
+register values use 20 bytes each on the CE. See the linker map for program
+and static-storage sizes; runtime
 stack and library allocations also need RAM.
 
 ## Tests
@@ -115,7 +116,7 @@ sh tests/run_tests.sh
 This builds and runs eighteen suites (number formatting, decimal rounding,
 math, BASE, statistics, TVM and units, DATE, the RPNCEres appvar reader,
 menu actions, keyboard shortcuts, dot-font rendering, saved state, the
-calculator core, universal values and complex arithmetic, quantities, entry
+calculator core, typed values and complex arithmetic, quantities, entry
 sequences, display redraws, and brightness controls), using
 stand-ins for the calculator's number routines.
 

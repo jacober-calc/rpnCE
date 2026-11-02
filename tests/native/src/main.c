@@ -19,7 +19,7 @@
 #include "../../../src/sys/brightness.h"
 
 _Static_assert(sizeof(real_t) == 9 && sizeof(value_t) == 20 && offsetof(calc_t, regs) == 262,
-               "update the UI smoke test for the new CE value layout");
+               "CE value layout must match the UI smoke test");
 _Static_assert(NATIVE_CHECK_COUNT > 0 && NATIVE_CHECK_COUNT <= 254,
                "native results must fit before the completion marker");
 
@@ -474,7 +474,7 @@ static void message_bounds(int *width, int *height)
     *height = bottom < top ? 0 : bottom - top + 1;
 }
 
-static void refactor_regressions(void)
+static void date_mode_stack_regressions(void)
 {
     static const char *epochs[] = {
         "D{1970,1,1}", "D{1900,1,1}", "D{1980,1,6}",
@@ -689,7 +689,7 @@ int main(void)
     calculator_regressions();
     numeric_boundaries();
     error_policy_neighbors();
-    refactor_regressions();
+    date_mode_stack_regressions();
     RESULTS[0] = checks;
     if (checks != NATIVE_CHECK_COUNT) RESULTS[0] = 0;
     RESULTS[255] = 0xAA;

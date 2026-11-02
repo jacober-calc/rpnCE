@@ -1,6 +1,6 @@
 # 6. The RPN stack
 
-rpnCE development build · User Guide
+rpnCE 0.8.0 · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 5. Entering numbers](05-number-entry.md) · [Next: 7. The menus](07-menus.md)
 

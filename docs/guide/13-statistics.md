@@ -1,6 +1,6 @@
 # 13. STAT: statistics and curve fitting
 
-rpnCE development build · User Guide
+rpnCE 0.8.0 · User Guide
 
 Variance and curve fitting can lose significant digits when the data's
 spread is very small compared with its magnitude. rpnCE reports

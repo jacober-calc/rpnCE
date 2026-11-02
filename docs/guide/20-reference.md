@@ -1,6 +1,6 @@
 # Reference tables
 
-rpnCE development build · User Guide
+rpnCE 0.8.0 · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 19. Limits and differences](19-compatibility.md)
 

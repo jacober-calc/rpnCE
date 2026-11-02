@@ -1,6 +1,6 @@
 # 11. Complex numbers
 
-rpnCE development build · User Guide
+rpnCE 0.8.0 · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 10. Math functions](10-mathematics.md) · [Next: 12. BASE: hexadecimal, octal and binary](12-base.md)
 

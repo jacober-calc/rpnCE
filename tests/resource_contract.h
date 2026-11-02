@@ -5,7 +5,7 @@
 #include "units.h"
 #include "actions.h"
 
-#define RESOURCE_CONTRACT_EXPECTED UINT32_C(0x569D1880)
+#define RESOURCE_CONTRACT_EXPECTED UINT32_C(0x9345CE20)
 
 static int resource_contract_unit(menu_id_t id)
 {
@@ -14,7 +14,7 @@ static int resource_contract_unit(menu_id_t id)
 }
 
 /* Hash decoded contents and navigation, independent of offsets, packing or
- * compiler integer widths. The expected value predates resource packing. */
+ * compiler integer widths. Covers menu labels, units and HELP contents. */
 static uint32_t resource_contract_hash = UINT32_C(2166136261);
 static void resource_contract_number(uint16_t n)
 {

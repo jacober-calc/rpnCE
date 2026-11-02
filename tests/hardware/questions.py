@@ -48,7 +48,7 @@ REFERENCES = {
     'units': 'Exact factors and offsets from tools/genunits.py, evaluated separately at 180 digits. This shares unit definitions with the program; it checks conversions, not an independent audit of the definitions.',
     'date': 'Python Gregorian date/datetime and exact integer second arithmetic. Epochs and fixed offsets are stated in the procedure.',
     'tvm': 'Independent annuity equations evaluated at 180 digits. Positive values are receipts; negative values are payments. The reference is not computed by the calculator solver.',
-    'contract': 'Current rpnCE development user guide and documented domains. Released 0.7.0 predates complex support. Expected errors are checked separately from numerical results.'
+    'contract': 'rpnCE 0.8.0 user guide and documented domains. Expected errors are checked separately from numerical results.'
 }
 
 def decimal(value):

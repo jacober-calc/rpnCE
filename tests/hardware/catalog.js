@@ -887,7 +887,7 @@ add('clear-stack','CLR','Clear all stack levels',['Enter 1 ENTER 2 ENTER 3 ENTER
 add('clear-registers','CLR','Clear ordinary registers',['This test clears all ordinary registers. Save anything you need first. Enter 99 STO→ MATH.',select('CLEAR_REGS'),'Press 2ND STO→ MATH.'],exact(0),['CLEAR_REGS']);
 add('clear-stat','CLR','Clear statistics from CLR',[...statSetup,select('CLEAR_STAT'),select('STAT_N')],exact(0),['CLEAR_STAT']);
 add('clear-tvm','CLR','Clear shared TVM values from CLR',[select('CLEAR_TVM'),'Open VARS and inspect the TVM entries. Close with ON.'],null,['CLEAR_TVM'],{checks:['N, I%YR, PV, PMT and FV are 0; P/YR and C/YR are 12; END is selected.']});
-add('help-pages','HELP','Calculator reference pages',[select('HELP'),'Use ↑/↓ to visit the pages, including About. Press ON. Open HELP again with 2ND 0; close with ENTER.'],null,['HELP'],{checks:['Pages are legible, navigation works, and About gives version 0.7.0 and the repository link.','Both exits return to the stack without changing it.']});
+add('help-pages','HELP','Calculator reference pages',[select('HELP'),'Use ↑/↓ to visit the pages, including About. Press ON. Open HELP again with 2ND 0; close with ENTER.'],null,['HELP'],{checks:['Pages are legible, navigation works, and About gives version 0.8.0 and the repository link.','Both exits return to the stack without changing it.']});
 add('key-shortcuts','Keyboard','Menu shortcuts',['Try MODE, STAT, X,T,θ,n, APPS and PRGM, returning to HOME with MATH each time.','Try 2ND + (MEM), 2ND STAT (LIST), and 2ND 0 (CATALOG). Return with ON.'],null,[],{checks:['The first keys open MODE, STAT, UNIT, BASE and HYP, respectively.','The 2ND keys open CLR, STK and HELP, respectively.']});
 add('persist-state','Persistence','Save, quit and reopen',[
  'This check replaces A, B and the active stack. Enter 12.',select('UNIT_FOOT'),'Press STO→ MATH (A).',
@@ -959,12 +959,12 @@ for (const test of cases) {
   else if (test.expected?.kind === 'error' && test.focus === 'normal') test.focus = 'domain';
 }
 const catalog = {
- revision: 'hardware-dev-values-9', version: '0.7.0', menuDigest: source.menuDigest,
+ revision: 'hardware-0.8.0', version: '0.8.0', menuDigest: source.menuDigest,
  reference: 'Exact integer and Gregorian references; basic mpmath references at 70 decimal digits and expanded references at 180 digits. Unit references reuse the exact definitions in tools/genunits.py and are evaluated separately. Most approximate checks allow 5E-11 relative error and zero absolute error; iterative-rate, near-pole and cancellation cases state their own tolerances. Use SHOW for numeric results, especially scientific notation. Passing means the reported observations satisfy these cases; it is not proof of a complete hardware audit.',
  baseline: [
   'Use a calculator with the current rpnCE program and matching resource appvar. Copy any stack/register values you want to keep: these exercises replace them. TVM cases replace the shared TI-OS Finance values.',
   'Before EACH case, cancel entry/prompts with ON or CLEAR as needed. Press APPS then Y= for DEC. Press MODE then TRACE for RAD. Press MODE then Y=, then . then 2 for FIX all digits.',
-  'Press MODE, then ↓ for row 2; press Y= for RRES and ZOOM for RECT. This real-domain, rectangular baseline is explicit even though fresh calculators now start in DEG. Individual cases may change it.',
+  'Press MODE, then ↓ for row 2; press Y= for RRES and ZOOM for RECT. This real-domain, rectangular baseline is explicit even though fresh calculators start in DEG. Individual cases may change it.',
   'Press MODE, ↓ three times, then Y= for raw DATE objects. Press MODE, ↓ three times, then ZOOM for period decimal. Enter 4; press MODE, ↓ twice, TRACE for stack depth 4.',
   'If a message is visible, press CLEAR once to dismiss it. Then press CLEAR twice to clear the stack. Follow the case-specific setup and steps after this baseline. A case that changes settings does not set up the next case.',
   'Named menu selections have a physical-key route below the steps. All routes begin with MATH (HOME). EE means the comma key; (−) is the sign key, distinct from subtraction.',

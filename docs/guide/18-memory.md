@@ -1,6 +1,6 @@
 # 18. Saving, memory and files
 
-rpnCE development build · User Guide
+rpnCE 0.8.0 · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 17. Messages and errors](17-troubleshooting.md) · [Next: 19. Limits and differences](19-compatibility.md)
 
@@ -33,8 +33,8 @@ can see them in `2ND MEM` > Mem Management > AppVars.
 - **To reset rpnCE's private saved state**, exit and delete `RPNCEdat`,
   `RPNCEcfg` there (also delete `RPNCEunt` if retained from an old version). Keep `RPNCEres`: rpnCE needs it to
   start. This does not clear shared TI-OS TVM values or reset the clock.
-- **Upgrading** imports version-5 state, including packed DATE values and
-  verified register-unit metadata. New saves use version 6, with each
+- **Upgrading** imports version-5 state and verified register-unit metadata.
+  Saved data uses version 6, with each
   value's type, payload and unit together in RPNCEdat. RPNCEunt is removed
   after a successful save. Older program versions cannot read version 6;
   keep a backup of old state before upgrading.

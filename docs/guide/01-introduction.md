@@ -1,6 +1,6 @@
 # 1. Introduction
 
-rpnCE development build · User Guide
+rpnCE 0.8.0 · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Next: 2. Installing rpnCE](02-installation.md)
 

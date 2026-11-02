@@ -1,6 +1,6 @@
 # 3. First calculations
 
-rpnCE development build · User Guide
+rpnCE 0.8.0 · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 2. Installing rpnCE](02-installation.md) · [Next: 4. The screen](04-display.md)
 
