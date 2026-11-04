@@ -2,12 +2,13 @@
 #define RPNCE_UI_DOTFONT_H
 
 #include <stdint.h>
+#include "../core/text_symbols.h"
 
 /*
  * A bold 5x7 LCD font for the stack, in the style of the SwissMicros
  * calculators: each font pixel is a solid block, a little taller than it is
- * wide, with no gaps. Characters are proportional: digits and letters are 5
- * columns wide, the decimal point and comma 1. The E of an exponent is drawn
+ * wide, with no gaps. Characters are proportional: digits and most letters
+ * are 5 columns wide, the decimal point and comma 1. The E of an exponent is drawn
  * small and centered, HP style.
  */
 
@@ -18,6 +19,11 @@
 
 /* Width in pixels of a string. */
 int dot_width(const char *s);
+
+/* The same mathematical symbols at the system font's size. Width includes
+ * the ordinary one-pixel character gap; zero means an ordinary character. */
+int dot_symbol_width(char ch);
+void dot_draw_symbol(char ch, int x, int y, uint8_t color, uint8_t y_scale);
 
 /* The same font with smaller blocks (2 x 2 pixels: half the height), for
  * labels beside the stack values. */

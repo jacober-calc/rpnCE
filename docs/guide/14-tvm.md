@@ -14,7 +14,7 @@ rpnCE 0.8.0 · User Guide
 - [Example: solve an interest rate](#example-solve-an-interest-rate)
 - [Settings and solver controls](#settings-and-solver-controls)
 
-**Menu location:** **HOME** row 1 → **TVM**.
+**Menu location:** **HOME** row 2 → **TVM**.
 
 - <img src="../../assets/guide/menu/home-tvm.png" alt="HOME > TVM" width="320">
     - <img src="../../assets/guide/menu/home-tvm-1.png" alt="HOME > TVM > Row 1" width="320">

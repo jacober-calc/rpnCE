@@ -3,7 +3,7 @@
 
 #include "actions.h"
 
-#define ACTION_CONTRACT_EXPECTED UINT32_C(0x70D73887)
+#define ACTION_CONTRACT_EXPECTED UINT32_C(0x6842D80F)
 
 /* Complete command/argument mapping, including shifted TVM recall. Integer
  * widths and any representation chosen by the generator do not affect it. */

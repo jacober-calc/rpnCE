@@ -22,7 +22,7 @@ int main(void)
         }
     mock_backlight = 100;
     sys_brightness_adjust(true);
-    if (mock_backlight != 92) fails++;
+    if (mock_backlight != 84) fails++;
     sys_brightness_adjust(false);
     if (mock_backlight != 100) fails++;
     mock_backlight = 100;

@@ -317,7 +317,7 @@ static void complex_regressions(void)
     check(rejected(CMD_STAT_PLUS, "Err: Data Type"));
     check(rejected(CMD_SET_WORD_SIZE, "Err: Data Type"));
     check(rejected(CMD_DATE_FN, "Err: Data Type"));
-    cmd(CMD_SHOW, 0); check(c.message && !strcmp(c.message, "3. i 4."));
+    cmd(CMD_SHOW, 0); check(c.message && !strcmp(c.message, "3.\x80" "4."));
     c.stack[0] = value_complex(os_StrToReal("8E99", NULL), os_StrToReal("8E99", NULL));
     c.stack[1] = c.stack[0]; cmd(CMD_DIV, 0); check(complex_number("1", "0"));
     c.stack[0] = value_complex(os_Int24ToReal(1), os_Int24ToReal(1)); cmd(CMD_SQRT, 0);
@@ -646,7 +646,7 @@ int main(void)
     uint8_t saved_lcd = lcd_BacklightLevel, saved_os = os_Brightness;
     lcd_BacklightLevel = 100;
     sys_brightness_adjust(true);
-    check(lcd_BacklightLevel == 92 && os_Brightness == 92);
+    check(lcd_BacklightLevel == 84 && os_Brightness == 84);
     sys_brightness_adjust(false);
     check(lcd_BacklightLevel == 100 && os_Brightness == 100);
     lcd_BacklightLevel = 0;

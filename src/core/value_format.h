@@ -1,6 +1,7 @@
 #ifndef RPNCE_CORE_VALUE_FORMAT_H
 #define RPNCE_CORE_VALUE_FORMAT_H
 #include "value.h"
+#include "text_symbols.h"
 /* Numeric/record formatting shared by stack, catalog and SHOW. Unit labels
  * are laid out by the caller, using the unit owned by the value. */
 void value_format(char out[VALUE_FORMAT_MAX], const value_t *v,

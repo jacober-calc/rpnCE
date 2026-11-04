@@ -50,9 +50,6 @@ rpnCE 0.8.0 · User Guide
 | `MATH` | HOME |
 | `MODE` | MODE |
 | `STAT` | STAT |
-| `X,T,θ,n` | UNIT |
-| `APPS` | BASE |
-| `PRGM` | HYP |
 | `2ND MEM` | CLR |
 | `2ND LIST` | STK |
 | `2ND CATALOG` | HELP |
@@ -65,8 +62,9 @@ rpnCE 0.8.0 · User Guide
 
 See [Complex numbers](11-complex-numbers.md) for worked entry,
 arithmetic, CPLX and LINK examples, and [Status bar](04-display.md#status-bar)
-for the compact indicators. DEG, DEC, RRES and RECT are implicit defaults;
-MODE marks every active choice. Ordinary stack and register operations
+for the compact indicators. Complex display always shows a𝑖b, r∠θ or r∠°.
+DEG and DEC are implicit; RRES/CRES are marked only in MODE.
+Ordinary stack and register operations
 copy complete real, complex, unit or DATE values.
 
 ## Appendix B: Menu map
@@ -79,8 +77,8 @@ Each row lists the five menu keys, from Y= to GRAPH.
 
 | Row | Keys | Screen |
 | --- | --- | --- |
-| 1 | [MATH] &nbsp; [NUM] &nbsp; [PROB] &nbsp; [CPLX] &nbsp; [TVM] | <img src="../../assets/guide/menu/home-1.png" alt="HOME > Row 1" width="320"> |
-| 2 | [BASE] &nbsp; [HYP] &nbsp; [STAT] &nbsp; [CONV] &nbsp; HELP | <img src="../../assets/guide/menu/home-2.png" alt="HOME > Row 2" width="320"> |
+| 1 | [MATH] &nbsp; [NUM] &nbsp; [PROB] &nbsp; [CPLX] &nbsp; HELP | <img src="../../assets/guide/menu/home-1.png" alt="HOME > Row 1" width="320"> |
+| 2 | [BASE] &nbsp; [HYP] &nbsp; [STAT] &nbsp; [CONV] &nbsp; [TVM] | <img src="../../assets/guide/menu/home-2.png" alt="HOME > Row 2" width="320"> |
 | 3 | [CLR] &nbsp; [MODE] &nbsp; [STK] &nbsp; [UNIT] &nbsp; [DATE] | <img src="../../assets/guide/menu/home-3.png" alt="HOME > Row 3" width="320"> |
 
 **HOME > MATH**
@@ -110,14 +108,6 @@ Each row lists the five menu keys, from Y= to GRAPH.
 | Row | Keys | Screen |
 | --- | --- | --- |
 | 1 | REAL &nbsp; IMAG &nbsp; CONJ &nbsp; CABS &nbsp; CANG | <img src="../../assets/guide/menu/home-cplx-1.png" alt="HOME > CPLX > Row 1" width="320"> |
-
-**HOME > TVM**
-
-| Row | Keys | Screen |
-| --- | --- | --- |
-| 1 | N &nbsp; I%YR &nbsp; PV &nbsp; PMT &nbsp; FV | <img src="../../assets/guide/menu/home-tvm-1.png" alt="HOME > TVM > Row 1" width="320"> |
-| 2 | P/YR &nbsp; C/YR &nbsp; BEG &nbsp; END &nbsp; CLTV | <img src="../../assets/guide/menu/home-tvm-2.png" alt="HOME > TVM > Row 2" width="320"> |
-| 3 | IYR1 &nbsp; IYR2 &nbsp; TMAX &nbsp; · &nbsp; RSTV | <img src="../../assets/guide/menu/home-tvm-3.png" alt="HOME > TVM > Row 3" width="320"> |
 
 **HOME > BASE**
 
@@ -195,6 +185,14 @@ Each row lists the five menu keys, from Y= to GRAPH.
 | 1 | →DEG &nbsp; →RAD &nbsp; · &nbsp; →REC &nbsp; →POL | <img src="../../assets/guide/menu/home-conv-1.png" alt="HOME > CONV > Row 1" width="320"> |
 | 2 | →HR &nbsp; →HMS &nbsp; HMS+ &nbsp; HMS- &nbsp; · | <img src="../../assets/guide/menu/home-conv-2.png" alt="HOME > CONV > Row 2" width="320"> |
 
+**HOME > TVM**
+
+| Row | Keys | Screen |
+| --- | --- | --- |
+| 1 | N &nbsp; I%YR &nbsp; PV &nbsp; PMT &nbsp; FV | <img src="../../assets/guide/menu/home-tvm-1.png" alt="HOME > TVM > Row 1" width="320"> |
+| 2 | P/YR &nbsp; C/YR &nbsp; BEG &nbsp; END &nbsp; CLTV | <img src="../../assets/guide/menu/home-tvm-2.png" alt="HOME > TVM > Row 2" width="320"> |
+| 3 | IYR1 &nbsp; IYR2 &nbsp; TMAX &nbsp; · &nbsp; RSTV | <img src="../../assets/guide/menu/home-tvm-3.png" alt="HOME > TVM > Row 3" width="320"> |
+
 **HOME > CLR**
 
 | Row | Keys | Screen |
@@ -209,7 +207,7 @@ Each row lists the five menu keys, from Y= to GRAPH.
 | 1 | FIX &nbsp; SCI &nbsp; ENG &nbsp; RAD &nbsp; DEG | <img src="../../assets/guide/menu/home-mode-1.png" alt="HOME > MODE > Row 1" width="320"> |
 | 2 | RRES &nbsp; CRES &nbsp; RECT &nbsp; PRAD &nbsp; PDEG | <img src="../../assets/guide/menu/home-mode-2.png" alt="HOME > MODE > Row 2" width="320"> |
 | 3 | RSIZ &nbsp; RSZ? &nbsp; TINT &nbsp; SSIZ &nbsp; SSZ? | <img src="../../assets/guide/menu/home-mode-3.png" alt="HOME > MODE > Row 3" width="320"> |
-| 4 | {..} &nbsp; ".." &nbsp; . &nbsp; , &nbsp; · | <img src="../../assets/guide/menu/home-mode-4.png" alt="HOME > MODE > Row 4" width="320"> |
+| 4 | {..} &nbsp; ".." &nbsp; · &nbsp; . &nbsp; , | <img src="../../assets/guide/menu/home-mode-4.png" alt="HOME > MODE > Row 4" width="320"> |
 
 **HOME > STK**
 

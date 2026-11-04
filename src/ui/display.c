@@ -72,6 +72,17 @@ static const accents_t commodore_accents = { {
     { 121, 231, 149 },
 } };
 
+/* TI-OS home-screen bar sampled from the supplied captures (#515551).
+ * The white panel is retained; body text is softened to charcoal. */
+static const accents_t tios_accents = { {
+    { 81, 85, 81 }, { 255, 255, 255 },
+    { 81, 85, 81 }, { 81, 85, 81 }, { 81, 85, 81 },
+    { 81, 85, 81 }, { 81, 85, 81 },
+    { 24, 24, 24 }, { 24, 24, 24 },
+    { 24, 24, 24 }, { 24, 24, 24 },
+    { 255, 255, 255 },
+} };
+
 /* Preset indices are saved settings; append rather than reorder. */
 static const tint_t tints[TINT_COUNT] = {
     { "LCD",  { { 34, 46, 49 },   { 156, 170, 155 }, { 56, 68, 68 },  { 26, 32, 32 } }, NULL },
@@ -82,12 +93,16 @@ static const tint_t tints[TINT_COUNT] = {
     { "MONOKAI", { { 166, 226, 46 }, { 39, 40, 34 }, { 163, 161, 144 }, { 248, 248, 242 } }, &monokai_accents },
     { "PASTEL", { { 38, 58, 89 }, { 244, 247, 252 }, { 83, 103, 132 }, { 38, 58, 89 } }, &pastel_accents },
     { "COMMODORE", { { 84, 222, 116 }, { 4, 10, 7 }, { 85, 168, 107 }, { 116, 232, 144 } }, &commodore_accents },
+    { "TIOS", { { 24, 24, 24 }, { 255, 255, 255 }, { 64, 64, 64 }, { 24, 24, 24 } }, &tios_accents },
 };
 static const accents_t *g_accents;
 
 static void set_rgb(uint8_t slot, const uint8_t *rgb)
 {
-    gfx_palette[slot] = gfx_RGBTo1555(rgb[0], rgb[1], rgb[2]);
+    /* The 8-bit LCD palette stores green's sixth bit in bit 15;
+     * GraphX's conversion supplies only the other five green bits. */
+    gfx_palette[slot] = gfx_RGBTo1555(rgb[0], rgb[1], rgb[2]) |
+                        (uint16_t)(rgb[1] & 4) << 13;
 }
 
 void display_set_tint(uint8_t tint)
@@ -154,8 +169,11 @@ static int label_width(const char *s)
 {
     int w = 0;
     gfx_SetTextScale(1, 1);
-    for (; *s; s++)
-        w += is_glyph(*s) ? glyph_width[(uint8_t)*s - 1] : (int)gfx_GetCharWidth(*s);
+    for (; *s; s++) {
+        int symbol_width = dot_symbol_width(*s);
+        w += symbol_width ? symbol_width : is_glyph(*s) ?
+             glyph_width[(uint8_t)*s - 1] : (int)gfx_GetCharWidth(*s);
+    }
     return w;
 }
 
@@ -166,7 +184,11 @@ static void draw_label_scaled(const char *s, int x, int y, uint8_t color, uint8_
     gfx_SetColor(color);
     gfx_SetTextScale(1, y_scale);
     for (; *s; s++) {
-        if (is_glyph(*s)) {
+        int symbol_width = dot_symbol_width(*s);
+        if (symbol_width) {
+            dot_draw_symbol(*s, x, y, color, y_scale);
+            x += symbol_width;
+        } else if (is_glyph(*s)) {
             uint8_t g = (uint8_t)*s - 1;
             for (int row = 0; row < 8; row++)
                 for (int col = 0; col < 8; col++)
@@ -286,8 +308,8 @@ static void draw_status(const calc_t *c, bool second, bool alpha)
     gfx_SetTextScale(1, 1);
     gfx_SetTextFGColor(g_accents ? COL_BAR_TEXT : COL_PANEL);
 
-    /* Format is always visible. DEG, RRES, RECT and DEC are implicit
-     * defaults; optional indicators occupy space only when active. */
+    /* Format and complex display mode are always visible. Result policy
+     * is marked only in MODE; DEG and DEC remain implicit. */
     static const char names[][4] = { "", "FIX", "SCI", "ENG" };
     memcpy(fmt, names[c->disp_style], 3);
     if (c->disp_digits == DISP_FLOAT) {
@@ -310,18 +332,21 @@ static void draw_status(const calc_t *c, bool second, bool alpha)
     const char *angle = c->degrees ? NULL : "RAD";
     const char *shift = second ? "2ND" : alpha ? "A" : NULL;     /* A: ALPHA pending */
 
+    static const char complex_labels[][4] = {
+        { 'a', TEXT_IMAG, 'b', 0 },
+        { 'r', TEXT_ANGLE, TEXT_THETA, 0 },
+        { 'r', TEXT_ANGLE, TEXT_DEGREE, 0 }
+    };
     const char *const modes[] = {
         fmt, angle, base, c->base.carry ? "CF" : NULL,
-        c->complex_results ? "CRES" : NULL,
-        c->complex_mode == COMPLEX_RAD ? "PRAD" :
-        c->complex_mode == COMPLEX_DEG ? "PDEG" : NULL,
+        complex_labels[c->complex_mode],
     };
     const unsigned count = sizeof modes / sizeof *modes;
     int w = 0;
     for (unsigned i = 0; i < count; i++) {
         if (!modes[i]) continue;
         if (w) w += STATUS_GAP;
-        w += (int)gfx_GetStringWidth(modes[i]);
+        w += label_width(modes[i]);
     }
     if (shift)
         w += STATUS_GAP + 2 + (int)gfx_GetStringWidth(shift) + 2;
@@ -336,8 +361,8 @@ static void draw_status(const calc_t *c, bool second, bool alpha)
     }
     for (unsigned i = 0; i < count; i++) {
         if (!modes[i]) continue;
-        gfx_PrintStringXY(modes[i], x, y);
-        x += (int)gfx_GetStringWidth(modes[i]) + STATUS_GAP;
+        draw_label(modes[i], x, y, g_accents ? COL_BAR_TEXT : COL_PANEL);
+        x += label_width(modes[i]) + STATUS_GAP;
     }
     if (shift) {                            /* a light badge on the dark bar */
         gfx_SetColor(g_accents ? COL_BAR_TEXT : COL_PANEL);
@@ -668,7 +693,7 @@ static void draw_catalog(const calc_t *c, const catalog_t *cat)
 /* ---------- menu row ---------- */
 
 /* Five dark boxes with inverted labels over the Y= ... GRAPH keys. A small
- * tab along the top marks a submenu; empty slots have no box. */
+ * tab along the top marks a submenu; empty slots are matching blank boxes. */
 static void draw_menu_row(const calc_t *c, const menu_t *m)
 {
     const int gap = 3;
@@ -677,12 +702,12 @@ static void draw_menu_row(const calc_t *c, const menu_t *m)
     for (uint8_t i = 0; i < 5; i++) {
         const menu_node_t *n = menu_slot(m, i);
         menu_kind_t kind = menu_node_kind(n);
-        if (kind == MENU_BLANK)
-            continue;
-
         int x = gap + i * (w + gap);
         gfx_SetColor(g_accents ? (uint8_t)(COL_MENU_FIRST + i) : COL_INK);
         gfx_FillRectangle(x, MENU_Y, w, MENU_H);
+
+        if (kind == MENU_BLANK)
+            continue;
 
         const char *label = res_text(n->label);
         if (kind == MENU_ALT && action_is_active(c, (menu_id_t)n->id))

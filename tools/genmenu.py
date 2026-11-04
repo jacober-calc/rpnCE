@@ -17,10 +17,14 @@ MENU_ATTRIBUTION = (
     ' */\n'
 )
 
-# Symbol names -> character codes drawn by the UI (see menu_glyphs in display.c).
+# Menu symbol names -> character codes drawn by display.c.
 SYMBOLS = ['sq', 'cube', 'cuberoot', 'root', 'sigma', 'to', 'block', 'mu',
            'deg', 'up', 'down', 'left', 'times', 'supx']
 SYM_CODE = {name: i + 1 for i, name in enumerate(SYMBOLS)}
+# Formatted values, HELP and labels share the same mathematical symbols.
+with open(os.path.join(ROOT, 'src', 'core', 'text_symbols.h')) as symbols:
+    SYM_CODE.update((name.lower(), int(code, 16)) for name, code in
+                    re.findall(r'#define TEXT_(\w+)\s+(0x[0-9a-fA-F]+)', symbols.read()))
 
 Item = namedtuple('Item', 'kind label alt ident command arg', defaults=(None, '0'))
 

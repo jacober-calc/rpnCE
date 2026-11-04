@@ -18,8 +18,8 @@ its top, **HOME**, which has three rows:
 
 | Row | Menus |
 | --- | --- |
-| 1 | **MATH** **NUM** **PROB** **CPLX** **TVM** |
-| 2 | **BASE** **HYP** **STAT** **CONV** **HELP** |
+| 1 | **MATH** **NUM** **PROB** **CPLX** **HELP** |
+| 2 | **BASE** **HYP** **STAT** **CONV** **TVM** |
 | 3 | **CLR** **MODE** **STK** **UNIT** **DATE** |
 
 - <img src="../../assets/guide/menu/home-1.png" alt="HOME > Row 1" width="320">
@@ -33,6 +33,8 @@ its top, **HOME**, which has three rows:
 - **Menu keys:** the five keys under the screen choose the item above them.
   A submenu (a box with a short line across its top) opens that menu; a
   function runs at once.
+- **Empty slots:** every row shows five matching buttons. A button without
+  text has no action.
 - **More rows:** when the message line shows ↓↑ at its right end, the menu
   has more rows. Use the up and down arrow keys to move between them.
 - **Back:** `ON` goes back one level, to the menu you came from. At HOME it
@@ -53,9 +55,6 @@ its top, **HOME**, which has three rows:
 | `MATH` | HOME |
 | `MODE` | MODE |
 | `STAT` | STAT |
-| `X,T,θ,n` | UNIT |
-| `APPS` | BASE |
-| `PRGM` | HYP |
 | `2ND MEM` (on `+`) | CLR |
 | `2ND LIST` (on `STAT`) | STK |
 | `2ND CATALOG` (on `0`) | HELP |
@@ -63,11 +62,12 @@ its top, **HOME**, which has three rows:
 Inside a STO or RCL prompt, and after `ALPHA`, these keys still give their
 letters, so the shortcuts never get in the way of naming a register.
 `2ND LINK` combines or splits complex values; `2ND ANGLE` enters polar
-values. `2ND i` (decimal point) enters rectangular values.
+values. `2ND i` (decimal point) enters rectangular values. Open UNIT,
+BASE and HYP through HOME; their plain-key shortcuts are unassigned.
 
 ## HELP
 
-**HELP** (HOME row 2, or `2ND CATALOG`) shows 26 quick-reference pages:
+**HELP** (HOME row 1, or `2ND CATALOG`) shows 26 quick-reference pages:
 using HELP and the menus, the RPN stack, variables, key shortcuts, each
 main menu, complex entry/arithmetic/modes/LINK, number types, status
 indicators, numeric limits, and About (the version and GitHub repository). The up and

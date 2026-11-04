@@ -100,7 +100,7 @@ bar shows **CF** after the base while the carry flag is set, including in DEC.
 
 ## Example: overflow in an eight-bit word
 
-**Setup:** Open **BASE** with APPS. Choose **DEC**, enter `8`, then use
+**Setup:** Press `MATH`, then `↓` and `Y=` to open **BASE**. Choose **DEC**, enter `8`, then use
 row 2 **BCFS** → **WSIZ**. Return to **BASE** and select **HEX**.
 Changing word size replaces the saved BASE word-size setting.
 

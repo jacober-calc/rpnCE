@@ -11,6 +11,7 @@
 #include "res_info.h"
 #include "units.h"
 #include "version.h"
+#include "text_symbols.h"
 #include "resource_contract.h"
 
 uint8_t mock_res[65536];
@@ -105,8 +106,10 @@ int main(void)
         for (uint8_t l = 0; l < res_help_lines(p); l++) {
             const char *s = res_help_line(p, l);
             if (strlen(s) > 44) fits = false;
-            for (; *s; s++)
-                if ((unsigned char)*s < 32 || (unsigned char)*s > 126) fits = false;
+            for (; *s; s++) {
+                unsigned char ch = (unsigned char)*s;
+                if ((ch < 32 || ch > 126) && (ch < TEXT_IMAG || ch > TEXT_THETA)) fits = false;
+            }
         }
         if (strstr(res_help_line(p, 0), "KEY SHORTCUTS")) {
             shortcuts = true;
@@ -126,7 +129,7 @@ int main(void)
     ok("every main menu and usage topic has a HELP page", complete, NULL);
     ok("HELP titles show their page number and total", numbered, NULL);
     ok("menu shortcuts leave LINK and ANGLE for complex operations", shortcuts, NULL);
-    ok("every page fits (8 lines, 44 ASCII chars)", fits, NULL);
+    ok("every page fits (8 lines, 44 supported chars)", fits, NULL);
     ok("ABOUT has the current version and repository", ({
         bool version = false, repo = false;
         uint8_t p = res_help_pages() - 1;

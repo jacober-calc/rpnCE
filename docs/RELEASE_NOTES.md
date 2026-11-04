@@ -6,9 +6,15 @@ An RPN scientific and financial calculator for the TI-84 Plus CE.
   scientific functions, LINK, and independent result/display modes.
 - HP-style stack with 4–12 levels, LASTX, ordinary and indirect registers,
   unit quantities, statistics, curve fitting, TVM, BASE, and DATE functions.
+- Mathematical complex separators and an always-visible a𝑖b/r∠θ/r∠°
+  presentation indicator; RRES/CRES are marked only in MODE.
 - Compact status indicators, DEG as the initial angle mode, decimal-point
-  or decimal-comma display, and eight screen tints.
+  or decimal-comma display, and nine screen tints including TIOS.
 - On-device HELP and an illustrated guide with complex-number examples.
+- HOME has HELP on row 1 and TVM on row 2. All menu rows have five buttons,
+  with unused slots blank. UNIT, BASE and HYP are reached through HOME.
+- MODE row 4 separates DATE display from decimal point/comma on TRACE/GRAPH.
+  Brightness uses 16-unit steps between the brightest and visible minimum.
 
 The [0.8.0 package](../cem/rpnCE-0.8.0.zip) includes matching program and
 resource files, installation notes, the license, screenshots and

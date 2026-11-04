@@ -60,12 +60,12 @@ HEADER_FMT = '<4sHHBBHI'
 OFFSETS_FMT = '<8H'
 
 
-def label_bytes(text):
-    """A menu label with {symbol} names turned into their character codes."""
+def label_bytes(text, source='menus.txt'):
+    """A resource label with {symbol} names turned into character codes."""
     def sym(m):
         name = m.group(1)
         if name not in genmenu.SYM_CODE:
-            sys.exit(f'menus.txt: unknown symbol {{{name}}} in {text}')
+            sys.exit(f'{source}: unknown symbol {{{name}}} in {text}')
         return chr(genmenu.SYM_CODE[name])
     return re.sub(r'\{(\w+)\}', sym, text).encode('latin-1')
 
@@ -205,12 +205,12 @@ def build_help():
                 continue
             if not page and not line.strip():
                 continue                    # blank lines before a title
-            if len(line) > HELP_MAX_CHARS:
-                sys.exit(f'help.txt:{n}: longer than {HELP_MAX_CHARS} characters')
             try:
                 line.encode('ascii')
             except UnicodeEncodeError:
-                sys.exit(f'help.txt:{n}: use plain ASCII characters')
+                sys.exit(f'help.txt:{n}: use ASCII text and {{symbol}} names')
+            if len(label_bytes(line, f'help.txt:{n}')) > HELP_MAX_CHARS:
+                sys.exit(f'help.txt:{n}: longer than {HELP_MAX_CHARS} characters')
             page.append(line)
     pages.append(page)
     pages = [[l for l in p] for p in pages]
@@ -241,7 +241,7 @@ def main():
     unit_records = [(label_bytes(label), dims.index(dim) | (0x80 if recip else 0),
                      factor.encode(), offset.encode() if offset else NONE16)
                     for ident, label, dim, factor, offset, recip in units]
-    help_records = [[line.encode('ascii') for line in page] for page in help_pages]
+    help_records = [[label_bytes(line, 'help.txt') for line in page] for page in help_pages]
     text = Text(v for records in (node_records, group_records, unit_records, help_records)
                 for row in records for v in row if isinstance(v, bytes))
     node_bytes = text.pack('<HHHB', node_records)

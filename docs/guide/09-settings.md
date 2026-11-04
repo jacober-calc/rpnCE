@@ -21,7 +21,7 @@ rpnCE 0.8.0 · User Guide
 | 1 | **FIX** **SCI** **ENG** **RAD** **DEG** |
 | 2 | **RRES** **CRES** **RECT** **PRAD** **PDEG** |
 | 3 | **RSIZ** **RSZ?** **TINT** **SSIZ** **SSZ?** |
-| 4 | **{..}** **".."** (DATE display), **.** **,** (decimal mark) |
+| 4 | **{..}** **".."** (DATE display), blank button, **.** **,** (decimal mark) |
 
 - <img src="../../assets/guide/menu/home-mode.png" alt="HOME > MODE" width="320">
     - <img src="../../assets/guide/menu/home-mode-1.png" alt="HOME > MODE > Row 1" width="320">
@@ -30,8 +30,8 @@ rpnCE 0.8.0 · User Guide
     - <img src="../../assets/guide/menu/home-mode-4.png" alt="HOME > MODE > Row 4" width="320">
 
 Complex result mode (RRES/CRES) and display mode (RECT/PRAD/PDEG) are
-independent of RAD/DEG. The status bar shows CRES and PRAD/PDEG when
-active; RRES and RECT are implicit defaults. MODE marks every selection.
+independent of RAD/DEG. The status bar always shows a𝑖b (RECT), r∠θ
+(PRAD) or r∠° (PDEG). RRES/CRES are marked only in MODE.
 See [Complex numbers](11-complex-numbers.md)
 for entry, LINK behavior and supported functions.
 
@@ -84,10 +84,11 @@ CANG and real trigonometry, independently of PRAD/PDEG. Polar entry also
 states its own angle unit. Selecting CRES does not extend trigonometric,
 hyperbolic or other real-only functions to complex operands.
 
-The status bar shows **CRES** and **PRAD**/**PDEG** when selected; **RRES**
-and **RECT** are implicit. DEG and DEC are also implicit, so a fresh
-calculator's only numeric status label is **ALL**. MODE marks each active
-choice, and result/display modes are saved when you quit. Follow the
+The status bar always shows **a𝑖b**, **r∠θ** or **r∠°** for the selected
+complex presentation. RRES/CRES change only their selection dots in MODE.
+DEG and DEC are implicit, so a fresh calculator shows **ALL a𝑖b**.
+MODE marks each active choice, and result/display modes are saved when
+you quit. Follow the
 [worked examples](11-complex-numbers.md#rres-and-cres-choosing-result-behavior)
 to compare RRES/CRES or join and split values with LINK.
 
@@ -107,7 +108,9 @@ to compare RRES/CRES or join and split values with LINK.
 
 ## Decimal and grouping marks
 
-MODE row 4 has two numeric display choices:
+MODE row 4 separates the DATE choices from two numeric display choices
+with a blank middle button. Press `TRACE` (button 4) for **.** or `GRAPH`
+(button 5) for **,**:
 
 | Selection | Decimal mark | Grouping mark | Example |
 | --- | --- | --- | --- |

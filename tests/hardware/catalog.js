@@ -3,12 +3,12 @@
 // Menu snapshot and decimal references; functional cases follow below.
 const source = {
   "groups": [
-    {"id":"HOME","label":"HOME","path":["HOME"],"route":["MATH"],"rows":[["MATH","NUM","PROB","CPLX","TVM"],["BASE","HYP","STAT","CONV","HELP"],["CLR","MODE","STK","UNIT","DATE"]],"section":"HOME"},
+    {"id":"HOME","label":"HOME","path":["HOME"],"route":["MATH"],"rows":[["MATH","NUM","PROB","CPLX","HELP"],["BASE","HYP","STAT","CONV","TVM"],["CLR","MODE","STK","UNIT","DATE"]],"section":"HOME"},
     {"id":"MATH","label":"MATH","path":["HOME","MATH"],"route":["MATH","Y="],"rows":[["X^3","³√X","X√Y","ATN2","—"],["2^X","LOG2","LOGB","E^X-","LN1+"]],"section":"MATH"},
     {"id":"NUM","label":"NUM","path":["HOME","NUM"],"route":["MATH","WINDOW"],"rows":[["%","%CH","GCD","LCM","PRIM"],["IP","FP","FLR","CEIL","NEAR"],["ABS","SIGN","MOD","MIN","MAX"],["RNDF","RNDN","RNDG","—","—"]],"section":"NUM"},
     {"id":"PROB","label":"PROB","path":["HOME","PROB"],"route":["MATH","ZOOM"],"rows":[["COMB","PERM","N!","RAND","SEED"]],"section":"PROB"},
     {"id":"COMPLEX","label":"CPLX","path":["HOME","CPLX"],"route":["MATH","TRACE"],"rows":[["REAL","IMAG","CONJ","CABS","CANG"]],"section":"CPLX"},
-    {"id":"TVM","label":"TVM","path":["HOME","TVM"],"route":["MATH","GRAPH"],"rows":[["N","I%YR","PV","PMT","FV"],["P/YR","C/YR","BEG","END","CLTV"],["IYR1","IYR2","TMAX","—","RSTV"]],"section":"TVM"},
+    {"id":"TVM","label":"TVM","path":["HOME","TVM"],"route":["MATH","↓","GRAPH"],"rows":[["N","I%YR","PV","PMT","FV"],["P/YR","C/YR","BEG","END","CLTV"],["IYR1","IYR2","TMAX","—","RSTV"]],"section":"TVM"},
     {"id":"BASE","label":"BASE","path":["HOME","BASE"],"route":["MATH","↓","Y="],"rows":[["DEC","HEX","OCT","BIN","—"],["LOGI","ROTS","BITS","BFCN","BCFS"]],"section":"BASE"},
     {"id":"BASE_LOGIC","label":"LOGI","path":["HOME","BASE","LOGI"],"route":["MATH","↓","Y=","↓","Y="],"rows":[["AND","OR","XOR","NOT","NEG"]],"section":"BASE"},
     {"id":"BASE_ROTATE","label":"ROTS","path":["HOME","BASE","ROTS"],"route":["MATH","↓","Y=","↓","WINDOW"],"rows":[["SL","SR","ASR","SLn","SRn"],["RL","RR","RLC","RRC","—"],["RLn","RRn","RLCn","RRCn","—"]],"section":"BASE"},
@@ -21,7 +21,7 @@ const source = {
     {"id":"CFIT","label":"CFIT","path":["HOME","STAT","CFIT"],"route":["MATH","↓","ZOOM","↓","↓","GRAPH"],"rows":[["Y→X","X→Y","SLOP","YINT","CORR"],["LINF","LOGF","EXPF","PWRF","BEST"]],"section":"STAT"},
     {"id":"CONV","label":"CONV","path":["HOME","CONV"],"route":["MATH","↓","TRACE"],"rows":[["→DEG","→RAD","—","→REC","→POL"],["→HR","→HMS","HMS+","HMS-","—"]],"section":"CONV"},
     {"id":"CLEAR","label":"CLR","path":["HOME","CLR"],"route":["MATH","↓","↓","Y="],"rows":[["CLX","CLST","CLRG","CLΣ","CLTV"],["CLD","—","—","—","—"]],"section":"CLR"},
-    {"id":"MODE","label":"MODE","path":["HOME","MODE"],"route":["MATH","↓","↓","WINDOW"],"rows":[["FIX","SCI","ENG","RAD","DEG"],["RRES","CRES","RECT","PRAD","PDEG"],["RSIZ","RSZ?","TINT","SSIZ","SSZ?"],["{..}","\"..\"",".",",","—"]],"section":"MODE"},
+    {"id":"MODE","label":"MODE","path":["HOME","MODE"],"route":["MATH","↓","↓","WINDOW"],"rows":[["FIX","SCI","ENG","RAD","DEG"],["RRES","CRES","RECT","PRAD","PDEG"],["RSIZ","RSZ?","TINT","SSIZ","SSZ?"],["{..}","\"..\"","—",".",","]],"section":"MODE"},
     {"id":"STACK","label":"STK","path":["HOME","STK"],"route":["MATH","↓","↓","ZOOM"],"rows":[["DUP","R↑","R↓","DROP","X←→Y"],["X<>","—","—","—","—"]],"section":"STK"},
     {"id":"UNIT","label":"UNIT","path":["HOME","UNIT"],"route":["MATH","↓","↓","TRACE"],"rows":[["UFCN","LENG","AREA","VOL","TEMP"],["MASS","FORC","PRES","ENER","PWR"],["TIME","SPD","FUEL","—","—"]],"section":"UNIT"},
     {"id":"UNIT_FUNCTIONS","label":"UFCN","path":["HOME","UNIT","UFCN"],"route":["MATH","↓","↓","TRACE","Y="],"rows":[["UVAL","UBAS","—","—","—"]],"section":"UNIT"},
@@ -98,20 +98,20 @@ const source = {
     {"id":"COMPLEX_CONJ","label":"CONJ","path":["HOME","CPLX","CONJ"],"route":["MATH","TRACE","ZOOM"],"section":"CPLX"},
     {"id":"COMPLEX_ABS","label":"CABS","path":["HOME","CPLX","CABS"],"route":["MATH","TRACE","TRACE"],"section":"CPLX"},
     {"id":"COMPLEX_ANGLE","label":"CANG","path":["HOME","CPLX","CANG"],"route":["MATH","TRACE","GRAPH"],"section":"CPLX"},
-    {"id":"TVM_N","label":"N","path":["HOME","TVM","N"],"route":["MATH","GRAPH","Y="],"section":"TVM"},
-    {"id":"TVM_IYR","label":"I%YR","path":["HOME","TVM","I%YR"],"route":["MATH","GRAPH","WINDOW"],"section":"TVM"},
-    {"id":"TVM_PV","label":"PV","path":["HOME","TVM","PV"],"route":["MATH","GRAPH","ZOOM"],"section":"TVM"},
-    {"id":"TVM_PMT","label":"PMT","path":["HOME","TVM","PMT"],"route":["MATH","GRAPH","TRACE"],"section":"TVM"},
-    {"id":"TVM_FV","label":"FV","path":["HOME","TVM","FV"],"route":["MATH","GRAPH","GRAPH"],"section":"TVM"},
-    {"id":"TVM_PYR","label":"P/YR","path":["HOME","TVM","P/YR"],"route":["MATH","GRAPH","↓","Y="],"section":"TVM"},
-    {"id":"TVM_CYR","label":"C/YR","path":["HOME","TVM","C/YR"],"route":["MATH","GRAPH","↓","WINDOW"],"section":"TVM"},
-    {"id":"TVM_BEGIN","label":"BEG","path":["HOME","TVM","BEG"],"route":["MATH","GRAPH","↓","ZOOM"],"section":"TVM"},
-    {"id":"TVM_END","label":"END","path":["HOME","TVM","END"],"route":["MATH","GRAPH","↓","TRACE"],"section":"TVM"},
-    {"id":"TVM_CLEAR","label":"CLTV","path":["HOME","TVM","CLTV"],"route":["MATH","GRAPH","↓","GRAPH"],"section":"TVM"},
-    {"id":"TVM_IYR0","label":"IYR1","path":["HOME","TVM","IYR1"],"route":["MATH","GRAPH","↓","↓","Y="],"section":"TVM"},
-    {"id":"TVM_IYR1","label":"IYR2","path":["HOME","TVM","IYR2"],"route":["MATH","GRAPH","↓","↓","WINDOW"],"section":"TVM"},
-    {"id":"TVM_ITER_MAX","label":"TMAX","path":["HOME","TVM","TMAX"],"route":["MATH","GRAPH","↓","↓","ZOOM"],"section":"TVM"},
-    {"id":"TVM_SOLVER_RESET","label":"RSTV","path":["HOME","TVM","RSTV"],"route":["MATH","GRAPH","↓","↓","GRAPH"],"section":"TVM"},
+    {"id":"TVM_N","label":"N","path":["HOME","TVM","N"],"route":["MATH","↓","GRAPH","Y="],"section":"TVM"},
+    {"id":"TVM_IYR","label":"I%YR","path":["HOME","TVM","I%YR"],"route":["MATH","↓","GRAPH","WINDOW"],"section":"TVM"},
+    {"id":"TVM_PV","label":"PV","path":["HOME","TVM","PV"],"route":["MATH","↓","GRAPH","ZOOM"],"section":"TVM"},
+    {"id":"TVM_PMT","label":"PMT","path":["HOME","TVM","PMT"],"route":["MATH","↓","GRAPH","TRACE"],"section":"TVM"},
+    {"id":"TVM_FV","label":"FV","path":["HOME","TVM","FV"],"route":["MATH","↓","GRAPH","GRAPH"],"section":"TVM"},
+    {"id":"TVM_PYR","label":"P/YR","path":["HOME","TVM","P/YR"],"route":["MATH","↓","GRAPH","↓","Y="],"section":"TVM"},
+    {"id":"TVM_CYR","label":"C/YR","path":["HOME","TVM","C/YR"],"route":["MATH","↓","GRAPH","↓","WINDOW"],"section":"TVM"},
+    {"id":"TVM_BEGIN","label":"BEG","path":["HOME","TVM","BEG"],"route":["MATH","↓","GRAPH","↓","ZOOM"],"section":"TVM"},
+    {"id":"TVM_END","label":"END","path":["HOME","TVM","END"],"route":["MATH","↓","GRAPH","↓","TRACE"],"section":"TVM"},
+    {"id":"TVM_CLEAR","label":"CLTV","path":["HOME","TVM","CLTV"],"route":["MATH","↓","GRAPH","↓","GRAPH"],"section":"TVM"},
+    {"id":"TVM_IYR0","label":"IYR1","path":["HOME","TVM","IYR1"],"route":["MATH","↓","GRAPH","↓","↓","Y="],"section":"TVM"},
+    {"id":"TVM_IYR1","label":"IYR2","path":["HOME","TVM","IYR2"],"route":["MATH","↓","GRAPH","↓","↓","WINDOW"],"section":"TVM"},
+    {"id":"TVM_ITER_MAX","label":"TMAX","path":["HOME","TVM","TMAX"],"route":["MATH","↓","GRAPH","↓","↓","ZOOM"],"section":"TVM"},
+    {"id":"TVM_SOLVER_RESET","label":"RSTV","path":["HOME","TVM","RSTV"],"route":["MATH","↓","GRAPH","↓","↓","GRAPH"],"section":"TVM"},
     {"id":"DEC","label":"DEC","path":["HOME","BASE","DEC"],"route":["MATH","↓","Y=","Y="],"section":"BASE"},
     {"id":"HEX","label":"HEX","path":["HOME","BASE","HEX"],"route":["MATH","↓","Y=","WINDOW"],"section":"BASE"},
     {"id":"OCT","label":"OCT","path":["HOME","BASE","OCT"],"route":["MATH","↓","Y=","ZOOM"],"section":"BASE"},
@@ -199,7 +199,7 @@ const source = {
     {"id":"HR_TO_HMS","label":"→HMS","path":["HOME","CONV","→HMS"],"route":["MATH","↓","TRACE","↓","WINDOW"],"section":"CONV"},
     {"id":"HMS_PLUS","label":"HMS+","path":["HOME","CONV","HMS+"],"route":["MATH","↓","TRACE","↓","ZOOM"],"section":"CONV"},
     {"id":"HMS_MINUS","label":"HMS-","path":["HOME","CONV","HMS-"],"route":["MATH","↓","TRACE","↓","TRACE"],"section":"CONV"},
-    {"id":"HELP","label":"HELP","path":["HOME","HELP"],"route":["MATH","↓","GRAPH"],"section":"HELP"},
+    {"id":"HELP","label":"HELP","path":["HOME","HELP"],"route":["MATH","GRAPH"],"section":"HELP"},
     {"id":"CLEAR_X","label":"CLX","path":["HOME","CLR","CLX"],"route":["MATH","↓","↓","Y=","Y="],"section":"CLR"},
     {"id":"CLEAR_STACK","label":"CLST","path":["HOME","CLR","CLST"],"route":["MATH","↓","↓","Y=","WINDOW"],"section":"CLR"},
     {"id":"CLEAR_REGS","label":"CLRG","path":["HOME","CLR","CLRG"],"route":["MATH","↓","↓","Y=","ZOOM"],"section":"CLR"},
@@ -223,8 +223,8 @@ const source = {
     {"id":"GET_STACK_SIZE","label":"SSZ?","path":["HOME","MODE","SSZ?"],"route":["MATH","↓","↓","WINDOW","↓","↓","GRAPH"],"section":"MODE"},
     {"id":"FORMAT_RECORD_RAW","label":"{..}","path":["HOME","MODE","{..}"],"route":["MATH","↓","↓","WINDOW","↓","↓","↓","Y="],"section":"MODE"},
     {"id":"FORMAT_RECORD_STRING","label":"\"..\"","path":["HOME","MODE","\"..\""],"route":["MATH","↓","↓","WINDOW","↓","↓","↓","WINDOW"],"section":"MODE"},
-    {"id":"DECIMAL_POINT","label":".","path":["HOME","MODE","."],"route":["MATH","↓","↓","WINDOW","↓","↓","↓","ZOOM"],"section":"MODE"},
-    {"id":"DECIMAL_COMMA","label":",","path":["HOME","MODE",","],"route":["MATH","↓","↓","WINDOW","↓","↓","↓","TRACE"],"section":"MODE"},
+    {"id":"DECIMAL_POINT","label":".","path":["HOME","MODE","."],"route":["MATH","↓","↓","WINDOW","↓","↓","↓","TRACE"],"section":"MODE"},
+    {"id":"DECIMAL_COMMA","label":",","path":["HOME","MODE",","],"route":["MATH","↓","↓","WINDOW","↓","↓","↓","GRAPH"],"section":"MODE"},
     {"id":"STACK_DUP","label":"DUP","path":["HOME","STK","DUP"],"route":["MATH","↓","↓","ZOOM","Y="],"section":"STK"},
     {"id":"STACK_ROLL_UP","label":"R↑","path":["HOME","STK","R↑"],"route":["MATH","↓","↓","ZOOM","WINDOW"],"section":"STK"},
     {"id":"STACK_ROLL_DOWN","label":"R↓","path":["HOME","STK","R↓"],"route":["MATH","↓","↓","ZOOM","ZOOM"],"section":"STK"},
@@ -664,7 +664,7 @@ const source = {
     {"id":"UNIT_LITERS_PER_HUNDRED_KILO_METERS","base":"UNIT_LITERS_PER_HUNDRED_KILO_METERS","dimension":"FUEL","value":"1.0"},
     {"id":"UNIT_MILES_PER_GALLON","base":"UNIT_LITERS_PER_HUNDRED_KILO_METERS","dimension":"FUEL","value":"235.2145833333333333333333333333333333333333333333333333"}
   ],
-  "menuDigest": "60c9b89bee22db0d19ac9a5274b34d10d871e80346d3465c9d3142529f02bcce",
+  "menuDigest": "e3b8e337009a54149388de2085343469fb895c521d0d286f8e7b1f7ae3a45209",
   "references": {"sinh230":"6.36572807683162355302753470060147645626906263536057793e+99","sinh1":"1.17520119364380145688238185059560081515571798133409587","cosh1":"1.543080634815243778477905620757061682601529112365863705","tanh1":"0.7615941559557648881194582826047935904127685972579365516","asinh1":"0.8813735870195430252326093249797923090281603282616354108","acosh2":"1.31695789692481670862504634730796844402698197146751648","atanh05":"0.5493061443340548456976226184612628523237452789113747259","atan2":"0.9272952180016122324285124629224288040570741085722405276","sqrt2":"1.414213562373095048801688724209698078569671875376948073","sqrt23":"0.8164965809277260327324280249019637973219824935522233761","ln2":"0.6931471805599453094172321214581765680755001343602552541","log10two":"0.3010299956639811952137388947244930267681898814621085413","e":"2.718281828459045235360287471352662497757247093699959575","pi":"3.141592653589793238462643383279502884197169399375105821","expm1tiny":"0.000000000001000000000000500000000000166666666666708333333333341667","log1ptiny":"0.0000000000009999999999995000000000003333333333330833333333335333333","mortgage":"-1264.13604698592746409166335247731953187583760823415496","growth":"1628.89462677744140625","lnsum":"1.791759469228055000812477358380702272722990692183004706","lnx2":"1.687401974730783402510881650176030885349016298223767572","lnysum":"3.871201010907890929064173722755231976949491095263770468","lny2":"5.612667065159408498704639715482363515286384302901221262","lnxlny":"2.929354999067793813607106893339199742721870873170676036","xlny":"8.841014310483891549523592682432989658546472748350290388","ylnx":"9.364262454248439386040399907367860500186943884377517727","energychange":"16.22222222222222222222222222222222222222222222222222222","fact69":"1.711224524281413113724683388812728390922705448935203694e+98","weightedX":"2.333333333333333333333333333333333333333333333333333333"}
 };
 const cases = [];
@@ -689,7 +689,7 @@ for (const g of source.groups) {
     `Open this menu with physical keys: ${g.route.join(' → ')}.`,
     ...g.rows.map((r, i) => `Row ${i + 1}: ${r.join(' | ')}.${i < g.rows.length - 1 ? ' Press ↓ once for the next row.' : ''}`),
     `${g.id === 'HOME' ? 'ON stays in HOME.' : 'Press ON to return one level.'} Do not execute the individual commands in this check.`
-  ], null, [], { kind: 'navigation', checks: ['Every row has these labels in these five positions (a filled square may mark the selected mode).', `Rows change cleanly and ON ${g.id === 'HOME' ? 'stays in HOME' : 'returns to the parent'} without changing the stack.`] });
+  ], null, [], { kind: 'navigation', checks: ['Every row has five matching buttons with these labels. A dash here means an empty button with no text or action; a filled square may mark a selected mode.', `Rows change cleanly and ON ${g.id === 'HOME' ? 'stays in HOME' : 'returns to the parent'} without changing the stack.`] });
 }
 
 // Each conversion is checked numerically; checking a menu alone never counts here.
@@ -730,8 +730,8 @@ add('random-seed','PROB','Repeatable random seed', ['Enter 12345.',select('RANDO
 for (const [id, value] of [['COMPLEX_REAL',2],['COMPLEX_IMAG',0],['COMPLEX_CONJ',2],['COMPLEX_ABS',2],['COMPLEX_ANGLE',0]]) {
   command(id,'2',exact(value));
 }
-for (const [id, indicator] of [['NUM_RESULT_MODE_REAL',null],['NUM_RESULT_MODE_COMPLEX','CRES'],['COMPLEX_MODE_RECT',null],['COMPLEX_MODE_RAD','PRAD'],['COMPLEX_MODE_DEG','PDEG']]) {
-  command(id,'2',exact(2),{checks:[`${byId[id].label} is marked active in MODE; ${indicator ? indicator+' appears in the status bar' : 'its default status label is omitted'}.`]});
+for (const [id, indicator] of [['NUM_RESULT_MODE_REAL',null],['NUM_RESULT_MODE_COMPLEX',null],['COMPLEX_MODE_RECT','a𝑖b'],['COMPLEX_MODE_RAD','r∠θ'],['COMPLEX_MODE_DEG','r∠°']]) {
+  command(id,'2',exact(2),{checks:[`${byId[id].label} is marked active in MODE; ${indicator ? indicator+' appears in the status bar' : 'the result policy adds no status label'}.`]});
 }
 
 // Use decimal display so bitwise results can be entered without translating a base.
@@ -871,7 +871,7 @@ add('display-formats','MODE','FIX, SCI, ENG and SHOW',['Enter 1 ENTER 7 ÷.',sel
 add('display-angle','MODE','DEG and RAD',[select('DEG'),'Enter 180 SIN. Check X.',select('RAD'),'Enter 0 COS.'],exact(1),['DEG','RAD'],{checks:['180 SIN in DEG gave exactly zero.']});
 add('display-decimal','MODE','Comma decimal throughout the interface',[select('DECIMAL_COMMA'),'Type 1234567.89 using the physical decimal key; inspect the unfinished entry. Press ENTER STO→ MATH.','Inspect VARS and SHOW for A. Close VARS/SHOW before returning to the calculator.',select('DECIMAL_POINT')],null,['DECIMAL_COMMA','DECIMAL_POINT'],{checks:['Entry, result, VARS and SHOW use 1.234.567,89 (allow trailing zeros).','Returning to period decimal shows 1,234,567.89 without changing the value.']});
 add('display-date-formats','MODE','Raw and readable DATE display',[dateInput('DATE_CREATE','2024,3,14'),select('FORMAT_RECORD_STRING'),'Inspect X, then select the raw format.',select('FORMAT_RECORD_RAW')],text('D{2024,3,14}'),['FORMAT_RECORD_RAW','FORMAT_RECORD_STRING'],{checks:['Readable format showed 2024-03-14.']});
-add('display-tints','MODE','Eight color themes',[select('SCREEN_TINT'),'Repeat TINT until you return to your starting theme. Check each theme with several stack values and an error message.'],null,['SCREEN_TINT'],{checks:['LCD, LCD+, GRAY, INVERTED, AYU DARK, MONOKAI, PASTEL and COMMODORE are all reachable.','Numbers, units, warnings and menus remain readable on the actual LCD.']});
+add('display-tints','MODE','Nine color themes',[select('SCREEN_TINT'),'Repeat TINT until you return to your starting theme. Check each theme with several stack values and an error message.'],null,['SCREEN_TINT'],{checks:['LCD, LCD+, GRAY, INVERTED, AYU DARK, MONOKAI, PASTEL, COMMODORE and TIOS are all reachable.','Numbers, units, warnings and menus remain readable on the actual LCD.']});
 add('display-brightness','Keyboard','Brightness keys during entry',['Note your current brightness. Type 12345 without ENTER. Press 2ND ↑ a few times, then 2ND ↓.','Confirm the entry is preserved; press ENTER. Restore a comfortable brightness.'],exact(12345),[],{checks:['Brightness changes in both directions and the display remains readable.']});
 add('display-messages','CLR','Warning size and clearing messages',[select('CLEAR_STACK'),'Inspect “Stack cleared” immediately, then wait two seconds without pressing a key. Press ↓ to reach CLR row 2 BEFORE creating the next error.','Enter 1 ENTER 0 ÷; inspect the error. Without navigating away, press Y= (CLD).'],null,['CLEAR_STACK','CLEAR_DISPLAY'],{checks:['The confirmation and error use the same enlarged message font; menu arrows and status bar retain their normal sizes.','“Stack cleared” disappeared by itself, leaving the stack unchanged.','CLD clears the error without changing stack values.']});
 add('message-clear-show','Keyboard','CLEAR dismisses SHOW and preserves a quantity',[
@@ -888,7 +888,7 @@ add('clear-registers','CLR','Clear ordinary registers',['This test clears all or
 add('clear-stat','CLR','Clear statistics from CLR',[...statSetup,select('CLEAR_STAT'),select('STAT_N')],exact(0),['CLEAR_STAT']);
 add('clear-tvm','CLR','Clear shared TVM values from CLR',[select('CLEAR_TVM'),'Open VARS and inspect the TVM entries. Close with ON.'],null,['CLEAR_TVM'],{checks:['N, I%YR, PV, PMT and FV are 0; P/YR and C/YR are 12; END is selected.']});
 add('help-pages','HELP','Calculator reference pages',[select('HELP'),'Use ↑/↓ to visit the pages, including About. Press ON. Open HELP again with 2ND 0; close with ENTER.'],null,['HELP'],{checks:['Pages are legible, navigation works, and About gives version 0.8.0 and the repository link.','Both exits return to the stack without changing it.']});
-add('key-shortcuts','Keyboard','Menu shortcuts',['Try MODE, STAT, X,T,θ,n, APPS and PRGM, returning to HOME with MATH each time.','Try 2ND + (MEM), 2ND STAT (LIST), and 2ND 0 (CATALOG). Return with ON.'],null,[],{checks:['The first keys open MODE, STAT, UNIT, BASE and HYP, respectively.','The 2ND keys open CLR, STK and HELP, respectively.']});
+add('key-shortcuts','Keyboard','Menu shortcuts',['Try MODE and STAT, returning to HOME with MATH each time. Press unshifted X,T,θ,n, APPS and PRGM; none should open a menu.','Try 2ND + (MEM), 2ND STAT (LIST), and 2ND 0 (CATALOG). Return with ON.'],null,[],{checks:['MODE and STAT open their menus; the three unassigned plain keys leave the menu and stack unchanged.','The 2ND keys open CLR, STK and HELP, respectively.']});
 add('persist-state','Persistence','Save, quit and reopen',[
  'This check replaces A, B and the active stack. Enter 12.',select('UNIT_FOOT'),'Press STO→ MATH (A).',
  dateInput('DATE_CREATE','2024,3,14'),'Press STO→ APPS (B). Choose a distinctive TINT and comma decimal mode. Note the selected settings.',

@@ -17,13 +17,16 @@ uint16_t gfx_palette[256];
 static uint64_t fingerprint;
 static uint8_t scale_x = 1, scale_y = 1;
 static uint8_t text_config;
-static int text_y;
+static int text_x, text_y;
 static unsigned large_message_chars, bad_status_scale, arrow_pixels, bad_arrow_size;
 static int fails;
 static char printed[4096];
 static size_t printed_count;
 static struct { char text[24]; int x, width; } status_text[8];
 static unsigned status_count;
+static int status_custom = -1;
+static unsigned status_symbol_pixels;
+static unsigned menu_boxes;
 static bool wide_font;
 
 static void printed_char(char c)
@@ -50,7 +53,16 @@ uint8_t gfx_SetColor(uint8_t c) { record(5); record(c); return 0; }
 void gfx_FillScreen(uint8_t c) { record(6); record(c); }
 void gfx_FillRectangle(int x, int y, int w, int h)
 {
-    if (x == 0 && y == 0 && w == 320 && h == 18) status_count = 0;
+    if (y == 213 && w == 60 && h == 24) menu_boxes++;
+    if (x == 0 && y == 0 && w == 320 && h == 18) {
+        status_count = status_symbol_pixels = 0;
+        status_custom = -1;
+    }
+    if (y < 18 && w == 1 && h == 1) {
+        status_symbol_pixels++;
+        if (status_custom >= 0 && x + w > status_text[status_custom].x + status_text[status_custom].width)
+            status_text[status_custom].width = x + w - status_text[status_custom].x;
+    }
     record(7); record((uint32_t)x); record((uint32_t)y); record((uint32_t)w); record((uint32_t)h);
     if (x >= 302 && y >= 18 && y < 48) {
         arrow_pixels++;
@@ -61,21 +73,37 @@ void gfx_HorizLine(int x, int y, int w)
 { record(8); record((uint32_t)x); record((uint32_t)y); record((uint32_t)w); }
 uint16_t gfx_RGBTo1555(uint8_t r, uint8_t g, uint8_t b)
 { return (uint16_t)((r >> 3) << 10 | (g >> 3) << 5 | b >> 3); }
-uint8_t gfx_SetTextFGColor(uint8_t c) { record(9); record(c); return 0; }
+uint8_t gfx_SetTextFGColor(uint8_t c) { status_custom = -1; record(9); record(c); return 0; }
 uint8_t gfx_SetTextBGColor(uint8_t c) { record(10); record(c); return 0; }
 uint8_t gfx_SetTextTransparentColor(uint8_t c) { record(11); record(c); return 0; }
 void gfx_SetTextScale(uint8_t x, uint8_t y)
 { scale_x = x; scale_y = y; record(12); record(x); record(y); }
-void gfx_SetTextXY(int x, int y) { text_y = y; record(13); record((uint32_t)x); record((uint32_t)y); }
+void gfx_SetTextXY(int x, int y) { text_x = x; text_y = y; record(13); record((uint32_t)x); record((uint32_t)y); }
 void gfx_SetTextConfig(uint8_t c) { text_config = c; record(14); record(c); }
 void gfx_SetClipRegion(int a, int b, int c, int d)
 { record(15); record((uint32_t)a); record((uint32_t)b); record((uint32_t)c); record((uint32_t)d); }
 unsigned int gfx_GetCharWidth(char c)
-{ return (unsigned)(c == ' ' || c == '.' || c == ',' || c == ':' ? 3 : wide_font ? 8 : 6) * scale_x; }
+{ return (unsigned)(c == ' ' || c == '.' || c == ',' || c == ':' ? 3 : wide_font ? 10 : 6) * scale_x; }
 unsigned int gfx_GetStringWidth(const char *s)
 { unsigned w = 0; for (; *s; s++) w += gfx_GetCharWidth(*s); return w; }
 void gfx_PrintChar(char c)
 {
+    if (text_y < 18) {
+        if (scale_x != 1 || scale_y != 1) bad_status_scale++;
+        if (status_custom < 0 && status_count < sizeof status_text / sizeof *status_text) {
+            status_custom = (int)status_count++;
+            status_text[status_custom].text[0] = '\0';
+            status_text[status_custom].x = text_x;
+        }
+        if (status_custom >= 0) {
+            size_t n = strlen(status_text[status_custom].text);
+            if (n + 1 < sizeof status_text[status_custom].text) {
+                status_text[status_custom].text[n] = c;
+                status_text[status_custom].text[n + 1] = '\0';
+            }
+            status_text[status_custom].width = text_x + (int)gfx_GetCharWidth(c) - status_text[status_custom].x;
+        }
+    }
     record(16); record((uint8_t)c); printed_char(c);
     if (text_y >= 18 && text_y < 48 && text_config == gfx_text_noclip &&
         scale_x == 1 && scale_y == 2)
@@ -83,6 +111,7 @@ void gfx_PrintChar(char c)
 }
 void gfx_PrintStringXY(const char *s, int x, int y)
 {
+    status_custom = -1;
     if (y < 18 && (scale_x != 1 || scale_y != 1)) bad_status_scale++;
     if (y < 18 && status_count < sizeof status_text / sizeof *status_text) {
         snprintf(status_text[status_count].text, sizeof status_text[status_count].text, "%s", s);
@@ -198,9 +227,32 @@ static void appearance(void)
     draw(&c, &m, &cat, NULL, false);
     display_close();
     printf("display fingerprint: %016" PRIx64 "\n", fingerprint);
-    /* Format remains visible; default mode indicators are omitted. Labels
-     * set the text scale once per label rather than once per character. */
-    check("whole-display drawing commands match approved layout", fingerprint == UINT64_C(0xf3277bfe6b89cab4));
+    /* Format and complex presentation remain visible; DEG and DEC are
+     * implicit. Labels set the text scale once per label. */
+    check("whole-display drawing commands match approved layout", fingerprint == UINT64_C(0x48d0e2fe19406f48));
+}
+
+static void complete_menu_rows(void)
+{
+    calc_t c;
+    menu_t m;
+    catalog_t cat = {0};
+    calc_init(&c);
+    display_open();
+    bool complete = true;
+    for (uint8_t tint = 0; tint < TINT_COUNT; tint++) {
+        display_set_tint(tint);
+        for (uint8_t group = 0; group < MENU_GROUP_COUNT; group++) {
+            menu_jump(&m, group);
+            for (m.row = 0; m.row < menu_group(group)->rows; m.row++) {
+                menu_boxes = 0;
+                draw(&c, &m, &cat, NULL, false);
+                complete &= menu_boxes == 5;
+            }
+        }
+    }
+    check("every menu row draws five buttons in every tint, including empty slots", complete);
+    display_close();
 }
 
 static void formatting_work(void)
@@ -460,13 +512,13 @@ static void number_mode_status(void)
         status_count = 0;
         display_draw(&c, &m, modifier == 1, modifier == 2, NULL, false, &cat);
         unchanged &= !memcmp(&before, &c, sizeof c);
-        unsigned expected = 2 + !angle + (radix != 0) + carry + result + (mode != COMPLEX_RECT) + (modifier != 0);
+        unsigned expected = 3 + !angle + (radix != 0) + carry + (modifier != 0);
         labels &= status_count == expected && status_has(formats[precision]) &&
             !status_has("DEG") && status_has("RAD") == !angle && !status_has("DEC") &&
-            !status_has("RRES") && !status_has("RECT") &&
-            status_has("CRES") == (result != 0) &&
-            status_has("PRAD") == (mode == COMPLEX_RAD) &&
-            status_has("PDEG") == (mode == COMPLEX_DEG) &&
+            !status_has("RRES") && !status_has("CRES") && !status_has("RECT") &&
+            !status_has("PRAD") && !status_has("PDEG") &&
+            status_has(mode == COMPLEX_RECT ? "ab" : "r") &&
+            status_symbol_pixels == (mode == COMPLEX_RECT ? 9u : mode == COMPLEX_RAD ? 30u : 15u) &&
             status_has("CF") == (carry != 0) &&
             status_has("HEX") == (radix == 1) &&
             status_has("OCT") == (radix == 2) &&
@@ -479,7 +531,7 @@ static void number_mode_status(void)
             if (i) geometry &= status_text[i - 1].x + status_text[i - 1].width + 2 <= status_text[i].x;
         }
     }
-    check("status shows format, RAD and only active optional indicators", labels);
+    check("status always shows complex presentation symbols and hides both result policies", labels);
     check("status indicators and clock fit without overlap", geometry);
     check("crowded status bars keep time while ordinary states keep the full date", full_clock && time_only);
     check("drawing number-mode indicators preserves calculator state", unchanged);
@@ -545,6 +597,7 @@ int main(void)
     fclose(f);
     if (!res_open()) return 1;
     appearance();
+    complete_menu_rows();
     formatting_work();
     quantity_catalog_and_help();
     application_clock();

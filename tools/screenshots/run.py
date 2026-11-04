@@ -132,8 +132,7 @@ KEYS = {
     'LEFT': 'sk_Left', 'RIGHT': 'sk_Right', 'ON': 'ON',
     'F1': 'sk_Yequ', 'F2': 'sk_Window', 'F3': 'sk_Zoom', 'F4': 'sk_Trace', 'F5': 'sk_Graph',
 }
-SHORTCUTS = {'MATH': ['HOME'], 'MODE': ['HOME', 'MODE'], 'STAT': ['HOME', 'STAT'],
-             'XTθn': ['HOME', 'UNIT'], 'APPS': ['HOME', 'BASE'], 'PRGM': ['HOME', 'HYP']}
+SHORTCUTS = {'MATH': ['HOME'], 'MODE': ['HOME', 'MODE'], 'STAT': ['HOME', 'STAT']}
 
 
 def compile_script(text, menus):

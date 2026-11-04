@@ -723,7 +723,7 @@ q('clear-extra-registers','CLR','CLRG clears extras and preserves statistics',['
 q('clear-stat-alias','CLR','CLR clears populated statistics',stat_data([('1','2'),('3','4')])+[select('CLEAR_STAT'),select('STAT_N')],number(0,exact=True),['CLEAR_STAT'],reference='integer')
 q('clear-tvm-alias','CLR','CLR restores TVM defaults',[select('TVM_BEGIN'),'Enter 4.',select('TVM_PYR'),'Enter 2.',select('TVM_CYR'),'Enter 99.',select('TVM_PV'),select('CLEAR_TVM'),'Inspect the TVM values in VARS and the timing marker.'],covers=['CLEAR_TVM'],checks=['N, I%YR, PV, PMT and FV are zero; P/YR and C/YR are 12; END is selected.'],reference='contract')
 q('clear-message-preserves-x','CLR','CLD preserves the stack after an error',['Open CLR row 2 BEFORE creating the error. Enter 1 ENTER 0 ÷. Note the error; press Y= (CLD) without navigating away.'],number(0,exact=True),['CLEAR_DISPLAY'],focus='interaction',checks=['The message cleared and Y still contains 1.'],reference='integer')
-q('tint-full-cycle','MODE','TINT wraps after all eight presets',['Enter 123.456. Note the starting tint.',*([select('SCREEN_TINT')]*8),'Check that the original tint has returned. Use SHOW to inspect the number.'],number('123.456',exact=True),['SCREEN_TINT'],focus='interaction',checks=['Eight selections returned to the starting tint; no preset was skipped.'],reference='contract')
+q('tint-full-cycle','MODE','TINT wraps after all nine presets',['Enter 123.456. Note the starting tint.',*([select('SCREEN_TINT')]*9),'Check that the original tint has returned. Use SHOW to inspect the number.'],number('123.456',exact=True),['SCREEN_TINT'],focus='interaction',checks=['Nine selections returned to the starting tint; no preset was skipped.'],reference='contract')
 for ident in ['FORMAT_RECORD_RAW','FORMAT_RECORD_STRING']:
     q('format-zoned-boundary-'+ident.lower(),'MODE',COMMANDS[ident]['label']+' on a long ZonedDateTime',[record('OFFSET_DATE_TIME_CREATE',[9999,12,31,23,59,59,-23,-45]),select(ident),'Inspect X using left/right scrolling as needed, then press SHOW to read the raw object.'],text('DZ{9999,12,31,23,59,59,-23,-45}'),[ident],focus='interaction',checks=['The chosen format is legible and scrolling stays within X.'],reference='date')
 q('angle-mode-preserves-x','MODE','Angle-mode changes preserve X',['Enter 1 ENTER 7 ÷.',select('DEG'),select('RAD')],number(mp.mpf(1)/7),['DEG','RAD'],focus='interaction')
@@ -762,14 +762,14 @@ for ident in COMPLEX_MODES:
       ['Enter 3, then 2ND . (i), then 4 ENTER.',select(ident),
        'Check the selected MODE choice and its status indicator before continuing.',select('COMPLEX_MODE_RECT'),
        'Check that X is still 3 + 4i.',select('COMPLEX_REAL')],number(3,exact=True),[ident],focus='interaction',
-      checks=['The selected choice was marked active; only CRES, PRAD or PDEG has a corresponding status label.','After RECT, the original real and imaginary components were both unchanged.'],reference='contract')
+      checks=['The selected choice was marked active; RECT/PRAD/PDEG show a𝑖b/r∠θ/r∠°, while RRES/CRES add no status label.','After RECT, the original real and imaginary components were both unchanged.'],reference='contract')
 
 q('complex-link-roundtrip','CPLX','LINK joins and splits rectangular components',
   ['Enter 3 ENTER 4.','Press 2ND X,T,theta,n (LINK). Check that X is 3 + 4i.','Press 2ND X,T,theta,n again.'],
   number(4,exact=True),['COMPLEX_MODE_RECT'],focus='interaction',checks=['Joining consumed two real levels; splitting restored real Y=3 and real X=4.'],reference='integer')
 q('complex-cres-negative-root','CPLX','CRES allows a negative real square root',
   [select('NUM_RESULT_MODE_COMPLEX'),'Enter 4 (−), then 2ND x².','Check that X is 0 + 2i.',select('COMPLEX_IMAG')],
-  number(2,exact=True),['NUM_RESULT_MODE_COMPLEX'],checks=['CRES is visible; the operation produced a complex value without a domain error.'],reference='integer')
+  number(2,exact=True),['NUM_RESULT_MODE_COMPLEX'],checks=['CRES is marked in MODE; the status indicator is unchanged and the operation produced a complex value without a domain error.'],reference='integer')
 q('complex-rres-negative-root','CPLX','RRES retains the real square-root domain',
   [select('NUM_RESULT_MODE_REAL'),'Enter 4 (−), then 2ND x².'],error('Err: Domain'),['NUM_RESULT_MODE_REAL'],focus='domain',checks=['X remains the real value -4; RRES has no status indicator.'],reference='contract')
 q('complex-zero-imag-real-boundary','CPLX','An imaginary zero remains complex until REAL extracts it',
@@ -780,7 +780,7 @@ q('status-implicit-defaults','MODE','Compact status defaults and active flags',
    select('RAD'),select('NUM_RESULT_MODE_COMPLEX'),select('COMPLEX_MODE_DEG'),select('HEX'),select('SET_CARRY_FLAG'),
    'Press 2ND and inspect the pending modifier badge; press 2ND again to cancel it.'],
   covers=['DEG','RAD','NUM_RESULT_MODE_REAL','NUM_RESULT_MODE_COMPLEX','COMPLEX_MODE_RECT','COMPLEX_MODE_DEG','DEC','HEX','SET_CARRY_FLAG'],focus='interaction',
-  checks=['The default numeric label was ALL; DEG, DEC, RRES and RECT were absent.','The active labels RAD, CRES, PDEG, HEX and CF appeared, with the pending 2ND badge.','Labels fit without overlap; the clock used HH:MM if the full date would not fit.'],reference='contract')
+  checks=['The default numeric labels were ALL a𝑖b; DEG, DEC, RRES and CRES were absent.','The active labels RAD, r∠°, HEX and CF appeared, with the pending 2ND badge; CRES remained a MODE selection only.','Labels fit without overlap; the clock used HH:MM if the full date would not fit.'],reference='contract')
 
 # Requirements are checked against the entire pool, not against completion counts.
 DOMAIN_IDS=set([

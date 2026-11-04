@@ -5,7 +5,7 @@
 #include "units.h"
 #include "actions.h"
 
-#define RESOURCE_CONTRACT_EXPECTED UINT32_C(0x9345CE20)
+#define RESOURCE_CONTRACT_EXPECTED UINT32_C(0x93A9A1F2)
 
 static int resource_contract_unit(menu_id_t id)
 {

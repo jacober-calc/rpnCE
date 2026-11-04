@@ -69,25 +69,7 @@ group HOME HOME
         item CONJ COMPLEX_CONJ CMD_COMPLEX_CONJ
         item CABS COMPLEX_ABS CMD_COMPLEX_ABS
         item CANG COMPLEX_ANGLE CMD_COMPLEX_ANGLE
-    group TVM TVM
-      row
-        item N TVM_N CMD_TVM_VAR TVM_N
-        item I%YR TVM_IYR CMD_TVM_VAR TVM_IYR
-        item PV TVM_PV CMD_TVM_VAR TVM_PV
-        item PMT TVM_PMT CMD_TVM_VAR TVM_PMT
-        item FV TVM_FV CMD_TVM_VAR TVM_FV
-      row
-        alt P/YR P/Y{block} TVM_PYR CMD_TVM_VAR TVM_PYR
-        alt C/YR C/Y{block} TVM_CYR CMD_TVM_VAR TVM_CYR
-        alt BEG BEG{block} TVM_BEGIN CMD_TVM_BEGIN
-        alt END END{block} TVM_END CMD_TVM_END
-        item CLTV TVM_CLEAR CMD_TVM_CLEAR
-      row
-        alt IYR1 IY1{block} TVM_IYR0 CMD_TVM_IYR1
-        alt IYR2 IY2{block} TVM_IYR1 CMD_TVM_IYR2
-        alt TMAX TMX{block} TVM_ITER_MAX CMD_TVM_ITER_MAX
-        blank
-        item RSTV TVM_SOLVER_RESET CMD_TVM_RESET
+    item HELP HELP
   row
     group BASE BASE
       row
@@ -213,7 +195,25 @@ group HOME HOME
         item {to}HMS HR_TO_HMS CMD_TO_HMS
         item HMS+ HMS_PLUS CMD_HMS_ADD
         item HMS- HMS_MINUS CMD_HMS_SUB
-    item HELP HELP
+    group TVM TVM
+      row
+        item N TVM_N CMD_TVM_VAR TVM_N
+        item I%YR TVM_IYR CMD_TVM_VAR TVM_IYR
+        item PV TVM_PV CMD_TVM_VAR TVM_PV
+        item PMT TVM_PMT CMD_TVM_VAR TVM_PMT
+        item FV TVM_FV CMD_TVM_VAR TVM_FV
+      row
+        alt P/YR P/Y{block} TVM_PYR CMD_TVM_VAR TVM_PYR
+        alt C/YR C/Y{block} TVM_CYR CMD_TVM_VAR TVM_CYR
+        alt BEG BEG{block} TVM_BEGIN CMD_TVM_BEGIN
+        alt END END{block} TVM_END CMD_TVM_END
+        item CLTV TVM_CLEAR CMD_TVM_CLEAR
+      row
+        alt IYR1 IY1{block} TVM_IYR0 CMD_TVM_IYR1
+        alt IYR2 IY2{block} TVM_IYR1 CMD_TVM_IYR2
+        alt TMAX TMX{block} TVM_ITER_MAX CMD_TVM_ITER_MAX
+        blank
+        item RSTV TVM_SOLVER_RESET CMD_TVM_RESET
   row
     group CLR CLEAR
       row
@@ -246,6 +246,7 @@ group HOME HOME
       row
         alt {..} {..}{block} FORMAT_RECORD_RAW CMD_DATE_FN DF_FORMAT_RAW
         alt ".." ".."{block} FORMAT_RECORD_STRING CMD_DATE_FN DF_FORMAT_STRING
+        blank
         alt . .{block} DECIMAL_POINT CMD_DECIMAL_POINT
         alt , ,{block} DECIMAL_COMMA CMD_DECIMAL_COMMA
     group STK STACK

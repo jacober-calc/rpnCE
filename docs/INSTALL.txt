@@ -65,9 +65,11 @@ The current number is X; the previous number is Y.
 
 Number modes
 ------------
-Fresh state starts in DEG, DEC, RRES and RECT. These defaults have no
-status labels; ALL means FIX with all display digits. RAD, CRES,
-PRAD/PDEG, HEX/OCT/BIN and CF appear when active. Saved modes are restored.
+Fresh state starts in DEG, DEC, RRES and RECT. ALL means FIX with all
+display digits. The complex display indicator is always aib (RECT),
+r-angle-theta (PRAD) or r-angle-degree (PDEG), using mathematical symbols.
+RRES/CRES have selection dots in MODE only. RAD, HEX/OCT/BIN and CF appear
+when active; DEG and DEC are implicit. Saved modes are restored.
 
 In DEC, 3 then 2ND . then 4 ENTER enters 3 + 4i in one stack level.
 2ND APPS enters a polar pair; 2ND X,T,theta,n joins/splits with LINK.

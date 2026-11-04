@@ -168,16 +168,16 @@ static void input_modes_format(void)
     c.stack[0]=z(3,4); c.complex_mode=COMPLEX_RECT;
     char text[VALUE_FORMAT_MAX];
     value_format(text,&c.stack[0],DISP_FIX,DISP_FLOAT,COMPLEX_RECT,false,false,true);
-    check("SHOW formats both components", !strcmp(text,"3. i 4."));
+    check("SHOW formats both components", !strcmp(text,"3.\x80" "4."));
     value_format(text,&c.stack[0],DISP_FIX,2,COMPLEX_DEG,false,false,false);
-    check("polar degree formatting", !strcmp(text,"5.00 <d 53.13"));
+    check("polar degree formatting", !strcmp(text,"5.00\x81\x82" "53.13"));
     c.stack[0]=z(1234.5,-6789.25);
     value_format(text,&c.stack[0],DISP_FIX,2,COMPLEX_RECT,true,false,false);
-    check("complex decimal comma formatting", !strcmp(text,"1.234,50 i -6.789,25"));
+    check("complex decimal comma formatting", !strcmp(text,"1.234,50\x80-6.789,25"));
     value_format_entry(text,"1234.5i-6789.25",true,false);
-    check("complex entry groups and localizes both components", !strcmp(text,"1.234,5 i -6.789,25"));
+    check("complex entry groups and localizes both components", !strcmp(text,"1.234,5\x80-6.789,25"));
     value_format_entry(text,"2d90",false,false);
-    check("polar entry identifies degrees", !strcmp(text,"2 <d 90"));
+    check("polar entry identifies degrees", !strcmp(text,"2\x81\x82" "90"));
 }
 static void evaluation_boundaries(void)
 {

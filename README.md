@@ -27,13 +27,15 @@ bottom of the screen, on a dot-matrix LCD-style display.
 - **Complex numbers:** one value per stack level, mixed real/complex arithmetic,
   roots, powers, logarithms and exponentials; rectangular and polar entry,
   LINK/unlink, RRES/CRES and RECT/PRAD/PDEG modes.
-- **Compact status bar:** ALL/FIX/SCI/ENG stays visible. DEG, DEC, RRES and
-  RECT are implicit; RAD, CRES, polar modes, nondecimal bases, carry and
-  pending modifiers appear when active. Fresh calculators start in DEG.
+- **Compact status bar:** ALL/FIX/SCI/ENG and the complex display indicator
+  (a𝑖b, r∠θ or r∠°) stay visible. RAD, nondecimal bases, carry and pending
+  modifiers appear when active. MODE marks RRES/CRES; fresh calculators
+  start in DEG.
 - **Remembers everything:** the stack, registers, statistics, and settings
   are saved when you quit and restored next time.
 - **Screen tints:** LCD, LCD+ (for real screens), GRAY, INVERTED, AYU DARK,
-  MONOKAI, PASTEL, and COMMODORE.
+  MONOKAI, PASTEL, COMMODORE, and TIOS (white with a grey-green bar and
+  charcoal text).
 
 The **[User Guide](docs/USER_GUIDE.md)** describes rpnCE 0.8.0,
 with operating procedures, worked keystroke examples, and a
@@ -163,6 +165,8 @@ Change `menus/menus.txt`, `help/help.txt` (or the unit definitions in
 `data/rpnCEres.bin`, the layout headers and `src/ui/menu_actions.h`.
 The program checks the appvar's resource-content stamp. Generated files
 are committed, so building doesn't need Python.
+HELP accepts `{imag}`, `{angle}`, `{degree}` and `{theta}` for the same
+mathematical symbols used by formatted numbers.
 Add optional `CMD_*` and argument fields to an item or alt line to define
 its calculator action. Define each ID's binding once; other menu entries
 reuse that ID. Unit indexes are generated automatically from unit order.

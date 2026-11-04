@@ -78,7 +78,7 @@ from the same build. Packaged releases use versioned filenames.
 | --- | --- | --- |
 | SIN or a polar angle looks wrong | RAD in the status bar; no angle indicator means DEG | Select the intended angle mode before the operation. |
 | A complex value's displayed angle and CANG differ | PRAD/PDEG versus DEG/RAD | Complex presentation and CANG have independent angle settings. See [complex modes](09-settings.md#complex-result-and-display-modes). |
-| A negative real square root gives Err: Domain | CRES indicator; absent means RRES | Select CRES for supported complex results, or enter an explicit complex operand. |
+| A negative real square root gives Err: Domain | RRES/CRES selection dot in MODE row 2 | Select CRES for supported complex results, or enter an explicit complex operand. |
 | A value with imaginary zero gives Err: Data Type | It is still a complex value | Use CPLX REAL if discarding the imaginary component is intended; CRES does not extend real-only functions. |
 | Ordinary arithmetic wraps or only whole digits can be entered | HEX/OCT/BIN in the status bar | Open BASE and select DEC. |
 | A result looks rounded but later arithmetic differs | FIX/SCI/ENG display setting | Use SHOW to inspect it; use RNDF or RNDN only if the stored value should be rounded. |

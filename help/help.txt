@@ -16,7 +16,7 @@ UP / DOWN: previous / next HELP page.
 Pages wrap; UP here opens ABOUT.
 ENTER, CLEAR, DEL or ON: close HELP.
 Y= WINDOW ZOOM TRACE GRAPH: menu keys.
-In menus, UP / DOWN changes the row.
+Blank buttons: no action. UP/DOWN: row.
 ON: back one menu. MATH: HOME.
 Full guide: GitHub repo > docs/USER_GUIDE.md
 ---
@@ -40,8 +40,8 @@ Real/complex/unit/DATE values stay whole.
 ---
 HELP 04/26 - KEY SHORTCUTS
 MATH: HOME    MODE: settings
-STAT: STAT    X,T,theta,n: UNIT
-APPS: BASE    PRGM: HYP
+STAT: STAT; UNIT: HOME row 3.
+BASE and HYP: HOME row 2.
 2ND MEM: CLR; LIST: STK; CATALOG: HELP
 VARS: variables; 2ND ENTRY: SHOW
 2ND ANS: LASTX; 2ND UP/DOWN: brightness
@@ -106,9 +106,9 @@ MODE row 2: RRES/CRES, RECT/PRAD/PDEG.
 RRES: real inputs use real-domain rules.
 CRES: allow supported complex results.
 Explicit complex inputs work in either.
-RECT: real i imaginary components.
-PRAD/PDEG: magnitude < angle, rad/deg.
-Modes are independent; CANG uses DEG/RAD.
+RECT: real {imag} imaginary components.
+PRAD: magnitude {angle} angle in radians.
+PDEG: magnitude {angle}{degree} angle in degrees.
 ---
 HELP 12/26 - COMPLEX LINK
 2ND X,T,theta,n (LINK) joins or splits.
@@ -176,11 +176,11 @@ No message? CLEAR twice clears stack.
 HELP 19/26 - MODE
 FIX/SCI/ENG: fixed/scientific/engineering.
 Then digit; .digit=10-19; >=12=all.
-RAD shown; else DEG. TINT: colors.
+RAD shown; else DEG. TINT: 9 colors.
 RSIZ/RSZ?: set/get registers (40-140).
 SSIZ/SSZ?: set/get stack depth (4-12).
 {..}/"..": raw/readable DATE values.
-. / ,: decimal mark; grouping swaps.
+TRACE . / GRAPH ,: decimal/grouping marks.
 ---
 HELP 20/26 - STK
 DUP: copy X into Y, like ENTER.
@@ -219,11 +219,11 @@ REAL extracts real; UVAL removes a unit.
 Unsupported types: Err: Data Type.
 ---
 HELP 24/26 - STATUS BAR
-Always shown: ALL, FIXn, SCIn or ENGn.
+Always: format and complex display mode.
 SCI-/ENG-: all digits in SCI/ENG.
-Implicit: DEG, DEC, RRES and RECT.
-Optional: RAD, HEX/OCT/BIN, CF, CRES.
-PRAD/PDEG: polar display and LINK.
+RECT: a{imag}b; PRAD: r{angle}{theta}; PDEG: r{angle}{degree}.
+DEG/DEC implicit; RAD, HEX/OCT/BIN, CF.
+RRES/CRES: dots in MODE only.
 2ND / A: pending 2ND / ALPHA key.
 Clock uses HH:MM if date will not fit.
 ---

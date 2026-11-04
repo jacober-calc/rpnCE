@@ -22,7 +22,7 @@ identifies them; each is described in this chapter.
 
 The dark strip at the top shows the calculator's state.
 
-<img src="../../assets/guide/screens/display-status.png" alt="The compact status bar: FIX4 with implicit DEG; RAD CRES PRAD with the 2ND badge; CRES PDEG with HEX, carry and the A badge" width="320">
+<img src="../../assets/guide/screens/display-status.png" alt="The status bar: FIX4 a𝑖b; RAD r∠θ with the 2ND badge; r∠° with HEX, carry and the A badge" width="320">
 
 | Item | Meaning |
 | --- | --- |
@@ -33,16 +33,16 @@ The dark strip at the top shows the calculator's state.
 | `SCI-` / `ENG-` | scientific or engineering format with all display digits |
 | `RAD` | radians for trigonometry and polar conversions; no angle indicator means DEG |
 | `HEX`, `OCT`, `BIN` | a nondecimal number base; no base indicator means DEC (see [chapter 12](12-base.md#12-base-hexadecimal-octal-and-binary)) |
-| `CRES` | real inputs may produce complex results; absent means RRES |
-| `PRAD` / `PDEG` | polar-radian or polar-degree display and LINK mode; absent means RECT; independent of DEG/RAD |
+| `a𝑖b` | rectangular complex display and LINK mode (RECT) |
+| `r∠θ` / `r∠°` | polar-radian (PRAD) or polar-degree (PDEG) display and LINK mode; independent of DEG/RAD |
 | `CF` | the BASE carry flag is set, including when DEC is implicit |
 | `2ND` badge | `2ND` was pressed; the next key gives its blue function |
 | `A` badge | `ALPHA` was pressed; the next key gives its green letter |
 
-Format is always shown. DEG, RRES, RECT and DEC are implicit
-defaults to keep the bar compact; the MODE menu still marks every active
-selection. A fresh calculator starts in DEG, DEC, RRES and RECT, so its
-only numeric status label is **ALL**.
+Format and the complex display indicator are always shown, including
+when X is real. DEG and DEC are implicit. RRES/CRES affect the selected
+dot in MODE without adding a status label. A fresh calculator starts in
+DEG, DEC, RRES and RECT, with **ALL a𝑖b** in the status bar.
 
 ## Message line
 
@@ -82,7 +82,8 @@ font. `X` is where numbers are typed and where results appear.
 The bottom row shows five dark boxes, one for each menu key. A short line
 across the top of a box marks a submenu (pressing it opens another menu);
 other boxes are functions. A ■ after a label marks the active choice in a
-setting, such as **DEG■**. An empty slot has no box.
+setting, such as **DEG■**. Empty slots are matching buttons without text
+or an action.
 
 ## Screen brightness
 
@@ -90,11 +91,11 @@ Press `2ND ↑` to brighten the LCD or `2ND ↓` to dim it. Repeat the
 shortcut for further steps. It works while entering numbers, at prompts,
 and in HELP or VARS. Brightness does not change stack values or menu rows.
 The setting is shared with TI-OS; the dimmest available step keeps the
-screen visible.
+screen visible. A full sweep from brightest to dimmest takes 14 presses.
 
 ## Screen colors
 
-`MODE`, then row 3, **TINT**, cycles through eight color schemes; the
+`MODE`, then row 3, **TINT**, cycles through nine color schemes; the
 message line names each one as you go, and the choice is remembered:
 
 | Tint | Look | Screen |
@@ -107,6 +108,7 @@ message line names each one as you go, and the choice is remembered:
 | **MONOKAI** | charcoal, with purple, cyan, green and pink stack values | <img src="../../assets/guide/screens/tint-6.png" alt="The MONOKAI tint" width="240"> |
 | **PASTEL** | a light background with distinct row colors and pastel menu keys | <img src="../../assets/guide/screens/tint-7.png" alt="The PASTEL tint" width="240"> |
 | **COMMODORE** | phosphor greens on near-black, with brighter X digits | <img src="../../assets/guide/screens/tint-8.png" alt="The COMMODORE tint" width="240"> |
+| **TIOS** | TI-OS home-screen colours: white background, grey-green status bar and buttons, white captions and charcoal text | <img src="../../assets/guide/screens/tint-9.png" alt="The TIOS tint" width="240"> |
 
 ---
 

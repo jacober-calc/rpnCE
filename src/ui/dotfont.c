@@ -92,6 +92,10 @@ static const glyph_t glyphs[] = {
     { 'z', 5, { 0x00, 0x00, 0x1f, 0x02, 0x04, 0x08, 0x1f } },
     { '{', 3, { 0x0c, 0x08, 0x08, 0x10, 0x08, 0x08, 0x0c } },
     { '}', 3, { 0x18, 0x08, 0x08, 0x04, 0x08, 0x08, 0x18 } },
+    { TEXT_IMAG, 4, { 0x02, 0x00, 0x0c, 0x04, 0x08, 0x12, 0x0c } },
+    { TEXT_ANGLE, 5, { 0x01, 0x02, 0x02, 0x04, 0x08, 0x10, 0x1f } },
+    { TEXT_DEGREE, 3, { 0x08, 0x14, 0x08, 0x00, 0x00, 0x00, 0x00 } },
+    { TEXT_THETA, 5, { 0x0e, 0x11, 0x11, 0x1f, 0x11, 0x11, 0x0e } },
 };
 
 /* Comma: 1 column, a dot on the baseline and one just below it. */
@@ -145,15 +149,24 @@ static int columns_of(const char *s, const char *start)
     return g ? g->width : 5;
 }
 
+/* Complex delimiters have two decimal-point gaps on either side. The
+ * angle/degree pair stays together as one delimiter. */
+static int gap_after(const char *s)
+{
+    uint8_t ch = (uint8_t)*s, next = (uint8_t)s[1];
+    if (!next) return 0;
+    if (ch == TEXT_ANGLE && next == TEXT_DEGREE) return 1;
+    return ch == TEXT_IMAG || ch == TEXT_ANGLE || ch == TEXT_DEGREE ||
+           next == TEXT_IMAG || next == TEXT_ANGLE ? 2 : 1;
+}
+
 int dot_width(const char *s)
 {
     const char *start = s;
     int cols = 0;
     for (; *s; s++)
-        cols += columns_of(s, start) + 1;       /* one blank column between */
-    if (cols == 0)
-        return 0;
-    return (cols - 1) * DOT_PITCH_X;
+        cols += columns_of(s, start) + gap_after(s);
+    return cols * DOT_PITCH_X;
 }
 
 static void draw_rows_pitch(const uint8_t *rows, int nrows, int x, int y,
@@ -193,8 +206,22 @@ static void draw_text(const char *s, int x, int y, uint8_t color, int clip_left,
                 draw_rows_pitch(g->rows, DOT_ROWS, x, y, clip_left, px_w, px_h);
             columns = g ? g->width : 5;
         }
-        x += (columns + 1) * px_w;
+        x += (columns + gap_after(s)) * px_w;
     }
+}
+
+int dot_symbol_width(char ch)
+{
+    if ((uint8_t)ch < TEXT_IMAG || (uint8_t)ch > TEXT_THETA)
+        return 0;
+    return find_glyph(ch)->width + 1;
+}
+
+void dot_draw_symbol(char ch, int x, int y, uint8_t color, uint8_t y_scale)
+{
+    const glyph_t *g = find_glyph(ch);
+    gfx_SetColor(color);
+    draw_rows_pitch(g->rows, DOT_ROWS, x, y, 0, 1, y_scale);
 }
 
 void dot_draw(const char *s, int x, int y, uint8_t color, int clip_left)

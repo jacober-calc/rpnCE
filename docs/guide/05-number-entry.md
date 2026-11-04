@@ -58,7 +58,7 @@ Each stack level and ordinary register holds one complete value:
 | Value | Example | How it is used |
 | --- | --- | --- |
 | Plain real | `3.`, `−2.5` | Real arithmetic, BASE words, statistics, TVM and numeric settings. |
-| Complex | `3. i 4.` (3 + 4i) | Supported arithmetic and the CPLX functions; both components occupy one level. |
+| Complex | `3.𝑖4.` (3 + 4i) | Supported arithmetic and the CPLX functions; both components occupy one level. |
 | Real with a unit | `12. ft` | Compatible-unit conversion and quantity arithmetic. |
 | DATE object | `D{2024,3,14}` | Calendar, time-zone and duration operations. |
 

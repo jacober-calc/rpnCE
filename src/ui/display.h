@@ -14,8 +14,9 @@ void display_help(uint8_t page);
  * with "Press any key." below. */
 void display_problem(const char *title, const char *detail);
 
-/* Persistent order: LCD, LCD+, GRAY, INVERTED, AYU DARK, MONOKAI, PASTEL, COMMODORE. */
-#define TINT_COUNT 8
+/* Persistent order: LCD, LCD+, GRAY, INVERTED, AYU DARK, MONOKAI, PASTEL,
+ * COMMODORE, TIOS. Append presets to retain saved selections. */
+#define TINT_COUNT 9
 void display_set_tint(uint8_t tint);
 const char *display_tint_name(uint8_t tint);
 

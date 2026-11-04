@@ -72,10 +72,10 @@ SEQUENCES = [
     f'{FIX4} 1264.136 ENTER 2 CHS ENTER 3 ÷ {PI} {RCL} ÷ MATH >display-anatomy',
     f'{FIX4_DEG} >display-status-1',
     f'{FIX4} MODE [RAD] [CRES] [PRAD] 2ND >display-status-2',
-    'MODE [SCI] 3 [DEG] [CRES] [PDEG] APPS [HEX] [BCFS] [SCF] ALPHA >display-status-3',
-    '4294967295 APPS [BIN] >display-scroll',
+    'MODE [SCI] 3 [DEG] [CRES] [PDEG] @HOME>BASE [HEX] [BCFS] [SCF] ALPHA >display-status-3',
+    '4294967295 @HOME>BASE [BIN] >display-scroll',
     f'{FIX4} 1264.136 ENTER 2 CHS ENTER 3 ÷ {PI} MODE DOWN DOWN >tint-1 [TINT] >tint-2 [TINT] >tint-3 '
-    '[TINT] >tint-4 [TINT] >tint-5 [TINT] >tint-6 [TINT] >tint-7 [TINT] >tint-8',
+    '[TINT] >tint-4 [TINT] >tint-5 [TINT] >tint-6 [TINT] >tint-7 [TINT] >tint-8 [TINT] >tint-9',
 
     # 5. Entering numbers
     f'{FIX4} 6.02 >entry-exp-1 , >entry-exp-2 2 CHS >entry-exp-3 ENTER >entry-exp-4',
@@ -99,7 +99,7 @@ SEQUENCES = [
     f'5 >reg-acc-4 {RCL} ÷ MATH >reg-acc-5',
     f'{FIX4} MODE DOWN DOWN 41 [RSIZ] MATH 41 STO . 123 STO 2ND . CLEAR {RCL} 2ND . >reg-extra-1 '
     'VARS >reg-extra-2',
-    f'{FIX4} XTθn [LENG] 12 [ft] STO MATH CLEAR 41 STO . CLEAR @HOME>TVM 360 [N] 6.5 [I%YR] '
+    f'{FIX4} @HOME>UNIT [LENG] 12 [ft] STO MATH CLEAR 41 STO . CLEAR @HOME>TVM 360 [N] 6.5 [I%YR] '
     'MATH CLEAR VARS >reg-vars',
 
     # 9. Settings
@@ -148,12 +148,12 @@ SEQUENCES = [
     f'{HELP_KEY} '+ 'DOWN ' * 23 + '>status-help',
 
     # 12. BASE
-    '255 ENTER 4895 ENTER 5133136320 APPS [HEX] >base-hex',
-    'APPS [DEC] 8 [BCFS] [WSIZ] ON [HEX] ALPHA COS ALPHA COS ENTER >base-ovf-1 2 + >base-ovf-2 '
+    '255 ENTER 4895 ENTER 5133136320 @HOME>BASE [HEX] >base-hex',
+    '@HOME>BASE [DEC] 8 [BCFS] [WSIZ] ON [HEX] ALPHA COS ALPHA COS ENTER >base-ovf-1 2 + >base-ovf-2 '
     '[DEC] >base-ovf-3',
-    'APPS [DEC] 8 [BCFS] [WSIZ] ON [HEX] ALPHA APPS 6 ENTER 6 5 >base-mask-1 [LOGI] [AND] '
+    '@HOME>BASE [DEC] 8 [BCFS] [WSIZ] ON [HEX] ALPHA APPS 6 ENTER 6 5 >base-mask-1 [LOGI] [AND] '
     '>base-mask-2 ON [BIN] >base-mask-3 [DEC] >base-mask-4',
-    '17 ENTER 5 APPS [BFCN] [BDIV] >base-bdiv',
+    '17 ENTER 5 @HOME>BASE [BFCN] [BDIV] >base-bdiv',
 
     # 13. Statistics
     f'{FIX4} STAT [CL{{sigma}}] [ALL{{sigma}}] [CFIT] [LINF] ON 3.1 ENTER 1 [{{sigma}}+] '
@@ -169,9 +169,9 @@ SEQUENCES = [
     f'{FIX4} @HOME>TVM [CLTV] [RSTV] 60 [N] 25000 [PV] 480 CHS [PMT] 0 [FV] [I%YR] >tvm-rate',
 
     # 15. Units
-    f'{FIX4} XTθn [LENG] 12 [ft] ENTER [m] >units-convert',
-    f'{FIX4} XTθn [LENG] 6 [ft] 2 [in] + >units-arith-1 3 ÷ >units-arith-2 [in] >units-arith-3',
-    f'{FIX4} XTθn [LENG] 12 [ft] >units-store-1 STO MATH >units-store-2 CLEAR >units-store-3 '
+    f'{FIX4} @HOME>UNIT [LENG] 12 [ft] ENTER [m] >units-convert',
+    f'{FIX4} @HOME>UNIT [LENG] 6 [ft] 2 [in] + >units-arith-1 3 ÷ >units-arith-2 [in] >units-arith-3',
+    f'{FIX4} @HOME>UNIT [LENG] 12 [ft] >units-store-1 STO MATH >units-store-2 CLEAR >units-store-3 '
     f'{RCL} MATH >units-store-4 [m] >units-store-5',
     f'{FIX4} @HOME>UNIT>ENER 2 [kWh] >units-energy-1 2000 [kcal] >units-energy-2 @HOME>NUM [%CH] '
     '>units-energy-3',

@@ -106,8 +106,8 @@ static void write_ppm(const char *name, const uint8_t *frame)
     fprintf(f, "P6 320 240 255\n");
     for (int i = 0; i < 320 * 240; i++) {
         uint16_t c = gfx_palette[frame[i]];
-        uint8_t r = (c >> 10) & 31, gg = (c >> 5) & 31, b = c & 31;
-        uint8_t px[3] = { (uint8_t)(r << 3 | r >> 2), (uint8_t)(gg << 3 | gg >> 2), (uint8_t)(b << 3 | b >> 2) };
+        uint8_t r = (c >> 10) & 31, gg = ((c >> 5) & 31) * 2 + (c >> 15), b = c & 31;
+        uint8_t px[3] = { (uint8_t)(r << 3 | r >> 2), (uint8_t)(gg << 2 | gg >> 4), (uint8_t)(b << 3 | b >> 2) };
         fwrite(px, 1, 3, f);
     }
     fclose(f);
