@@ -7,8 +7,8 @@
 /* Saves the stack, LASTX, variables, and modes to an archived appvar. */
 void storage_save(calc_t *c);
 
-/* Restores saved state. Returns false (leaving c alone) if there is none
- * or it is from an incompatible version. */
+/* Restores saved state. Returns false (leaving c alone) if there is none,
+ * it is damaged, or it is from rpnCE 0.7.0 or earlier. */
 bool storage_load(calc_t *c);
 
 /* Settings kept in their own small appvar: the screen tint and the DATE

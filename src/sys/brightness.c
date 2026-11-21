@@ -5,7 +5,7 @@
 void sys_brightness_adjust(bool brighter)
 {
     /* CE backlight: 0 is brightest, 255 darkest. Stop short of black. */
-    int level = lcd_BacklightLevel + (brighter ? -8 : 8);
+    int level = lcd_BacklightLevel + (brighter ? -16 : 16);
     if (level < 0) level = 0;
     if (level > 224) level = 224;
     lcd_BacklightLevel = (uint8_t)level;

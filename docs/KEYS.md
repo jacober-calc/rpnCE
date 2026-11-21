@@ -13,7 +13,8 @@ leave it as it was.
 
 | Key | Primary | 2ND |
 | --- | --- | --- |
-| 0-9, `.` | number entry | |
+| 0-9 | number entry | |
+| `.` | decimal point | `i`: rectangular complex entry |
 | `,` | EE (exponent); inside a DATE record, the field separator | EE |
 | `(-)` | +/- (of the exponent after EE) | ANS: LASTX |
 | `ENTER` | ENTER | ENTRY: SHOW all 14 digits |
@@ -33,11 +34,39 @@ leave it as it was.
 | `LOG` / `LN` | LOG / LN | 10^X / e^X |
 | `SIN COS TAN` | trig (DEG or RAD) | ASIN ACOS ATAN |
 
-Negative bases follow the HP rule (HP-32SII / DM32): Y^X with a negative Y
+In RRES, negative bases follow the HP rule (HP-32SII / DM32): Y^X with a negative Y
 needs a whole-number X, and ˣ√Y (MATH menu) with a negative Y needs an odd
 whole-number X. Anything else is "Err: Domain", even where a real value
 exists: (-8)^3 = -512 and ˣ√ of -8 with X = 3 is -2, but (-8)^0.4 and ˣ√ of
 -32 with X = 2.5 are errors. To get those, use |Y| and apply the sign.
+CRES permits principal complex results for supported powers, roots and
+logarithms. Explicit complex operands work in either result mode.
+
+## Complex numbers
+
+Use BASE DEC. `3 2ND . 4 ENTER` enters 3 + 4i in one stack level;
+`2ND . ENTER` enters i. `2 2ND APPS 90 ENTER` enters magnitude 2 at 90°;
+repeat `2ND APPS` while editing to toggle radians/degrees. Each component
+has its own sign, decimal point and EE exponent.
+
+`2ND X,T,θ,n` (LINK) joins real Y and X into one complex value, or splits
+complex X into two reals. RECT means Y = real part, X = imaginary part;
+PRAD/PDEG means Y = magnitude, X = angle in the selected unit.
+
+HOME > CPLX has REAL, IMAG, CONJ, CABS and CANG. CANG follows DEG/RAD;
+complex logarithms and exponentials use radians. MODE row 2 selects
+RRES/CRES (results from real inputs) and RECT/PRAD/PDEG (display and LINK).
+The groups are independent. The status bar always shows a𝑖b for RECT,
+r∠θ for PRAD or r∠° for PDEG. RRES/CRES are marked only in MODE.
+Selecting a mode keeps stored values intact.
+
+Complex arithmetic includes + − × ÷, CHS, reciprocal, squares/cubes,
+roots, powers, logarithms and exponentials. Trigonometry, HYP, NUM,
+probability, BASE word operations, statistics, TVM and numeric settings
+require real operands. An imaginary zero still has complex type; REAL
+extracts its real component. Stack movement, LASTX and ordinary STO/RCL
+preserve both components. See the illustrated
+[complex-number tutorial](guide/11-complex-numbers.md).
 
 ## Registers
 
@@ -79,7 +108,7 @@ solve TVM values using the TVM menu below.
 
 ## TVM (time value of money)
 
-MATH, then TVM (row 1 of HOME). Works like an HP-12C: type a value and
+MATH, then TVM (row 2 of HOME). Works like an HP-12C: type a value and
 press N, I%YR, PV, PMT, or FV to store it; press one of them right after
 another TVM key (without typing a number) to solve for it. 2ND + the key
 recalls the stored value. Money received is positive, money paid out is
@@ -135,7 +164,7 @@ is 120 fathoms.
 ## Stack depth
 
 The stack has 4 levels (T, Z, Y, X) like the HP-32SII; MODE > SSIZ makes
-it up to 12. Only the bottom four are shown; deeper levels sit above T. A
+it up to 13. Only the bottom four are shown; deeper levels sit above T. A
 two-number operation drops the whole stack and copies the top level down;
 R-down and R-up roll through every level. MODE > SSZ? shows the current
 depth, and RSZ? the number of registers.
@@ -162,7 +191,7 @@ and right arrows scroll X through the rest.
 ## BASE
 
 MATH, then BASE. DEC, HEX, OCT, BIN choose how whole numbers are shown and
-typed; the status line shows HEX, OCT or BIN, plus C when the carry flag is
+typed; the status bar shows HEX, OCT or BIN, plus CF when the carry flag is
 set. In HEX, type A-F with ALPHA plus the key with that green letter (ALPHA
 MATH = A, ALPHA APPS = B, ... ALPHA COS = F). Digits the base can't use, and
 digits that would overflow the word size, are ignored. Long values scroll
@@ -175,7 +204,7 @@ WSIZ, from X; default 32). The calculator's 14-digit numbers hold every
 
 A value that isn't a word of the current size (too big, negative, or not a
 whole number) stays in decimal with a small `dec` beside it, and when it's
-in X the status line says why: "Exceeds 32-bit word", "Negative: not a
+in X the message line says why: "Exceeds 32-bit word", "Negative: not a
 word", or "Not a whole number". BASE operations on a value too big for the
 word size give "Err: Word Size"; raise WSIZ to use it.
 
@@ -260,11 +289,12 @@ Keep the TI clock at local time and set CTZ to its UTC offset. ATZ controls
 application clock results and the status bar; changing either zone leaves
 the TI clock unchanged.
 
-MODE row 4 also selects **.** or **,** as the numeric decimal mark,
+MODE row 4 has `{..}`, `".."`, a blank button, **.** on `TRACE`, and **,**
+on `GRAPH`. The last two select the numeric decimal mark,
 swapping the grouping mark throughout entry, results, VARS and SHOW.
 The physical decimal key keeps its meaning, and DATE record commas stay
 field separators. `2ND UP/DOWN` changes the shared TI-OS brightness without
-interrupting entry or prompts.
+interrupting entry or prompts; 14 presses cover the full brightness range.
 
 MODE row 4 chooses how objects are shown: `{..}` as typed (the default) or
 `".."` as RFC 3339 strings. Long values scroll with the arrow keys. SHOW
@@ -273,12 +303,14 @@ screen tint in `RPNCEcfg`.
 
 ## The screen
 
-- **Status bar:** a dark strip with the calculator's state: the date and
-  time from the CE's clock on the left (`2026-10-18 14:05`, converted to
-  the application time zone, ATZ), and on the right the display format (FIX4, SCI3, FIX- for
-  as many digits as needed), DEG or RAD, the base (DEC, HEX, OCT or BIN,
-  with C when the carry flag is set), and a 2ND or A (ALPHA) badge when one
-  is pending.
+- **Status bar:** the application clock on the left and format/precision
+  on the right. ALL means FIX with as many digits as needed.
+  SCI-/ENG- are the all-digits settings for those formats.
+  The complex display indicator is always a𝑖b (RECT), r∠θ (PRAD) or r∠°
+  (PDEG). Optional indicators are RAD, HEX/OCT/BIN, CF, and a pending
+  2ND or A (ALPHA) badge. DEG and DEC are implicit; RRES/CRES appear only
+  as selections in MODE. If the timestamp would overlap the
+  indicators, the clock shows HH:MM.
 - **Message line:** under the status bar: errors, SHOW, notices, and BASE
   warnings about X, in the system font. Up/down arrows at its right end
   mean the current menu has more rows.
@@ -293,11 +325,8 @@ screen tint in `RPNCEcfg`.
 | `Y= WINDOW ZOOM TRACE GRAPH` | the five menu keys; the menu stays put after a pick |
 | up / down arrows | previous / next row of the current menu (when the message line shows arrows at its right end) |
 | `MATH` | HOME, the top of the menu tree |
-| `MODE` | MODE menu: FIX, SCI, ENG (a digit 0-9, or . then a digit for 10-19, as on the HP-32SII: FIX . 1 is FIX 11; 12 or more means as many digits as needed, shown as FIX-), RAD, DEG. Row 3: RSIZ (X = total registers, 40-140; less than 40 means 40) and RSZ?, TINT (cycle the screen colors: LCD, LCD+ for real screens, GRAY, INVERTED, AYU DARK, MONOKAI, PASTEL, COMMODORE; saved in the appvar `RPNCEcfg`), SSIZ (X = stack depth, 4-12; less than 4 means 4) and SSZ? |
+| `MODE` | Row 1: FIX/SCI/ENG precision and RAD/DEG. Row 2: RRES/CRES and RECT/PRAD/PDEG. Row 3: RSIZ/RSZ? (40–140 registers), TINT (nine presets), SSIZ/SSZ? (4–12 stack levels). Row 4: DATE display, blank button, then decimal point/comma on TRACE/GRAPH. See [Settings](guide/09-settings.md). |
 | `STAT` | STAT menu |
-| `X,T,theta,n` | UNIT menu |
-| `APPS` | BASE menu |
-| `PRGM` | HYP menu |
 | `2ND MEM` (`2ND +`) | CLR menu |
 | `2ND CATALOG` (`2ND 0`) | HELP reference pages |
 | `2ND LIST` (`2ND STAT`) | STK menu |
@@ -307,30 +336,31 @@ screen tint in `RPNCEcfg`.
 | `2ND MODE` (QUIT) | save and exit |
 | `2ND ON` (OFF) | save and exit |
 
-TINT cycles through eight presets. INVERTED is the former DARK, with the
+TINT cycles through nine presets. INVERTED is the former DARK, with the
 same colors and saved selection. AYU DARK uses a deep blue-gray background
 with amber and blue accents. MONOKAI uses charcoal with purple, cyan, green
 and pink stack values. PASTEL uses a light background, distinct row colors and
 pastel menu keys. COMMODORE uses phosphor greens on near-black, with brighter
-X digits and dark green menu panels. The selection is saved on exit. See
+X digits and dark green menu panels. TIOS uses a white panel, grey-green
+status bar and buttons, white captions and charcoal text. The selection is saved on exit. See
 [Screen colors](guide/04-display.md#screen-colors) for the presets.
 
-HOME has TVM in the fifth position on its first row and HELP in the fifth
-position on its second row. HELP opens the reference pages: UP / DOWN
+HOME has HELP in the fifth position on its first row and TVM in the fifth
+position on its second row. Each menu row has five matching buttons;
+buttons without text do nothing. UNIT, BASE and HYP are reached through
+HOME. HELP opens the reference pages: UP / DOWN
 change pages; ENTER, CLEAR, DEL or ON returns to the calculator. The pages
 are written in `help/help.txt` and stored in the RPNCEres appvar. 2ND LINK
-and 2ND ANGLE are deliberately unassigned: complex-number entry will use
-them. ALPHA
-letters and STO/RCL variable selection take priority over menu shortcuts.
+combines or splits complex values; 2ND ANGLE enters polar values; 2ND i
+(decimal point) enters rectangular values. LINK is on X,T,θ,n and ANGLE is
+on APPS. ALPHA letters and STO/RCL variable selection take priority over menu shortcuts.
 
 Numbers show up to 12 digits with thousands commas, or up to 10 next to an
 exponent; SHOW (2ND ENTRY) shows all 14.
 
 The stack, LASTX, variables, angle mode, and display format are saved on exit
 (in the archived appvar `RPNCEdat`) and restored on the next run. Units on
-registers are saved separately in `RPNCEunt`, with a checksum and a
-fingerprint of the register values they belong to: if it's missing,
-damaged, or belongs to different values, the registers load without units
-and every value is kept. After 5
-minutes without a key press, rpnCE saves and exits so the calculator can
-power down.
+registers are stored with their values in RPNCEdat. rpnCE 0.8.0 does not read
+data saved by 0.7.0 or earlier, and earlier versions cannot read 0.8.0 data. After
+five minutes without a key press, rpnCE saves and exits so the calculator
+can power down.

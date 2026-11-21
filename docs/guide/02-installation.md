@@ -1,6 +1,6 @@
 # 2. Installing rpnCE
 
-rpnCE 0.7.0 · User Guide
+rpnCE 0.8.0 · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 1. Introduction](01-introduction.md) · [Next: 3. First calculations](03-first-calculations.md)
 
@@ -20,13 +20,15 @@ operating system and any installed native-program launcher.
 
 | File | Purpose | Where it comes from |
 | --- | --- | --- |
-| `rpnCE-0.7.0.8xp` | Executable program | rpnCE release |
-| `rpnCEres-0.7.0.8xv` | Menus, unit tables, and HELP pages; required | The same release as the program |
+| `rpnCE-0.8.0.8xp` | Executable program | [rpnCE 0.8.0 package](../../cem/rpnCE-0.8.0.zip) |
+| `rpnCEres-0.8.0.8xv` | Menus, unit tables, and HELP pages; required | The same package as the program |
 | `clibs.8xg` | CE C runtime libraries | [CE Programming libraries releases](https://github.com/CE-Programming/libraries/releases) |
 
-An rpnCE release contains the first two files. Install the CE libraries
-if they are not already present. A local build writes `rpnCE.8xp` and
-`rpnCEres.8xv` to `bin/`; the versioned release files are in `cem/`.
+Extract the ZIP before transferring files. It also includes installation
+notes, the license, screenshots and an animated preview. Install the CE
+libraries if they are not already present. Source builds write
+`bin/rpnCE.8xp` and `bin/rpnCEres.8xv`; see
+[Building](../../README.md#building) for instructions.
 The filenames on your computer do not change their names on the calculator:
 the program is `RPNCE` and its resource appvar is `RPNCEres`.
 
@@ -48,7 +50,8 @@ will run it on an unmodified newer OS.
 ## Transfer and start
 
 1. Connect the calculator with USB and open TI Connect CE.
-2. Transfer `rpnCE-0.7.0.8xp` and `rpnCEres-0.7.0.8xv`, plus `clibs.8xg` if needed.
+2. Transfer `rpnCE-0.8.0.8xp` and `rpnCEres-0.8.0.8xv` from the package,
+   plus `clibs.8xg` if needed.
    The rpnCE files can be archived.
 3. Launch rpnCE using the method supported by the OS or installed
    launcher. On an OS that supports `Asm(`, the home-screen command is
@@ -65,9 +68,16 @@ to replace them.
 
 ## Upgrade an installation
 
+> **From 0.7.0 or earlier:** complex-number support changed how every value
+> is stored, so 0.8.0 does not read calculator data saved by earlier
+> versions. It starts with an empty stack, registers and statistics, and
+> replaces the old `RPNCEdat` when you quit. Write down any values you need
+> before upgrading and re-enter them afterward. Display and DATE settings
+> carry over. Delete the obsolete `RPNCEunt` appvar if you have one.
+
 1. Exit rpnCE normally with `2ND QUIT` so current work is saved.
 2. Keep the saved appvars in place. For a backup, copy them to your
-   computer as described in [chapter 17](17-memory.md#backing-up-your-work).
+   computer as described in [chapter 18](18-memory.md#backing-up-your-work).
 3. Transfer the new program and resource appvar together, replacing the
    two older files.
 4. Start rpnCE and check your saved values.
@@ -75,7 +85,7 @@ to replace them.
 Both files must be from the same build. A help-text change can change the
 resource stamp even when the software version number is unchanged. If
 rpnCE reports a missing or mismatched resource, transfer both files again
-from one release or build. See [Startup problems](16-troubleshooting.md#when-rpnce-cant-start).
+from one release or build. See [Startup problems](17-troubleshooting.md#when-rpnce-cant-start).
 
 ## Save and exit
 

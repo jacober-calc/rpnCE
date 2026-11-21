@@ -1,27 +1,113 @@
-rpnCE 0.7.0 - first official pre-release
+rpnCE 0.8.0 - an RPN calculator for the TI-84 Plus CE
+==========================================================
 
-An HP-style RPN calculator for the TI-84 Plus CE, with scientific math,
-statistics, TVM, units, BASE arithmetic, and dates and times.
+Version 0.8.0 brings complex-number support and a new shared value-storage
+system to this HP-style RPN calculator for the TI-84 Plus CE.
 
-INSTALLATION
-Send rpnCE-0.7.0.8xp and rpnCEres-0.7.0.8xv to your calculator using
-TI Connect CE. Both files can remain archived and must be from the same
-release. The CE C libraries (clibs.8xg) are also required:
+Enter rectangular or polar complex numbers, calculate with them, and store
+both components in one stack level or register. Real numbers, complex
+numbers, DATE objects and unit quantities use the same value-storage model.
+
+IMPORTANT: 0.8.0 cannot import saved stacks, private registers or statistics
+from 0.7.0 and earlier. Note needed values before upgrading and re-enter
+them afterward. See "Upgrading from 0.7.0 or earlier" below.
+
+Files
+-----
+  rpnCE-0.8.0.8xp       the program
+  rpnCEres-0.8.0.8xv    its menus, unit tables and HELP pages (required)
+  readme.txt           installation, documentation and support
+  LICENSE              redistribution terms
+  rpnCE-0.8.0-*.png     complex, polar, stack, TVM and unit screenshots
+  rpnCE-promo1.gif      animated 0.8.0 complex-number calculations
+
+The images are for viewing on your computer; only the program, resources
+and required CE libraries need to be sent to the calculator.
+
+Source builds write bin/rpnCE.8xp and bin/rpnCEres.8xv; packaged builds
+use the versioned filenames above.
+
+rpnCE also needs the CE C libraries (clibs.8xg), which many CE programs
+use. If you don't have them, download clibs.8xg from
 https://github.com/CE-Programming/libraries/releases
 
-Launch RPNCE using your calculator's native-program launcher, or
-Asm(prgmRPNCE) on OS versions that support it. For newer OS versions,
-follow the arTIfiCE instructions for your model and OS:
-https://yvantt.github.io/arTIfiCE/
+Installing
+----------
+1. Send rpnCE-0.8.0.8xp, rpnCEres-0.8.0.8xv and clibs.8xg with TI Connect
+   CE. All three can stay in archive memory.
+2. Launch using the native-program method supported by your OS or
+   launcher. On OS versions that support it, use Asm(prgmRPNCE).
+   Newer OS versions need native-program support enabled first; follow
+   the current arTIfiCE instructions for your exact model and OS:
+   https://yvantt.github.io/arTIfiCE/
 
-Try 2 ENTER 3 + for 5. MATH opens the menus; 2ND 0 opens HELP.
-Use 2ND QUIT to save your work and exit.
+rpnCE-0.8.0.8xp and rpnCEres-0.8.0.8xv must come from the same release. If RPNCEres
+is missing or from a different version, rpnCE says so when it starts.
 
-Project and downloads:
-https://github.com/jacober-calc/rpnCE
-Illustrated user guide:
+Your data
+---------
+rpnCE saves the stack, registers, statistics and settings when you quit
+(2ND QUIT) in RPNCEdat and RPNCEcfg. Saved data uses format 6 and stores
+complete real, complex, DATE and unit values together. Deleting the private
+state does not clear shared TI-OS TVM values or reset the clock.
+
+Upgrading from 0.7.0 or earlier
+-------------------------------
+The new value-storage system changes the saved-data format. Version 0.8.0
+does not read RPNCEdat from 0.7.0 and earlier: the saved stack, LASTX,
+private registers and statistics are incompatible. Its first start uses
+an empty stack and private registers, cleared statistics, and default
+calculator modes. The old RPNCEdat is replaced when you quit.
+
+Before upgrading, record any values you need and keep a backup of the old
+RPNCEdat if desired. Re-enter needed values in 0.8.0; restoring the old
+file does not convert it. That backup can only be used with 0.7.0.
+Files saved by 0.8.0 cannot be read by earlier versions either.
+
+The screen tint, DATE settings and decimal separator in RPNCEcfg carry
+over. Shared TI-OS TVM values and the hardware clock remain available.
+Delete RPNCEunt if a 0.7.0 installation left one; 0.8.0 does not use it.
+
+Getting started
+---------------
+RPN calculations use ENTER to separate numbers, followed by an operation.
+The current number is X; the previous number is Y.
+
+  2 ENTER 3 +           5
+  MATH                  the menu tree (ON goes back)
+  MODE                  display format, angle mode, and more
+  2ND 0                 on-device HELP
+  2ND QUIT              save and exit
+
+Number modes
+------------
+Fresh state starts in DEG, DEC, RRES and RECT. ALL means FIX with all
+display digits. The complex display indicator is always aib (RECT),
+r-angle-theta (PRAD) or r-angle-degree (PDEG), using mathematical symbols.
+RRES/CRES have selection dots in MODE only. RAD, HEX/OCT/BIN and CF appear
+when active; DEG and DEC are implicit. Saved modes are restored.
+
+In DEC, 3 then 2ND . then 4 ENTER enters 3 + 4i in one stack level.
+2ND APPS enters a polar pair; 2ND X,T,theta,n joins/splits with LINK.
+See the Complex numbers chapter of the User Guide for illustrated examples.
+
+User documentation
+------------------
+The illustrated User Guide explains the stack, registers, menus and
+functions, with worked examples:
 https://github.com/jacober-calc/rpnCE/blob/main/docs/USER_GUIDE.md
-Bug reports (include model, OS, version, keys, and expected/actual result):
+
+Key and menu reference:
+https://github.com/jacober-calc/rpnCE/blob/main/docs/KEYS.md
+
+Bug reports and issues
+----------------------
+Check existing issues, or report a problem at:
 https://github.com/jacober-calc/rpnCE/issues
 
-MIT License. See LICENSE for copyright and redistribution terms.
+Include the rpnCE version (shown in HELP / ABOUT), calculator model,
+TI-OS version, exact keys and inputs, expected result and actual result.
+Mention relevant settings such as angle mode, units or time zones.
+
+Project and source code:
+https://github.com/jacober-calc/rpnCE

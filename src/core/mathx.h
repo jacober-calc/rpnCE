@@ -8,7 +8,7 @@
 #include <ti/real.h>
 #include <ti/error.h>
 
-/* Private errors caught by calc.c; never handed to the OS error screen. */
+/* Private errors caught by value_eval(); never handed to the OS error screen. */
 #define MX_E_UNDERFLOW OS_E_APPERR1
 #define MX_E_PRECISION OS_E_APPERR2
 

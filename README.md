@@ -1,10 +1,15 @@
-# rpnCE
-![rpnCE Screenshot](assets/rpnCE-promo1.gif)
+# rpnCE 0.8.0
+![rpnCE 0.8.0: complex arithmetic, register recall and polar display](assets/rpnCE-promo1.gif)
 
 An RPN calculator for the TI-84 Plus CE, written in C. It turns the CE into
 an HP-style RPN calculator: a 4-level stack (up to 12), numbered registers
 in the style of the HP-32SII, and a full menu tree of functions along the
 bottom of the screen, on a dot-matrix LCD-style display.
+
+**New in 0.8.0:** complex-number support and a shared value-storage system
+for real, complex, DATE and unit values. Saved stacks, private registers
+and statistics from 0.7.0 and earlier cannot be imported; record needed
+values before upgrading and re-enter them in 0.8.0.
 
 ## Features
 
@@ -24,22 +29,31 @@ bottom of the screen, on a dot-matrix LCD-style display.
   BASE (HEX/OCT/BIN words up to 44 bits, logic, shifts, rotates, bit
   operations), and DATE
   (dates, times, time zones, durations, epochs, and the CE's clock).
+- **Complex numbers:** one value per stack level, mixed real/complex arithmetic,
+  roots, powers, logarithms and exponentials; rectangular and polar entry,
+  LINK/unlink, RRES/CRES and RECT/PRAD/PDEG modes.
+- **Compact status bar:** ALL/FIX/SCI/ENG and the complex display indicator
+  (a𝑖b, r∠θ or r∠°) stay visible. RAD, nondecimal bases, carry and pending
+  modifiers appear when active. MODE marks RRES/CRES; fresh calculators
+  start in DEG.
 - **Remembers everything:** the stack, registers, statistics, and settings
   are saved when you quit and restored next time.
 - **Screen tints:** LCD, LCD+ (for real screens), GRAY, INVERTED, AYU DARK,
-  MONOKAI, PASTEL, and COMMODORE.
+  MONOKAI, PASTEL, COMMODORE, and TIOS (white with a grey-green bar and
+  charcoal text).
 
-The **[User Guide](docs/USER_GUIDE.md)** is a chapter-based manual for 0.7.0,
+The **[User Guide](docs/USER_GUIDE.md)** describes rpnCE 0.8.0,
 with operating procedures, worked keystroke examples, and a
-[function index](docs/guide/19-reference.md#appendix-d-alphabetical-function-index).
+[function index](docs/guide/20-reference.md#appendix-d-alphabetical-function-index).
 [docs/KEYS.md](docs/KEYS.md) is a compact key and menu reference.
+Start with the illustrated [complex-number tutorial](docs/guide/11-complex-numbers.md)
+for entry, arithmetic, CPLX functions and LINK.
 
 ## Installing
 
-1. Download `rpnCE-0.7.0.zip` from the
-   [releases](https://github.com/jacober-calc/rpnCE/releases) and unzip it.
-   You need `rpnCE-0.7.0.8xp` (the program)
-   and `rpnCEres-0.7.0.8xv` (its menus and unit tables). Also get the
+1. Download and extract [rpnCE 0.8.0](cem/rpnCE-0.8.0.zip). Use
+   `rpnCE-0.8.0.8xp` (the program) and `rpnCEres-0.8.0.8xv` (its menus,
+   unit tables and HELP pages). Also get the
    [CE C libraries](https://github.com/CE-Programming/libraries/releases)
    (`clibs.8xg`) if you don't already have them.
 2. Send all three to the calculator with TI Connect CE. They can all stay
@@ -53,9 +67,16 @@ with operating procedures, worked keystroke examples, and a
 
 The program and `RPNCEres` must come from the same release; if the appvar
 is missing or doesn't match, rpnCE says so at startup. rpnCE saves its own
-data in up to three more appvars: `RPNCEdat` (calculator state), `RPNCEcfg`
-(display and DATE settings) and `RPNCEunt` (units on registers, only when
-some register has one). Deleting them resets rpnCE; upgrading keeps them.
+data in `RPNCEdat` (complete values, statistics and calculator modes) and
+`RPNCEcfg` (display and DATE settings). Saved data uses version 6 and includes
+units with each value.
+
+**Upgrading from 0.7.0 or earlier:** complex-number support changed how
+every value is stored, so rpnCE 0.8.0 does not read calculator data saved by
+earlier versions. It starts with an empty stack, registers and statistics,
+and replaces the old `RPNCEdat` when you quit. Display and DATE settings in
+`RPNCEcfg` carry over. Note any values you need before upgrading, and delete
+the obsolete `RPNCEunt` appvar if you have one.
 
 ## Quick start
 
@@ -78,19 +99,30 @@ some register has one). Deleting them resets rpnCE; upgrading keeps them.
 
 The version is set in `src/core/version.h`.
 
-The release files in [cem/](cem/) use versioned filenames. TI-OS still lists
-the program as `RPNCE`; its resource and saved-data appvar names are unchanged
-so existing calculator data remains available.
+The release files in [cem/](cem/) use versioned filenames. The ZIP also
+includes installation notes, the license, complex/polar screenshots and the
+animated calculation preview `rpnCE-promo1.gif`.
+TI-OS still lists the program as `RPNCE`; its resource and saved-data appvar
+names stay the same. The saved-data format changed in 0.8.0; the upgrade
+notice above explains which values must be re-entered.
 
-To try it without a calculator, load both files and `clibs.8xg` into the
+To prepare the release assets after updating the illustrated guide's
+screenshots, run `python3 tools/package_release.py` with the CE toolchain
+on PATH. It builds the program, renders the complex-number demonstration,
+and writes the matching files and ZIP in `cem/`. The animation is also
+written to `assets/rpnCE-promo1.gif` for this page.
+
+To try a source build without a calculator, load both files from `bin/`
+and `clibs.8xg` into the
 [CEmu](https://ce-programming.github.io/CEmu/) emulator.
 
 ### Memory
 
-The menu tree, unit tables and HELP pages (about 17 KB) live in `RPNCEres`
-and are read straight from archive, so they use no RAM. The 0.7.0 build has
-an 86,329-byte program image and 4,065 bytes of uninitialized static storage, excluding
-runtime stack and library allocations.
+The menu tree, unit tables and 26 HELP pages (about 18 KB) live in `RPNCEres`
+and are read straight from archive, so they use no RAM. Stack and ordinary
+register values use 20 bytes each on the CE. See the linker map for program
+and static-storage sizes; runtime
+stack and library allocations also need RAM.
 
 ## Tests
 
@@ -101,16 +133,17 @@ tested on a PC. With a C compiler installed:
 sh tests/run_tests.sh
 ```
 
-This builds and runs seventeen suites (number formatting, decimal rounding,
+This builds and runs eighteen suites (number formatting, decimal rounding,
 math, BASE, statistics, TVM and units, DATE, the RPNCEres appvar reader,
 menu actions, keyboard shortcuts, dot-font rendering, saved state, the
-calculator core, quantities, entry sequences, display redraws, and brightness controls), using
+calculator core, typed values and complex arithmetic, quantities, entry
+sequences, display redraws, and brightness controls), using
 stand-ins for the calculator's number routines.
 
 The [native tests](tests/README.md#native-ce-checks) additionally compile
-the real core with the CE toolchain and run 161 checks in CEmu using TI-OS
+the real core with the CE toolchain and run 196 checks in CEmu using TI-OS
 number routines. They cover CE execution, CTZ/ATZ conversions, unit round trips and all
-four curve-fit models and numeric boundaries. Nineteen further checks exercise
+four curve-fit models and numeric boundaries. Twenty-two further checks exercise
 the program's keyboard loop and saving/reopening in CEmu. Known numerical
 checks and coverage limits are described in [tests/README.md](tests/README.md#numeric-limit-checks).
 
@@ -125,7 +158,7 @@ src/core/    calculator logic: stack, registers, math, formatting, rounding,
 src/ui/      display, dot-matrix font, keypad, menus, VARS catalog,
              res.c (reads the RPNCEres appvar)
 src/sys/     saving and loading state, the hardware clock
-menus/       menus.txt: the whole menu tree as editable text
+menus/       menus.txt: menu tree and calculator command/argument bindings
 help/        help.txt: the HELP pages as editable text
 data/        rpnCEres.bin: the RPNCEres appvar's contents (generated)
 tools/       guide_appendix.py: regenerates the manual's menu map, unit list
@@ -142,12 +175,17 @@ docs/        USER_GUIDE.md: manual contents; guide/: chapters and reference
 
 Change `menus/menus.txt`, `help/help.txt` (or the unit definitions in
 `tools/genunits.py`), then run `python3 tools/genres.py` and rebuild. It regenerates
-`data/rpnCEres.bin` and the headers that go with it, with a new version
-stamp, so a program and appvar built from different sources can't be mixed
-up. The generated files are committed, so building doesn't need Python.
+`data/rpnCEres.bin`, the layout headers and `src/ui/menu_actions.h`.
+The program checks the appvar's resource-content stamp. Generated files
+are committed, so building doesn't need Python.
+HELP accepts `{imag}`, `{angle}`, `{degree}` and `{theta}` for the same
+mathematical symbols used by formatted numbers.
+Add optional `CMD_*` and argument fields to an item or alt line to define
+its calculator action. Define each ID's binding once; other menu entries
+reuse that ID. Unit indexes are generated automatically from unit order.
 After changing the menus or units, also run `python3 tools/guide_appendix.py`
 to refresh the menu map, unit list, and function index in
-`docs/guide/19-reference.md`. Update the operating instructions and examples
+`docs/guide/20-reference.md`. Update the operating instructions and examples
 in the corresponding chapter when behavior changes; generated tables do
 not replace those explanations. Both generators need the `mpmath` package.
 

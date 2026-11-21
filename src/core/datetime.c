@@ -132,6 +132,22 @@ dt_err_t dt_validate(const dt_obj_t *o)
     return ok ? DT_OK : DT_ERR_INVALID;
 }
 
+void dt_retype(dt_obj_t *o, obj_type_t type)
+{
+    bool dated = type == OBJ_DATE || type == OBJ_DATETIME || type == OBJ_DZ;
+    bool timed = type == OBJ_TIME || type == OBJ_DATETIME || type == OBJ_DZ || type == OBJ_DR;
+    bool zoned = type == OBJ_TZ || type == OBJ_DZ;
+    dt_obj_t r;
+    memset(&r, 0, sizeof r);
+    r.type = (uint8_t)type;
+    if (dated || type == OBJ_DR) r.year = o->year;      /* a Duration's days */
+    if (dated) r.month = o->month;
+    if (dated || type == OBJ_DW) r.day = o->day;
+    if (timed) { r.hour = o->hour; r.minute = o->minute; r.second = o->second; }
+    if (zoned) { r.tz_hour = o->tz_hour; r.tz_minute = o->tz_minute; }
+    *o = r;
+}
+
 /* ---------- parsing ---------- */
 
 static const struct { const char *tag; uint8_t type; uint8_t arity; } tags[] = {
@@ -479,14 +495,19 @@ int dt_tz_quarters(const dt_obj_t *tz)
     return tz->tz_hour * 4 + tz->tz_minute / 15;
 }
 
+void dt_set_tz_quarters(dt_obj_t *o, int q)
+{
+    o->tz_hour = (int8_t)(q / 4);
+    o->tz_minute = (int8_t)((q % 4) * 15);
+}
+
 dt_err_t dt_tz_from_quarters(dt_int q, dt_obj_t *out)
 {
     if (q < -95 || q > 95)
         return DT_ERR_DOMAIN;
     memset(out, 0, sizeof *out);
     out->type = OBJ_TZ;
-    out->tz_hour = (int8_t)(q / 4);
-    out->tz_minute = (int8_t)((q % 4) * 15);
+    dt_set_tz_quarters(out, (int)q);
     return DT_OK;
 }
 
@@ -549,10 +570,8 @@ dt_err_t dt_from_epoch_seconds(dt_int secs, dt_int epoch_days, obj_type_t type,
         return e;
     if (type == OBJ_DATE)
         out->hour = out->minute = out->second = 0;
-    if (type == OBJ_DZ) {
-        out->tz_hour = (int8_t)(tz_quarters / 4);
-        out->tz_minute = (int8_t)((tz_quarters % 4) * 15);
-    }
+    if (type == OBJ_DZ)
+        dt_set_tz_quarters(out, tz_quarters);
     return DT_OK;
 }
 

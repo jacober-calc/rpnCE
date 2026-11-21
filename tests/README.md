@@ -14,9 +14,13 @@ Run the desktop suites from the repository root:
 sh tests/run_tests.sh
 ```
 
-The 17 suites cover formatting, rounding, math, BASE, statistics, TVM,
+The 18 suites cover formatting, rounding, math, BASE, statistics, TVM,
 units, DATE, resources, menus, keys, fonts, saved state, calculator commands,
-entry sequences, display redraws and brightness. Host stand-ins use doubles
+entry sequences, typed values, complex arithmetic, display redraws and
+brightness. Complex checks use independent host complex references across
+all quadrants and exercise type boundaries, whole-value movement, entry,
+mode separation and formatting. Native regressions exercise complex
+arithmetic and entry using actual TI decimal routines. Host stand-ins use doubles
 for arithmetic; rounding tests use packed decimal digits.
 
 The sequence suite checks explicit arithmetic and editing examples, record
@@ -33,11 +37,28 @@ and tiny rates and invalid payment/compounding settings.
 
 ## Native CE checks
 
-`native/` compiles the core with `-Oz`/LTO settings and runs 161
+`native/` compiles the core with `-Oz`/LTO settings and runs 196
 checks in CEmu with TI-OS arithmetic. It covers arithmetic, DATE ranges,
 CTZ/ATZ conversion, units, all four curve-fit models, TVM and real GraphX
 pixels. The fixed clock makes results repeatable. The check count and
 completion marker are verified independently of the display.
+
+DATE component checks cover signed timezone fields and the wider Duration
+day field. Every epoch choice is checked against its zero date. Stack
+regressions exercise overlapping moves of complete mixed values at the
+maximum depth; mode checks also verify the corresponding menu selections.
+
+The resource contract hashes all decoded nodes, groups, unit metadata and
+HELP lines against an expected fingerprint. Both host and
+native checks use it, covering unaligned records on the CE as well as the
+desktop. Desktop menu checks exercise all 580 slots, including submenu
+entry/back navigation, action selection and inert blanks. Resource tests
+also reject the preceding layout even when the size/stamp match.
+
+The action contract checks all 488 menu IDs both plain and shifted against
+the expected command/argument mapping. It includes every unit index
+and TVM recall modifier. Desktop checks also reject out-of-range menu IDs
+without reading past the action data.
 
 The native numeric cases compare against decimal references rather than
 host `double` results. Exact checks compare the stored digits; approximate
@@ -57,7 +78,7 @@ changes inside the emulator.
 
 `ce_smoke/` runs the built program through its keyboard loop, stores a
 register, quits, and reopens it to verify actual appvar persistence. Its
-nineteen checks include typed and recalled values at exponents −99 and +99,
+twenty-two checks include typed and recalled values at exponents −99 and +99,
 and zero deviation for constant data before and after reopening. After
 building the program, run it with the same emulator environment:
 
@@ -68,16 +89,18 @@ python3 tests/ce_smoke/run.py
 
 Omit `AUTOTESTER_LAUNCHER` for direct native execution.
 
-The keyboard checks also cover CLEAR dismissing SHOW, errors and notices
+The keyboard checks also verify complex entry, both saved components and
+complex squaring. They cover CLEAR dismissing SHOW, errors and notices
 without changing operands, ENTER performing its normal action after a
 message, and ordinary CLEAR behavior returning after a notice times out.
 
 ## Numeric limit checks
 
-The native suite now checks explicit overflow, underflow and precision
+The native suite checks explicit overflow, underflow and precision
 errors for the 14 cases confirmed on a TI-84 Plus CE running OS 5.8.4.0058.
-The [original build-25 report](hardware/results/rpnce-hardware-c3165aca-19a2-48e9-b053-c58681dee30e.json)
-is preserved. The [build-26 hardware retest](hardware/results/rpnce-hardware-2a9a2054-33d6-4bce-82e9-f1fb8e8df91a.json)
+The [device report](hardware/results/rpnce-hardware-c3165aca-19a2-48e9-b053-c58681dee30e.json)
+and [hardware retest](hardware/results/rpnce-hardware-2a9a2054-33d6-4bce-82e9-f1fb8e8df91a.json)
+record these checks. The retest
 passes all 14 revised cases, with none skipped: six overflow, three underflow
 and five precision warnings. This confirms the specified error behavior
 for these cases on that device and OS; it is not a complete hardware audit.
@@ -90,12 +113,14 @@ into zero, and ambiguous cancellation in variance calculations. Large
 SINH may report overflow when its intermediate exponential exceeds the
 range. Precision is not extended to force a numerical answer.
 
-The 14 added native neighbor checks cover genuine zero results, ordinary
+The 14 native neighbor checks cover genuine zero results, ordinary
 polar conversion and standard deviation, both range endpoints, rejected
 statistics/register updates, and defensive formatting of legacy invalid
 values. Native checks verify operand preservation, not just the message.
-Desktop storage checks verify precision metadata round trips, damaged
-metadata and legacy state without discarding the saved values.
+Desktop storage checks verify precision metadata round trips, and that
+damaged or missing metadata never discards the saved values. Saves from
+rpnCE 0.7.0 and earlier (format 5) are rejected without changing the
+calculator or the file.
 
 Remaining limits include convergence for arbitrary TVM cash flows, noisy
 curve fits, conversions between every pair of compatible units at numeric

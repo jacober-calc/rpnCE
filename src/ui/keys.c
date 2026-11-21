@@ -26,17 +26,7 @@ static int digit_of(sk_key_t key)
     }
 }
 
-/* The green ALPHA letters printed above the CE keys. */
-static int letter_index(sk_key_t key);
-
-/* The register named by a key in a STO/RCL/x<> prompt: its green ALPHA
- * letter (A = 1 ... Z = 26), or -1. */
-static int letter_of(sk_key_t key)
-{
-    int i = letter_index(key);
-    return i < 0 ? -1 : i + 1;
-}
-
+/* The green ALPHA letters printed above the CE keys: A = 0 ... Z = 25. */
 static int letter_index(sk_key_t key)
 {
     switch (key) {
@@ -70,6 +60,19 @@ static int letter_index(sk_key_t key)
     }
 }
 
+/* The register named by a key in a STO/RCL/x<> prompt: its green ALPHA
+ * letter (A = 1 ... Z = 26), or -1. */
+static int letter_of(sk_key_t key)
+{
+    int i = letter_index(key);
+    return i < 0 ? -1 : i + 1;
+}
+
+/* Register arithmetic in a STO/RCL prompt: 1 +, 2 -, 3 x, 4 /, else 0.
+ * The value is added to CMD_STO or CMD_RCL to pick the command. */
+_Static_assert(CMD_STO_ADD == CMD_STO + 1 && CMD_STO_DIV == CMD_STO + 4 &&
+               CMD_RCL_ADD == CMD_RCL + 1 && CMD_RCL_DIV == CMD_RCL + 4,
+               "prompt arithmetic relies on the STO/RCL command order");
 static uint8_t op_of(sk_key_t key)
 {
     switch (key) {
@@ -192,6 +195,8 @@ static event_t prompt_key(keys_t *k, sk_key_t key)
         ev.kind = EV_CMD;
         static const calc_cmd_t cmds[] = { CMD_DISP_FIX, CMD_DISP_SCI, CMD_DISP_ENG,
                                            CMD_ROUND_N, CMD_ROUND_G };
+        _Static_assert(sizeof cmds / sizeof cmds[0] == PROMPT_RNDG - PROMPT_FIX + 1,
+                       "every digit prompt needs a command");
         ev.cmd = cmds[k->prompt - PROMPT_FIX];
         ev.arg = value;
         k->prompt = PROMPT_NONE;
@@ -250,6 +255,9 @@ static event_t prompt_key(keys_t *k, sk_key_t key)
 static calc_cmd_t second_cmd(sk_key_t key)
 {
     switch (key) {
+        case sk_GraphVar: return CMD_COMPLEX_LINK;
+        case sk_Apps: return CMD_COMPLEX_POLAR_ENTRY;
+        case sk_DecPnt: return CMD_COMPLEX_RECT_ENTRY;
         case sk_Square: return CMD_SQRT;
         case sk_Log:    return CMD_ALOG;                  /* 10^x */
         case sk_Ln:     return CMD_EXP;                   /* e^x */
@@ -364,8 +372,6 @@ event_t keys_translate(keys_t *k, sk_key_t key)
             ev.kind = EV_MENU;
             ev.arg = key == sk_Add ? MENU_GROUP_CLEAR : MENU_GROUP_STACK;
         } else {
-            /* 2ND LINK (on X,T,theta,n) and 2ND ANGLE (on APPS) are left
-             * free on purpose: complex-number entry will need them. */
             ev.cmd = second_cmd(key);
             if (ev.cmd != CMD_NONE)
                 ev.kind = EV_CMD;
@@ -382,9 +388,6 @@ event_t keys_translate(keys_t *k, sk_key_t key)
         case sk_Math:   ev.kind = EV_MENU; ev.arg = MENU_GROUP_HOME; return ev;
         case sk_Mode:   ev.kind = EV_MENU; ev.arg = MENU_GROUP_MODE; return ev;
         case sk_Stat:   ev.kind = EV_MENU; ev.arg = MENU_GROUP_STAT; return ev;
-        case sk_GraphVar: ev.kind = EV_MENU; ev.arg = MENU_GROUP_UNIT; return ev;
-        case sk_Apps:   ev.kind = EV_MENU; ev.arg = MENU_GROUP_BASE; return ev;
-        case sk_Prgm:   ev.kind = EV_MENU; ev.arg = MENU_GROUP_HYPERBOLIC; return ev;
         default:        break;
     }
 

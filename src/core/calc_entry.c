@@ -1,17 +1,24 @@
-/* Number, BASE and DATE record entry. Calculator command dispatch remains
+/* Real/complex, BASE and DATE record entry. Calculator command dispatch remains
  * in calc.c; this module owns editing the entry text and finalizing X. */
 #include <string.h>
 #include "calc_entry.h"
 #include "calc_internal.h"
 #include "format.h"
 #include "mathx.h"
-#include "dateobj.h"
+#include "value_parse.h"
 
 /* ---------- number entry ---------- */
 
+static int component_start(const calc_t *c)
+{
+    for (int i = c->entry_len - 1; i >= 0; i--)
+        if (c->entry[i] == 'i' || c->entry[i] == 'd' || c->entry[i] == 'r') return i + 1;
+    return 0;
+}
 static int find_char(const calc_t *c, char ch)
 {
-    for (int i = 0; i < c->entry_len; i++)
+    int start = ch == '.' || ch == 'E' ? component_start(c) : 0;
+    for (int i = start; i < c->entry_len; i++)
         if (c->entry[i] == ch)
             return i;
     return -1;
@@ -39,6 +46,7 @@ void calc_entry_append(calc_t *c, char ch)
     insert_char(c, c->entry_len, ch);
 }
 
+/* Starts number entry unless it is already under way. */
 static void begin_entry(calc_t *c)
 {
     if (c->editing)
@@ -66,18 +74,10 @@ void calc_finish_entry(calc_t *c)
 {
     if (!c->editing)
         return;
-    if (dt_text_is_object(c->entry)) {
-        dt_obj_t o;
-        if (dt_parse(c->entry, &o) == DT_OK)
-            c->stack[0] = obj_pack(&o);
-        else
-            c->stack[0] = mx_zero;           /* only when leaving mid-record */
-    } else if (calc_base_mode(c)) {
-        c->stack[0] = base_real(entry_word(c));
-    } else {
-        c->stack[0] = os_StrToReal(c->entry, NULL);
-    }
-    c->unit[REG_X] = 0;
+    value_t result;
+    calc_error(c, value_parse(c->entry, &c->base, &result));
+    if (c->message) return;
+    c->stack[0] = result;
     c->editing = false;
 }
 
@@ -86,15 +86,14 @@ void calc_entry_clear(calc_t *c)
     c->editing = false;
     c->entry_len = 0;
     c->entry[0] = '\0';
-    c->stack[0] = mx_zero;
-    c->unit[REG_X] = 0;
+    c->stack[0] = value_real(mx_zero);
     c->lift = false;
 }
 
 static int mantissa_digits(const calc_t *c)
 {
     int n = 0;
-    for (int i = 0; i < c->entry_len && c->entry[i] != 'E'; i++)
+    for (int i = component_start(c); i < c->entry_len && c->entry[i] != 'E'; i++)
         if (c->entry[i] >= '0' && c->entry[i] <= '9')
             n++;
     return n;
@@ -207,7 +206,7 @@ void calc_entry_chs(calc_t *c)
         return;
     }
     int e = find_char(c, 'E');
-    int pos = (e >= 0) ? e + 1 : 0;
+    int pos = (e >= 0) ? e + 1 : component_start(c);
     if (pos < c->entry_len && c->entry[pos] == '-')
         remove_char(c, pos);
     else
@@ -225,8 +224,7 @@ void calc_entry_backspace(calc_t *c)
 /* 2ND {: starts a record, after an optional type tag. */
 void calc_entry_record_open(calc_t *c)
 {
-    if (!c->editing)
-        begin_entry(c);
+    begin_entry(c);
     if (entry_has(c, '{'))
         return;
     for (int i = 0; i < c->entry_len; i++)
@@ -241,8 +239,7 @@ void calc_entry_record_tag(calc_t *c, uint8_t type)
     static const char *const tag[OBJ_COUNT] = { "", "D{", "T{", "DT{", "TZ{", "DZ{", "DW{", "DR{" };
     if (type == OBJ_NONE || type >= OBJ_COUNT)
         return;
-    if (!c->editing)
-        begin_entry(c);
+    begin_entry(c);
     if (c->entry_len)
         return;
     for (const char *p = tag[type]; *p; p++)
@@ -260,8 +257,7 @@ void calc_entry_alpha(calc_t *c, uint8_t letter)
     if (letter >= 26)
         return;
     char ch = (char)('A' + letter);
-    if (!c->editing)
-        begin_entry(c);
+    begin_entry(c);
     if (entry_has(c, '{'))
         return;
 
@@ -278,3 +274,15 @@ void calc_entry_alpha(calc_t *c, uint8_t letter)
         calc_entry_append(c, ch);                         /* 1D2H, 90M, ... */
 }
 
+
+/* Delimiters encode their own angle unit, independently of display/trig modes. */
+void calc_entry_complex(calc_t *c, char delimiter)
+{
+    if (calc_base_mode(c) || calc_entry_is_object(c)) return;
+    begin_entry(c);
+    int start = component_start(c);
+    if (start) {
+        char old = c->entry[start - 1];
+        c->entry[start - 1] = delimiter == 'i' ? 'i' : old == 'd' ? 'r' : 'd';
+    } else calc_entry_append(c, delimiter);
+}

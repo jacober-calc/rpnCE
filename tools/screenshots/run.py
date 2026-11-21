@@ -40,8 +40,8 @@ DRIVER = os.path.join(CACHE, 'driver')
 
 SOURCES = ['src/ui/display.c', 'src/ui/dotfont.c', 'src/ui/keys.c', 'src/ui/menu.c',
            'src/ui/actions.c', 'src/ui/catalog.c', 'src/ui/res.c',
-           'src/core/calc.c', 'src/core/calc_entry.c', 'src/core/calc_date.c',
-           'src/core/calc_quantity.c', 'src/core/base.c', 'src/core/datetime.c',
+           'src/core/commands.c', 'src/core/calc.c', 'src/core/calc_entry.c', 'src/core/calc_date.c', 'src/core/calc_mode.c',
+           'src/core/value.c', 'src/core/value_parse.c', 'src/core/value_math.c', 'src/core/value_date.c', 'src/core/value_format.c', 'src/core/base.c', 'src/core/datetime.c',
            'src/core/mathx.c', 'src/core/stats.c', 'src/core/tvm.c', 'src/core/units.c',
            'src/core/format.c']
 
@@ -68,11 +68,11 @@ def font_header():
         f.write('static const uint8_t font_spacing[128] = {' + ','.join(map(str, sp)) + '};\n')
 
 
-def build():
+def build(extra_flags=()):
     font_header()
     inc = ['-I' + os.path.join(HERE, 'hostinc'), '-I' + CACHE, '-Itests/mock',
            '-Itests/mock_fileioc', '-Isrc/core', '-Isrc/ui']
-    flags = ['-O1', '-w', '-DRPNCE_HOST_TEST']
+    flags = ['-O1', '-w', '-DRPNCE_HOST_TEST', *extra_flags]
     main_o = os.path.join(CACHE, 'main.o')
     subprocess.run(['cc'] + flags + ['-Dmain=rpnce_main'] + inc +
                    ['-c', 'src/main.c', '-o', main_o], check=True, cwd=ROOT)
@@ -132,8 +132,7 @@ KEYS = {
     'LEFT': 'sk_Left', 'RIGHT': 'sk_Right', 'ON': 'ON',
     'F1': 'sk_Yequ', 'F2': 'sk_Window', 'F3': 'sk_Zoom', 'F4': 'sk_Trace', 'F5': 'sk_Graph',
 }
-SHORTCUTS = {'MATH': ['HOME'], 'MODE': ['HOME', 'MODE'], 'STAT': ['HOME', 'STAT'],
-             'XTθn': ['HOME', 'UNIT'], 'APPS': ['HOME', 'BASE'], 'PRGM': ['HOME', 'HYP']}
+SHORTCUTS = {'MATH': ['HOME'], 'MODE': ['HOME', 'MODE'], 'STAT': ['HOME', 'STAT']}
 
 
 def compile_script(text, menus):

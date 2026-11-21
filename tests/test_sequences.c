@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "calc.h"
-#include "dateobj.h"
+#include "value.h"
 #include "units.h"
 
 static unsigned steps;
@@ -27,10 +27,10 @@ static void invariant(const calc_t *c)
           c->base.radix == 10 || c->base.radix == 16) &&
           c->base.bits >= 1 && c->base.bits <= BASE_MAX_BITS);
     for (int i = 0; i < STACK_MAX; i++) {
-        check("stack unit tag", c->unit[i] <= UNIT_COUNT);
-        if (obj_is(&c->stack[i])) {
-            dt_obj_t object = obj_unpack(&c->stack[i]);
-            check("DATE object", !c->unit[i] && dt_validate(&object) == DT_OK);
+        check("stack unit tag", c->stack[i].unit <= UNIT_COUNT);
+        if (value_is_date(&c->stack[i])) {
+            dt_obj_t object = c->stack[i].date;
+            check("DATE object", !c->stack[i].unit && dt_validate(&object) == DT_OK);
         }
     }
 }
@@ -75,22 +75,22 @@ static void examples(uint8_t depth)
     calc_t c;
     calc_init(&c); c.depth = depth;
     trace(&c, "2=3+4*");
-    check("chained arithmetic", !c.message && c.stack[0].v == 20 &&
-          c.lastx.v == 4 && c.lift && !c.editing);
+    check("chained arithmetic", !c.message && c.stack[0].real.v == 20 &&
+          c.lastx.real.v == 4 && c.lift && !c.editing);
     calc_init(&c); c.depth = depth;
     trace(&c, "2===***");
-    check("repeating top register", !c.message && c.stack[0].v == 16);
+    check("repeating top register", !c.message && c.stack[0].real.v == 16);
     calc_init(&c); c.depth = depth;
     trace(&c, "1234~~5=");
-    check("backspace during entry", !c.message && c.stack[0].v == 125 &&
-          c.stack[1].v == 125 && !c.lift);
+    check("backspace during entry", !c.message && c.stack[0].real.v == 125 &&
+          c.stack[1].real.v == 125 && !c.lift);
     calc_init(&c); c.depth = depth;
     trace(&c, "{2024,2,30=");
     check("invalid record stays editable", c.editing && c.message &&
           !strcmp(c.entry, "{2024,2,30"));
     trace(&c, "~~29}=");
-    dt_obj_t date = obj_unpack(&c.stack[0]);
-    check("record repair", !c.message && !c.editing && obj_is(&c.stack[0]) &&
+    dt_obj_t date = c.stack[0].date;
+    check("record repair", !c.message && !c.editing && value_is_date(&c.stack[0]) &&
           date.type == OBJ_DATE && date.year == 2024 && date.month == 2 && date.day == 29);
     calc_init(&c); c.depth = depth;
     trace(&c, "12345678901234567890E-123=");

@@ -1,6 +1,6 @@
 # 7. The menus
 
-rpnCE 0.7.0 · User Guide
+rpnCE 0.8.0 · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 6. The RPN stack](06-stack.md) · [Next: 8. Registers](08-registers.md)
 
@@ -18,21 +18,23 @@ its top, **HOME**, which has three rows:
 
 | Row | Menus |
 | --- | --- |
-| 1 | **MATH** **NUM** **PROB** **CPLX** **TVM** |
-| 2 | **BASE** **HYP** **STAT** **CONV** **HELP** |
+| 1 | **MATH** **NUM** **PROB** **CPLX** **HELP** |
+| 2 | **BASE** **HYP** **STAT** **CONV** **TVM** |
 | 3 | **CLR** **MODE** **STK** **UNIT** **DATE** |
 
 - <img src="../../assets/guide/menu/home-1.png" alt="HOME > Row 1" width="320">
 - <img src="../../assets/guide/menu/home-2.png" alt="HOME > Row 2" width="320">
 - <img src="../../assets/guide/menu/home-3.png" alt="HOME > Row 3" width="320">
 
-[Appendix B](19-reference.md#appendix-b-menu-map) lists every menu and item.
+[Appendix B](20-reference.md#appendix-b-menu-map) lists every menu and item.
 
 ## Using menus
 
 - **Menu keys:** the five keys under the screen choose the item above them.
   A submenu (a box with a short line across its top) opens that menu; a
   function runs at once.
+- **Empty slots:** every row shows five matching buttons. A button without
+  text has no action.
 - **More rows:** when the message line shows ↓↑ at its right end, the menu
   has more rows. Use the up and down arrow keys to move between them.
 - **Back:** `ON` goes back one level, to the menu you came from. At HOME it
@@ -53,27 +55,31 @@ its top, **HOME**, which has three rows:
 | `MATH` | HOME |
 | `MODE` | MODE |
 | `STAT` | STAT |
-| `X,T,θ,n` | UNIT |
-| `APPS` | BASE |
-| `PRGM` | HYP |
 | `2ND MEM` (on `+`) | CLR |
 | `2ND LIST` (on `STAT`) | STK |
 | `2ND CATALOG` (on `0`) | HELP |
 
 Inside a STO or RCL prompt, and after `ALPHA`, these keys still give their
 letters, so the shortcuts never get in the way of naming a register.
-`2ND LINK` and `2ND ANGLE` are left unassigned on purpose: they're reserved
-for complex numbers.
+`2ND LINK` combines or splits complex values; `2ND ANGLE` enters polar
+values. `2ND i` (decimal point) enters rectangular values. Open UNIT,
+BASE and HYP through HOME; their plain-key shortcuts are unassigned.
 
 ## HELP
 
-**HELP** (HOME row 2, or `2ND CATALOG`) shows 19 quick-reference pages:
-using HELP and the menus, the RPN stack, variables, key shortcuts, one page
-per main menu, and About (the version and GitHub repository). The up and
+**HELP** (HOME row 1, or `2ND CATALOG`) shows 26 quick-reference pages:
+using HELP and the menus, the RPN stack, variables, key shortcuts, each
+main menu, complex entry/arithmetic/modes/LINK, number types, status
+indicators, numeric limits, and About (the version and GitHub repository). The up and
 down arrows change pages and wrap around; `UP` from the first page opens
 About. `ENTER`, `CLEAR`, `DEL` or `ON` returns to the calculator.
 
 <img src="../../assets/guide/screens/menus-help-1.png" alt="HELP, page 1" width="320"> <img src="../../assets/guide/screens/menus-help-about.png" alt="HELP, the About page" width="320">
+
+The complex pages give the physical entry/LINK keys and supported math;
+the status page explains the implicit defaults and optional indicators.
+
+<img src="../../assets/guide/screens/complex-help.png" alt="On-device CPLX help with the component, magnitude and angle functions" width="320"> <img src="../../assets/guide/screens/status-help.png" alt="On-device status-bar help listing implicit defaults and active indicators" width="320">
 
 ---
 

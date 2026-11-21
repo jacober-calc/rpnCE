@@ -14,13 +14,12 @@ void menu_jump(menu_t *m, uint8_t group)
     /* Collect the path from the target up to the top, then store it in
      * top-down order so ON walks back through each parent. */
     uint8_t path_group[MENU_MAX_DEPTH], path_row[MENU_MAX_DEPTH];
-    uint8_t n = 0;
-    uint8_t g = group;
-    while (menu_parent_of(g) != 0xFF && n < MENU_MAX_DEPTH) {
-        path_group[n] = menu_parent_of(g);
+    uint8_t n = 0, g = group, parent;
+    while (n < MENU_MAX_DEPTH && (parent = menu_parent_of(g)) != 0xFF) {
+        path_group[n] = parent;
         path_row[n] = menu_parent_row_of(g);
         n++;
-        g = menu_parent_of(g);
+        g = parent;
     }
 
     m->depth = n;
@@ -63,10 +62,11 @@ const menu_node_t *menu_press(menu_t *m, uint8_t slot)
 {
     const menu_node_t *n = menu_slot(m, slot);
 
-    if (n->kind == MENU_BLANK)
+    menu_kind_t kind = menu_node_kind(n);
+    if (kind == MENU_BLANK)
         return NULL;
 
-    if (n->kind == MENU_GROUP) {
+    if (kind == MENU_GROUP) {
         if (m->depth < MENU_MAX_DEPTH) {
             m->back[m->depth].group = m->group;
             m->back[m->depth].row = m->row;

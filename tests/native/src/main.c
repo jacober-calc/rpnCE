@@ -8,15 +8,18 @@
 #include <graphx.h>
 #include "calc.h"
 #include "format.h"
-#include "dateobj.h"
+#include "value.h"
 #include "res.h"
 #include "display.h"
+#include "actions.h"
 #include "units.h"
 #include "../checks.h"
+#include "../../resource_contract.h"
+#include "../../action_contract.h"
 #include "../../../src/sys/brightness.h"
 
-_Static_assert(sizeof(real_t) == 9 && offsetof(calc_t, regs) == 131,
-               "update the UI smoke test for the new CE value layout");
+_Static_assert(sizeof(real_t) == 9 && sizeof(value_t) == 20 && offsetof(calc_t, regs) == 262,
+               "CE value layout must match the UI smoke test");
 _Static_assert(NATIVE_CHECK_COUNT > 0 && NATIVE_CHECK_COUNT <= 254,
                "native results must fit before the completion marker");
 
@@ -55,14 +58,14 @@ static void record(const char *s)
 static bool x_number(const char *text)
 {
     real_t expected = os_StrToReal(text, NULL);
-    return !c.message && !obj_is(&c.stack[0]) &&
+    return !c.message && value_is_real(&c.stack[0]) &&
            !memcmp(&c.stack[0], &expected, sizeof expected);
 }
 static bool x_object(const char *text)
 {
     char actual[DT_FORMAT_MAX];
-    if (c.message || !obj_is(&c.stack[0])) return false;
-    dt_obj_t o = obj_unpack(&c.stack[0]);
+    if (c.message || !value_is_date(&c.stack[0])) return false;
+    dt_obj_t o = c.stack[0].date;
     dt_format(actual, &o, false);
     return !strcmp(actual, text);
 }
@@ -76,17 +79,17 @@ static uint8_t unit_tag(const char *label)
 
 static bool x_close(const char *text)
 {
-    if (c.message || obj_is(&c.stack[0])) return false;
+    if (c.message || !value_is_real(&c.stack[0])) return false;
     real_t target = os_StrToReal(text, NULL), tolerance = os_StrToReal("1E-12", NULL);
     real_t zero = os_Int24ToReal(0);
     if (!memcmp(&c.stack[0], &target, sizeof target)) return true;
     if (os_RealCompare(&target, &zero) == 0)
-        return os_RealCompare(&c.stack[0], &zero) == 0;
-    int difference = (uint8_t)c.stack[0].exp - (uint8_t)target.exp;
-    if (difference < -1 || difference > 1 || os_RealCompare(&c.stack[0], &zero) == 0)
+        return os_RealCompare(&c.stack[0].real, &zero) == 0;
+    int difference = (uint8_t)c.stack[0].real.exp - (uint8_t)target.exp;
+    if (difference < -1 || difference > 1 || os_RealCompare(&c.stack[0].real, &zero) == 0)
         return false;
     real_t one = os_Int24ToReal(1);
-    real_t ratio = os_RealDiv(&c.stack[0], &target);
+    real_t ratio = os_RealDiv(&c.stack[0].real, &target);
     real_t delta = os_RealSub(&ratio, &one);
     if (os_RealCompare(&delta, &zero) < 0) delta = os_RealNeg(&delta);
     return os_RealCompare(&delta, &tolerance) <= 0;
@@ -157,16 +160,16 @@ static void numeric_boundaries(void)
     };
     for (unsigned i = 0; i < sizeof cases / sizeof *cases; i++) {
         calc_init(&c);
-        c.stack[1] = os_StrToReal(cases[i].y, NULL);
-        c.stack[0] = os_StrToReal(cases[i].x, NULL);
+        c.stack[1] = value_real(os_StrToReal(cases[i].y, NULL));
+        c.stack[0] = value_real(os_StrToReal(cases[i].x, NULL));
         if (cases[i].error) {
             check(rejected(cases[i].operation, cases[i].error));
         } else {
             cmd(cases[i].operation, cases[i].argument);
             if (cases[i].expected) check(x_close(cases[i].expected));
             else {
-                int exponent = (uint8_t)c.stack[0].exp - 128;
-                check(c.message || (!obj_is(&c.stack[0]) &&
+                int exponent = (uint8_t)c.stack[0].real.exp - 128;
+                check(c.message || (value_is_real(&c.stack[0]) &&
                       exponent >= -99 && exponent <= 99));
             }
         }
@@ -192,7 +195,7 @@ static void numeric_boundaries(void)
     c.stats.linear_only = true;
     const char *offset_data[] = {"100000001", "100000002", "100000003"};
     for (unsigned i = 0; i < 3; i++) {
-        c.stack[0] = c.stack[1] = os_StrToReal(offset_data[i], NULL);
+        c.stack[0] = c.stack[1] = value_real(os_StrToReal(offset_data[i], NULL));
         cmd(CMD_STAT_PLUS, 0);
     }
     check(rejected(CMD_STAT_SDEV, "Err: Precision"));
@@ -203,37 +206,36 @@ static void numeric_boundaries(void)
         if (!strcmp(unit_label(i), "km")) km = i + 1;
     }
     calc_init(&c);
-    c.stack[0] = os_StrToReal("1E99", NULL); c.unit[0] = km;
-    real_t before = c.stack[0];
+    c.stack[0] = value_real(os_StrToReal("1E99", NULL)); c.stack[0].unit = km;
+    real_t before = c.stack[0].real;
     cmd(CMD_UNIT, meter - 1);
     check(km && meter && c.message && !strcmp(c.message, "Err: Overflow") &&
-          !memcmp(&before, &c.stack[0], sizeof before) && c.unit[0] == km);
+          !memcmp(&before, &c.stack[0], sizeof before) && c.stack[0].unit == km);
     calc_init(&c);
-    c.stack[0] = os_StrToReal("1E-99", NULL); c.unit[0] = meter;
-    before = c.stack[0];
+    c.stack[0] = value_real(os_StrToReal("1E-99", NULL)); c.stack[0].unit = meter;
+    before = c.stack[0].real;
     cmd(CMD_UNIT, km - 1);
-    int exponent = (uint8_t)c.stack[0].exp - 128;
     check(km && meter && c.message && !strcmp(c.message, "Err: Underflow") &&
-          !memcmp(&before, &c.stack[0], sizeof before) && c.unit[0] == meter);
+          !memcmp(&before, &c.stack[0], sizeof before) && c.stack[0].unit == meter);
 }
 
 static void pair(int y, uint8_t uy, int x, uint8_t ux)
 {
     calc_init(&c);
-    c.stack[1] = os_Int24ToReal(y); c.unit[1] = uy;
-    c.stack[0] = os_Int24ToReal(x); c.unit[0] = ux;
+    c.stack[1] = value_real(os_Int24ToReal(y)); c.stack[1].unit = uy;
+    c.stack[0] = value_real(os_Int24ToReal(x)); c.stack[0].unit = ux;
 }
 
 static bool rejected(calc_cmd_t operation, const char *error)
 {
-    real_t x = c.stack[0], y = c.stack[1], lastx = c.lastx;
-    uint8_t ux = c.unit[0], uy = c.unit[1], ul = c.unit_lastx;
+    value_t x = c.stack[0], y = c.stack[1], lastx = c.lastx;
+    uint8_t ux = c.stack[0].unit, uy = c.stack[1].unit, ul = c.lastx.unit;
     bool lift = c.lift;
     cmd(operation, 0);
     return c.message && !strcmp(c.message, error) &&
            !memcmp(&x, &c.stack[0], sizeof x) && !memcmp(&y, &c.stack[1], sizeof y) &&
-           !memcmp(&lastx, &c.lastx, sizeof lastx) && c.unit[0] == ux &&
-           c.unit[1] == uy && c.unit_lastx == ul && c.lift == lift;
+           !memcmp(&lastx, &c.lastx, sizeof lastx) && c.stack[0].unit == ux &&
+           c.stack[1].unit == uy && c.lastx.unit == ul && c.lift == lift;
 }
 
 static void error_policy_neighbors(void)
@@ -244,31 +246,31 @@ static void error_policy_neighbors(void)
     pair(0, 0, 0, 0); cmd(CMD_ATANH, 0); check(x_number("0"));
     pair(0, 0, 0, 0); cmd(CMD_TO_POL, 0); check(x_number("0"));
     pair(3, 0, 4, 0); cmd(CMD_TO_POL, 0); check(x_number("5"));
-    pair(1, 0, 0, 0); c.stack[0] = os_StrToReal("1E-99", NULL);
+    pair(1, 0, 0, 0); c.stack[0] = value_real(os_StrToReal("1E-99", NULL));
     cmd(CMD_MUL, 0); check(x_number("1E-99"));
-    pair(0, 0, 1, 0); c.stack[1] = os_StrToReal("9.9999999999999E99", NULL);
+    pair(0, 0, 1, 0); c.stack[1] = value_real(os_StrToReal("9.9999999999999E99", NULL));
     cmd(CMD_DIV, 0); check(x_number("9.9999999999999E99"));
     calc_init(&c); c.stats.linear_only = true;
     for (uint8_t i = 0; i < 3; i++) {
-        c.stack[0] = c.stack[1] = os_StrToReal("100000001", NULL);
+        c.stack[0] = c.stack[1] = value_real(os_StrToReal("100000001", NULL));
         cmd(CMD_STAT_PLUS, 0);
     }
     cmd(CMD_STAT_SDEV, 0); check(x_number("0"));
     calc_init(&c); c.stats.linear_only = true;
     for (uint8_t i = 2; i <= 4; i++) {
-        c.stack[0] = c.stack[1] = os_Int24ToReal(i); cmd(CMD_STAT_PLUS, 0);
+        c.stack[0] = c.stack[1] = value_real(os_Int24ToReal(i)); cmd(CMD_STAT_PLUS, 0);
     }
     cmd(CMD_STAT_SDEV, 0); check(x_number("1"));
     stats_t before = c.stats;
-    c.stack[0] = os_StrToReal("1E99", NULL); c.stack[1] = os_Int24ToReal(1);
+    c.stack[0] = value_real(os_StrToReal("1E99", NULL)); c.stack[1] = value_real(os_Int24ToReal(1));
     bool refused = rejected(CMD_STAT_PLUS, "Err: Overflow");
     check(refused && !memcmp(&before, &c.stats, sizeof before));
-    calc_init(&c); c.regs[0] = c.stack[0] = os_StrToReal("9E99", NULL);
-    real_t original = c.regs[0]; cmd(CMD_STO_ADD, REG_A);
+    calc_init(&c); c.regs[0] = c.stack[0] = value_real(os_StrToReal("9E99", NULL));
+    real_t original = c.regs[0].real; cmd(CMD_STO_ADD, REG_A);
     check(c.message && !strcmp(c.message, "Err: Overflow") &&
           !memcmp(&original, &c.regs[0], sizeof original));
-    calc_init(&c); c.regs[0] = os_Int24ToReal(10); c.stack[0] = os_StrToReal("1E-99", NULL);
-    original = c.stack[0]; cmd(CMD_RCL_DIV, REG_A);
+    calc_init(&c); c.regs[0] = value_real(os_Int24ToReal(10)); c.stack[0] = value_real(os_StrToReal("1E-99", NULL));
+    original = c.stack[0].real; cmd(CMD_RCL_DIV, REG_A);
     check(c.message && !strcmp(c.message, "Err: Underflow") &&
           !memcmp(&original, &c.stack[0], sizeof original));
     char output[FORMAT_MAX]; original = os_Int24ToReal(1);
@@ -280,12 +282,56 @@ static void error_policy_neighbors(void)
     check(format_ok && !strcmp(output, "Err: Underflow"));
 }
 
+static bool complex_number(const char *re, const char *im)
+{
+    if (c.message || c.stack[0].type != VALUE_COMPLEX) return false;
+    real_t a = os_StrToReal(re, NULL), b = os_StrToReal(im, NULL);
+    return os_RealCompare(&c.stack[0].real, &a) == 0 && os_RealCompare(&c.stack[0].imag, &b) == 0;
+}
+static void complex_regressions(void)
+{
+    calc_init(&c);
+    number(3); cmd(CMD_COMPLEX_RECT_ENTRY, 0); number(4); cmd(CMD_ENTER, 0);
+    check(complex_number("3", "4"));
+    number(2); cmd(CMD_ADD, 0); check(complex_number("5", "4"));
+    cmd(CMD_SQUARE, 0); check(complex_number("9", "40"));
+    cmd(CMD_COMPLEX_REAL, 0); check(x_number("9"));
+    cmd(CMD_LASTX, 0); cmd(CMD_COMPLEX_IMAG, 0); check(x_number("40"));
+    cmd(CMD_CLEAR, 0); cmd(CMD_COMPLEX_RECT_ENTRY, 0); cmd(CMD_ENTER, 0);
+    check(complex_number("0", "1"));
+    cmd(CMD_SQUARE, 0); check(complex_number("-1", "0"));
+    c.stack[0] = value_real(os_Int24ToReal(-4));
+    cmd(CMD_RESULT_COMPLEX, 0); cmd(CMD_SQRT, 0); check(complex_number("0", "2"));
+    cmd(CMD_STO, REG_A); c.stack[0] = value_real(os_Int24ToReal(3));
+    cmd(CMD_STO_ADD, REG_A); cmd(CMD_RCL, REG_A); check(complex_number("3", "2"));
+    cmd(CMD_COMPLEX_CONJ, 0); check(complex_number("3", "-2"));
+    cmd(CMD_COMPLEX_LINK, 0); check(x_number("-2") && os_RealToInt24(&c.stack[1].real) == 3);
+    cmd(CMD_COMPLEX_LINK, 0); check(complex_number("3", "-2"));
+    c.stack[0] = value_complex(os_Int24ToReal(3), os_Int24ToReal(4));
+    cmd(CMD_COMPLEX_ABS, 0); check(x_number("5"));
+    cmd(CMD_CLEAR, 0); number(2); cmd(CMD_COMPLEX_POLAR_ENTRY, 0); number(90); cmd(CMD_ENTER, 0);
+    check(complex_number("0", "2"));
+    cmd(CMD_MODE_DEG, 0); cmd(CMD_COMPLEX_ANGLE, 0); check(x_number("90"));
+    c.stack[0] = value_complex(os_Int24ToReal(3), os_Int24ToReal(4));
+    check(rejected(CMD_SIN, "Err: Data Type"));
+    check(rejected(CMD_STAT_PLUS, "Err: Data Type"));
+    check(rejected(CMD_SET_WORD_SIZE, "Err: Data Type"));
+    check(rejected(CMD_DATE_FN, "Err: Data Type"));
+    cmd(CMD_SHOW, 0); check(c.message && !strcmp(c.message, "3.\x80" "4."));
+    c.stack[0] = value_complex(os_StrToReal("8E99", NULL), os_StrToReal("8E99", NULL));
+    c.stack[1] = c.stack[0]; cmd(CMD_DIV, 0); check(complex_number("1", "0"));
+    c.stack[0] = value_complex(os_Int24ToReal(1), os_Int24ToReal(1)); cmd(CMD_SQRT, 0);
+    value_t root = c.stack[0];
+    c.stack[0] = value_real(root.real); bool root_re = x_close("1.0986841134678");
+    c.stack[0] = value_real(root.imag); check(root_re && x_close("0.45508986056223"));
+}
+
 static void calculator_regressions(void)
 {
     pair(0, 0, 1981, 0); cmd(CMD_PRIME, 0);
-    check(x_number("7") && os_RealToInt24(&c.stack[1]) == 1981);
+    check(x_number("7") && os_RealToInt24(&c.stack[1].real) == 1981);
     cmd(CMD_DIV, 0); cmd(CMD_PRIME, 0);
-    check(x_number("1") && os_RealToInt24(&c.stack[1]) == 283);
+    check(x_number("1") && os_RealToInt24(&c.stack[1].real) == 283);
     pair(6, 0, 8, 0); cmd(CMD_LCM, 0); check(x_number("24"));
     pair(21, 0, 6, 0); cmd(CMD_LCM, 0); check(x_number("42"));
     pair(0, 0, 6, 0); cmd(CMD_LCM, 0); check(x_number("0"));
@@ -309,62 +355,62 @@ static void calculator_regressions(void)
     uint8_t ft = unit_tag("ft"), in = unit_tag("in");
     uint8_t kwh = unit_tag("kWh"), kcal = unit_tag("kcal"), kw = unit_tag("kW");
     pair(2, kwh, 2000, kcal); cmd(CMD_PERCENT_CHANGE, 0);
-    check(kwh && kcal && x_close("16.222222222222") && !c.unit[0] && c.unit[1] == kwh);
+    check(kwh && kcal && x_close("16.222222222222") && !c.stack[0].unit && c.stack[1].unit == kwh);
     pair(6, ft, 2, in); cmd(CMD_ADD, 0); cmd(CMD_UNIT, in - 1);
-    check(ft && in && x_close("74") && c.unit[0] == in);
+    check(ft && in && x_close("74") && c.stack[0].unit == in);
     pair(6, ft, 2, in); cmd(CMD_DIV, 0);
-    check(x_close("36") && !c.unit[0]);
+    check(x_close("36") && !c.stack[0].unit);
     pair(6, ft, 2, in);
     check(ft && in && rejected(CMD_MOD, "Err: Precision"));
     pair(7, ft, 24, in); cmd(CMD_MOD, 0);
-    check(x_number("1") && c.unit[0] == ft);
+    check(x_number("1") && c.stack[0].unit == ft);
     pair(6, ft, 24, in); cmd(CMD_MOD, 0);
-    check(x_number("0") && c.unit[0] == ft);
+    check(x_number("0") && c.stack[0].unit == ft);
     pair(1, ft, 24, in); cmd(CMD_MOD, 0);
-    check(x_number("1") && c.unit[0] == ft);
+    check(x_number("1") && c.stack[0].unit == ft);
     pair(6, ft, 2, ft); cmd(CMD_MOD, 0);
-    check(x_number("0") && c.unit[0] == ft);
+    check(x_number("0") && c.stack[0].unit == ft);
     pair(-7, ft, 24, in); cmd(CMD_MOD, 0);
-    check(x_number("1") && c.unit[0] == ft);
+    check(x_number("1") && c.stack[0].unit == ft);
     pair(7, ft, -24, in); cmd(CMD_MOD, 0);
-    check(x_number("-1") && c.unit[0] == ft);
+    check(x_number("-1") && c.stack[0].unit == ft);
     pair(2, kw, 2000, kcal);
     check(kw && rejected(CMD_PERCENT_CHANGE, "Err: Unit Mismatch"));
     pair(6, ft, 2, 0); check(rejected(CMD_ADD, "Err: Data Type"));
     pair(0, 0, 5, ft); cmd(CMD_STO, REG_A); cmd(CMD_CLEAR, 0); cmd(CMD_RCL, REG_A);
-    check(x_number("5") && c.unit[0] == ft);
+    check(x_number("5") && c.stack[0].unit == ft);
     pair(0, 0, 6, ft); cmd(CMD_STO, REG_A);
     number(2); cmd(CMD_UNIT, in - 1); cmd(CMD_STO_ADD, REG_A); cmd(CMD_RCL, REG_A);
-    check(x_close("6.1666666666667") && c.unit[0] == ft);
+    check(x_close("6.1666666666667") && c.stack[0].unit == ft);
     pair(0, 0, 6, ft); cmd(CMD_STO, REG_A);
     number(2); cmd(CMD_UNIT, in - 1); cmd(CMD_XCH, REG_A);
-    check(x_number("6") && c.unit[0] == ft && c.reg_unit[0] == in &&
-          os_RealToInt24(&c.regs[0]) == 2);
+    check(x_number("6") && c.stack[0].unit == ft && c.regs[0].unit == in &&
+          os_RealToInt24(&c.regs[0].real) == 2);
 
     uint8_t cel = unit_tag("\x09" "C"), kel = unit_tag("\x09" "K");
     pair(0, 0, 0, cel); cmd(CMD_UNIT, kel - 1);
-    check(cel && kel && x_close("273.15") && c.unit[0] == kel);
+    check(cel && kel && x_close("273.15") && c.stack[0].unit == kel);
     pair(10, cel, 20, cel); check(rejected(CMD_ADD, "Err: Data Type"));
     pair(0, 0, 0, cel); cmd(CMD_UNIT, kel - 1); cmd(CMD_ROUND_N, 0);
-    check(x_number("273") && c.unit[0] == kel);
+    check(x_number("273") && c.stack[0].unit == kel);
     uint8_t mpg = unit_tag("mpg"), lkm = unit_tag("Lkm");
     pair(0, 0, 30, mpg); cmd(CMD_UNIT, lkm - 1);
-    check(mpg && lkm && x_close("7.840486111111") && c.unit[0] == lkm);
+    check(mpg && lkm && x_close("7.840486111111") && c.stack[0].unit == lkm);
     pair(2, 0, 30, mpg); check(rejected(CMD_MUL, "Err: Data Type"));
     pair(0, 0, 30, mpg); cmd(CMD_UNIT, lkm - 1); cmd(CMD_ROUND_N, 0);
-    check(x_number("8") && c.unit[0] == lkm);
+    check(x_number("8") && c.stack[0].unit == lkm);
 
     pair(2, 0, 1, 0); cmd(CMD_STAT_PLUS, 0);
-    c.stack[0] = os_Int24ToReal(3); c.stack[1] = os_Int24ToReal(4);
+    c.stack[0] = value_real(os_Int24ToReal(3)); c.stack[1] = value_real(os_Int24ToReal(4));
     cmd(CMD_STAT_PLUS, 0); cmd(CMD_STAT_MEAN, 0);
-    check(x_number("2") && os_RealToInt24(&c.stack[1]) == 3);
+    check(x_number("2") && os_RealToInt24(&c.stack[1].real) == 3);
 
     pair(2, 0, 1, 0); cmd(CMD_STAT_PLUS, 0);
-    c.stack[0] = os_Int24ToReal(2); c.stack[1] = os_Int24ToReal(4);
+    c.stack[0] = value_real(os_Int24ToReal(2)); c.stack[1] = value_real(os_Int24ToReal(4));
     cmd(CMD_STAT_PLUS, 0);
     for (uint8_t model = 0; model < FIT_COUNT; model++) {
         cmd(CMD_FIT_MODEL, model);
-        c.stack[0] = os_Int24ToReal(model == FIT_LOG ? 4 : 3);
+        c.stack[0] = value_real(os_Int24ToReal(model == FIT_LOG ? 4 : 3));
         cmd(CMD_FIT_Y, 0);
         check(x_close(model == FIT_EXP ? "8" : "6"));
     }
@@ -376,9 +422,10 @@ static void calculator_regressions(void)
     os_Fin_FV = os_Int24ToReal(0); os_Fin_PY = os_Fin_CY = os_Int24ToReal(12);
     c.last_cmd = CMD_TVM_VAR; cmd(CMD_TVM_VAR, TVM_PMT);
     check(c.message && !strcmp(c.message, "TVM Calculated") &&
-          os_RealToInt24(&c.stack[0]) == -100);
+          os_RealToInt24(&c.stack[0].real) == -100);
     catalog_t catalog = {0};
-    bool vars_ok = catalog_open(&catalog, &c) && catalog.items[catalog.count - 1] == CAT_LASTX;
+    catalog_open(&catalog, &c);
+    bool vars_ok = catalog.open && catalog.items[catalog.count - 1] == CAT_LASTX;
     for (uint8_t item = CAT_TVM_FIRST; item <= CAT_TVM_LAST; item++) {
         bool found = false;
         for (uint8_t i = 0; i < catalog.count; i++) found |= catalog.items[i] == item;
@@ -390,9 +437,9 @@ static void calculator_regressions(void)
     bool units_ok = true;
     for (uint8_t i = 0; i < UNIT_COUNT; i++) {
         calc_init(&c);
-        c.stack[0] = os_StrToReal("123.25", NULL); c.unit[0] = i + 1;
+        c.stack[0] = value_real(os_StrToReal("123.25", NULL)); c.stack[0].unit = i + 1;
         cmd(CMD_UNIT, unit_base_of(unit_dim(i))); cmd(CMD_UNIT, i);
-        units_ok &= x_close("123.25") && c.unit[0] == i + 1;
+        units_ok &= x_close("123.25") && c.stack[0].unit == i + 1;
     }
     check(units_ok);
 }
@@ -428,10 +475,65 @@ static void message_bounds(int *width, int *height)
     *height = bottom < top ? 0 : bottom - top + 1;
 }
 
+static void date_mode_stack_regressions(void)
+{
+    static const char *epochs[] = {
+        "D{1970,1,1}", "D{1900,1,1}", "D{1980,1,6}",
+        "D{1997,1,1}", "D{2000,1,1}", "D{2050,1,1}"
+    };
+    for (uint8_t i = 0; i < sizeof epochs / sizeof epochs[0]; i++) {
+        calc_init(&c);
+        dt_obj_t o = {0};
+        dt_parse(epochs[i], &o);
+        c.stack[0] = value_date(&o);
+        cmd(CMD_DATE_FN, (uint8_t)(DF_EPOCH_UNIX + i));
+        cmd(CMD_DATE_FN, DF_TO_ES);
+        check(x_number("0"));
+    }
+    calc_init(&c);
+    dt_obj_t duration = { .type = OBJ_DR, .year = -9999, .hour = -23, .minute = -59, .second = -59 };
+    c.stack[0] = value_date(&duration);
+    cmd(CMD_DATE_FN, DF_DAY);
+    check(x_number("-9999"));
+    dt_obj_t zone = { .type = OBJ_TZ, .tz_hour = -23, .tz_minute = -45 };
+    c.stack[0] = value_date(&zone);
+    cmd(CMD_DATE_FN, DF_TZ_MINUTE);
+    check(x_number("-45"));
+
+    /* Static snapshots keep the CE's small C stack available to callees. */
+    static value_t original[STACK_MAX];
+    c.depth = STACK_MAX;
+    for (uint8_t i = 0; i < STACK_MAX; i++) {
+        real_t n = os_Int24ToReal(i);
+        c.stack[i] = i % 2 ? value_complex(n, n) : value_date(&duration);
+    }
+    memcpy(original, c.stack, sizeof original);
+    cmd(CMD_ROLL_UP, 0);
+    cmd(CMD_ROLL_DOWN, 0);
+    check(!memcmp(original, c.stack, sizeof original));
+    cmd(CMD_DROP, 0);
+    check(!memcmp(c.stack, original+1, (STACK_MAX-1)*sizeof(value_t)) &&
+          !memcmp(c.stack+STACK_MAX-1, original+STACK_MAX-1, sizeof(value_t)));
+
+    c.lift = false;
+    cmd(CMD_MODE_RAD, 255);
+    cmd(CMD_RESULT_COMPLEX, 0);
+    cmd(CMD_COMPLEX_DEG, 0);
+    cmd(CMD_TVM_BEGIN, 0);
+    cmd(CMD_DATE_FN, DF_FORMAT_STRING);
+    check(!c.degrees && c.complex_results && c.complex_mode == COMPLEX_DEG &&
+          c.tvm.begin && c.date_as_string && !c.lift &&
+          action_is_active(&c, MID_RAD) && action_is_active(&c, MID_NUM_RESULT_MODE_COMPLEX) &&
+          action_is_active(&c, MID_COMPLEX_MODE_DEG) && action_is_active(&c, MID_TVM_BEGIN) &&
+          action_is_active(&c, MID_FORMAT_RECORD_STRING) && !action_is_active(&c, MID_DEG));
+}
+
 int main(void)
 {
     memset((void *)RESULTS, 0, sizeof results);
     check(res_open());
+    check(resource_contract() == RESOURCE_CONTRACT_EXPECTED);
+    check(action_contract() == ACTION_CONTRACT_EXPECTED);
     calc_init(&c);
     record("1987,01,17"); number(15000); cmd(CMD_ADD, 0);
     check(x_object("D{2028,2,11}"));
@@ -495,7 +597,8 @@ int main(void)
     cmd(CMD_DATE_FN, DF_NOW);
     check(x_number("1798785000"));
     dt_obj_t now;
-    calc_t before = c;
+    static calc_t before;
+    before = c;
     check(calc_clock_now(&c, false, &now) && now.year == 2027 &&
           now.month == 1 && now.day == 1 && now.hour == 15 && now.minute == 30 &&
           now.tz_hour == 9 && !memcmp(&before, &c, sizeof c));
@@ -531,7 +634,7 @@ int main(void)
     cmd(CMD_SHOW, 0);
     check(c.message && !strcmp(c.message, "1.234.567,89"));
     real_t expected = os_StrToReal("1234567.89", NULL);
-    check(os_RealCompare(&c.stack[0], &expected) == 0);
+    check(os_RealCompare(&c.stack[0].real, &expected) == 0);
     number(2); cmd(CMD_ADD, 0);
     check(x_number("1234569.89"));
     cmd(CMD_DECIMAL_POINT, 0); cmd(CMD_SHOW, 0);
@@ -543,7 +646,7 @@ int main(void)
     uint8_t saved_lcd = lcd_BacklightLevel, saved_os = os_Brightness;
     lcd_BacklightLevel = 100;
     sys_brightness_adjust(true);
-    check(lcd_BacklightLevel == 92 && os_Brightness == 92);
+    check(lcd_BacklightLevel == 84 && os_Brightness == 84);
     sys_brightness_adjust(false);
     check(lcd_BacklightLevel == 100 && os_Brightness == 100);
     lcd_BacklightLevel = 0;
@@ -583,9 +686,11 @@ int main(void)
     message_bounds(&width, &height);
     check(height == 14 && width > 0 && width <= (int)gfx_GetStringWidth(c.message));
     display_close();
+    complex_regressions();
     calculator_regressions();
     numeric_boundaries();
     error_policy_neighbors();
+    date_mode_stack_regressions();
     RESULTS[0] = checks;
     if (checks != NATIVE_CHECK_COUNT) RESULTS[0] = 0;
     RESULTS[255] = 0xAA;

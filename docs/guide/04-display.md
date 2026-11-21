@@ -1,6 +1,6 @@
 # 4. The screen
 
-rpnCE 0.7.0 · User Guide
+rpnCE 0.8.0 · User Guide
 
 [Manual contents](../USER_GUIDE.md) · [Previous: 3. First calculations](03-first-calculations.md) · [Next: 5. Entering numbers](05-number-entry.md)
 
@@ -22,18 +22,27 @@ identifies them; each is described in this chapter.
 
 The dark strip at the top shows the calculator's state.
 
-<img src="../../assets/guide/screens/display-status.png" alt="The status bar: FIX4 DEG DEC; RAD with the 2ND badge; SCI3 HEX with carry and the A badge" width="320">
+<img src="../../assets/guide/screens/display-status.png" alt="The status bar: FIX4 a𝑖b; RAD r∠θ with the 2ND badge; r∠° with HEX, carry and the A badge" width="320">
 
 | Item | Meaning |
 | --- | --- |
 | `2026-10-18 14:05` | the date and time in the application time zone (ATZ), using CTZ to interpret the CE's clock; it updates each minute |
+| `HH:MM` | time only when the full timestamp would overlap the mode indicators |
 | `FIX4`, `SCI3`, `ENG2` | the display format and its number of digits (see [chapter 9](09-settings.md#9-display-formats-and-mode-settings)) |
-| `FIX-` | "as many digits as needed" (all digits, like ALL on an HP) |
-| `DEG` / `RAD` | the angle mode for trigonometry and polar conversions |
-| `DEC`, `HEX`, `OCT`, `BIN` | the number base (see [chapter 11](11-base.md#11-base-hexadecimal-octal-and-binary)) |
-| `CF` after the base | the BASE carry flag is set, including in DEC |
+| `ALL` | FIX with "as many digits as needed" (all digits, like ALL on an HP) |
+| `SCI-` / `ENG-` | scientific or engineering format with all display digits |
+| `RAD` | radians for trigonometry and polar conversions; no angle indicator means DEG |
+| `HEX`, `OCT`, `BIN` | a nondecimal number base; no base indicator means DEC (see [chapter 12](12-base.md#12-base-hexadecimal-octal-and-binary)) |
+| `a𝑖b` | rectangular complex display and LINK mode (RECT) |
+| `r∠θ` / `r∠°` | polar-radian (PRAD) or polar-degree (PDEG) display and LINK mode; independent of DEG/RAD |
+| `CF` | the BASE carry flag is set, including when DEC is implicit |
 | `2ND` badge | `2ND` was pressed; the next key gives its blue function |
 | `A` badge | `ALPHA` was pressed; the next key gives its green letter |
+
+Format and the complex display indicator are always shown, including
+when X is real. DEG and DEC are implicit. RRES/CRES affect the selected
+dot in MODE without adding a status label. A fresh calculator starts in
+DEG, DEC, RRES and RECT, with **ALL a𝑖b** in the status bar.
 
 ## Message line
 
@@ -59,8 +68,8 @@ The middle of the screen shows the four stack registers, `T` at the top and
 font. `X` is where numbers are typed and where results appear.
 
 - A value can have a small label after it: a unit such as `ft` or `kg`
-  (chapter 14), or `dec` in BASE modes for a value that can't be shown in
-  that base (chapter 11).
+  (chapter 15), or `dec` in BASE modes for a value that can't be shown in
+  that base (chapter 12).
 - A value too long for its line (a 32-bit binary number, or a long date)
   stays on one line: you see its right end, with a small ◂ where digits are
   hidden. Press ◂ and ▸ (the left and right arrow keys) to scroll through X.
@@ -73,7 +82,8 @@ font. `X` is where numbers are typed and where results appear.
 The bottom row shows five dark boxes, one for each menu key. A short line
 across the top of a box marks a submenu (pressing it opens another menu);
 other boxes are functions. A ■ after a label marks the active choice in a
-setting, such as **DEG■**. An empty slot has no box.
+setting, such as **DEG■**. Empty slots are matching buttons without text
+or an action.
 
 ## Screen brightness
 
@@ -81,11 +91,11 @@ Press `2ND ↑` to brighten the LCD or `2ND ↓` to dim it. Repeat the
 shortcut for further steps. It works while entering numbers, at prompts,
 and in HELP or VARS. Brightness does not change stack values or menu rows.
 The setting is shared with TI-OS; the dimmest available step keeps the
-screen visible.
+screen visible. A full sweep from brightest to dimmest takes 14 presses.
 
 ## Screen colors
 
-`MODE`, then row 3, **TINT**, cycles through eight color schemes; the
+`MODE`, then row 3, **TINT**, cycles through nine color schemes; the
 message line names each one as you go, and the choice is remembered:
 
 | Tint | Look | Screen |
@@ -98,6 +108,7 @@ message line names each one as you go, and the choice is remembered:
 | **MONOKAI** | charcoal, with purple, cyan, green and pink stack values | <img src="../../assets/guide/screens/tint-6.png" alt="The MONOKAI tint" width="240"> |
 | **PASTEL** | a light background with distinct row colors and pastel menu keys | <img src="../../assets/guide/screens/tint-7.png" alt="The PASTEL tint" width="240"> |
 | **COMMODORE** | phosphor greens on near-black, with brighter X digits | <img src="../../assets/guide/screens/tint-8.png" alt="The COMMODORE tint" width="240"> |
+| **TIOS** | TI-OS home-screen colours: white background, grey-green status bar and buttons, white captions and charcoal text | <img src="../../assets/guide/screens/tint-9.png" alt="The TIOS tint" width="240"> |
 
 ---
 

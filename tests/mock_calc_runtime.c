@@ -1,5 +1,6 @@
 /* Shared host stand-ins for calculator tests. */
 #include <stdio.h>
+#include <string.h>
 #include <ti/real.h>
 #include <ti/error.h>
 #include "calc.h"
@@ -16,7 +17,22 @@ real_t os_RealLog(const real_t *a)
 static long long g(long long a, long long b) { while (b) { long long t = a % b; a = b; b = t; } return a; }
 real_t os_RealGcd(const real_t *a, const real_t *b) { return mk((double)g((long long)a->v, (long long)b->v)); }
 void format_real(char *out, const real_t *v, uint8_t style, int8_t digits, int maxd, int maxe, bool group)
-{ (void)style; (void)digits; (void)maxd; (void)maxe; (void)group; mock_format_calls++; snprintf(out, FORMAT_MAX, "%.14g", v->v); }
+{
+    mock_format_calls++;
+#ifdef RPNCE_FORMAT_ACCURATE
+    char scientific[40];
+    snprintf(scientific, sizeof scientific, "%.13e", fabs(v->v));
+    uint8_t d[14];
+    int n = 0;
+    for (const char *p = scientific; *p && *p != 'e'; p++)
+        if (*p >= '0' && *p <= '9') d[n++] = *p - '0';
+    int exp = atoi(strchr(scientific, 'e') + 1);
+    format_digits(out, signbit(v->v), exp, d, style, digits, maxd, maxe, group);
+#else
+    (void)style; (void)digits; (void)maxd; (void)maxe; (void)group;
+    snprintf(out, FORMAT_MAX, "%.14g", v->v);
+#endif
+}
 
 /* decimal rounding stand-ins (the real ones work on the calculator's digits) */
 real_t round_decimals(const real_t *v, int n) { double p = pow(10, n); return mk(round(v->v * p) / p); }
