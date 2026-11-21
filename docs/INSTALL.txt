@@ -1,8 +1,16 @@
 rpnCE 0.8.0 - an RPN calculator for the TI-84 Plus CE
 ==========================================================
 
-An HP-style RPN calculator with scientific functions, statistics, TVM,
-real and complex arithmetic, units, BASE arithmetic, and dates and times.
+Version 0.8.0 brings complex-number support and a new shared value-storage
+system to this HP-style RPN calculator for the TI-84 Plus CE.
+
+Enter rectangular or polar complex numbers, calculate with them, and store
+both components in one stack level or register. Real numbers, complex
+numbers, DATE objects and unit quantities use the same value-storage model.
+
+IMPORTANT: 0.8.0 cannot import saved stacks, private registers or statistics
+from 0.7.0 and earlier. Note needed values before upgrading and re-enter
+them afterward. See "Upgrading from 0.7.0 or earlier" below.
 
 Files
 -----
@@ -10,8 +18,8 @@ Files
   rpnCEres-0.8.0.8xv    its menus, unit tables and HELP pages (required)
   readme.txt           installation, documentation and support
   LICENSE              redistribution terms
-  rpnCE-0.8.0-*.png     stack, TVM and unit-conversion screenshots
-  rpnCE-promo1.gif      animated program preview
+  rpnCE-0.8.0-*.png     complex, polar, stack, TVM and unit screenshots
+  rpnCE-promo1.gif      animated 0.8.0 complex-number calculations
 
 The images are for viewing on your computer; only the program, resources
 and required CE libraries need to be sent to the calculator.
@@ -39,18 +47,26 @@ is missing or from a different version, rpnCE says so when it starts.
 Your data
 ---------
 rpnCE saves the stack, registers, statistics and settings when you quit
-(2ND QUIT) in RPNCEdat and RPNCEcfg. Saved data uses version 6 and stores
+(2ND QUIT) in RPNCEdat and RPNCEcfg. Saved data uses format 6 and stores
 complete real, complex, DATE and unit values together. Deleting the private
 state does not clear shared TI-OS TVM values or reset the clock.
 
 Upgrading from 0.7.0 or earlier
 -------------------------------
-Complex-number support changed how every value is stored, so 0.8.0 does not
-read the RPNCEdat saved by 0.7.0 and earlier. The first start shows an empty
-stack, registers and statistics, and the old RPNCEdat is replaced when you
-quit. Note any values you need before upgrading. The screen tint, DATE
-settings and decimal separator in RPNCEcfg carry over. Delete RPNCEunt if a
-0.7.0 installation left one; 0.8.0 does not use it.
+The new value-storage system changes the saved-data format. Version 0.8.0
+does not read RPNCEdat from 0.7.0 and earlier: the saved stack, LASTX,
+private registers and statistics are incompatible. Its first start uses
+an empty stack and private registers, cleared statistics, and default
+calculator modes. The old RPNCEdat is replaced when you quit.
+
+Before upgrading, record any values you need and keep a backup of the old
+RPNCEdat if desired. Re-enter needed values in 0.8.0; restoring the old
+file does not convert it. That backup can only be used with 0.7.0.
+Files saved by 0.8.0 cannot be read by earlier versions either.
+
+The screen tint, DATE settings and decimal separator in RPNCEcfg carry
+over. Shared TI-OS TVM values and the hardware clock remain available.
+Delete RPNCEunt if a 0.7.0 installation left one; 0.8.0 does not use it.
 
 Getting started
 ---------------

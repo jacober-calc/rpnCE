@@ -1,6 +1,9 @@
 # rpnCE 0.8.0
 
-An RPN scientific and financial calculator for the TI-84 Plus CE.
+Version 0.8.0 introduces complex-number support and a shared value-storage
+system for real numbers, complex numbers, DATE objects and unit quantities.
+Complete values move together through the stack, registers and saved data.
+The new saved-data format is incompatible with 0.7.0 and earlier.
 
 - Real and complex decimal arithmetic, rectangular and polar entry,
   scientific functions, LINK, and independent result/display modes.
@@ -17,8 +20,9 @@ An RPN scientific and financial calculator for the TI-84 Plus CE.
   Brightness uses 16-unit steps between the brightest and visible minimum.
 
 The [0.8.0 package](../cem/rpnCE-0.8.0.zip) includes matching program and
-resource files, installation notes, the license, screenshots and
-`rpnCE-promo1.gif`. Source builds produce `bin/rpnCE.8xp` and
+resource files, installation notes, the license, complex-arithmetic and
+polar-display screenshots, and `rpnCE-promo1.gif`: an animated calculation,
+register-recall and display-mode demonstration. Source builds produce `bin/rpnCE.8xp` and
 `bin/rpnCEres.8xv`; resource format is 4.
 
 ## Not compatible with 0.7.0 saved data

@@ -49,8 +49,9 @@ only real numbers. The catalog retains the message acknowledgement checks:
 CLEAR dismisses a visible message without changing the stack; other keys
 dismiss it and perform their normal action. Routine notices time out after
 about 1.5 seconds. The carry indicator is **CF**, including in DEC mode.
-DEG, DEC, RRES and RECT are implicit; RAD, CRES, PRAD/PDEG and nondecimal
-bases appear when selected. ALL is FIX with all display digits.
+DEG and DEC are implicit; RAD and nondecimal bases appear when selected.
+The complex presentation is always shown as a𝑖b, r∠θ or r∠°; RRES/CRES
+are marked only in MODE. ALL is FIX with all display digits.
 New runs start with all cases selected.
 The focused run and completed 14-case numerical confirmation run have been
 removed, along with the 14 completed individual cases. Their original device reports

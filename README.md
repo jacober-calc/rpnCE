@@ -1,10 +1,15 @@
 # rpnCE 0.8.0
-![rpnCE Screenshot](assets/rpnCE-promo1.gif)
+![rpnCE 0.8.0: complex arithmetic, register recall and polar display](assets/rpnCE-promo1.gif)
 
 An RPN calculator for the TI-84 Plus CE, written in C. It turns the CE into
 an HP-style RPN calculator: a 4-level stack (up to 12), numbered registers
 in the style of the HP-32SII, and a full menu tree of functions along the
 bottom of the screen, on a dot-matrix LCD-style display.
+
+**New in 0.8.0:** complex-number support and a shared value-storage system
+for real, complex, DATE and unit values. Saved stacks, private registers
+and statistics from 0.7.0 and earlier cannot be imported; record needed
+values before upgrading and re-enter them in 0.8.0.
 
 ## Features
 
@@ -95,9 +100,17 @@ the obsolete `RPNCEunt` appvar if you have one.
 The version is set in `src/core/version.h`.
 
 The release files in [cem/](cem/) use versioned filenames. The ZIP also
-includes installation notes, the license, screenshots and `rpnCE-promo1.gif`.
+includes installation notes, the license, complex/polar screenshots and the
+animated calculation preview `rpnCE-promo1.gif`.
 TI-OS still lists the program as `RPNCE`; its resource and saved-data appvar
-names are unchanged so existing calculator data remains available.
+names stay the same. The saved-data format changed in 0.8.0; the upgrade
+notice above explains which values must be re-entered.
+
+To prepare the release assets after updating the illustrated guide's
+screenshots, run `python3 tools/package_release.py` with the CE toolchain
+on PATH. It builds the program, renders the complex-number demonstration,
+and writes the matching files and ZIP in `cem/`. The animation is also
+written to `assets/rpnCE-promo1.gif` for this page.
 
 To try a source build without a calculator, load both files from `bin/`
 and `clibs.8xg` into the

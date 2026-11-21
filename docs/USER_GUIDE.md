@@ -1,14 +1,17 @@
 # rpnCE User Guide
 
 **RPN scientific and financial calculator for the TI-84 Plus CE**\
-**Version 0.8.0 · Updated 1 November 2026**
+**Version 0.8.0 · Updated 21 November 2026**
 
 ![rpnCE calculator display](../assets/rpnCE-promo1.gif)
 
 This manual explains how to operate rpnCE, from a first calculation to
 statistics, time value of money, unit conversions, and calendar arithmetic.
 A dedicated complex-number chapter explains entry, functions and display states.
-It describes rpnCE 0.8.0.
+Version 0.8.0 also introduces shared value storage for real, complex, DATE
+and unit values. Saved stacks and private registers from earlier versions
+cannot be imported; read the [upgrade instructions](guide/02-installation.md#upgrade-an-installation)
+before installing it.
 
 [Project and source](https://github.com/jacober-calc/rpnCE) ·
 [Releases](https://github.com/jacober-calc/rpnCE/releases) ·

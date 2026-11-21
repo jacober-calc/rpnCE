@@ -68,11 +68,11 @@ def font_header():
         f.write('static const uint8_t font_spacing[128] = {' + ','.join(map(str, sp)) + '};\n')
 
 
-def build():
+def build(extra_flags=()):
     font_header()
     inc = ['-I' + os.path.join(HERE, 'hostinc'), '-I' + CACHE, '-Itests/mock',
            '-Itests/mock_fileioc', '-Isrc/core', '-Isrc/ui']
-    flags = ['-O1', '-w', '-DRPNCE_HOST_TEST']
+    flags = ['-O1', '-w', '-DRPNCE_HOST_TEST', *extra_flags]
     main_o = os.path.join(CACHE, 'main.o')
     subprocess.run(['cc'] + flags + ['-Dmain=rpnce_main'] + inc +
                    ['-c', 'src/main.c', '-o', main_o], check=True, cwd=ROOT)
